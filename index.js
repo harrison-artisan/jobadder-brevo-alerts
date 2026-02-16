@@ -10,6 +10,12 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public'));
+
+// Dashboard route
+app.get('/dashboard', (req, res) => {
+  res.sendFile(__dirname + '/public/dashboard.html');
+});
 
 // Health check endpoint
 app.get('/', (req, res) => {
