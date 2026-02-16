@@ -14,12 +14,17 @@ app.use(express.urlencoded({ extended: true }));
 // Health check endpoint
 app.get('/', (req, res) => {
   const isAuthorized = jobadderService.isAuthorized();
+  const testMode = process.env.TEST_MODE === 'true';
+  const testEmail = process.env.TEST_EMAIL;
+  
   res.json({ 
     status: 'running',
     service: 'JobAdder to Brevo Job Alerts',
-    version: '1.0.0',
+    version: '1.0.1',
+    test_mode: testMode,
+    test_email: testMode ? testEmail : null,
     jobadder_authorized: isAuthorized,
-    message: isAuthorized ? 'Ready to send job alerts' : 'Please complete JobAdder authorization at /auth/jobadder'
+    message: isAuthorized ? (testMode ? `🧪 TEST MODE: Emails will only send to ${testEmail}` : 'Ready to send job alerts') : 'Please complete JobAdder authorization at /auth/jobadder'
   });
 });
 
@@ -115,6 +120,9 @@ cron.schedule('0 14 * * *', async () => {
 // Start server
 app.listen(PORT, () => {
   const isAuthorized = jobadderService.isAuthorized();
+  const testMode = process.env.TEST_MODE === 'true';
+  const testEmail = process.env.TEST_EMAIL;
+  
   console.log(`
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
@@ -122,6 +130,9 @@ app.listen(PORT, () => {
 ║                                                           ║
 ║   Server running on port ${PORT}                            ║
 ║   Daily roundup scheduled for 2 PM (Australia/Sydney)    ║
+║                                                           ║
+║   Mode: ${testMode ? '🧪 TEST MODE' : '🌐 PRODUCTION'}                                  ║
+║   ${testMode ? `Test Email: ${testEmail}` : '                                                     '}               ║
 ║                                                           ║
 ║   JobAdder Status: ${isAuthorized ? '✅ Authorized' : '❌ Not Authorized'}                   ║
 ║   ${!isAuthorized ? 'Visit /auth/jobadder to authorize' : '                                   '}                      ║
