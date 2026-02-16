@@ -4,12 +4,25 @@ class BrevoService {
   constructor() {
     this.apiKey = process.env.BREVO_API_KEY;
     this.baseUrl = 'https://api.brevo.com/v3';
+    this.testMode = process.env.TEST_MODE === 'true';
+    this.testEmail = process.env.TEST_EMAIL;
   }
 
   /**
    * Get all contacts where JOB_ALERTS = "Yes"
+   * In test mode, returns only the test email
    */
   async getJobAlertContacts() {
+    // TEST MODE: Return only test email
+    if (this.testMode && this.testEmail) {
+      console.log(`🧪 TEST MODE: Using test email ${this.testEmail}`);
+      return [{
+        email: this.testEmail,
+        name: 'Test User'
+      }];
+    }
+
+    // PRODUCTION MODE: Fetch from Brevo
     try {
       const response = await axios.get(`${this.baseUrl}/contacts`, {
         headers: {
@@ -48,6 +61,11 @@ class BrevoService {
     if (!recipients || recipients.length === 0) {
       console.log('⚠️  No recipients to send email to');
       return;
+    }
+
+    // Log test mode status
+    if (this.testMode) {
+      console.log(`🧪 TEST MODE ACTIVE: Sending to ${recipients.length} test recipient(s)`);
     }
 
     try {
