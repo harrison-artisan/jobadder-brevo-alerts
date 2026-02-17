@@ -193,22 +193,6 @@ class JobAdderService {
       });
 
       console.log(`✅ Retrieved ${liveAds.length} live job ads (${ads.length} total, ${ads.length - liveAds.length} expired)`);
-      
-      // Debug: Log first job ad structure
-      if (liveAds.length > 0) {
-        console.log('\n========== JOB AD DEBUG ==========');
-        console.log('Full JSON:', JSON.stringify(liveAds[0], null, 2));
-        console.log('\nKey Fields:');
-        console.log('  adId:', liveAds[0].adId);
-        console.log('  title:', liveAds[0].title);
-        console.log('  location:', liveAds[0].location);
-        console.log('  workType:', liveAds[0].workType);
-        console.log('  category:', liveAds[0].category);
-        console.log('  subCategory:', liveAds[0].subCategory);
-        console.log('  All keys:', Object.keys(liveAds[0]).join(', '));
-        console.log('==================================\n');
-      }
-      
       return liveAds;
     } catch (error) {
       console.error('❌ Error fetching job ads:', error.response?.data || error.message);
@@ -253,7 +237,39 @@ class JobAdderService {
       console.log(`📋 Using job board: ${artisanBoard.name} (ID: ${artisanBoard.boardId})`);
 
       // Get job ads from the Artisan board
-      return await this.getJobAds(artisanBoard.boardId);
+      const ads = await this.getJobAds(artisanBoard.boardId);
+      
+      // Enrich each ad with full job details
+      console.log(`🔍 Fetching full job details for ${ads.length} ads...`);
+      const enrichedAds = await Promise.all(
+        ads.map(async (ad) => {
+          try {
+            // Get full job details using the reference number
+            const jobDetails = await this.getJobByReference(ad.reference);
+            // Merge ad data with job details
+            return { ...ad, jobDetails };
+          } catch (error) {
+            console.warn(`⚠️  Could not fetch details for job ${ad.reference}:`, error.message);
+            return ad; // Return ad without enrichment if fetch fails
+          }
+        })
+      );
+      
+      console.log(`✅ Enriched ${enrichedAds.length} ads with full job details`);
+      
+      // Debug: Log first enriched ad
+      if (enrichedAds.length > 0 && enrichedAds[0].jobDetails) {
+        console.log('\n========== ENRICHED JOB AD DEBUG ==========');
+        console.log('Job Details:', JSON.stringify(enrichedAds[0].jobDetails, null, 2));
+        console.log('\nExtracted Fields:');
+        console.log('  location:', enrichedAds[0].jobDetails.location);
+        console.log('  workType:', enrichedAds[0].jobDetails.workType);
+        console.log('  category:', enrichedAds[0].jobDetails.category);
+        console.log('  All job detail keys:', Object.keys(enrichedAds[0].jobDetails).join(', '));
+        console.log('==========================================\n');
+      }
+      
+      return enrichedAds;
     } catch (error) {
       console.error('❌ Error fetching live job ads:', error.message);
       throw error;
@@ -282,17 +298,54 @@ class JobAdderService {
   }
 
   /**
+   * Get job by reference number
+   */
+  async getJobByReference(reference) {
+    try {
+      const token = await this.getAccessToken();
+      
+      // Search for job by reference
+      const response = await axios.get(`${this.baseUrl}/jobs`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        params: {
+          reference: reference,
+          limit: 1
+        }
+      });
+
+      if (response.data.items && response.data.items.length > 0) {
+        return response.data.items[0];
+      }
+      
+      throw new Error(`Job not found with reference: ${reference}`);
+    } catch (error) {
+      console.error(`❌ Error fetching job by reference ${reference}:`, error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  /**
    * Format job ad data for email template
    */
   formatJobForEmail(ad) {
-    // Job ads have different structure than jobs
-    // ad.title, ad.summary, ad.bulletPoints, ad.reference, ad.adId, ad.links
+    // ad contains: title, summary, bulletPoints, reference, adId, links
+    // ad.jobDetails contains: location, workType, category, etc. (if enriched)
     
-    // Extract location from summary (usually mentions city/area)
-    const location = this.extractLocation(ad.summary, ad.bulletPoints);
+    // Get location and work type from job details if available
+    let location = 'Location TBD';
+    let jobType = 'Not specified';
     
-    // Extract job type from summary/bullets (Contract, Permanent, Temp)
-    const jobType = this.extractJobType(ad.summary, ad.bulletPoints);
+    if (ad.jobDetails) {
+      // Use structured data from job details
+      location = ad.jobDetails.location?.name || ad.jobDetails.location || this.extractLocation(ad.summary, ad.bulletPoints);
+      jobType = ad.jobDetails.workType?.name || ad.jobDetails.workType || this.extractJobType(ad.summary, ad.bulletPoints);
+    } else {
+      // Fallback to extraction from text
+      location = this.extractLocation(ad.summary, ad.bulletPoints);
+      jobType = this.extractJobType(ad.summary, ad.bulletPoints);
+    }
     
     // Build description from summary and bullet points
     let description = ad.summary || '';
