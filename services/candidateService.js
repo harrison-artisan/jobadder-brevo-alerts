@@ -3,10 +3,14 @@ const jobadderService = require('./jobadderService');
 
 class CandidateService {
   constructor() {
+    // Try multiple variations of note type names
     this.INTERVIEW_NOTE_TYPES = [
       'Internal Interview',
       'Candidate Interview', 
-      'Phonescreen'
+      'Phonescreen',
+      'Phone Screen',
+      'Interview',
+      'Client Interview'
     ];
   }
 
@@ -19,32 +23,43 @@ class CandidateService {
     // Calculate cutoff date
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - (weeksAgo * 7));
-    const dateFilter = `>${cutoffDate.toISOString()}`;
     
     console.log(`   Cutoff date: ${cutoffDate.toISOString()}`);
+    console.log(`   Cutoff date (readable): ${cutoffDate.toLocaleString()}`);
     
-    // Fetch interview notes for all interview types
-    const allInterviewNotes = [];
+    // Try different approaches to find interview data
+    let candidateIds = [];
     
-    for (const noteType of this.INTERVIEW_NOTE_TYPES) {
-      try {
-        console.log(`  📋 Fetching "${noteType}" notes...`);
-        const notes = await this.fetchNotesByType(noteType, dateFilter);
-        allInterviewNotes.push(...notes);
-        console.log(`    ✓ Found ${notes.length} notes`);
-      } catch (error) {
-        console.warn(`    ⚠️  Could not fetch "${noteType}" notes:`, error.message);
-      }
+    // Approach 1: Try notes endpoint with type filter
+    console.log('\n📋 Approach 1: Querying notes by type...');
+    const noteCandidates = await this.fetchCandidatesFromNotes(cutoffDate);
+    candidateIds.push(...noteCandidates);
+    
+    // Approach 2: Try activities endpoint if notes didn't work
+    if (candidateIds.length === 0) {
+      console.log('\n📋 Approach 2: Querying activities...');
+      const activityCandidates = await this.fetchCandidatesFromActivities(cutoffDate);
+      candidateIds.push(...activityCandidates);
     }
     
-    console.log(`\n📊 Total interview notes found: ${allInterviewNotes.length}`);
+    // Approach 3: Try fetching all recent notes without type filter
+    if (candidateIds.length === 0) {
+      console.log('\n📋 Approach 3: Querying all recent notes...');
+      const allNotesCandidates = await this.fetchCandidatesFromAllNotes(cutoffDate);
+      candidateIds.push(...allNotesCandidates);
+    }
     
-    // Extract unique candidate IDs
-    const candidateIds = this.extractUniqueCandidateIds(allInterviewNotes);
-    console.log(`👥 Unique candidates interviewed: ${candidateIds.length}`);
+    // Remove duplicates
+    candidateIds = [...new Set(candidateIds)];
+    
+    console.log(`\n👥 Total unique candidates found: ${candidateIds.length}`);
     
     if (candidateIds.length === 0) {
       console.log('⚠️  No candidates found with interviews in the specified period');
+      console.log('💡 Suggestions:');
+      console.log('   - Check if interviews are logged in JobAdder');
+      console.log('   - Verify note type names in JobAdder settings');
+      console.log('   - Try increasing the time period (e.g., 12 weeks)');
       return [];
     }
     
@@ -57,39 +72,223 @@ class CandidateService {
   }
 
   /**
-   * Fetch notes by type and date
+   * Approach 1: Fetch candidates from notes with type filter
    */
-  async fetchNotesByType(noteType, dateFilter) {
-    const token = await jobadderService.getAccessToken();
+  async fetchCandidatesFromNotes(cutoffDate) {
+    const candidateIds = [];
+    const allInterviewNotes = [];
     
-    const response = await axios.get(`${jobadderService.baseUrl}/notes`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      params: {
-        type: noteType,
-        createdAt: dateFilter,
-        limit: 500  // Max per request
+    for (const noteType of this.INTERVIEW_NOTE_TYPES) {
+      try {
+        console.log(`  📝 Trying note type: "${noteType}"`);
+        const notes = await this.fetchNotesByType(noteType, cutoffDate);
+        
+        if (notes.length > 0) {
+          console.log(`    ✓ Found ${notes.length} notes`);
+          console.log(`    📄 Sample note structure:`, JSON.stringify(notes[0], null, 2).substring(0, 500));
+          allInterviewNotes.push(...notes);
+        } else {
+          console.log(`    ⚠️  No notes found for this type`);
+        }
+      } catch (error) {
+        console.warn(`    ❌ Error fetching "${noteType}":`, error.message);
+        if (error.response) {
+          console.warn(`       Status: ${error.response.status}`);
+          console.warn(`       Response:`, JSON.stringify(error.response.data).substring(0, 200));
+        }
       }
-    });
+    }
     
-    return response.data.items || [];
+    if (allInterviewNotes.length > 0) {
+      const ids = this.extractCandidateIdsFromNotes(allInterviewNotes);
+      console.log(`  ✓ Extracted ${ids.length} candidate IDs from notes`);
+      candidateIds.push(...ids);
+    }
+    
+    return candidateIds;
   }
 
   /**
-   * Extract unique candidate IDs from notes
+   * Approach 2: Fetch candidates from activities endpoint
    */
-  extractUniqueCandidateIds(notes) {
+  async fetchCandidatesFromActivities(cutoffDate) {
+    const candidateIds = [];
+    
+    try {
+      const token = await jobadderService.getAccessToken();
+      const dateFilter = cutoffDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+      
+      console.log(`  📅 Querying activities since ${dateFilter}`);
+      
+      const response = await axios.get(`${jobadderService.baseUrl}/activities`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        params: {
+          createdAt: `>${dateFilter}`,
+          limit: 500
+        }
+      });
+      
+      const activities = response.data.items || [];
+      console.log(`  ✓ Found ${activities.length} activities`);
+      
+      if (activities.length > 0) {
+        console.log(`  📄 Sample activity:`, JSON.stringify(activities[0], null, 2).substring(0, 500));
+        
+        // Filter for interview-related activities
+        const interviewActivities = activities.filter(activity => {
+          const name = (activity.name || '').toLowerCase();
+          const type = (activity.type || '').toLowerCase();
+          return name.includes('interview') || name.includes('phone') || 
+                 type.includes('interview') || type.includes('phone');
+        });
+        
+        console.log(`  ✓ Found ${interviewActivities.length} interview-related activities`);
+        
+        // Extract candidate IDs
+        interviewActivities.forEach(activity => {
+          if (activity.candidateId) {
+            candidateIds.push(activity.candidateId);
+          }
+          if (activity.candidates && Array.isArray(activity.candidates)) {
+            candidateIds.push(...activity.candidates);
+          }
+        });
+      }
+      
+    } catch (error) {
+      console.warn(`  ❌ Error fetching activities:`, error.message);
+      if (error.response) {
+        console.warn(`     Status: ${error.response.status}`);
+      }
+    }
+    
+    return candidateIds;
+  }
+
+  /**
+   * Approach 3: Fetch all recent notes without type filter
+   */
+  async fetchCandidatesFromAllNotes(cutoffDate) {
+    const candidateIds = [];
+    
+    try {
+      const token = await jobadderService.getAccessToken();
+      const dateFilter = cutoffDate.toISOString().split('T')[0];
+      
+      console.log(`  📅 Querying all notes since ${dateFilter}`);
+      
+      const response = await axios.get(`${jobadderService.baseUrl}/notes`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        params: {
+          createdAt: `>${dateFilter}`,
+          limit: 500
+        }
+      });
+      
+      const allNotes = response.data.items || [];
+      console.log(`  ✓ Found ${allNotes.length} total notes`);
+      
+      if (allNotes.length > 0) {
+        // Get unique note types to help user understand what's available
+        const noteTypes = [...new Set(allNotes.map(n => n.type).filter(Boolean))];
+        console.log(`  📋 Available note types:`, noteTypes);
+        
+        // Filter for interview-related notes
+        const interviewNotes = allNotes.filter(note => {
+          const type = (note.type || '').toLowerCase();
+          const text = (note.text || '').toLowerCase();
+          return type.includes('interview') || type.includes('phone') ||
+                 text.includes('interview') || text.includes('phone screen');
+        });
+        
+        console.log(`  ✓ Found ${interviewNotes.length} interview-related notes`);
+        
+        if (interviewNotes.length > 0) {
+          const ids = this.extractCandidateIdsFromNotes(interviewNotes);
+          candidateIds.push(...ids);
+        }
+      }
+      
+    } catch (error) {
+      console.warn(`  ❌ Error fetching all notes:`, error.message);
+    }
+    
+    return candidateIds;
+  }
+
+  /**
+   * Fetch notes by type and date
+   */
+  async fetchNotesByType(noteType, cutoffDate) {
+    const token = await jobadderService.getAccessToken();
+    
+    // Try different date formats
+    const isoDate = cutoffDate.toISOString();
+    const shortDate = cutoffDate.toISOString().split('T')[0]; // YYYY-MM-DD
+    
+    // Try ISO format first
+    try {
+      const response = await axios.get(`${jobadderService.baseUrl}/notes`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        params: {
+          type: noteType,
+          createdAt: `>${isoDate}`,
+          limit: 500
+        }
+      });
+      
+      return response.data.items || [];
+    } catch (error) {
+      // Try short date format
+      const response = await axios.get(`${jobadderService.baseUrl}/notes`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        params: {
+          type: noteType,
+          createdAt: `>${shortDate}`,
+          limit: 500
+        }
+      });
+      
+      return response.data.items || [];
+    }
+  }
+
+  /**
+   * Extract candidate IDs from notes
+   */
+  extractCandidateIdsFromNotes(notes) {
     const candidateIds = new Set();
     
     notes.forEach(note => {
-      // Notes have a 'candidates' array with candidate IDs
+      // Try different possible fields for candidate ID
+      if (note.candidateId) {
+        candidateIds.add(note.candidateId);
+      }
+      
       if (note.candidates && Array.isArray(note.candidates)) {
-        note.candidates.forEach(candidateId => {
-          if (candidateId) {
-            candidateIds.add(candidateId);
-          }
+        note.candidates.forEach(id => {
+          if (id) candidateIds.add(id);
         });
+      }
+      
+      if (note.candidate && typeof note.candidate === 'object' && note.candidate.candidateId) {
+        candidateIds.add(note.candidate.candidateId);
+      }
+      
+      // Check links for candidate reference
+      if (note.links && note.links.candidate) {
+        const match = note.links.candidate.match(/\/candidates\/(\d+)/);
+        if (match) {
+          candidateIds.add(parseInt(match[1]));
+        }
       }
     });
     
@@ -144,7 +343,6 @@ class CandidateService {
    */
   calculateYearsOfExperience(candidate) {
     if (!candidate.employment?.history || candidate.employment.history.length === 0) {
-      // Try to estimate from current position or return default
       return 5; // Default fallback
     }
     
@@ -167,7 +365,6 @@ class CandidateService {
    * Get current job title for candidate
    */
   getCurrentTitle(candidate) {
-    // Try multiple sources for job title
     if (candidate.employment?.current?.position) {
       return candidate.employment.current.position;
     }
@@ -204,3 +401,4 @@ class CandidateService {
 }
 
 module.exports = new CandidateService();
+
