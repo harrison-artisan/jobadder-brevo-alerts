@@ -327,6 +327,26 @@ class JobAdderService {
   }
 
   /**
+   * Get candidate by ID
+   */
+  async getCandidateById(candidateId) {
+    try {
+      const token = await this.getAccessToken();
+      
+      const response = await axios.get(`${this.baseUrl}/candidates/${candidateId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error(`❌ Error fetching candidate ${candidateId}:`, error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  /**
    * Format job ad data for email template
    */
   formatJobForEmail(ad) {
