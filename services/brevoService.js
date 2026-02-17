@@ -6,6 +6,8 @@ class BrevoService {
     this.baseUrl = 'https://api.brevo.com/v3';
     this.testMode = process.env.TEST_MODE === 'true';
     this.testEmail = process.env.TEST_EMAIL;
+    this.senderEmail = process.env.SENDER_EMAIL || 'artisan@artisan.com.au';
+    this.senderName = process.env.SENDER_NAME || 'ARTISAN';
   }
 
   /**
@@ -87,6 +89,10 @@ class BrevoService {
         }));
 
         const response = await axios.post(`${this.baseUrl}/smtp/email`, {
+          sender: {
+            email: this.senderEmail,
+            name: this.senderName
+          },
           templateId: parseInt(templateId),
           messageVersions: messageVersions
         }, {
@@ -120,3 +126,4 @@ class BrevoService {
 }
 
 module.exports = new BrevoService();
+
