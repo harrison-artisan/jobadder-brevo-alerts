@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Job Alerts Test Dashboard</title>
+    <title>Artisan Dashboard - Job Alerts & A-List</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
@@ -22,7 +22,7 @@
         }
         
         .container {
-            max-width: 900px;
+            max-width: 1200px;
             margin: 0 auto;
         }
         
@@ -43,6 +43,53 @@
         .header p {
             color: #7f8c8d;
             font-size: 14px;
+        }
+        
+        /* Tab Navigation */
+        .tabs {
+            background: white;
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 10px;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px 25px;
+            border: none;
+            background: transparent;
+            color: #7f8c8d;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+        
+        .tab:hover {
+            background: #f8f9fa;
+        }
+        
+        .tab.active {
+            background: #2C3E50;
+            color: white;
+        }
+        
+        .tab.alist.active {
+            background: #8E44AD;
+        }
+        
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
         }
         
         .status-grid {
@@ -90,6 +137,34 @@
             font-size: 13px;
         }
         
+        .status-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .status-badge.empty {
+            background: #ecf0f1;
+            color: #7f8c8d;
+        }
+        
+        .status-badge.generated {
+            background: #3498db;
+            color: white;
+        }
+        
+        .status-badge.tested {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .status-badge.sent {
+            background: #27ae60;
+            color: white;
+        }
+        
         .actions-card {
             background: white;
             border-radius: 12px;
@@ -121,9 +196,10 @@
             transition: all 0.3s;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            font-family: inherit;
         }
         
-        .btn:hover {
+        .btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 6px 12px rgba(0,0,0,0.15);
         }
@@ -146,6 +222,21 @@
         
         .btn-info {
             background: #3498db;
+            color: white;
+        }
+        
+        .btn-purple {
+            background: #8E44AD;
+            color: white;
+        }
+        
+        .btn-warning {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #27ae60;
             color: white;
         }
         
@@ -210,84 +301,294 @@
             background: #D1ECF1;
             color: #0C5460;
         }
+        
+        /* A-List Specific Styles */
+        .candidates-grid {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .candidate-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid #8E44AD;
+        }
+        
+        .candidate-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+        
+        .candidate-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #8E44AD;
+        }
+        
+        .candidate-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2C3E50;
+            margin-bottom: 5px;
+        }
+        
+        .candidate-title {
+            font-size: 16px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        
+        .candidate-experience {
+            font-size: 14px;
+            color: #95a5a6;
+        }
+        
+        .candidate-summary {
+            color: #34495e;
+            line-height: 1.6;
+            margin-top: 15px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+        
+        .empty-state h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .loading-indicator {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #8E44AD;
+            font-weight: 600;
+        }
+        
+        .loading-indicator.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #8E44AD;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        .message {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .message.active {
+            display: block;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚀 Job Alerts Test Dashboard</h1>
-            <p>Monitor and test your automated job alert system</p>
+            <h1>🚀 Artisan Dashboard</h1>
+            <p>Manage job alerts and candidate A-List emails</p>
         </div>
         
-        <div class="status-grid">
-            <div class="status-card">
-                <h3>Server Status</h3>
-                <div class="status-value success" id="serverStatus">●</div>
-                <div class="status-label">Running</div>
-                <button class="btn btn-secondary" onclick="refreshStatus()" style="margin-top: 15px; padding: 10px 20px; font-size: 14px; width: 100%;">
-                    🔄 Refresh
-                </button>
-            </div>
-            
-            <div class="status-card">
-                <h3>Mode</h3>
-                <div class="status-value" id="modeStatus">
-                    <span class="badge" id="modeBadge">Loading...</span>
+        <!-- Tab Navigation -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('job-alerts')">
+                📧 Job Alerts
+            </button>
+            <button class="tab alist" onclick="switchTab('alist')">
+                🌟 The A-List
+            </button>
+        </div>
+        
+        <!-- Job Alerts Tab -->
+        <div id="job-alerts-content" class="tab-content active">
+            <div class="status-grid">
+                <div class="status-card">
+                    <h3>Server Status</h3>
+                    <div class="status-value success" id="serverStatus">●</div>
+                    <div class="status-label">Running</div>
+                    <button class="btn btn-secondary" onclick="refreshStatus()" style="margin-top: 15px; padding: 10px 20px; font-size: 14px; width: 100%;">
+                        🔄 Refresh
+                    </button>
                 </div>
-                <div class="status-label" id="modeEmail">-</div>
+                
+                <div class="status-card">
+                    <h3>Mode</h3>
+                    <div class="status-value" id="modeStatus">
+                        <span class="badge" id="modeBadge">Loading...</span>
+                    </div>
+                    <div class="status-label" id="modeEmail">-</div>
+                </div>
+                
+                <div class="status-card">
+                    <h3>JobAdder</h3>
+                    <div class="status-value" id="jobadderStatus">●</div>
+                    <div class="status-label" id="jobadderLabel">Checking...</div>
+                    <button class="btn btn-info" onclick="authorizeJobAdder()" id="btnAuthorize" style="margin-top: 15px; padding: 10px 20px; font-size: 14px; width: 100%; display: none;">
+                        🔐 Authorize
+                    </button>
+                </div>
+                
+                <div class="status-card">
+                    <h3>Version</h3>
+                    <div class="status-value" id="versionStatus">-</div>
+                    <div class="status-label">Application Version</div>
+                </div>
             </div>
             
-            <div class="status-card">
-                <h3>JobAdder</h3>
-                <div class="status-value" id="jobadderStatus">●</div>
-                <div class="status-label" id="jobadderLabel">Checking...</div>
-                <button class="btn btn-info" onclick="authorizeJobAdder()" id="btnAuthorize" style="margin-top: 15px; padding: 10px 20px; font-size: 14px; width: 100%; display: none;">
-                    🔐 Authorize
-                </button>
-            </div>
-            
-            <div class="status-card">
-                <h3>Version</h3>
-                <div class="status-value" id="versionStatus">-</div>
-                <div class="status-label">Application Version</div>
+            <div class="actions-card">
+                <h2>🧪 Test Actions</h2>
+                
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="triggerDailyRoundup()" id="btnDailyRoundup">
+                        📧 Send Daily Roundup
+                    </button>
+                </div>
+                
+                <div style="margin-top: 30px; padding-top: 30px; border-top: 2px solid #e0e0e0;">
+                    <h3 style="color: #2C3E50; margin-bottom: 15px;">🎯 On-Demand Single Job Alert</h3>
+                    <p style="color: #7f8c8d; margin-bottom: 15px; font-size: 14px;">Select a job to send an immediate alert</p>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label for="jobSelector" style="display: block; margin-bottom: 8px; color: #2C3E50; font-weight: 600;">Select Job:</label>
+                        <select id="jobSelector" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px; background: white;">
+                            <option value="">Loading jobs...</option>
+                        </select>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="sendSingleJobAlert()" id="btnSingleJob">
+                        📧 Send Job Alert
+                    </button>
+                </div>
+                
+                <div class="result-box" id="resultBox"></div>
             </div>
         </div>
         
-        <div class="actions-card">
-            <h2>🧪 Test Actions</h2>
-            
-            <div class="button-group">
-                <button class="btn btn-primary" onclick="triggerDailyRoundup()" id="btnDailyRoundup">
-                    📧 Send Daily Roundup
-                </button>
-            </div>
-            
-            <div style="margin-top: 30px; padding-top: 30px; border-top: 2px solid #e0e0e0;">
-                <h3 style="color: #2C3E50; margin-bottom: 15px;">🎯 On-Demand Single Job Alert</h3>
-                <p style="color: #7f8c8d; margin-bottom: 15px; font-size: 14px;">Select a job to send an immediate alert</p>
-                
-                <div style="margin-bottom: 15px;">
-                    <label for="jobSelector" style="display: block; margin-bottom: 8px; color: #2C3E50; font-weight: 600;">Select Job:</label>
-                    <select id="jobSelector" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px; background: white;">
-                        <option value="">Loading jobs...</option>
-                    </select>
+        <!-- A-List Tab -->
+        <div id="alist-content" class="tab-content">
+            <div class="status-grid" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="status-card">
+                    <h3>Current State</h3>
+                    <div class="status-value">
+                        <span class="status-badge empty" id="alistStateBadge">EMPTY</span>
+                    </div>
+                    <div class="status-label" id="alistStateTimestamp">No A-List generated</div>
                 </div>
                 
-                <button class="btn btn-primary" onclick="sendSingleJobAlert()" id="btnSingleJob">
-                    📧 Send Job Alert
-                </button>
+                <div class="status-card">
+                    <h3>Candidates Selected</h3>
+                    <div class="status-value" id="alistSelectedCount">0</div>
+                    <div class="status-label">out of <span id="alistTotalPool">0</span> in pool</div>
+                </div>
+                
+                <div class="status-card">
+                    <h3>Last Action</h3>
+                    <div class="status-value" style="font-size: 16px;" id="alistLastAction">None</div>
+                    <div class="status-label" id="alistLastActionTime">-</div>
+                </div>
             </div>
-            
-            <div class="result-box" id="resultBox"></div>
+
+            <div id="alistMessageBox" class="message"></div>
+
+            <div class="actions-card">
+                <h2>🌟 A-List Actions</h2>
+                <div class="button-group">
+                    <button class="btn btn-purple" id="btnGenerate">
+                        🎲 Generate A-List
+                    </button>
+                    <button class="btn btn-info" id="btnRegenerate" disabled>
+                        🔄 Regenerate
+                    </button>
+                    <button class="btn btn-warning" id="btnSendTest" disabled>
+                        🧪 Send Test
+                    </button>
+                    <button class="btn btn-success" id="btnApproveAndSend" disabled>
+                        ✅ Approve & Send
+                    </button>
+                </div>
+                
+                <div class="loading-indicator" id="alistLoading">
+                    <div class="spinner"></div>
+                    <div id="alistLoadingText">Processing...</div>
+                </div>
+            </div>
+
+            <div class="actions-card">
+                <h2>Candidate Preview</h2>
+                <div id="candidatesPreview">
+                    <div class="empty-state">
+                        <h3>No candidates generated yet</h3>
+                        <p>Click "Generate A-List" to fetch candidates interviewed in the last 3 weeks</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
+        // Current tab
+        let currentTab = 'job-alerts';
+        let alistState = null;
+
         // Load status and jobs on page load
         window.addEventListener('DOMContentLoaded', () => {
             refreshStatus();
             loadJobs();
+            loadAListState();
         });
+        
+        // Tab switching
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Update content
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(tab + '-content').classList.add('active');
+            
+            // Load data for active tab
+            if (tab === 'alist') {
+                loadAListState();
+            }
+        }
+        
+        // ========== JOB ALERTS FUNCTIONS ==========
         
         async function refreshStatus() {
             try {
@@ -432,6 +733,240 @@
             const resultBox = document.getElementById('resultBox');
             resultBox.textContent = message;
             resultBox.className = 'result-box show ' + type;
+        }
+        
+        // ========== A-LIST FUNCTIONS ==========
+        
+        // Button event listeners for A-List
+        document.getElementById('btnGenerate').addEventListener('click', generateAList);
+        document.getElementById('btnRegenerate').addEventListener('click', generateAList);
+        document.getElementById('btnSendTest').addEventListener('click', sendAListTest);
+        document.getElementById('btnApproveAndSend').addEventListener('click', approveAndSendAList);
+
+        async function loadAListState() {
+            try {
+                const response = await fetch('/api/alist/state');
+                const state = await response.json();
+                alistState = state;
+                updateAListUI(state);
+            } catch (error) {
+                showAListMessage('Error loading state: ' + error.message, 'error');
+            }
+        }
+
+        async function generateAList() {
+            setAListLoading(true, 'Generating A-List... This may take 30-60 seconds');
+            hideAListMessage();
+            
+            try {
+                const response = await fetch('/api/alist/generate', { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAListMessage(result.message, 'success');
+                    alistState = result.data;
+                    updateAListUI(result.data);
+                } else {
+                    showAListMessage(result.message, 'error');
+                }
+            } catch (error) {
+                showAListMessage('Error: ' + error.message, 'error');
+            } finally {
+                setAListLoading(false);
+            }
+        }
+
+        async function sendAListTest() {
+            setAListLoading(true, 'Sending test email...');
+            hideAListMessage();
+            
+            try {
+                const response = await fetch('/api/alist/send-test', { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAListMessage(result.message, 'success');
+                    alistState = result.data;
+                    updateAListUI(result.data);
+                } else {
+                    showAListMessage(result.message, 'error');
+                }
+            } catch (error) {
+                showAListMessage('Error: ' + error.message, 'error');
+            } finally {
+                setAListLoading(false);
+            }
+        }
+
+        async function approveAndSendAList() {
+            if (!confirm('Are you sure you want to send The A-List to all recipients?')) {
+                return;
+            }
+            
+            setAListLoading(true, 'Sending to all recipients...');
+            hideAListMessage();
+            
+            try {
+                const response = await fetch('/api/alist/send', { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAListMessage(result.message + ' - Resetting state...', 'success');
+                    setTimeout(() => {
+                        loadAListState();
+                    }, 2000);
+                } else {
+                    showAListMessage(result.message, 'error');
+                }
+            } catch (error) {
+                showAListMessage('Error: ' + error.message, 'error');
+            } finally {
+                setAListLoading(false);
+            }
+        }
+
+        function updateAListUI(state) {
+            // Update state badge
+            const stateBadge = document.getElementById('alistStateBadge');
+            stateBadge.textContent = state.state;
+            stateBadge.className = 'status-badge ' + state.state.toLowerCase();
+            
+            // Update timestamp
+            const stateTimestamp = document.getElementById('alistStateTimestamp');
+            if (state.generatedAt) {
+                stateTimestamp.textContent = 'Generated ' + formatTimestamp(state.generatedAt);
+            } else {
+                stateTimestamp.textContent = 'No A-List generated';
+            }
+            
+            // Update counts
+            document.getElementById('alistSelectedCount').textContent = state.candidates?.length || 0;
+            document.getElementById('alistTotalPool').textContent = state.totalCandidatesInPool || 0;
+            
+            // Update last action
+            updateAListLastAction(state);
+            
+            // Update buttons
+            updateAListButtons(state.state);
+            
+            // Update preview
+            updateAListPreview(state.candidates);
+        }
+
+        function updateAListLastAction(state) {
+            const lastAction = document.getElementById('alistLastAction');
+            const lastActionTime = document.getElementById('alistLastActionTime');
+            
+            if (state.sentAt) {
+                lastAction.textContent = 'Sent to All';
+                lastActionTime.textContent = formatTimestamp(state.sentAt);
+            } else if (state.testSentAt) {
+                lastAction.textContent = 'Test Sent';
+                lastActionTime.textContent = formatTimestamp(state.testSentAt);
+            } else if (state.generatedAt) {
+                lastAction.textContent = 'Generated';
+                lastActionTime.textContent = formatTimestamp(state.generatedAt);
+            } else {
+                lastAction.textContent = 'None';
+                lastActionTime.textContent = '-';
+            }
+        }
+
+        function updateAListButtons(state) {
+            const btnGenerate = document.getElementById('btnGenerate');
+            const btnRegenerate = document.getElementById('btnRegenerate');
+            const btnSendTest = document.getElementById('btnSendTest');
+            const btnApproveAndSend = document.getElementById('btnApproveAndSend');
+            
+            btnGenerate.disabled = false;
+            btnRegenerate.disabled = !(state === 'GENERATED' || state === 'TESTED');
+            btnSendTest.disabled = !(state === 'GENERATED' || state === 'TESTED');
+            btnApproveAndSend.disabled = state !== 'TESTED';
+        }
+
+        function updateAListPreview(candidates) {
+            const preview = document.getElementById('candidatesPreview');
+            
+            if (!candidates || candidates.length === 0) {
+                preview.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No candidates generated yet</h3>
+                        <p>Click "Generate A-List" to fetch candidates interviewed in the last 3 weeks</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            preview.innerHTML = candidates.map(candidate => `
+                <div class="candidate-card">
+                    <div class="candidate-header">
+                        <div>
+                            <div class="candidate-number">#${candidate.number}</div>
+                        </div>
+                        <div style="flex: 1; margin-left: 20px;">
+                            <div class="candidate-name">${candidate.name}</div>
+                            <div class="candidate-title">${candidate.title}</div>
+                            <div class="candidate-experience">Experience: ${candidate.experience}</div>
+                        </div>
+                    </div>
+                    <div class="candidate-summary">${candidate.summary}</div>
+                </div>
+            `).join('');
+        }
+
+        function formatTimestamp(isoString) {
+            const date = new Date(isoString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            
+            if (diffMins < 1) return 'just now';
+            if (diffMins < 60) return `${diffMins} min ago`;
+            
+            const diffHours = Math.floor(diffMins / 60);
+            if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+            
+            const diffDays = Math.floor(diffHours / 24);
+            if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+            
+            return date.toLocaleDateString();
+        }
+
+        function setAListLoading(active, text = 'Processing...') {
+            const loading = document.getElementById('alistLoading');
+            const loadingText = document.getElementById('alistLoadingText');
+            
+            if (active) {
+                loading.classList.add('active');
+                loadingText.textContent = text;
+                disableAllAListButtons(true);
+            } else {
+                loading.classList.remove('active');
+                disableAllAListButtons(false);
+            }
+        }
+
+        function disableAllAListButtons(disabled) {
+            ['btnGenerate', 'btnRegenerate', 'btnSendTest', 'btnApproveAndSend'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (disabled) {
+                    btn.dataset.wasDisabled = btn.disabled;
+                    btn.disabled = true;
+                } else {
+                    btn.disabled = btn.dataset.wasDisabled === 'true';
+                }
+            });
+        }
+
+        function showAListMessage(text, type) {
+            const messageBox = document.getElementById('alistMessageBox');
+            messageBox.textContent = text;
+            messageBox.className = 'message active ' + type;
+        }
+
+        function hideAListMessage() {
+            const messageBox = document.getElementById('alistMessageBox');
+            messageBox.classList.remove('active');
         }
     </script>
 </body>
