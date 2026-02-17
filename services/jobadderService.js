@@ -193,6 +193,12 @@ class JobAdderService {
       });
 
       console.log(`✅ Retrieved ${liveAds.length} live job ads (${ads.length} total, ${ads.length - liveAds.length} expired)`);
+      
+      // Debug: Log first job ad structure
+      if (liveAds.length > 0) {
+        console.log('🔍 DEBUG - First job ad data:', JSON.stringify(liveAds[0], null, 2));
+      }
+      
       return liveAds;
     } catch (error) {
       console.error('❌ Error fetching job ads:', error.response?.data || error.message);
