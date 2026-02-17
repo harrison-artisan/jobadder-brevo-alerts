@@ -120,17 +120,13 @@ class CandidateService {
             firstNoteLogged = true;
           }
           
-          // Extract candidate ID from various possible locations
-          if (fullNote.candidateId) {
-            candidateIds.add(fullNote.candidateId);
-          }
-          
-          if (fullNote.candidate?.candidateId) {
-            candidateIds.add(fullNote.candidate.candidateId);
-          }
-          
-          if (fullNote.application?.candidateId) {
-            candidateIds.add(fullNote.application.candidateId);
+          // Extract candidate IDs from candidates array
+          if (fullNote.candidates && Array.isArray(fullNote.candidates)) {
+            fullNote.candidates.forEach(candidate => {
+              if (candidate.candidateId) {
+                candidateIds.add(candidate.candidateId);
+              }
+            });
           }
           
           // Check links for candidate reference
@@ -279,4 +275,5 @@ class CandidateService {
 }
 
 module.exports = new CandidateService();
+
 
