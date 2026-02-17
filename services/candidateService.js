@@ -96,6 +96,7 @@ class CandidateService {
     // Process notes in batches
     const batchSize = 20;
     let processed = 0;
+    let firstNoteLogged = false;
     
     for (let i = 0; i < notes.length; i += batchSize) {
       const batch = notes.slice(i, i + batchSize);
@@ -110,6 +111,14 @@ class CandidateService {
           });
           
           const fullNote = response.data;
+          
+          // Log first note to see structure
+          if (!firstNoteLogged) {
+            console.log(`\n    📄 FULL NOTE DETAILS:`);
+            console.log(JSON.stringify(fullNote, null, 2));
+            console.log(`    📄 Available keys:`, Object.keys(fullNote));
+            firstNoteLogged = true;
+          }
           
           // Extract candidate ID from various possible locations
           if (fullNote.candidateId) {
@@ -270,3 +279,4 @@ class CandidateService {
 }
 
 module.exports = new CandidateService();
+
