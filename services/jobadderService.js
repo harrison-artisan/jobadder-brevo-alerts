@@ -149,26 +149,79 @@ class JobAdderService {
   }
 
   /**
-   * Get all live/open jobs from JobAdder
+   * Get job boards for the account
    */
-  async getLiveJobs() {
+  async getJobBoards() {
     try {
       const token = await this.getAccessToken();
       
-      const response = await axios.get(`${this.baseUrl}/jobs`, {
+      const response = await axios.get(`${this.baseUrl}/jobboards`, {
         headers: {
           'Authorization': `Bearer ${token}`
-        },
-        params: {
-          status: 'Open',
-          limit: 100 // Adjust as needed
         }
       });
 
-      console.log(`✅ Retrieved ${response.data.items?.length || 0} live jobs from JobAdder`);
+      console.log(`✅ Retrieved ${response.data.items?.length || 0} job boards`);
       return response.data.items || [];
     } catch (error) {
-      console.error('❌ Error fetching live jobs:', error.response?.data || error.message);
+      console.error('❌ Error fetching job boards:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Get live job ads from a specific job board
+   */
+  async getJobAds(boardId) {
+    try {
+      const token = await this.getAccessToken();
+      
+      const response = await axios.get(`${this.baseUrl}/jobboards/${boardId}/ads`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const ads = response.data.items || [];
+      
+      // Filter out expired ads
+      const now = new Date();
+      const liveAds = ads.filter(ad => {
+        if (!ad.expiresAt) return true; // No expiry date = always live
+        const expiryDate = new Date(ad.expiresAt);
+        return expiryDate > now;
+      });
+
+      console.log(`✅ Retrieved ${liveAds.length} live job ads (${ads.length} total, ${ads.length - liveAds.length} expired)`);
+      return liveAds;
+    } catch (error) {
+      console.error('❌ Error fetching job ads:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all live job ads from all job boards
+   */
+  async getLiveJobs() {
+    try {
+      // Get all job boards
+      const boards = await this.getJobBoards();
+      
+      if (!boards || boards.length === 0) {
+        console.log('⚠️  No job boards found');
+        return [];
+      }
+
+      // For now, use the first board (Artisan's main job board)
+      // TODO: Could be enhanced to fetch from all boards and combine
+      const mainBoard = boards[0];
+      console.log(`📋 Using job board: ${mainBoard.name} (ID: ${mainBoard.boardId})`);
+
+      // Get job ads from the board
+      return await this.getJobAds(mainBoard.boardId);
+    } catch (error) {
+      console.error('❌ Error fetching live job ads:', error.message);
       throw error;
     }
   }
@@ -195,15 +248,27 @@ class JobAdderService {
   }
 
   /**
-   * Format job data for email template
+   * Format job ad data for email template
    */
-  formatJobForEmail(job) {
+  formatJobForEmail(ad) {
+    // Job ads have different structure than jobs
+    // ad.title, ad.summary, ad.bulletPoints, ad.reference, ad.adId
+    
+    // Build description from summary and bullet points
+    let description = ad.summary || '';
+    if (ad.bulletPoints && ad.bulletPoints.length > 0) {
+      // Add first 3 bullet points
+      const bullets = ad.bulletPoints.slice(0, 3).map(b => `• ${b}`).join(' ');
+      description = description ? `${description} ${bullets}` : bullets;
+    }
+    
     return {
-      job_title: job.title || 'Untitled Position',
-      location: job.location?.name || 'Location TBD',
-      job_type: job.workType || 'Not specified',
-      job_description: this.truncateDescription(job.summary || job.description || 'No description available'),
-      apply_url: job.applyUrl || `https://clientapps.jobadder.com/67514/artisan/jobs/${job.jobId}`
+      job_title: ad.title || 'Untitled Position',
+      location: ad.location || 'Location TBD', // Job ads might not have location object
+      job_type: ad.workType || 'Not specified',
+      job_description: this.truncateDescription(description || 'No description available'),
+      apply_url: `https://clientapps.jobadder.com/67514/artisan/jobs/${ad.adId}`,
+      reference: ad.reference || ''
     };
   }
 
