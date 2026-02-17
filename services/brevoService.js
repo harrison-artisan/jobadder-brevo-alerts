@@ -88,10 +88,20 @@ class BrevoService {
           params: params
         }));
 
-        const response = await axios.post(`${this.baseUrl}/smtp/email`, {
+        const payload = {
           templateId: parseInt(templateId),
           messageVersions: messageVersions
-        }, {
+        };
+        
+        // Add sender if configured (required for some Brevo setups)
+        if (this.senderEmail) {
+          payload.sender = {
+            email: this.senderEmail,
+            name: this.senderName
+          };
+        }
+        
+        const response = await axios.post(`${this.baseUrl}/smtp/email`, payload, {
           headers: {
             'api-key': this.apiKey,
             'Content-Type': 'application/json'
@@ -122,4 +132,3 @@ class BrevoService {
 }
 
 module.exports = new BrevoService();
-
