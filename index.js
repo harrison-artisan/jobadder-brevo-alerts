@@ -73,6 +73,31 @@ app.post('/webhook/jobadder', async (req, res) => {
   await jobAlertsController.handleJobPostedWebhook(req, res);
 });
 
+// Get live jobs list for dashboard dropdown
+app.get('/api/jobs', async (req, res) => {
+  try {
+    if (!jobadderService.isAuthorized()) {
+      return res.status(401).json({ 
+        error: 'Not authorized', 
+        message: 'Please complete JobAdder authorization first' 
+      });
+    }
+    
+    const jobs = await jobadderService.getLiveJobs();
+    
+    // Return simplified job list for dropdown
+    const jobList = jobs.map(job => ({
+      adId: job.adId,
+      title: job.title,
+      reference: job.reference
+    }));
+    
+    res.json({ jobs: jobList });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Manual trigger endpoints (for testing)
 app.post('/trigger/daily-roundup', async (req, res) => {
   try {
@@ -89,7 +114,7 @@ app.post('/trigger/daily-roundup', async (req, res) => {
   }
 });
 
-app.post('/trigger/single-job/:jobId', async (req, res) => {
+app.post('/trigger/single-job/:adId', async (req, res) => {
   try {
     if (!jobadderService.isAuthorized()) {
       return res.status(401).json({ 
@@ -97,7 +122,7 @@ app.post('/trigger/single-job/:jobId', async (req, res) => {
         message: 'Please complete JobAdder authorization at /auth/jobadder' 
       });
     }
-    const result = await jobAlertsController.sendSingleJobAlert(req.params.jobId);
+    const result = await jobAlertsController.sendSingleJobAlert(req.params.adId);
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
