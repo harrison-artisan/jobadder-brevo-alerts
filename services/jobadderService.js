@@ -213,13 +213,31 @@ class JobAdderService {
         return [];
       }
 
-      // For now, use the first board (Artisan's main job board)
-      // TODO: Could be enhanced to fetch from all boards and combine
-      const mainBoard = boards[0];
-      console.log(`📋 Using job board: ${mainBoard.name} (ID: ${mainBoard.boardId})`);
+      // Find the Artisan job board
+      const artisanBoard = boards.find(board => 
+        board.name && board.name.toLowerCase().includes('artisan')
+      );
 
-      // Get job ads from the board
-      return await this.getJobAds(mainBoard.boardId);
+      if (!artisanBoard) {
+        console.log('⚠️  Artisan job board not found. Available boards:');
+        boards.forEach(b => console.log(`   - ${b.name} (ID: ${b.boardId})`));
+        console.log('\n💡 Tip: Set JOBADDER_BOARD_ID environment variable to specify a board');
+        
+        // Fallback to environment variable or first board
+        const boardId = process.env.JOBADDER_BOARD_ID;
+        if (boardId) {
+          console.log(`📋 Using board ID from environment: ${boardId}`);
+          return await this.getJobAds(parseInt(boardId));
+        }
+        
+        console.log(`📋 Using first available board: ${boards[0].name} (ID: ${boards[0].boardId})`);
+        return await this.getJobAds(boards[0].boardId);
+      }
+
+      console.log(`📋 Using job board: ${artisanBoard.name} (ID: ${artisanBoard.boardId})`);
+
+      // Get job ads from the Artisan board
+      return await this.getJobAds(artisanBoard.boardId);
     } catch (error) {
       console.error('❌ Error fetching live job ads:', error.message);
       throw error;
