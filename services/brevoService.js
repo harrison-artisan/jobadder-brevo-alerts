@@ -132,3 +132,4 @@ class BrevoService {
 }
 
 module.exports = new BrevoService();
+
