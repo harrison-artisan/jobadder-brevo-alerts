@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cron = require('node-cron');
 const jobAlertsController = require('./controllers/jobAlertsController');
+const candidateAlertsController = require('./controllers/candidateAlertsController');
 const jobadderService = require('./services/jobadderService');
 
 const app = express();
@@ -93,6 +94,70 @@ app.get('/api/jobs', async (req, res) => {
     }));
     
     res.json({ jobs: jobList });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// A-List API endpoints
+app.get('/api/alist/state', async (req, res) => {
+  try {
+    const state = candidateAlertsController.getState();
+    res.json(state);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/alist/generate', async (req, res) => {
+  try {
+    if (!jobadderService.isAuthorized()) {
+      return res.status(401).json({ 
+        error: 'Not authorized', 
+        message: 'Please complete JobAdder authorization at /auth/jobadder' 
+      });
+    }
+    const result = await candidateAlertsController.generateAList();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/alist/send-test', async (req, res) => {
+  try {
+    if (!jobadderService.isAuthorized()) {
+      return res.status(401).json({ 
+        error: 'Not authorized', 
+        message: 'Please complete JobAdder authorization at /auth/jobadder' 
+      });
+    }
+    const result = await candidateAlertsController.sendTest();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/alist/send', async (req, res) => {
+  try {
+    if (!jobadderService.isAuthorized()) {
+      return res.status(401).json({ 
+        error: 'Not authorized', 
+        message: 'Please complete JobAdder authorization at /auth/jobadder' 
+      });
+    }
+    const result = await candidateAlertsController.sendToAll();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/alist/reset', async (req, res) => {
+  try {
+    const result = candidateAlertsController.resetState();
+    res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
