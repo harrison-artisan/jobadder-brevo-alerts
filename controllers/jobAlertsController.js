@@ -110,13 +110,20 @@ class JobAlertsController {
   /**
    * Manual trigger for single job alert (for testing or consultant use)
    */
-  async sendSingleJobAlert(jobId) {
-    console.log(`\n🔄 Sending single job alert for job ID: ${jobId}...`);
+  async sendSingleJobAlert(adId) {
+    console.log(`\n🔄 Sending single job alert for ad ID: ${adId}...`);
     
     try {
-      // 1. Fetch job details
-      const jobDetails = await jobadderService.getJobDetails(jobId);
-      const formattedJob = jobadderService.formatJobForEmail(jobDetails);
+      // 1. Fetch all live jobs and find the one with matching adId
+      const liveJobs = await jobadderService.getLiveJobs();
+      const jobAd = liveJobs.find(job => job.adId === parseInt(adId));
+      
+      if (!jobAd) {
+        console.log(`⚠️  Job ad with ID ${adId} not found`);
+        return { success: false, message: `Job ad ${adId} not found` };
+      }
+      
+      const formattedJob = jobadderService.formatJobForEmail(jobAd);
 
       // 2. Get recipients
       const recipients = await brevoService.getJobAlertContacts();
