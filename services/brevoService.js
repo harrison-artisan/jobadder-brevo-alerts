@@ -89,10 +89,6 @@ class BrevoService {
         }));
 
         const response = await axios.post(`${this.baseUrl}/smtp/email`, {
-          sender: {
-            email: this.senderEmail,
-            name: this.senderName
-          },
           templateId: parseInt(templateId),
           messageVersions: messageVersions
         }, {
