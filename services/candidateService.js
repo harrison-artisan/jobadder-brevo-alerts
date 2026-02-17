@@ -86,7 +86,9 @@ class CandidateService {
         
         if (notes.length > 0) {
           console.log(`    ✓ Found ${notes.length} notes`);
-          console.log(`    📄 Sample note structure:`, JSON.stringify(notes[0], null, 2).substring(0, 500));
+          console.log(`    📄 Complete note structure:`);
+          console.log(JSON.stringify(notes[0], null, 2));
+          console.log(`    📄 Note keys:`, Object.keys(notes[0]));
           allInterviewNotes.push(...notes);
         } else {
           console.log(`    ⚠️  No notes found for this type`);
@@ -402,3 +404,4 @@ class CandidateService {
 }
 
 module.exports = new CandidateService();
+
