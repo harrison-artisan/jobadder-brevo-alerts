@@ -2,9 +2,20 @@ const OpenAI = require('openai');
 
 class AIService {
   constructor() {
-    this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY
-    });
+    // Don't initialize OpenAI client here - do it lazily when needed
+    this.openai = null;
+  }
+
+  /**
+   * Get or create OpenAI client (lazy initialization)
+   */
+  getOpenAIClient() {
+    if (!this.openai && process.env.OPENAI_API_KEY) {
+      this.openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY
+      });
+    }
+    return this.openai;
   }
 
   /**
@@ -12,6 +23,14 @@ class AIService {
    */
   async generateCandidateSummary(candidate) {
     try {
+      const client = this.getOpenAIClient();
+      
+      // If no OpenAI client available, use fallback immediately
+      if (!client) {
+        console.log(`  ⚠️  OpenAI not configured, using fallback for ${candidate.firstName} ${candidate.lastName}`);
+        return this.getFallbackSummary(candidate);
+      }
+      
       // Build context about the candidate
       const context = this.buildCandidateContext(candidate);
       
@@ -28,7 +47,7 @@ Requirements:
 
       console.log(`  🤖 Generating AI summary for ${candidate.firstName} ${candidate.lastName}...`);
       
-      const response = await this.openai.chat.completions.create({
+      const response = await client.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
@@ -116,7 +135,13 @@ Requirements:
    * Generate summaries for multiple candidates in parallel
    */
   async generateBatchSummaries(candidates) {
-    console.log(`\n🤖 Generating AI summaries for ${candidates.length} candidates...`);
+    const client = this.getOpenAIClient();
+    
+    if (!client) {
+      console.log(`\n⚠️  OpenAI API key not configured - using fallback summaries for all candidates`);
+    } else {
+      console.log(`\n🤖 Generating AI summaries for ${candidates.length} candidates...`);
+    }
     
     const summaries = await Promise.all(
       candidates.map(candidate => this.generateCandidateSummary(candidate))
