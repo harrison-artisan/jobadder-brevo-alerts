@@ -45,6 +45,52 @@
             font-size: 14px;
         }
         
+        /* Global Status Cards - Always Visible */
+        .global-status-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .status-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .status-card h3 {
+            color: #2C3E50;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+        
+        .status-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .status-value.success {
+            color: #27AE60;
+        }
+        
+        .status-value.warning {
+            color: #F39C12;
+        }
+        
+        .status-value.error {
+            color: #E74C3C;
+        }
+        
+        .status-label {
+            color: #7f8c8d;
+            font-size: 13px;
+        }
+        
         /* Tab Navigation */
         .tabs {
             background: white;
@@ -92,49 +138,12 @@
             display: block;
         }
         
+        /* Tab-specific status grids */
         .status-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 20px;
             margin-bottom: 20px;
-        }
-        
-        .status-card {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        
-        .status-card h3 {
-            color: #2C3E50;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-        }
-        
-        .status-value {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        
-        .status-value.success {
-            color: #27AE60;
-        }
-        
-        .status-value.warning {
-            color: #F39C12;
-        }
-        
-        .status-value.error {
-            color: #E74C3C;
-        }
-        
-        .status-label {
-            color: #7f8c8d;
-            font-size: 13px;
         }
         
         .status-badge {
@@ -417,9 +426,45 @@
 </head>
 <body>
     <div class="container">
+        <!-- Header -->
         <div class="header">
             <h1>🚀 Artisan Dashboard</h1>
             <p>Manage job alerts and candidate A-List emails</p>
+        </div>
+        
+        <!-- Global Status Cards - Always Visible -->
+        <div class="global-status-grid">
+            <div class="status-card">
+                <h3>Server Status</h3>
+                <div class="status-value success" id="serverStatus">●</div>
+                <div class="status-label">Running</div>
+                <button class="btn btn-secondary" onclick="refreshStatus()" style="margin-top: 15px; padding: 10px 20px; font-size: 14px; width: 100%;">
+                    🔄 Refresh
+                </button>
+            </div>
+            
+            <div class="status-card">
+                <h3>Mode</h3>
+                <div class="status-value" id="modeStatus">
+                    <span class="badge" id="modeBadge">Loading...</span>
+                </div>
+                <div class="status-label" id="modeEmail">-</div>
+            </div>
+            
+            <div class="status-card">
+                <h3>JobAdder</h3>
+                <div class="status-value" id="jobadderStatus">●</div>
+                <div class="status-label" id="jobadderLabel">Checking...</div>
+                <button class="btn btn-info" onclick="authorizeJobAdder()" id="btnAuthorize" style="margin-top: 15px; padding: 10px 20px; font-size: 14px; width: 100%; display: none;">
+                    🔐 Authorize
+                </button>
+            </div>
+            
+            <div class="status-card">
+                <h3>Version</h3>
+                <div class="status-value" id="versionStatus">-</div>
+                <div class="status-label">Application Version</div>
+            </div>
         </div>
         
         <!-- Tab Navigation -->
@@ -434,40 +479,6 @@
         
         <!-- Job Alerts Tab -->
         <div id="job-alerts-content" class="tab-content active">
-            <div class="status-grid">
-                <div class="status-card">
-                    <h3>Server Status</h3>
-                    <div class="status-value success" id="serverStatus">●</div>
-                    <div class="status-label">Running</div>
-                    <button class="btn btn-secondary" onclick="refreshStatus()" style="margin-top: 15px; padding: 10px 20px; font-size: 14px; width: 100%;">
-                        🔄 Refresh
-                    </button>
-                </div>
-                
-                <div class="status-card">
-                    <h3>Mode</h3>
-                    <div class="status-value" id="modeStatus">
-                        <span class="badge" id="modeBadge">Loading...</span>
-                    </div>
-                    <div class="status-label" id="modeEmail">-</div>
-                </div>
-                
-                <div class="status-card">
-                    <h3>JobAdder</h3>
-                    <div class="status-value" id="jobadderStatus">●</div>
-                    <div class="status-label" id="jobadderLabel">Checking...</div>
-                    <button class="btn btn-info" onclick="authorizeJobAdder()" id="btnAuthorize" style="margin-top: 15px; padding: 10px 20px; font-size: 14px; width: 100%; display: none;">
-                        🔐 Authorize
-                    </button>
-                </div>
-                
-                <div class="status-card">
-                    <h3>Version</h3>
-                    <div class="status-value" id="versionStatus">-</div>
-                    <div class="status-label">Application Version</div>
-                </div>
-            </div>
-            
             <div class="actions-card">
                 <h2>🧪 Test Actions</h2>
                 
@@ -499,7 +510,7 @@
         
         <!-- A-List Tab -->
         <div id="alist-content" class="tab-content">
-            <div class="status-grid" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="status-grid">
                 <div class="status-card">
                     <h3>Current State</h3>
                     <div class="status-value">
