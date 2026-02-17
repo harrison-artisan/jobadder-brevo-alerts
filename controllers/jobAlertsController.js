@@ -22,8 +22,8 @@ class JobAlertsController {
       const recentJobs = liveJobs.slice(0, 5);
       console.log(`📊 Limiting to ${recentJobs.length} most recent jobs (out of ${liveJobs.length} total)`);
 
-      // 3. Build HTML for jobs
-      const jobsHtml = jobadderService.buildJobsHtml(recentJobs);
+      // 3. Format jobs for email (as data array, not HTML)
+      const jobsData = recentJobs.map(job => jobadderService.formatJobForEmail(job));
 
       // 4. Get recipients from Brevo
       console.log('👥 Fetching recipients from Brevo...');
@@ -34,12 +34,12 @@ class JobAlertsController {
         return { success: true, message: 'No recipients found' };
       }
 
-      // 5. Send batch email
+      // 5. Send batch email with job data array
       console.log(`📧 Sending daily roundup to ${recipients.length} recipients...`);
       await brevoService.sendBatchEmail(
         recipients,
         process.env.DAILY_ROUNDUP_TEMPLATE_ID,
-        { jobs_html: jobsHtml }
+        { jobs: jobsData, job_count: jobsData.length }
       );
 
       console.log('✅ Daily roundup completed successfully!\n');
