@@ -160,9 +160,11 @@ class CandidateService {
       
       await Promise.all(promises);
       processed += batch.length;
+      console.log(`    Processed ${processed}/${notes.length} notes, found ${candidateIds.size} candidates so far...`);
       
-      if (processed % 100 === 0 || processed === notes.length) {
-        console.log(`    Processed ${processed}/${notes.length} notes, found ${candidateIds.size} candidates so far...`);
+      // Add delay between batches to avoid rate limiting (except for last batch)
+      if (i + batchSize < notes.length) {
+        await new Promise(resolve => setTimeout(resolve, 500)); // 0.5 second delay
       }
     }
     
@@ -188,6 +190,11 @@ class CandidateService {
       
       const batchResults = await Promise.all(batchPromises);
       candidates.push(...batchResults.filter(c => c !== null));
+      
+      // Add delay between batches to avoid rate limiting (except for last batch)
+      if (i + batchSize < candidateIds.length) {
+        await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
+      }
     }
     
     return candidates;
@@ -275,5 +282,4 @@ class CandidateService {
 }
 
 module.exports = new CandidateService();
-
 
