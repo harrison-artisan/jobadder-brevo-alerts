@@ -4,13 +4,14 @@ const jobadderService = require('./jobadderService');
 class CandidateService {
   constructor() {
     // Try multiple variations of note type names
+    // Note: JobAdder is case-sensitive! Use exact casing from your system
     this.INTERVIEW_NOTE_TYPES = [
-      'Internal Interview',
-      'Candidate Interview', 
+      'Internal interview',  // lowercase 'i' in interview
+      'Candidate interview',  // lowercase 'i' in interview
       'Phonescreen',
-      'Phone Screen',
+      'Phone screen',
       'Interview',
-      'Client Interview'
+      'Client interview'
     ];
   }
 
@@ -401,4 +402,3 @@ class CandidateService {
 }
 
 module.exports = new CandidateService();
-
