@@ -261,13 +261,32 @@
                 </button>
             </div>
             
+            <div style="margin-top: 30px; padding-top: 30px; border-top: 2px solid #e0e0e0;">
+                <h3 style="color: #2C3E50; margin-bottom: 15px;">🎯 On-Demand Single Job Alert</h3>
+                <p style="color: #7f8c8d; margin-bottom: 15px; font-size: 14px;">Select a job to send an immediate alert</p>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="jobSelector" style="display: block; margin-bottom: 8px; color: #2C3E50; font-weight: 600;">Select Job:</label>
+                    <select id="jobSelector" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px; background: white;">
+                        <option value="">Loading jobs...</option>
+                    </select>
+                </div>
+                
+                <button class="btn btn-primary" onclick="sendSingleJobAlert()" id="btnSingleJob">
+                    📧 Send Job Alert
+                </button>
+            </div>
+            
             <div class="result-box" id="resultBox"></div>
         </div>
     </div>
 
     <script>
-        // Load status on page load
-        window.addEventListener('DOMContentLoaded', refreshStatus);
+        // Load status and jobs on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            refreshStatus();
+            loadJobs();
+        });
         
         async function refreshStatus() {
             try {
@@ -344,6 +363,68 @@
         
         function authorizeJobAdder() {
             window.location.href = '/auth/jobadder';
+        }
+        
+        async function loadJobs() {
+            const selector = document.getElementById('jobSelector');
+            
+            try {
+                const response = await fetch('/api/jobs');
+                const data = await response.json();
+                
+                if (response.ok && data.jobs && data.jobs.length > 0) {
+                    selector.innerHTML = '<option value="">-- Select a job --</option>';
+                    
+                    data.jobs.forEach(job => {
+                        const option = document.createElement('option');
+                        option.value = job.adId;
+                        option.textContent = `${job.title} - ID: ${job.adId} - Ref: ${job.reference}`;
+                        selector.appendChild(option);
+                    });
+                } else if (!response.ok) {
+                    selector.innerHTML = '<option value="">Error loading jobs</option>';
+                } else {
+                    selector.innerHTML = '<option value="">No jobs available</option>';
+                }
+            } catch (error) {
+                console.error('Error loading jobs:', error);
+                selector.innerHTML = '<option value="">Error loading jobs</option>';
+            }
+        }
+        
+        async function sendSingleJobAlert() {
+            const selector = document.getElementById('jobSelector');
+            const adId = selector.value;
+            
+            if (!adId) {
+                showResult('Please select a job first', 'error');
+                return;
+            }
+            
+            const btn = document.getElementById('btnSingleJob');
+            const originalText = btn.innerHTML;
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Sending...';
+            
+            try {
+                const response = await fetch(`/trigger/single-job/${adId}`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(JSON.stringify(data, null, 2), 'success');
+                } else {
+                    showResult('Error: ' + JSON.stringify(data, null, 2), 'error');
+                }
+            } catch (error) {
+                showResult('Error: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
         }
         
         function showResult(message, type) {
