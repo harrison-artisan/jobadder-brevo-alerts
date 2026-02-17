@@ -196,7 +196,17 @@ class JobAdderService {
       
       // Debug: Log first job ad structure
       if (liveAds.length > 0) {
-        console.log('🔍 DEBUG - First job ad data:', JSON.stringify(liveAds[0], null, 2));
+        console.log('\n========== JOB AD DEBUG ==========');
+        console.log('Full JSON:', JSON.stringify(liveAds[0], null, 2));
+        console.log('\nKey Fields:');
+        console.log('  adId:', liveAds[0].adId);
+        console.log('  title:', liveAds[0].title);
+        console.log('  location:', liveAds[0].location);
+        console.log('  workType:', liveAds[0].workType);
+        console.log('  category:', liveAds[0].category);
+        console.log('  subCategory:', liveAds[0].subCategory);
+        console.log('  All keys:', Object.keys(liveAds[0]).join(', '));
+        console.log('==================================\n');
       }
       
       return liveAds;
@@ -276,7 +286,13 @@ class JobAdderService {
    */
   formatJobForEmail(ad) {
     // Job ads have different structure than jobs
-    // ad.title, ad.summary, ad.bulletPoints, ad.reference, ad.adId
+    // ad.title, ad.summary, ad.bulletPoints, ad.reference, ad.adId, ad.links
+    
+    // Extract location from summary (usually mentions city/area)
+    const location = this.extractLocation(ad.summary, ad.bulletPoints);
+    
+    // Extract job type from summary/bullets (Contract, Permanent, Temp)
+    const jobType = this.extractJobType(ad.summary, ad.bulletPoints);
     
     // Build description from summary and bullet points
     let description = ad.summary || '';
@@ -286,14 +302,69 @@ class JobAdderService {
       description = description ? `${description} ${bullets}` : bullets;
     }
     
+    // Use the correct apply URL from JobAdder
+    const applyUrl = ad.links?.ui?.self || `https://clientapps.jobadder.com/67514/artisan/${ad.adId}`;
+    
     return {
       job_title: ad.title || 'Untitled Position',
-      location: ad.location || 'Location TBD', // Job ads might not have location object
-      job_type: ad.workType || 'Not specified',
+      location: location,
+      job_type: jobType,
       job_description: this.truncateDescription(description || 'No description available'),
-      apply_url: `https://clientapps.jobadder.com/67514/artisan/jobs/${ad.adId}`,
+      apply_url: applyUrl,
       reference: ad.reference || ''
     };
+  }
+
+  /**
+   * Extract location from summary text
+   */
+  extractLocation(summary, bulletPoints) {
+    const text = `${summary || ''} ${(bulletPoints || []).join(' ')}`;
+    
+    // Common location patterns
+    const patterns = [
+      /(?:in|at|location:|based in)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*(?:\s+(?:CBD|City|Area))?)/i,
+      /(Sydney|Melbourne|Brisbane|Perth|Adelaide|Canberra|Hobart|Darwin)(?:\s+(?:CBD|City|Inner|Outer|North|South|East|West))?/i,
+      /Hybrid.*?([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i
+    ];
+    
+    for (const pattern of patterns) {
+      const match = text.match(pattern);
+      if (match) {
+        return match[1] || match[0];
+      }
+    }
+    
+    return 'Location TBD';
+  }
+
+  /**
+   * Extract job type from summary text
+   */
+  extractJobType(summary, bulletPoints) {
+    const text = `${summary || ''} ${(bulletPoints || []).join(' ')}`;
+    
+    // Check for job type keywords
+    if (/\b(\d+\s*(?:month|mth|week|wk))\s+contract/i.test(text)) {
+      return 'Contract';
+    }
+    if (/\bcontract\b/i.test(text)) {
+      return 'Contract';
+    }
+    if (/\bpermanent\b/i.test(text)) {
+      return 'Permanent';
+    }
+    if (/\btemp\b|\btemporary\b/i.test(text)) {
+      return 'Temporary';
+    }
+    if (/\bfull[\s-]?time\b/i.test(text)) {
+      return 'Full-time';
+    }
+    if (/\bpart[\s-]?time\b/i.test(text)) {
+      return 'Part-time';
+    }
+    
+    return 'Not specified';
   }
 
   /**
