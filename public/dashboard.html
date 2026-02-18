@@ -6,7 +6,7 @@
     <title>Artisan Dashboard - Job Alerts & A-List</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -15,8 +15,8 @@
         }
         
         body {
-            font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #2C3E50 0%, #34495e 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -27,106 +27,124 @@
         }
         
         .header {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 6px;
+            padding: 28px 32px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
         }
         
         .header h1 {
-            color: #2C3E50;
-            margin-bottom: 10px;
-            font-size: 28px;
+            color: #1a202c;
+            margin-bottom: 8px;
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
         }
         
         .header p {
-            color: #7f8c8d;
+            color: #718096;
             font-size: 14px;
+            font-weight: 500;
         }
         
         /* Global Status Cards - Always Visible */
         .global-status-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            margin-bottom: 20px;
+            gap: 16px;
+            margin-bottom: 16px;
         }
         
         .status-card {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 6px;
+            padding: 22px 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.2s ease;
+        }
+        
+        .status-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.06);
         }
         
         .status-card h3 {
-            color: #2C3E50;
-            font-size: 14px;
+            color: #4a5568;
+            font-size: 12px;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
+            letter-spacing: 1.2px;
+            margin-bottom: 14px;
+            font-weight: 600;
         }
         
         .status-value {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 5px;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
         }
         
         .status-value.success {
-            color: #27AE60;
+            color: #10b981;
         }
         
         .status-value.warning {
-            color: #F39C12;
+            color: #f59e0b;
         }
         
         .status-value.error {
-            color: #E74C3C;
+            color: #ef4444;
         }
         
         .status-label {
-            color: #7f8c8d;
+            color: #9ca3af;
             font-size: 13px;
+            font-weight: 500;
         }
         
         /* Tab Navigation */
         .tabs {
-            background: white;
-            border-radius: 12px;
-            padding: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 6px;
+            padding: 8px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
         
         .tab {
             flex: 1;
-            padding: 15px 25px;
+            padding: 14px 24px;
             border: none;
             background: transparent;
-            color: #7f8c8d;
-            font-size: 16px;
+            color: #6b7280;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
-            border-radius: 8px;
-            transition: all 0.3s ease;
+            border-radius: 4px;
+            transition: all 0.2s ease;
             font-family: inherit;
         }
         
         .tab:hover {
-            background: #f8f9fa;
+            background: rgba(0,0,0,0.03);
+            color: #374151;
         }
         
         .tab.active {
-            background: #2C3E50;
+            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
             color: white;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
         }
         
         .tab.alist.active {
-            background: #8E44AD;
+            background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+            box-shadow: 0 2px 6px rgba(124, 58, 237, 0.3);
         }
         
         /* Tab Content */
@@ -142,75 +160,87 @@
         .status-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-bottom: 20px;
+            gap: 16px;
+            margin-bottom: 16px;
         }
         
         .status-badge {
             display: inline-block;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 14px;
+            padding: 5px 14px;
+            border-radius: 4px;
+            font-size: 13px;
             font-weight: 600;
+            letter-spacing: 0.3px;
         }
         
         .status-badge.empty {
-            background: #ecf0f1;
-            color: #7f8c8d;
+            background: #e5e7eb;
+            color: #6b7280;
         }
         
         .status-badge.generated {
-            background: #3498db;
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
             color: white;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
         }
         
         .status-badge.tested {
-            background: #f39c12;
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
             color: white;
+            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
         }
         
         .status-badge.sent {
-            background: #27ae60;
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
             color: white;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
         }
         
         .actions-card {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 6px;
+            padding: 28px 32px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 16px;
         }
         
         .actions-card h2 {
-            color: #2C3E50;
+            color: #1a202c;
             margin-bottom: 20px;
-            font-size: 20px;
+            font-size: 19px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
         }
         
         .button-group {
             display: flex;
-            gap: 15px;
+            gap: 12px;
             flex-wrap: wrap;
             margin-bottom: 20px;
         }
         
         .btn {
-            padding: 15px 30px;
+            padding: 13px 28px;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
+            border-radius: 5px;
+            font-size: 15px;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s ease;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             font-family: inherit;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
         
         .btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
         }
         
         .btn:disabled {
@@ -220,43 +250,43 @@
         }
         
         .btn-primary {
-            background: #E74C3C;
+            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
             color: white;
         }
         
         .btn-secondary {
-            background: #27AE60;
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
             color: white;
         }
         
         .btn-info {
-            background: #3498db;
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
             color: white;
         }
         
         .btn-purple {
-            background: #8E44AD;
+            background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
             color: white;
         }
         
         .btn-warning {
-            background: #f39c12;
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
             color: white;
         }
         
         .btn-success {
-            background: #27ae60;
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
             color: white;
         }
         
         .result-box {
-            background: #f8f9fa;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 20px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 5px;
+            padding: 18px;
             margin-top: 20px;
             display: none;
-            font-family: 'Courier New', monospace;
+            font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
             font-size: 13px;
             max-height: 400px;
             overflow-y: auto;
@@ -267,25 +297,25 @@
         }
         
         .result-box.success {
-            background: #d4edda;
-            border-color: #c3e6cb;
-            color: #155724;
+            background: #d1fae5;
+            border-color: #a7f3d0;
+            color: #065f46;
         }
         
         .result-box.error {
-            background: #f8d7da;
-            border-color: #f5c6cb;
-            color: #721c24;
+            background: #fee2e2;
+            border-color: #fecaca;
+            color: #991b1b;
         }
         
         .loading {
             display: inline-block;
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             border: 3px solid rgba(255,255,255,.3);
             border-radius: 50%;
             border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
+            animation: spin 0.8s linear infinite;
         }
         
         @keyframes spin {
@@ -295,88 +325,101 @@
         .badge {
             display: inline-block;
             padding: 4px 12px;
-            border-radius: 20px;
+            border-radius: 4px;
             font-size: 12px;
-            font-weight: bold;
+            font-weight: 600;
             text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
         
         .badge.test {
-            background: #FFF3CD;
-            color: #856404;
+            background: #fef3c7;
+            color: #92400e;
         }
         
         .badge.prod {
-            background: #D1ECF1;
-            color: #0C5460;
+            background: #dbeafe;
+            color: #1e40af;
         }
         
         /* A-List Specific Styles */
         .candidates-grid {
             display: grid;
-            gap: 20px;
+            gap: 16px;
         }
         
         .candidate-card {
-            background: #f8f9fa;
-            border-radius: 8px;
+            background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+            border-radius: 5px;
             padding: 20px;
-            border-left: 4px solid #8E44AD;
+            border-left: 3px solid #7c3aed;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            transition: all 0.2s ease;
+        }
+        
+        .candidate-card:hover {
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            transform: translateX(2px);
         }
         
         .candidate-header {
             display: flex;
             justify-content: space-between;
             align-items: start;
-            margin-bottom: 15px;
+            margin-bottom: 14px;
         }
         
         .candidate-number {
-            font-size: 24px;
-            font-weight: bold;
-            color: #8E44AD;
+            font-size: 22px;
+            font-weight: 700;
+            color: #7c3aed;
+            letter-spacing: -0.5px;
         }
         
         .candidate-name {
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 600;
-            color: #2C3E50;
-            margin-bottom: 5px;
+            color: #1a202c;
+            margin-bottom: 4px;
         }
         
         .candidate-title {
-            font-size: 16px;
-            color: #7f8c8d;
-            margin-bottom: 5px;
+            font-size: 15px;
+            color: #6b7280;
+            margin-bottom: 4px;
+            font-weight: 500;
         }
         
         .candidate-experience {
-            font-size: 14px;
-            color: #95a5a6;
+            font-size: 13px;
+            color: #9ca3af;
         }
         
         .candidate-summary {
-            color: #34495e;
+            color: #374151;
             line-height: 1.6;
-            margin-top: 15px;
+            margin-top: 14px;
+            font-size: 14px;
         }
         
         .empty-state {
             text-align: center;
-            padding: 60px 20px;
-            color: #7f8c8d;
+            padding: 50px 20px;
+            color: #9ca3af;
         }
         
         .empty-state h3 {
-            font-size: 20px;
-            margin-bottom: 10px;
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: #6b7280;
+            font-weight: 600;
         }
         
         .loading-indicator {
             display: none;
             text-align: center;
-            padding: 20px;
-            color: #8E44AD;
+            padding: 18px;
+            color: #7c3aed;
             font-weight: 600;
         }
         
@@ -385,42 +428,31 @@
         }
         
         .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #8E44AD;
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #7c3aed;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
+            width: 36px;
+            height: 36px;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
         }
         
-        .message {
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
-        }
-        
-        .message.active {
-            display: block;
-        }
-        
-        .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .message.info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
+        @media (max-width: 768px) {
+            .global-status-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -428,84 +460,86 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1>🚀 Artisan Dashboard</h1>
-            <p>Manage job alerts and candidate A-List emails</p>
+            <h1>Artisan Dashboard</h1>
+            <p>Manage job alerts and candidate A-List</p>
         </div>
         
-        <!-- Global Status Cards - Always Visible -->
+        <!-- Global Status Cards (Always Visible) -->
         <div class="global-status-grid">
             <div class="status-card">
                 <h3>Server Status</h3>
                 <div class="status-value success" id="serverStatus">●</div>
-                <div class="status-label">Running</div>
-                <button class="btn btn-secondary" onclick="refreshStatus()" style="margin-top: 15px; padding: 10px 20px; font-size: 14px; width: 100%;">
-                    🔄 Refresh
-                </button>
+                <div class="status-label">
+                    <button class="btn btn-info" onclick="refreshStatus()" style="padding: 8px 16px; font-size: 13px; margin-top: 8px;">
+                        Refresh
+                    </button>
+                </div>
             </div>
             
             <div class="status-card">
                 <h3>Mode</h3>
-                <div class="status-value" id="modeStatus">
-                    <span class="badge" id="modeBadge">Loading...</span>
+                <div class="status-value">
+                    <span class="badge test" id="modeBadge">Test Mode</span>
                 </div>
-                <div class="status-label" id="modeEmail">-</div>
+                <div class="status-label" id="modeEmail">Loading...</div>
             </div>
             
             <div class="status-card">
                 <h3>JobAdder</h3>
                 <div class="status-value" id="jobadderStatus">●</div>
                 <div class="status-label" id="jobadderLabel">Checking...</div>
-                <button class="btn btn-info" onclick="authorizeJobAdder()" id="btnAuthorize" style="margin-top: 15px; padding: 10px 20px; font-size: 14px; width: 100%; display: none;">
-                    🔐 Authorize
+                <button class="btn btn-info" onclick="authorizeJobAdder()" id="btnAuthorize" style="padding: 8px 16px; font-size: 13px; margin-top: 8px; display: none;">
+                    Authorize
                 </button>
             </div>
             
             <div class="status-card">
                 <h3>Version</h3>
-                <div class="status-value" id="versionStatus">-</div>
-                <div class="status-label">Application Version</div>
+                <div class="status-value" style="font-size: 18px;" id="versionStatus">1.0.0</div>
+                <div class="status-label">Application</div>
             </div>
         </div>
         
         <!-- Tab Navigation -->
         <div class="tabs">
             <button class="tab active" onclick="switchTab('job-alerts')">
-                📧 Job Alerts
+                Job Alerts
             </button>
             <button class="tab alist" onclick="switchTab('alist')">
-                🌟 The A-List
+                The A-List
             </button>
         </div>
         
         <!-- Job Alerts Tab -->
         <div id="job-alerts-content" class="tab-content active">
             <div class="actions-card">
-                <h2>🧪 Test Actions</h2>
-                
-                <div class="button-group">
-                    <button class="btn btn-primary" onclick="triggerDailyRoundup()" id="btnDailyRoundup">
-                        📧 Send Daily Roundup
-                    </button>
-                </div>
-                
-                <div style="margin-top: 30px; padding-top: 30px; border-top: 2px solid #e0e0e0;">
-                    <h3 style="color: #2C3E50; margin-bottom: 15px;">🎯 On-Demand Single Job Alert</h3>
-                    <p style="color: #7f8c8d; margin-bottom: 15px; font-size: 14px;">Select a job to send an immediate alert</p>
-                    
-                    <div style="margin-bottom: 15px;">
-                        <label for="jobSelector" style="display: block; margin-bottom: 8px; color: #2C3E50; font-weight: 600;">Select Job:</label>
-                        <select id="jobSelector" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px; background: white;">
-                            <option value="">Loading jobs...</option>
-                        </select>
-                    </div>
-                    
-                    <button class="btn btn-primary" onclick="sendSingleJobAlert()" id="btnSingleJob">
-                        📧 Send Job Alert
-                    </button>
-                </div>
-                
-                <div class="result-box" id="resultBox"></div>
+                <h2>Daily Roundup</h2>
+                <p style="color: #6b7280; margin-bottom: 20px; font-size: 14px;">
+                    Send all live job ads to your contact list
+                </p>
+                <button class="btn btn-primary" onclick="triggerDailyRoundup()" id="btnDailyRoundup">
+                    Send Daily Roundup
+                </button>
             </div>
+            
+            <div class="actions-card">
+                <h2>Single Job Alert</h2>
+                <p style="color: #6b7280; margin-bottom: 16px; font-size: 14px;">
+                    Send a specific job ad to your contact list
+                </p>
+                
+                <div style="margin-bottom: 16px;">
+                    <select id="jobSelector" style="width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 5px; font-size: 14px; font-family: inherit; background: white;">
+                        <option value="">Loading jobs...</option>
+                    </select>
+                </div>
+                
+                <button class="btn btn-primary" onclick="sendSingleJobAlert()" id="btnSingleJob">
+                    Send Job Alert
+                </button>
+            </div>
+            
+            <div class="result-box" id="resultBox"></div>
         </div>
         
         <!-- A-List Tab -->
@@ -535,19 +569,19 @@
             <div id="alistMessageBox" class="message"></div>
 
             <div class="actions-card">
-                <h2>🌟 A-List Actions</h2>
+                <h2>A-List Actions</h2>
                 <div class="button-group">
                     <button class="btn btn-purple" id="btnGenerate">
-                        🎲 Generate A-List
+                        Generate A-List
                     </button>
                     <button class="btn btn-info" id="btnRegenerate" disabled>
-                        🔄 Regenerate
+                        Regenerate
                     </button>
                     <button class="btn btn-warning" id="btnSendTest" disabled>
-                        🧪 Send Test
+                        Send Test
                     </button>
                     <button class="btn btn-success" id="btnApproveAndSend" disabled>
-                        ✅ Approve & Send
+                        Approve & Send
                     </button>
                 </div>
                 
@@ -612,11 +646,11 @@
                 const modeEmail = document.getElementById('modeEmail');
                 
                 if (testMode) {
-                    modeBadge.textContent = '🧪 Test Mode';
+                    modeBadge.textContent = 'Test Mode';
                     modeBadge.className = 'badge test';
                     modeEmail.textContent = data.test_email || 'No test email set';
                 } else {
-                    modeBadge.textContent = '🌐 Production';
+                    modeBadge.textContent = 'Production';
                     modeBadge.className = 'badge prod';
                     modeEmail.textContent = 'Sending to all contacts';
                 }
@@ -757,82 +791,14 @@
         async function loadAListState() {
             try {
                 const response = await fetch('/api/alist/state');
-                const state = await response.json();
-                alistState = state;
-                updateAListUI(state);
-            } catch (error) {
-                showAListMessage('Error loading state: ' + error.message, 'error');
-            }
-        }
-
-        async function generateAList() {
-            setAListLoading(true, 'Generating A-List... This may take 30-60 seconds');
-            hideAListMessage();
-            
-            try {
-                const response = await fetch('/api/alist/generate', { method: 'POST' });
-                const result = await response.json();
+                const data = await response.json();
                 
-                if (result.success) {
-                    showAListMessage(result.message, 'success');
-                    alistState = result.data;
-                    updateAListUI(result.data);
-                } else {
-                    showAListMessage(result.message, 'error');
+                if (response.ok) {
+                    alistState = data;
+                    updateAListUI(data);
                 }
             } catch (error) {
-                showAListMessage('Error: ' + error.message, 'error');
-            } finally {
-                setAListLoading(false);
-            }
-        }
-
-        async function sendAListTest() {
-            setAListLoading(true, 'Sending test email...');
-            hideAListMessage();
-            
-            try {
-                const response = await fetch('/api/alist/send-test', { method: 'POST' });
-                const result = await response.json();
-                
-                if (result.success) {
-                    showAListMessage(result.message, 'success');
-                    alistState = result.data;
-                    updateAListUI(result.data);
-                } else {
-                    showAListMessage(result.message, 'error');
-                }
-            } catch (error) {
-                showAListMessage('Error: ' + error.message, 'error');
-            } finally {
-                setAListLoading(false);
-            }
-        }
-
-        async function approveAndSendAList() {
-            if (!confirm('Are you sure you want to send The A-List to all recipients?')) {
-                return;
-            }
-            
-            setAListLoading(true, 'Sending to all recipients...');
-            hideAListMessage();
-            
-            try {
-                const response = await fetch('/api/alist/send', { method: 'POST' });
-                const result = await response.json();
-                
-                if (result.success) {
-                    showAListMessage(result.message + ' - Resetting state...', 'success');
-                    setTimeout(() => {
-                        loadAListState();
-                    }, 2000);
-                } else {
-                    showAListMessage(result.message, 'error');
-                }
-            } catch (error) {
-                showAListMessage('Error: ' + error.message, 'error');
-            } finally {
-                setAListLoading(false);
+                console.error('Error loading A-List state:', error);
             }
         }
 
@@ -840,46 +806,37 @@
             // Update state badge
             const stateBadge = document.getElementById('alistStateBadge');
             stateBadge.textContent = state.state;
-            stateBadge.className = 'status-badge ' + state.state.toLowerCase();
+            stateBadge.className = `status-badge ${state.state.toLowerCase()}`;
             
             // Update timestamp
-            const stateTimestamp = document.getElementById('alistStateTimestamp');
+            const timestamp = document.getElementById('alistStateTimestamp');
             if (state.generatedAt) {
-                stateTimestamp.textContent = 'Generated ' + formatTimestamp(state.generatedAt);
+                timestamp.textContent = `Generated ${new Date(state.generatedAt).toLocaleString()}`;
             } else {
-                stateTimestamp.textContent = 'No A-List generated';
+                timestamp.textContent = 'No A-List generated';
             }
             
             // Update counts
             document.getElementById('alistSelectedCount').textContent = state.candidates?.length || 0;
-            document.getElementById('alistTotalPool').textContent = state.totalCandidatesInPool || 0;
+            document.getElementById('alistTotalPool').textContent = state.totalPool || 0;
             
             // Update last action
-            updateAListLastAction(state);
+            document.getElementById('alistLastAction').textContent = state.lastAction || 'None';
+            document.getElementById('alistLastActionTime').textContent = state.lastActionTime ? new Date(state.lastActionTime).toLocaleString() : '-';
             
             // Update buttons
             updateAListButtons(state.state);
             
-            // Update preview
-            updateAListPreview(state.candidates);
-        }
-
-        function updateAListLastAction(state) {
-            const lastAction = document.getElementById('alistLastAction');
-            const lastActionTime = document.getElementById('alistLastActionTime');
-            
-            if (state.sentAt) {
-                lastAction.textContent = 'Sent to All';
-                lastActionTime.textContent = formatTimestamp(state.sentAt);
-            } else if (state.testSentAt) {
-                lastAction.textContent = 'Test Sent';
-                lastActionTime.textContent = formatTimestamp(state.testSentAt);
-            } else if (state.generatedAt) {
-                lastAction.textContent = 'Generated';
-                lastActionTime.textContent = formatTimestamp(state.generatedAt);
+            // Update candidate preview
+            if (state.candidates && state.candidates.length > 0) {
+                renderCandidates(state.candidates);
             } else {
-                lastAction.textContent = 'None';
-                lastActionTime.textContent = '-';
+                document.getElementById('candidatesPreview').innerHTML = `
+                    <div class="empty-state">
+                        <h3>No candidates generated yet</h3>
+                        <p>Click "Generate A-List" to fetch candidates interviewed in the last 3 weeks</p>
+                    </div>
+                `;
             }
         }
 
@@ -889,95 +846,130 @@
             const btnSendTest = document.getElementById('btnSendTest');
             const btnApproveAndSend = document.getElementById('btnApproveAndSend');
             
+            // Reset all
             btnGenerate.disabled = false;
-            btnRegenerate.disabled = !(state === 'GENERATED' || state === 'TESTED');
-            btnSendTest.disabled = !(state === 'GENERATED' || state === 'TESTED');
-            btnApproveAndSend.disabled = state !== 'TESTED';
+            btnRegenerate.disabled = true;
+            btnSendTest.disabled = true;
+            btnApproveAndSend.disabled = true;
+            
+            if (state === 'GENERATED') {
+                btnRegenerate.disabled = false;
+                btnSendTest.disabled = false;
+            } else if (state === 'TESTED') {
+                btnRegenerate.disabled = false;
+                btnSendTest.disabled = false;
+                btnApproveAndSend.disabled = false;
+            }
         }
 
-        function updateAListPreview(candidates) {
-            const preview = document.getElementById('candidatesPreview');
-            
-            if (!candidates || candidates.length === 0) {
-                preview.innerHTML = `
-                    <div class="empty-state">
-                        <h3>No candidates generated yet</h3>
-                        <p>Click "Generate A-List" to fetch candidates interviewed in the last 3 weeks</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            preview.innerHTML = candidates.map(candidate => `
+        function renderCandidates(candidates) {
+            const html = candidates.map(c => `
                 <div class="candidate-card">
                     <div class="candidate-header">
                         <div>
-                            <div class="candidate-number">#${candidate.number}</div>
-                        </div>
-                        <div style="flex: 1; margin-left: 20px;">
-                            <div class="candidate-name">${candidate.name}</div>
-                            <div class="candidate-title">${candidate.title}</div>
-                            <div class="candidate-experience">Experience: ${candidate.experience}</div>
+                            <div class="candidate-number">#${c.number}</div>
+                            <div class="candidate-name">${c.name}</div>
+                            <div class="candidate-title">${c.title}</div>
                         </div>
                     </div>
-                    <div class="candidate-summary">${candidate.summary}</div>
+                    <div class="candidate-summary">${c.summary}</div>
                 </div>
             `).join('');
+            
+            document.getElementById('candidatesPreview').innerHTML = `<div class="candidates-grid">${html}</div>`;
         }
 
-        function formatTimestamp(isoString) {
-            const date = new Date(isoString);
-            const now = new Date();
-            const diffMs = now - date;
-            const diffMins = Math.floor(diffMs / 60000);
-            
-            if (diffMins < 1) return 'just now';
-            if (diffMins < 60) return `${diffMins} min ago`;
-            
-            const diffHours = Math.floor(diffMins / 60);
-            if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-            
-            const diffDays = Math.floor(diffHours / 24);
-            if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-            
-            return date.toLocaleDateString();
-        }
-
-        function setAListLoading(active, text = 'Processing...') {
+        async function generateAList() {
             const loading = document.getElementById('alistLoading');
             const loadingText = document.getElementById('alistLoadingText');
             
-            if (active) {
-                loading.classList.add('active');
-                loadingText.textContent = text;
-                disableAllAListButtons(true);
-            } else {
+            loading.classList.add('active');
+            loadingText.textContent = 'Fetching candidates...';
+            
+            document.getElementById('btnGenerate').disabled = true;
+            document.getElementById('btnRegenerate').disabled = true;
+            
+            try {
+                const response = await fetch('/api/alist/generate', {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    await loadAListState();
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to generate A-List'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
                 loading.classList.remove('active');
-                disableAllAListButtons(false);
+                document.getElementById('btnGenerate').disabled = false;
             }
         }
 
-        function disableAllAListButtons(disabled) {
-            ['btnGenerate', 'btnRegenerate', 'btnSendTest', 'btnApproveAndSend'].forEach(id => {
-                const btn = document.getElementById(id);
-                if (disabled) {
-                    btn.dataset.wasDisabled = btn.disabled;
-                    btn.disabled = true;
+        async function sendAListTest() {
+            const loading = document.getElementById('alistLoading');
+            const loadingText = document.getElementById('alistLoadingText');
+            
+            loading.classList.add('active');
+            loadingText.textContent = 'Sending test email...';
+            
+            document.getElementById('btnSendTest').disabled = true;
+            
+            try {
+                const response = await fetch('/api/alist/send-test', {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('Test email sent successfully!');
+                    await loadAListState();
                 } else {
-                    btn.disabled = btn.dataset.wasDisabled === 'true';
+                    alert('Error: ' + (data.error || 'Failed to send test'));
                 }
-            });
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                loading.classList.remove('active');
+                document.getElementById('btnSendTest').disabled = false;
+            }
         }
 
-        function showAListMessage(text, type) {
-            const messageBox = document.getElementById('alistMessageBox');
-            messageBox.textContent = text;
-            messageBox.className = 'message active ' + type;
-        }
-
-        function hideAListMessage() {
-            const messageBox = document.getElementById('alistMessageBox');
-            messageBox.classList.remove('active');
+        async function approveAndSendAList() {
+            if (!confirm('Are you sure you want to send the A-List to all recipients?')) {
+                return;
+            }
+            
+            const loading = document.getElementById('alistLoading');
+            const loadingText = document.getElementById('alistLoadingText');
+            
+            loading.classList.add('active');
+            loadingText.textContent = 'Sending to all recipients...';
+            
+            document.getElementById('btnApproveAndSend').disabled = true;
+            
+            try {
+                const response = await fetch('/api/alist/send', {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert(`A-List sent successfully to ${data.recipientCount} recipients!`);
+                    await loadAListState();
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to send A-List'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                loading.classList.remove('active');
+            }
         }
     </script>
 </body>
