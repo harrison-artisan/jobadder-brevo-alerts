@@ -545,40 +545,43 @@
             }
             
             .global-status-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 12px;
-                margin-bottom: 25px;
+                grid-template-columns: repeat(5, 1fr);
+                gap: 6px;
+                margin-bottom: 15px;
             }
             
             .status-card {
-                padding: 20px 15px;
-                border-radius: 8px;
+                padding: 10px 6px;
+                border-radius: 6px;
+                min-height: auto;
             }
             
             .status-card h3 {
-                font-size: 12px;
-                margin-bottom: 10px;
+                font-size: 9px;
+                margin-bottom: 4px;
+                font-weight: 600;
             }
             
             .status-card .status-value {
-                font-size: 16px;
-                margin: 8px 0;
+                font-size: 12px;
+                margin: 4px 0;
             }
             
             .status-card .status-label {
-                font-size: 11px;
+                font-size: 8px;
+                line-height: 1.2;
             }
             
             .status-card .btn {
-                width: 100%;
-                margin-top: 8px;
-                padding: 8px 12px;
-                font-size: 11px;
+                display: none;
             }
             
             .status-card .badge {
-                font-size: 11px;
-                padding: 6px 12px;
+                font-size: 8px;
+                padding: 3px 6px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
             
             .status-grid {
@@ -716,20 +719,33 @@
             }
             
             .global-status-grid {
-                grid-template-columns: 1fr;
-                gap: 10px;
+                grid-template-columns: repeat(5, 1fr);
+                gap: 4px;
+                margin-bottom: 12px;
             }
             
             .status-card {
-                padding: 18px 15px;
+                padding: 8px 4px;
+            }
+            
+            .status-card h3 {
+                font-size: 8px;
+            }
+            
+            .status-card .status-value {
+                font-size: 10px;
+            }
+            
+            .status-card .status-label {
+                font-size: 7px;
             }
             
             .tabs {
-                flex-direction: column;
+                flex-direction: row;
             }
             
             .tab {
-                width: 100%;
+                flex: 1;
             }
         }
         }
@@ -1330,5 +1346,4 @@
     </script>
 </body>
 </html>
-
 
