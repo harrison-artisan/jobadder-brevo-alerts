@@ -435,13 +435,14 @@
         .empty-state {
             text-align: center;
             padding: 80px 20px;
-            color: rgba(255, 255, 255, 0.8);
+            color: #34495e;
         }
         
         .empty-state h3 {
             font-size: 22px;
             margin-bottom: 12px;
             font-weight: 700;
+            color: #1b334d;
         }
         
         .loading-indicator {
@@ -554,7 +555,7 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1>🎨 Artisan Dashboard</h1>
+            <h1>Artisan Dashboard</h1>
             <p>Job Alerts & A-List Management System</p>
         </div>
         
@@ -563,7 +564,7 @@
             <div class="status-card">
                 <h3>Mode</h3>
                 <div class="status-value" style="font-size: 16px;">
-                    <span class="badge test" id="modeBadge">🧪 Test Mode</span>
+                    <span class="badge test" id="modeBadge">Test Mode</span>
                 </div>
                 <div class="status-label" id="modeEmail">Loading...</div>
             </div>
@@ -590,19 +591,22 @@
             </div>
             
             <div class="status-card">
-                <h3>Uptime</h3>
+                <h3>System</h3>
                 <div class="status-value success">●</div>
-                <div class="status-label">Operational</div>
+                <div class="status-label">(Live)</div>
+                <button class="btn btn-info" onclick="refreshStatus()" style="margin-top: 10px; padding: 10px 20px; font-size: 12px;">
+                    Refresh
+                </button>
             </div>
         </div>
         
         <!-- Tab Navigation -->
         <div class="tabs">
             <button class="tab active" onclick="switchTab('job-alerts')">
-                📧 Job Alerts
+                Job Alerts
             </button>
             <button class="tab alist" onclick="switchTab('alist')">
-                🌟 A-List
+                A-List
             </button>
         </div>
         
@@ -629,10 +633,10 @@
             </div>
 
             <div class="actions-card">
-                <h2>📧 Job Alert Actions</h2>
+                <h2>Job Alert Actions</h2>
                 <div class="button-group">
                     <button class="btn btn-primary" onclick="triggerDailyRoundup()" id="btnDailyRoundup">
-                        📨 Send Daily Roundup
+                        Send Daily Roundup
                     </button>
                 </div>
                 
@@ -642,7 +646,7 @@
                 </select>
                 
                 <button class="btn btn-primary" onclick="sendSingleJobAlert()" id="btnSingleJob">
-                    📧 Send Job Alert
+                    Send Job Alert
                 </button>
                 
                 <div class="result-box" id="resultBox"></div>
@@ -676,19 +680,19 @@
             <div id="alistMessageBox" class="message"></div>
 
             <div class="actions-card">
-                <h2>🌟 A-List Actions</h2>
+                <h2>A-List Actions</h2>
                 <div class="button-group">
                     <button class="btn btn-purple" id="btnGenerate">
-                        🎲 Generate A-List
+                        Generate A-List
                     </button>
                     <button class="btn btn-info" id="btnRegenerate" disabled>
-                        🔄 Regenerate
+                        Regenerate
                     </button>
                     <button class="btn btn-warning" id="btnSendTest" disabled>
-                        🧪 Send Test
+                        Send Test
                     </button>
                     <button class="btn btn-success" id="btnApproveAndSend" disabled>
-                        ✅ Approve & Send
+                        Approve & Send
                     </button>
                 </div>
                 
@@ -771,11 +775,11 @@
                 const modeEmail = document.getElementById('modeEmail');
                 
                 if (testMode) {
-                    modeBadge.textContent = '🧪 Test Mode';
+                    modeBadge.textContent = 'Test Mode';
                     modeBadge.className = 'badge test';
                     modeEmail.textContent = data.test_email || 'No test email set';
                 } else {
-                    modeBadge.textContent = '🌐 Production';
+                    modeBadge.textContent = 'Production';
                     modeBadge.className = 'badge prod';
                     modeEmail.textContent = 'Sending to all contacts';
                 }
@@ -969,27 +973,13 @@
             const btnSendTest = document.getElementById('btnSendTest');
             const btnApprove = document.getElementById('btnApproveAndSend');
             
-            if (state.state === 'empty') {
-                btnGenerate.disabled = false;
-                btnRegenerate.disabled = true;
-                btnSendTest.disabled = true;
-                btnApprove.disabled = true;
-            } else if (state.state === 'generated') {
-                btnGenerate.disabled = true;
-                btnRegenerate.disabled = false;
-                btnSendTest.disabled = false;
-                btnApprove.disabled = false;
-            } else if (state.state === 'tested') {
-                btnGenerate.disabled = true;
-                btnRegenerate.disabled = false;
-                btnSendTest.disabled = false;
-                btnApprove.disabled = false;
-            } else if (state.state === 'sent') {
-                btnGenerate.disabled = false;
-                btnRegenerate.disabled = true;
-                btnSendTest.disabled = true;
-                btnApprove.disabled = true;
-            }
+            // Update button states based on state string (uppercase)
+            const stateUpper = state.state ? state.state.toUpperCase() : 'EMPTY';
+            
+            btnGenerate.disabled = false;
+            btnRegenerate.disabled = !(stateUpper === 'GENERATED' || stateUpper === 'TESTED');
+            btnSendTest.disabled = !(stateUpper === 'GENERATED' || stateUpper === 'TESTED');
+            btnApprove.disabled = stateUpper !== 'TESTED';
             
             // Update candidates preview
             if (state.candidates && state.candidates.length > 0) {
@@ -1121,3 +1111,4 @@
     </script>
 </body>
 </html>
+
