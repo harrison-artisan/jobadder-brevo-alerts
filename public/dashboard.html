@@ -3,10 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Artisan Dashboard - Job Alerts & A-List</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <title>Artisan Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -15,31 +12,19 @@
         }
         
         body {
-            font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #1b334d 0%, #2a4a6b 50%, #1b334d 100%);
-            background-attachment: fixed;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1b334d 0%, #2c5282 25%, #3498db 50%, #5dade2 75%, #85c1e9 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
             min-height: 100vh;
             padding: 40px 20px;
             position: relative;
-            overflow-x: hidden;
         }
         
-        /* Animated background elements */
-        body::before {
-            content: '';
-            position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(189, 32, 61, 0.1) 0%, transparent 50%);
-            animation: rotate 30s linear infinite;
-            z-index: 0;
-        }
-        
-        @keyframes rotate {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
         
         .container {
@@ -71,18 +56,17 @@
         
         .header h1 {
             color: #1b334d;
-            margin-bottom: 12px;
             font-size: 32px;
-            font-weight: 900;
-            letter-spacing: -0.5px;
+            margin-bottom: 10px;
+            font-weight: 800;
         }
         
         .header p {
-            color: #7f8c8d;
-            font-size: 15px;
+            color: #34495e;
+            font-size: 16px;
         }
         
-        /* Global Status Cards - Always Visible */
+        /* Global Status Grid */
         .global-status-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
@@ -99,36 +83,31 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
             transition: all 0.3s ease;
+            text-align: center;
         }
         
         .status-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
-            background: rgba(255, 255, 255, 0.15);
         }
         
         .status-card h3 {
             color: rgba(255, 255, 255, 0.9);
-            font-size: 13px;
+            font-size: 14px;
+            margin-bottom: 15px;
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
-            margin-bottom: 18px;
-            font-weight: 700;
+            letter-spacing: 1px;
         }
         
         .status-value {
-            font-size: 28px;
-            font-weight: 900;
-            margin-bottom: 8px;
-            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            margin: 15px 0;
         }
         
         .status-value.success {
-            color: #2ecc71;
-        }
-        
-        .status-value.warning {
-            color: #f39c12;
+            color: #27ae60;
         }
         
         .status-value.error {
@@ -155,18 +134,15 @@
         
         .tab {
             flex: 1;
-            padding: 18px 30px;
-            border: none;
+            padding: 15px 25px;
             background: transparent;
+            border: none;
             color: rgba(255, 255, 255, 0.7);
-            font-size: 16px;
-            font-weight: 700;
+            font-size: 15px;
+            font-weight: 600;
             cursor: pointer;
-            border-radius: 14px;
+            border-radius: 8px;
             transition: all 0.3s ease;
-            font-family: inherit;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
         
         .tab:hover {
@@ -175,14 +151,14 @@
         }
         
         .tab.active {
-            background: linear-gradient(135deg, #1b334d 0%, #2a4a6b 100%);
+            background: linear-gradient(135deg, #1b334d 0%, #2c5282 100%);
             color: white;
-            box-shadow: 0 4px 20px rgba(27, 51, 77, 0.4);
+            box-shadow: 0 4px 15px rgba(27, 51, 77, 0.4);
         }
         
         .tab.alist.active {
-            background: linear-gradient(135deg, #bd203d 0%, #9a1a32 100%);
-            box-shadow: 0 4px 20px rgba(189, 32, 61, 0.4);
+            background: linear-gradient(135deg, #bd203d 0%, #d63a54 100%);
+            box-shadow: 0 4px 15px rgba(189, 32, 61, 0.4);
         }
         
         /* Tab Content */
@@ -194,7 +170,7 @@
             display: block;
         }
         
-        /* Tab-specific status grids */
+        /* Status Grid (3 boxes under tabs) */
         .status-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -202,36 +178,7 @@
             margin-bottom: 40px;
         }
         
-        .status-badge {
-            display: inline-block;
-            padding: 8px 18px;
-            border-radius: 25px;
-            font-size: 13px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .status-badge.empty {
-            background: rgba(236, 240, 241, 0.2);
-            color: rgba(255, 255, 255, 0.8);
-        }
-        
-        .status-badge.generated {
-            background: rgba(52, 152, 219, 0.3);
-            color: #3498db;
-        }
-        
-        .status-badge.tested {
-            background: rgba(243, 156, 18, 0.3);
-            color: #f39c12;
-        }
-        
-        .status-badge.sent {
-            background: rgba(39, 174, 96, 0.3);
-            color: #27ae60;
-        }
-        
+        /* Actions Card */
         .actions-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
@@ -244,36 +191,31 @@
         
         .actions-card h2 {
             color: #1b334d;
+            font-size: 24px;
             margin-bottom: 25px;
-            font-size: 22px;
-            font-weight: 900;
-            letter-spacing: -0.3px;
+            font-weight: 700;
         }
         
         .button-group {
             display: flex;
-            gap: 18px;
+            gap: 15px;
             flex-wrap: wrap;
-            margin-bottom: 25px;
         }
         
         .btn {
-            padding: 16px 32px;
+            padding: 15px 30px;
             border: none;
             border-radius: 12px;
             font-size: 15px;
-            font-weight: 700;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            font-family: inherit;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
         
-        .btn:hover:not(:disabled) {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         }
         
         .btn:disabled {
@@ -283,22 +225,17 @@
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #bd203d 0%, #9a1a32 100%);
+            background: linear-gradient(135deg, #1b334d 0%, #2c5282 100%);
             color: white;
         }
         
-        .btn-secondary {
-            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+        .btn-purple {
+            background: linear-gradient(135deg, #bd203d 0%, #d63a54 100%);
             color: white;
         }
         
         .btn-info {
             background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-            color: white;
-        }
-        
-        .btn-purple {
-            background: linear-gradient(135deg, #8e44ad 0%, #7d3c98 100%);
             color: white;
         }
         
@@ -312,17 +249,26 @@
             color: white;
         }
         
-        .result-box {
-            background: rgba(248, 249, 250, 0.95);
-            border: 1px solid rgba(224, 224, 224, 0.5);
+        select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid rgba(27, 51, 77, 0.2);
             border-radius: 12px;
-            padding: 25px;
-            margin-top: 25px;
+            font-size: 15px;
+            margin: 15px 0;
+            background: white;
+            color: #1b334d;
+        }
+        
+        .result-box {
             display: none;
-            font-family: 'Courier New', monospace;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 12px;
+            font-family: monospace;
             font-size: 13px;
-            max-height: 400px;
-            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
         
         .result-box.show {
@@ -330,100 +276,120 @@
         }
         
         .result-box.success {
-            background: rgba(212, 237, 218, 0.95);
-            border-color: rgba(195, 230, 203, 0.5);
-            color: #155724;
+            background: rgba(39, 174, 96, 0.1);
+            border: 2px solid rgba(39, 174, 96, 0.3);
+            color: #27ae60;
         }
         
         .result-box.error {
-            background: rgba(248, 215, 218, 0.95);
-            border-color: rgba(245, 198, 203, 0.5);
-            color: #721c24;
-        }
-        
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+            background: rgba(231, 76, 60, 0.1);
+            border: 2px solid rgba(231, 76, 60, 0.3);
+            color: #e74c3c;
         }
         
         .badge {
             display: inline-block;
-            padding: 6px 14px;
-            border-radius: 25px;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
         }
         
         .badge.test {
-            background: #fff3cd;
-            color: #856404;
+            background: rgba(241, 196, 15, 0.2);
+            color: #f1c40f;
+            border: 1px solid rgba(241, 196, 15, 0.4);
         }
         
         .badge.prod {
-            background: #d1ecf1;
-            color: #0c5460;
+            background: rgba(39, 174, 96, 0.2);
+            color: #27ae60;
+            border: 1px solid rgba(39, 174, 96, 0.4);
         }
         
-        /* A-List Specific Styles */
+        /* A-List Specific */
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-badge.EMPTY {
+            background: rgba(149, 165, 166, 0.2);
+            color: #95a5a6;
+            border: 1px solid rgba(149, 165, 166, 0.4);
+        }
+        
+        .status-badge.GENERATED {
+            background: rgba(52, 152, 219, 0.2);
+            color: #3498db;
+            border: 1px solid rgba(52, 152, 219, 0.4);
+        }
+        
+        .status-badge.TESTED {
+            background: rgba(241, 196, 15, 0.2);
+            color: #f39c12;
+            border: 1px solid rgba(241, 196, 15, 0.4);
+        }
+        
+        .status-badge.SENT {
+            background: rgba(39, 174, 96, 0.2);
+            color: #27ae60;
+            border: 1px solid rgba(39, 174, 96, 0.4);
+        }
+        
         .candidates-grid {
             display: grid;
-            gap: 25px;
+            gap: 20px;
         }
         
         .candidate-card {
-            background: rgba(248, 249, 250, 0.8);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
+            background: white;
             padding: 25px;
-            border-left: 5px solid #bd203d;
-            transition: all 0.3s ease;
-        }
-        
-        .candidate-card:hover {
-            transform: translateX(5px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #bd203d;
         }
         
         .candidate-header {
             display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 18px;
+            align-items: center;
+            margin-bottom: 15px;
         }
         
         .candidate-number {
-            font-size: 28px;
-            font-weight: 900;
-            color: #bd203d;
+            background: linear-gradient(135deg, #bd203d 0%, #d63a54 100%);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
         }
         
         .candidate-name {
-            font-size: 19px;
+            font-size: 18px;
             font-weight: 700;
             color: #1b334d;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
         
         .candidate-title {
-            font-size: 16px;
-            color: #7f8c8d;
-            margin-bottom: 6px;
+            font-size: 15px;
+            color: #bd203d;
+            font-weight: 600;
+            margin-bottom: 5px;
         }
         
         .candidate-experience {
-            font-size: 14px;
-            color: #95a5a6;
+            font-size: 13px;
+            color: #7f8c8d;
         }
         
         .candidate-summary {
@@ -448,46 +414,34 @@
         .loading-indicator {
             display: none;
             text-align: center;
-            padding: 25px;
-            color: #bd203d;
-            font-weight: 700;
+            padding: 40px;
         }
         
         .loading-indicator.active {
             display: block;
         }
         
-        .spinner {
-            border: 3px solid rgba(189, 32, 61, 0.2);
+        .loading {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #bd203d;
             border-radius: 50%;
-            border-top: 3px solid #bd203d;
             width: 40px;
             height: 40px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
+            margin: 0 auto 20px;
         }
         
-        select {
-            width: 100%;
-            padding: 14px;
-            border: 2px solid rgba(224, 224, 224, 0.5);
-            border-radius: 10px;
-            font-size: 15px;
-            font-family: inherit;
-            background: white;
-            margin-bottom: 20px;
-        }
-        
-        select:focus {
-            outline: none;
-            border-color: #bd203d;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         
         .message {
-            padding: 18px;
-            border-radius: 10px;
-            margin-bottom: 25px;
             display: none;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 15px;
         }
         
         .message.show {
@@ -495,24 +449,23 @@
         }
         
         .message.success {
-            background: rgba(212, 237, 218, 0.95);
-            color: #155724;
-            border: 1px solid rgba(195, 230, 203, 0.5);
+            background: rgba(39, 174, 96, 0.15);
+            color: #27ae60;
+            border: 1px solid rgba(39, 174, 96, 0.3);
         }
         
         .message.error {
-            background: rgba(248, 215, 218, 0.95);
-            color: #721c24;
-            border: 1px solid rgba(245, 198, 203, 0.5);
+            background: rgba(231, 76, 60, 0.15);
+            color: #e74c3c;
+            border: 1px solid rgba(231, 76, 60, 0.3);
+        }
+        
+        /* Mobile Status Dropdown */
+        .mobile-status-toggle {
+            display: none;
         }
         
         /* Responsive */
-        @media (max-width: 1400px) {
-            .global-status-grid {
-                grid-template-columns: repeat(5, 1fr);
-            }
-        }
-        
         @media (max-width: 1100px) {
             .global-status-grid {
                 grid-template-columns: repeat(3, 1fr);
@@ -521,104 +474,172 @@
         
         @media (max-width: 768px) {
             body {
-                padding: 15px 10px;
-                background-size: 400% 400%;
-            }
-            
-            .container {
-                max-width: 100%;
+                padding: 20px 15px;
             }
             
             .header {
-                padding: 25px 20px;
-                margin-bottom: 25px;
-                border-radius: 8px;
+                padding: 30px 25px;
+                margin-bottom: 30px;
             }
             
             .header h1 {
-                font-size: 24px;
-                margin-bottom: 8px;
+                font-size: 26px;
             }
             
             .header p {
-                font-size: 13px;
+                font-size: 14px;
             }
             
+            /* Hide desktop status grid, show mobile toggle */
             .global-status-grid {
-                grid-template-columns: repeat(5, 1fr);
-                gap: 6px;
-                margin-bottom: 15px;
-            }
-            
-            .status-card {
-                padding: 10px 6px;
-                border-radius: 6px;
-                min-height: auto;
-            }
-            
-            .status-card h3 {
-                font-size: 9px;
-                margin-bottom: 4px;
-                font-weight: 600;
-            }
-            
-            .status-card .status-value {
-                font-size: 12px;
-                margin: 4px 0;
-            }
-            
-            .status-card .status-label {
-                font-size: 8px;
-                line-height: 1.2;
-            }
-            
-            .status-card .btn {
                 display: none;
             }
             
-            .status-card .badge {
-                font-size: 8px;
-                padding: 3px 6px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
+            .mobile-status-toggle {
+                display: block;
+                background: rgba(255, 255, 255, 0.12);
+                backdrop-filter: blur(20px);
+                border-radius: 10px;
+                padding: 20px;
+                margin-bottom: 30px;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                cursor: pointer;
+                transition: all 0.3s ease;
             }
             
-            .status-grid {
-                grid-template-columns: 1fr;
+            .mobile-status-toggle:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+            }
+            
+            .mobile-status-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            
+            .mobile-status-title {
+                display: flex;
+                align-items: center;
                 gap: 12px;
+                color: white;
+                font-size: 16px;
+                font-weight: 600;
+            }
+            
+            .status-indicator-dot {
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                display: inline-block;
+            }
+            
+            .status-indicator-dot.green {
+                background: #27ae60;
+                box-shadow: 0 0 10px rgba(39, 174, 96, 0.5);
+            }
+            
+            .status-indicator-dot.red {
+                background: #e74c3c;
+                box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+            }
+            
+            .mobile-status-arrow {
+                color: rgba(255, 255, 255, 0.7);
+                font-size: 20px;
+                transition: transform 0.3s ease;
+            }
+            
+            .mobile-status-toggle.expanded .mobile-status-arrow {
+                transform: rotate(180deg);
+            }
+            
+            .mobile-status-details {
+                display: none;
+                margin-top: 20px;
+                padding-top: 20px;
+                border-top: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            
+            .mobile-status-toggle.expanded .mobile-status-details {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+            
+            .mobile-status-item {
+                background: rgba(255, 255, 255, 0.1);
+                padding: 15px;
+                border-radius: 8px;
+                text-align: center;
+            }
+            
+            .mobile-status-item h4 {
+                color: rgba(255, 255, 255, 0.9);
+                font-size: 11px;
+                margin-bottom: 8px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            
+            .mobile-status-item .status-value {
+                font-size: 16px;
+                margin: 8px 0;
+            }
+            
+            .mobile-status-item .status-label {
+                font-size: 11px;
+            }
+            
+            .mobile-status-item .badge {
+                font-size: 10px;
+                padding: 5px 10px;
+            }
+            
+            /* Keep 3 info boxes in one row */
+            .status-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 12px;
+                margin-bottom: 30px;
+            }
+            
+            .status-card {
+                padding: 18px 12px;
+            }
+            
+            .status-card h3 {
+                font-size: 11px;
+                margin-bottom: 10px;
+            }
+            
+            .status-card .status-value {
+                font-size: 18px;
+                margin: 10px 0;
+            }
+            
+            .status-card .status-label {
+                font-size: 11px;
             }
             
             .tabs {
-                padding: 8px;
-                margin-bottom: 25px;
-                border-radius: 8px;
-                display: flex;
-                flex-direction: row;
-                gap: 8px;
+                padding: 10px;
+                margin-bottom: 30px;
             }
             
             .tab {
-                padding: 12px 16px;
-                font-size: 13px;
-                border-radius: 6px;
-                flex: 1;
+                padding: 14px 20px;
+                font-size: 14px;
             }
             
             .actions-card {
-                padding: 25px 20px;
-                margin-bottom: 25px;
-                border-radius: 8px;
+                padding: 30px 25px;
+                margin-bottom: 30px;
             }
             
             .actions-card h2 {
-                font-size: 18px;
+                font-size: 20px;
                 margin-bottom: 20px;
-            }
-            
-            .actions-card h3 {
-                font-size: 15px;
-                margin: 20px 0 12px 0;
             }
             
             .button-group {
@@ -628,126 +649,38 @@
             
             .btn {
                 width: 100%;
-                padding: 14px 20px;
-                font-size: 14px;
-                border-radius: 8px;
-                font-weight: 600;
+                padding: 16px 24px;
+                font-size: 15px;
             }
             
             select {
-                width: 100%;
-                padding: 12px 15px;
-                font-size: 13px;
-                border-radius: 8px;
-                margin-bottom: 12px;
-            }
-            
-            .result-box, .message {
-                padding: 15px;
-                font-size: 12px;
-                border-radius: 8px;
-                margin-top: 15px;
+                padding: 14px;
+                font-size: 14px;
             }
             
             .candidate-card {
                 padding: 20px;
-                margin-bottom: 15px;
-                border-radius: 8px;
             }
             
             .candidate-number {
+                width: 45px;
+                height: 45px;
                 font-size: 18px;
-                width: 40px;
-                height: 40px;
-                line-height: 40px;
             }
             
             .candidate-name {
-                font-size: 15px;
-                margin-bottom: 6px;
+                font-size: 16px;
             }
             
             .candidate-title {
-                font-size: 13px;
-                margin-bottom: 4px;
-            }
-            
-            .candidate-experience {
-                font-size: 11px;
-            }
-            
-            .candidate-summary {
-                font-size: 13px;
-                line-height: 1.6;
-                margin-top: 12px;
-            }
-            
-            .empty-state {
-                padding: 50px 20px;
-            }
-            
-            .empty-state h3 {
-                font-size: 18px;
-                margin-bottom: 10px;
-            }
-            
-            .empty-state p {
-                font-size: 13px;
-            }
-            
-            .loading-indicator {
-                padding: 30px 20px;
-            }
-            
-            .loading-indicator .loading {
-                width: 30px;
-                height: 30px;
+                font-size: 14px;
             }
         }
         
         @media (max-width: 480px) {
-            body {
-                padding: 10px 8px;
+            .mobile-status-toggle.expanded .mobile-status-details {
+                grid-template-columns: 1fr;
             }
-            
-            .header {
-                padding: 20px 15px;
-            }
-            
-            .header h1 {
-                font-size: 20px;
-            }
-            
-            .global-status-grid {
-                grid-template-columns: repeat(5, 1fr);
-                gap: 4px;
-                margin-bottom: 12px;
-            }
-            
-            .status-card {
-                padding: 8px 4px;
-            }
-            
-            .status-card h3 {
-                font-size: 8px;
-            }
-            
-            .status-card .status-value {
-                font-size: 10px;
-            }
-            
-            .status-card .status-label {
-                font-size: 7px;
-            }
-            
-            .tabs {
-                flex-direction: row;
-            }
-            
-            .tab {
-                flex: 1;
-            }
-        }
         }
     </style>
 </head>
@@ -759,7 +692,7 @@
             <p>Job Alerts & A-List Management System</p>
         </div>
         
-        <!-- Global Status Cards - Always Visible -->
+        <!-- Desktop: Global Status Cards - Always Visible -->
         <div class="global-status-grid">
             <div class="status-card">
                 <h3>Mode</h3>
@@ -771,9 +704,9 @@
             
             <div class="status-card">
                 <h3>JobAdder</h3>
-                <div class="status-value" id="jobadderStatus">●</div>
+                <div class="status-value success" id="jobadderStatus">●</div>
                 <div class="status-label" id="jobadderLabel">Checking...</div>
-                <button class="btn btn-info" onclick="authorizeJobAdder()" id="btnAuthorize" style="display: none; margin-top: 10px; padding: 10px 20px; font-size: 12px;">
+                <button class="btn btn-info" onclick="authorizeJobAdder()" id="btnAuthorize" style="margin-top: 15px; display: none; padding: 10px 20px; font-size: 12px;">
                     Authorize
                 </button>
             </div>
@@ -800,6 +733,46 @@
             </div>
         </div>
         
+        <!-- Mobile: Collapsible Status Toggle -->
+        <div class="mobile-status-toggle" id="mobileStatusToggle" onclick="toggleMobileStatus()">
+            <div class="mobile-status-header">
+                <div class="mobile-status-title">
+                    <span class="status-indicator-dot green" id="mobileStatusDot"></span>
+                    <span>System Status</span>
+                </div>
+                <div class="mobile-status-arrow">▼</div>
+            </div>
+            <div class="mobile-status-details" id="mobileStatusDetails">
+                <div class="mobile-status-item">
+                    <h4>Mode</h4>
+                    <div class="status-value" style="font-size: 14px;">
+                        <span class="badge test" id="modeBadgeMobile">Test Mode</span>
+                    </div>
+                    <div class="status-label" id="modeEmailMobile">Loading...</div>
+                </div>
+                <div class="mobile-status-item">
+                    <h4>JobAdder</h4>
+                    <div class="status-value success" id="jobadderStatusMobile">●</div>
+                    <div class="status-label" id="jobadderLabelMobile">Checking...</div>
+                </div>
+                <div class="mobile-status-item">
+                    <h4>Brevo</h4>
+                    <div class="status-value success" id="brevoStatusMobile">●</div>
+                    <div class="status-label" id="brevoLabelMobile">Connected</div>
+                </div>
+                <div class="mobile-status-item">
+                    <h4>Version</h4>
+                    <div class="status-value" style="font-size: 16px; color: white;" id="versionStatusMobile">1.0.0</div>
+                    <div class="status-label">System Version</div>
+                </div>
+                <div class="mobile-status-item">
+                    <h4>System</h4>
+                    <div class="status-value success">●</div>
+                    <div class="status-label">(Live)</div>
+                </div>
+            </div>
+        </div>
+        
         <!-- Tab Navigation -->
         <div class="tabs">
             <button class="tab active" onclick="switchTab('job-alerts')">
@@ -815,8 +788,8 @@
             <div class="status-grid">
                 <div class="status-card">
                     <h3>Daily Roundup</h3>
-                    <div class="status-value" style="font-size: 18px; color: white;">Scheduled</div>
-                    <div class="status-label">Runs daily at 9:00 AM</div>
+                    <div class="status-value" style="font-size: 18px; color: white;">Manual</div>
+                    <div class="status-label">Trigger manually below</div>
                 </div>
                 
                 <div class="status-card">
@@ -858,8 +831,8 @@
             <div class="status-grid">
                 <div class="status-card">
                     <h3>Current State</h3>
-                    <div class="status-value">
-                        <span class="status-badge empty" id="alistStateBadge">EMPTY</span>
+                    <div class="status-value" style="font-size: 16px;">
+                        <span class="status-badge EMPTY" id="alistStateBadge">EMPTY</span>
                     </div>
                     <div class="status-label" id="alistStateTimestamp">No A-List generated</div>
                 </div>
@@ -897,14 +870,11 @@
                 </div>
                 
                 <div class="loading-indicator" id="alistLoading">
-                    <div class="spinner"></div>
-                    <div id="alistLoadingText">Processing...</div>
+                    <div class="loading"></div>
+                    <div style="color: #1b334d; font-weight: 600;" id="alistLoadingText">Processing...</div>
                 </div>
-            </div>
-
-            <div class="actions-card">
-                <h2>Candidate Preview</h2>
-                <div id="candidatesPreview">
+                
+                <div id="candidatesPreview" style="margin-top: 30px;">
                     <div class="empty-state">
                         <h3>No candidates generated yet</h3>
                         <p>Click "Generate A-List" to fetch candidates interviewed in the last 3 weeks</p>
@@ -913,54 +883,63 @@
             </div>
         </div>
     </div>
-
+    
     <script>
-        // Current tab
-        let currentTab = 'job-alerts';
         let alistState = null;
-
-        // Load status and jobs on page load
-        window.addEventListener('DOMContentLoaded', () => {
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
             refreshStatus();
             loadJobs();
             loadAListState();
             checkBrevoStatus();
         });
         
-        // Tab switching
-        function switchTab(tab) {
-            currentTab = tab;
-            
-            // Update tab buttons
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            // Update content
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.getElementById(tab + '-content').classList.add('active');
-            
-            // Load data for active tab
-            if (tab === 'alist') {
-                loadAListState();
-            }
+        function toggleMobileStatus() {
+            const toggle = document.getElementById('mobileStatusToggle');
+            toggle.classList.toggle('expanded');
         }
         
-        // ========== STATUS FUNCTIONS ==========
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName + '-content').classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
         
         async function checkBrevoStatus() {
-            // Simple check - if API key is set, assume connected
             const brevoStatus = document.getElementById('brevoStatus');
             const brevoLabel = document.getElementById('brevoLabel');
+            const brevoStatusMobile = document.getElementById('brevoStatusMobile');
+            const brevoLabelMobile = document.getElementById('brevoLabelMobile');
             
             try {
                 // You can add a real API check here if needed
                 brevoStatus.textContent = '●';
                 brevoStatus.className = 'status-value success';
                 brevoLabel.textContent = 'Connected';
+                brevoStatusMobile.textContent = '●';
+                brevoStatusMobile.className = 'status-value success';
+                brevoLabelMobile.textContent = 'Connected';
             } catch (error) {
                 brevoStatus.textContent = '●';
                 brevoStatus.className = 'status-value error';
                 brevoLabel.textContent = 'Disconnected';
+                brevoStatusMobile.textContent = '●';
+                brevoStatusMobile.className = 'status-value error';
+                brevoLabelMobile.textContent = 'Disconnected';
+                updateMobileStatusDot();
             }
         }
         
@@ -973,40 +952,76 @@
                 const testMode = data.test_mode;
                 const modeBadge = document.getElementById('modeBadge');
                 const modeEmail = document.getElementById('modeEmail');
+                const modeBadgeMobile = document.getElementById('modeBadgeMobile');
+                const modeEmailMobile = document.getElementById('modeEmailMobile');
                 
                 if (testMode) {
                     modeBadge.textContent = 'Test Mode';
                     modeBadge.className = 'badge test';
                     modeEmail.textContent = data.test_email || 'No test email set';
+                    modeBadgeMobile.textContent = 'Test Mode';
+                    modeBadgeMobile.className = 'badge test';
+                    modeEmailMobile.textContent = data.test_email || 'No test email set';
                 } else {
                     modeBadge.textContent = 'Production';
                     modeBadge.className = 'badge prod';
                     modeEmail.textContent = 'Sending to all contacts';
+                    modeBadgeMobile.textContent = 'Production';
+                    modeBadgeMobile.className = 'badge prod';
+                    modeEmailMobile.textContent = 'Sending to all contacts';
                 }
                 
                 // Update JobAdder status
                 const jobadderStatus = document.getElementById('jobadderStatus');
                 const jobadderLabel = document.getElementById('jobadderLabel');
                 const btnAuthorize = document.getElementById('btnAuthorize');
+                const jobadderStatusMobile = document.getElementById('jobadderStatusMobile');
+                const jobadderLabelMobile = document.getElementById('jobadderLabelMobile');
                 
                 if (data.jobadder_authorized) {
                     jobadderStatus.textContent = '●';
                     jobadderStatus.className = 'status-value success';
                     jobadderLabel.textContent = 'Authorized';
                     btnAuthorize.style.display = 'none';
+                    jobadderStatusMobile.textContent = '●';
+                    jobadderStatusMobile.className = 'status-value success';
+                    jobadderLabelMobile.textContent = 'Authorized';
                 } else {
                     jobadderStatus.textContent = '●';
                     jobadderStatus.className = 'status-value error';
                     jobadderLabel.textContent = 'Not Authorized';
                     btnAuthorize.style.display = 'block';
+                    jobadderStatusMobile.textContent = '●';
+                    jobadderStatusMobile.className = 'status-value error';
+                    jobadderLabelMobile.textContent = 'Not Authorized';
+                    updateMobileStatusDot();
                 }
                 
                 // Update version
                 document.getElementById('versionStatus').textContent = data.version || '1.0.0';
+                document.getElementById('versionStatusMobile').textContent = data.version || '1.0.0';
+                
+                updateMobileStatusDot();
                 
             } catch (error) {
                 console.error('Error fetching status:', error);
                 showResult('Error fetching status: ' + error.message, 'error');
+            }
+        }
+        
+        function updateMobileStatusDot() {
+            const dot = document.getElementById('mobileStatusDot');
+            const jobadderStatus = document.getElementById('jobadderStatusMobile');
+            const brevoStatus = document.getElementById('brevoStatusMobile');
+            
+            // Check if any service has error class
+            const hasError = jobadderStatus.classList.contains('error') || 
+                           brevoStatus.classList.contains('error');
+            
+            if (hasError) {
+                dot.className = 'status-indicator-dot red';
+            } else {
+                dot.className = 'status-indicator-dot green';
             }
         }
         
