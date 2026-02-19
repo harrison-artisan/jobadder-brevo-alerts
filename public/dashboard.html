@@ -956,16 +956,14 @@
             }
             
             // Update counts
-            document.getElementById('alistSelectedCount').textContent = state.selectedCount || 0;
-            document.getElementById('alistTotalPool').textContent = state.totalPool || 0;
+            const selectedCount = state.candidates ? state.candidates.length : 0;
+            const totalPool = state.totalCandidatesInPool || 0;
             
-            // Update last action
-            document.getElementById('alistLastAction').textContent = state.lastAction || 'None';
-            if (state.lastActionAt) {
-                document.getElementById('alistLastActionTime').textContent = new Date(state.lastActionAt).toLocaleString();
-            } else {
-                document.getElementById('alistLastActionTime').textContent = '-';
-            }
+            document.getElementById('alistSelectedCount').textContent = selectedCount;
+            document.getElementById('alistTotalPool').textContent = totalPool;
+            
+            // Update last action based on timestamps
+            updateAListLastAction(state);
             
             // Update button states
             const btnGenerate = document.getElementById('btnGenerate');
@@ -1108,7 +1106,45 @@
                 messageBox.classList.remove('show');
             }, 5000);
         }
+
+        function updateAListLastAction(state) {
+            const lastAction = document.getElementById('alistLastAction');
+            const lastActionTime = document.getElementById('alistLastActionTime');
+            
+            if (state.sentAt) {
+                lastAction.textContent = 'Sent to All';
+                lastActionTime.textContent = formatTimestamp(state.sentAt);
+            } else if (state.testSentAt) {
+                lastAction.textContent = 'Test Sent';
+                lastActionTime.textContent = formatTimestamp(state.testSentAt);
+            } else if (state.generatedAt) {
+                lastAction.textContent = 'Generated';
+                lastActionTime.textContent = formatTimestamp(state.generatedAt);
+            } else {
+                lastAction.textContent = 'None';
+                lastActionTime.textContent = '-';
+            }
+        }
+
+        function formatTimestamp(isoString) {
+            const date = new Date(isoString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            
+            if (diffMins < 1) return 'just now';
+            if (diffMins < 60) return `${diffMins} min ago`;
+            
+            const diffHours = Math.floor(diffMins / 60);
+            if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+            
+            const diffDays = Math.floor(diffHours / 24);
+            if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+            
+            return date.toLocaleDateString();
+        }
     </script>
 </body>
 </html>
+
 
