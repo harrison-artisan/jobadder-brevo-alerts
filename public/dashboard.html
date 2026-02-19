@@ -1306,14 +1306,14 @@
         }
 
         async function approveAndSendAList() {
-            if (!confirm('Are you sure you want to send the A-List to all contacts? This cannot be undone.')) {
+            if (!confirm('Are you sure you want to send the A-List? In test mode, it will only send to the test email.')) {
                 return;
             }
             
-            showLoading('Sending A-List to all contacts...');
+            showLoading('Sending A-List...');
             
             try {
-                const response = await fetch('/api/alist/approve-and-send', {
+                const response = await fetch('/api/alist/send', {
                     method: 'POST'
                 });
                 
