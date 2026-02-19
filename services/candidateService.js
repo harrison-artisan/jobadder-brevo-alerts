@@ -10,13 +10,13 @@ class CandidateService {
       'Phone Screen'  // Capital S based on logs
     ];
     
-    // Line art illustrations for candidates 1-5
+    // Line art illustrations for candidates 1-5 (cleaned and cropped with white backgrounds)
     this.CANDIDATE_IMAGES = [
-      'https://files.manuscdn.com/user_upload_by_module/session_file/310519663319947996/pzTOcKITaobJarAC.png',
-      'https://files.manuscdn.com/user_upload_by_module/session_file/310519663319947996/NeuNOpUgADoHvDui.png',
-      'https://files.manuscdn.com/user_upload_by_module/session_file/310519663319947996/aattvrprsDIeLpzd.png',
-      'https://files.manuscdn.com/user_upload_by_module/session_file/310519663319947996/iaAQUFHBtSMsCVoC.png',
-      'https://files.manuscdn.com/user_upload_by_module/session_file/310519663319947996/JmKstOAridzHaWqF.png'
+      'https://files.manuscdn.com/user_upload_by_module/session_file/310519663319947996/BAqVCSDgfObJIpua.png',
+      'https://files.manuscdn.com/user_upload_by_module/session_file/310519663319947996/ciPuVrqcILvuNZID.png',
+      'https://files.manuscdn.com/user_upload_by_module/session_file/310519663319947996/LjpxADMYuFGcTurV.png',
+      'https://files.manuscdn.com/user_upload_by_module/session_file/310519663319947996/jXNoewliRXhFNbbo.png',
+      'https://files.manuscdn.com/user_upload_by_module/session_file/310519663319947996/PlLAYxHCQCkRMJss.png'
     ];
   }
 
