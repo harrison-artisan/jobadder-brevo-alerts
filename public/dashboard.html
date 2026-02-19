@@ -13,7 +13,7 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #1b334d 0%, #2c5282 25%, #3498db 50%, #5dade2 75%, #85c1e9 100%);
+            background: linear-gradient(135deg, #0f1c2e 0%, #1b334d 25%, #2c5282 50%, #34495e 75%, #3d5a80 100%);
             background-size: 400% 400%;
             animation: gradientShift 15s ease infinite;
             min-height: 100vh;
@@ -706,7 +706,7 @@
                 <h3>JobAdder</h3>
                 <div class="status-value success" id="jobadderStatus">●</div>
                 <div class="status-label" id="jobadderLabel">Checking...</div>
-                <button class="btn btn-info" onclick="authorizeJobAdder()" id="btnAuthorize" style="margin-top: 15px; display: none; padding: 10px 20px; font-size: 12px;">
+                <button class="btn btn-info" onclick="authorizeJobAdder()" id="btnAuthorize" style="margin-top: 15px; display: none; padding: 10px 20px; font-size: 12px; width: 100%;">
                     Authorize
                 </button>
             </div>
@@ -725,8 +725,8 @@
             
             <div class="status-card">
                 <h3>System</h3>
-                <div class="status-value success">●</div>
-                <div class="status-label">(Live)</div>
+                <div class="status-value success" id="systemStatus">●</div>
+                <div class="status-label" id="systemLabel">(Live)</div>
                 <button class="btn btn-info" onclick="refreshStatus()" style="margin-top: 10px; padding: 10px 20px; font-size: 12px;">
                     Refresh
                 </button>
@@ -754,6 +754,9 @@
                     <h4>JobAdder</h4>
                     <div class="status-value success" id="jobadderStatusMobile">●</div>
                     <div class="status-label" id="jobadderLabelMobile">Checking...</div>
+                    <button class="btn btn-info" onclick="authorizeJobAdder()" id="btnAuthorizeMobile" style="margin-top: 10px; display: none; padding: 8px 16px; font-size: 11px; width: 100%;">
+                        Authorize
+                    </button>
                 </div>
                 <div class="mobile-status-item">
                     <h4>Brevo</h4>
@@ -767,8 +770,8 @@
                 </div>
                 <div class="mobile-status-item">
                     <h4>System</h4>
-                    <div class="status-value success">●</div>
-                    <div class="status-label">(Live)</div>
+                    <div class="status-value success" id="systemStatusMobile">●</div>
+                    <div class="status-label" id="systemLabelMobile">(Live)</div>
                 </div>
             </div>
         </div>
@@ -954,6 +957,10 @@
                 const modeEmail = document.getElementById('modeEmail');
                 const modeBadgeMobile = document.getElementById('modeBadgeMobile');
                 const modeEmailMobile = document.getElementById('modeEmailMobile');
+                const systemStatus = document.getElementById('systemStatus');
+                const systemLabel = document.getElementById('systemLabel');
+                const systemStatusMobile = document.getElementById('systemStatusMobile');
+                const systemLabelMobile = document.getElementById('systemLabelMobile');
                 
                 if (testMode) {
                     modeBadge.textContent = 'Test Mode';
@@ -962,6 +969,16 @@
                     modeBadgeMobile.textContent = 'Test Mode';
                     modeBadgeMobile.className = 'badge test';
                     modeEmailMobile.textContent = data.test_email || 'No test email set';
+                    
+                    // System status orange in test mode
+                    systemStatus.textContent = '●';
+                    systemStatus.className = 'status-value';
+                    systemStatus.style.color = '#f39c12';
+                    systemLabel.textContent = '(Test Mode)';
+                    systemStatusMobile.textContent = '●';
+                    systemStatusMobile.className = 'status-value';
+                    systemStatusMobile.style.color = '#f39c12';
+                    systemLabelMobile.textContent = '(Test Mode)';
                 } else {
                     modeBadge.textContent = 'Production';
                     modeBadge.className = 'badge prod';
@@ -969,6 +986,16 @@
                     modeBadgeMobile.textContent = 'Production';
                     modeBadgeMobile.className = 'badge prod';
                     modeEmailMobile.textContent = 'Sending to all contacts';
+                    
+                    // System status green in production
+                    systemStatus.textContent = '●';
+                    systemStatus.className = 'status-value success';
+                    systemStatus.style.color = '';
+                    systemLabel.textContent = '(Live)';
+                    systemStatusMobile.textContent = '●';
+                    systemStatusMobile.className = 'status-value success';
+                    systemStatusMobile.style.color = '';
+                    systemLabelMobile.textContent = '(Live)';
                 }
                 
                 // Update JobAdder status
@@ -978,6 +1005,8 @@
                 const jobadderStatusMobile = document.getElementById('jobadderStatusMobile');
                 const jobadderLabelMobile = document.getElementById('jobadderLabelMobile');
                 
+                const btnAuthorizeMobile = document.getElementById('btnAuthorizeMobile');
+                
                 if (data.jobadder_authorized) {
                     jobadderStatus.textContent = '●';
                     jobadderStatus.className = 'status-value success';
@@ -986,6 +1015,7 @@
                     jobadderStatusMobile.textContent = '●';
                     jobadderStatusMobile.className = 'status-value success';
                     jobadderLabelMobile.textContent = 'Authorized';
+                    btnAuthorizeMobile.style.display = 'none';
                 } else {
                     jobadderStatus.textContent = '●';
                     jobadderStatus.className = 'status-value error';
@@ -994,6 +1024,7 @@
                     jobadderStatusMobile.textContent = '●';
                     jobadderStatusMobile.className = 'status-value error';
                     jobadderLabelMobile.textContent = 'Not Authorized';
+                    btnAuthorizeMobile.style.display = 'block';
                     updateMobileStatusDot();
                 }
                 
