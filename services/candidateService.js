@@ -9,6 +9,15 @@ class CandidateService {
       'Candidate interview',
       'Phone Screen'  // Capital S based on logs
     ];
+    
+    // Line art illustrations for candidates 1-5
+    this.CANDIDATE_IMAGES = [
+      'https://files.manuscdn.com/user_upload_by_module/session_file/310519663319947996/pzTOcKITaobJarAC.png',
+      'https://files.manuscdn.com/user_upload_by_module/session_file/310519663319947996/NeuNOpUgADoHvDui.png',
+      'https://files.manuscdn.com/user_upload_by_module/session_file/310519663319947996/aattvrprsDIeLpzd.png',
+      'https://files.manuscdn.com/user_upload_by_module/session_file/310519663319947996/iaAQUFHBtSMsCVoC.png',
+      'https://files.manuscdn.com/user_upload_by_module/session_file/310519663319947996/JmKstOAridzHaWqF.png'
+    ];
   }
 
   /**
@@ -276,10 +285,10 @@ class CandidateService {
       summary: aiSummary,
       profile_url: `https://app.jobadder.com/candidates/${candidate.candidateId}`,
       avatar_url: candidate.links?.photo || null,
+      image_url: this.CANDIDATE_IMAGES[position - 1] || this.CANDIDATE_IMAGES[0],
       candidateId: candidate.candidateId
     };
   }
 }
 
 module.exports = new CandidateService();
-
