@@ -705,13 +705,15 @@
         .preview-panel {
             position: sticky;
             top: 20px;
-            height: calc(100vh - 100px);
+            height: 600px;
+            max-height: calc(100vh - 100px);
             background: rgba(255, 255, 255, 0.12);
             backdrop-filter: blur(20px);
             border-radius: 10px;
             padding: 20px;
             border: 1px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
         }
         
         .preview-empty {
