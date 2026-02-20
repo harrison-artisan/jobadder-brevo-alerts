@@ -1,7 +1,114 @@
+const fs = require('fs').promises;
+const path = require('path');
 const jobadderService = require('./jobadderService');
 const wordpressService = require('./wordpressService');
 
 class EmailPreviewService {
+    constructor() {
+        this.templates = {};
+    }
+
+    /**
+     * Load a Brevo template from file
+     */
+    async loadTemplate(templateName) {
+        if (this.templates[templateName]) {
+            return this.templates[templateName];
+        }
+
+        const templatePath = path.join(__dirname, '..', 'templates', `${templateName}.html`);
+        try {
+            const html = await fs.readFile(templatePath, 'utf8');
+            this.templates[templateName] = html;
+            return html;
+        } catch (error) {
+            console.error(`Failed to load template ${templateName}:`, error);
+            throw new Error(`Template ${templateName} not found`);
+        }
+    }
+
+    /**
+     * Replace Brevo template variables with actual data
+     * Handles both {{ contact.X }} and {{ params.X }} syntax
+     */
+    replaceTemplateVariables(html, data) {
+        let result = html;
+
+        // Replace contact variables
+        result = result.replace(/\{\{\s*contact\.FIRSTNAME\s*\}\}/g, data.contact?.FIRSTNAME || 'there');
+        result = result.replace(/\{\{\s*contact\.LASTNAME\s*\}\}/g, data.contact?.LASTNAME || '');
+        result = result.replace(/\{\{\s*contact\.EMAIL\s*\}\}/g, data.contact?.EMAIL || '');
+
+        // Replace simple params variables
+        if (data.params) {
+            // Featured article
+            if (data.params.featuredArticle) {
+                const fa = data.params.featuredArticle;
+                result = result.replace(/\{\{\s*params\.featuredArticle\.title\s*\}\}/g, fa.title || '');
+                result = result.replace(/\{\{\s*params\.featuredArticle\.excerpt\s*\}\}/g, fa.excerpt || '');
+                result = result.replace(/\{\{\s*params\.featuredArticle\.link\s*\}\}/g, fa.link || '#');
+                result = result.replace(/\{\{\s*params\.featuredArticle\.featuredImage\s*\}\}/g, fa.featuredImage || fa.image || 'https://via.placeholder.com/650x300');
+            }
+
+            // Handle loops for recent articles
+            if (data.params.recentArticles && Array.isArray(data.params.recentArticles)) {
+                const articleLoopRegex = /\{%\s*for\s+article\s+in\s+params\.recentArticles\s*%\}([\s\S]*?)\{%\s*endfor\s*%\}/g;
+                result = result.replace(articleLoopRegex, (match, template) => {
+                    return data.params.recentArticles.map(article => {
+                        let articleHtml = template;
+                        articleHtml = articleHtml.replace(/\{\{\s*article\.title\s*\}\}/g, article.title || '');
+                        articleHtml = articleHtml.replace(/\{\{\s*article\.excerpt\s*\}\}/g, article.excerpt || '');
+                        articleHtml = articleHtml.replace(/\{\{\s*article\.link\s*\}\}/g, article.link || '#');
+                        articleHtml = articleHtml.replace(/\{\{\s*article\.featuredImage\s*\}\}/g, article.featuredImage || article.image || 'https://via.placeholder.com/150');
+                        return articleHtml;
+                    }).join('');
+                });
+            }
+
+            // Handle loops for jobs
+            if (data.params.jobs && Array.isArray(data.params.jobs)) {
+                const jobLoopRegex = /\{%\s*for\s+job\s+in\s+params\.jobs\s*%\}([\s\S]*?)\{%\s*endfor\s*%\}/g;
+                result = result.replace(jobLoopRegex, (match, template) => {
+                    return data.params.jobs.map((job, index) => {
+                        let jobHtml = template;
+                        jobHtml = jobHtml.replace(/\{\{\s*job\.title\s*\}\}/g, job.title || '');
+                        jobHtml = jobHtml.replace(/\{\{\s*job\.location\s*\}\}/g, job.location || '');
+                        jobHtml = jobHtml.replace(/\{\{\s*job\.type\s*\}\}/g, job.type || job.workType || '');
+                        jobHtml = jobHtml.replace(/\{\{\s*job\.summary\s*\}\}/g, job.summary || job.description || '');
+                        jobHtml = jobHtml.replace(/\{\{\s*job\.url\s*\}\}/g, job.url || job.link || '#');
+                        
+                        // Handle loop.index for conditional formatting
+                        jobHtml = jobHtml.replace(/\{%\s*if\s+loop\.index\s*%\s*2\s*==\s*1\s*%\}(.*?)\{%\s*else\s*%\}(.*?)\{%\s*endif\s*%\}/g, 
+                            (m, odd, even) => (index % 2 === 0) ? odd : even);
+                        
+                        return jobHtml;
+                    }).join('');
+                });
+            }
+
+            // Handle loops for candidates (A-List)
+            if (data.params.candidates && Array.isArray(data.params.candidates)) {
+                const candidateLoopRegex = /\{%\s*for\s+candidate\s+in\s+params\.candidates\s*%\}([\s\S]*?)\{%\s*endfor\s*%\}/g;
+                result = result.replace(candidateLoopRegex, (match, template) => {
+                    return data.params.candidates.map(candidate => {
+                        let candidateHtml = template;
+                        candidateHtml = candidateHtml.replace(/\{\{\s*candidate\.name\s*\}\}/g, candidate.name || '');
+                        candidateHtml = candidateHtml.replace(/\{\{\s*candidate\.title\s*\}\}/g, candidate.title || '');
+                        candidateHtml = candidateHtml.replace(/\{\{\s*candidate\.location\s*\}\}/g, candidate.location || '');
+                        candidateHtml = candidateHtml.replace(/\{\{\s*candidate\.summary\s*\}\}/g, candidate.summary || '');
+                        candidateHtml = candidateHtml.replace(/\{\{\s*candidate\.skills\s*\}\}/g, candidate.skills || '');
+                        return candidateHtml;
+                    }).join('');
+                });
+            }
+        }
+
+        // Clean up any remaining template syntax
+        result = result.replace(/\{%\s*if\s+loop\.index\s*%\s*2\s*==\s*0\s+and\s+not\s+loop\.last\s*%\}[\s\S]*?\{%\s*endif\s*%\}/g, '');
+        
+        return result;
+    }
+
     /**
      * Render HTML preview for Xpose newsletter
      */
@@ -10,9 +117,38 @@ class EmailPreviewService {
             throw new Error('No newsletter data available. Please generate first.');
         }
 
-        const { featuredArticle, recentArticles, jobs } = state;
+        const template = await this.loadTemplate('brevo_template_161_xpose_newsletter');
+        
+        const data = {
+            contact: {
+                FIRSTNAME: 'Preview',
+                LASTNAME: 'User',
+                EMAIL: 'preview@artisan.com.au'
+            },
+            params: {
+                featuredArticle: {
+                    title: state.featuredArticle.title,
+                    excerpt: state.featuredArticle.excerpt,
+                    link: state.featuredArticle.link,
+                    featuredImage: state.featuredArticle.image || state.featuredArticle.featuredImage
+                },
+                recentArticles: (state.recentArticles || []).map(article => ({
+                    title: article.title,
+                    excerpt: article.excerpt,
+                    link: article.link,
+                    featuredImage: article.image || article.featuredImage
+                })),
+                jobs: (state.jobs || []).slice(0, 5).map(job => ({
+                    title: job.title,
+                    location: job.location,
+                    type: job.workType || job.type,
+                    summary: job.summary || job.description || '',
+                    url: job.link || job.url || '#'
+                }))
+            }
+        };
 
-        return this.buildXposeNewsletterHTML(featuredArticle, recentArticles || [], jobs || []);
+        return this.replaceTemplateVariables(template, data);
     }
 
     /**
@@ -24,7 +160,25 @@ class EmailPreviewService {
             throw new Error('Article not found');
         }
 
-        return this.buildSingleArticleHTML(article);
+        const template = await this.loadTemplate('brevo_template_162_single_article');
+        
+        const data = {
+            contact: {
+                FIRSTNAME: 'Preview',
+                LASTNAME: 'User',
+                EMAIL: 'preview@artisan.com.au'
+            },
+            params: {
+                article: {
+                    title: article.title,
+                    excerpt: article.excerpt,
+                    link: article.link,
+                    featuredImage: article.image || article.featuredImage
+                }
+            }
+        };
+
+        return this.replaceTemplateVariables(template, data);
     }
 
     /**
@@ -34,7 +188,28 @@ class EmailPreviewService {
         if (!job) {
             throw new Error('Job not found');
         }
-        return this.buildSingleJobHTML(job);
+
+        const template = await this.loadTemplate('brevo_template_job_alert');
+        
+        const data = {
+            contact: {
+                FIRSTNAME: 'Preview',
+                LASTNAME: 'User',
+                EMAIL: 'preview@artisan.com.au'
+            },
+            params: {
+                job: {
+                    title: job.title,
+                    company: job.company || 'Artisan',
+                    location: job.location,
+                    type: job.workType || job.type,
+                    summary: job.summary || job.description || '',
+                    url: job.link || job.url || '#'
+                }
+            }
+        };
+
+        return this.replaceTemplateVariables(template, data);
     }
     
     /**
@@ -44,260 +219,27 @@ class EmailPreviewService {
         if (!state || !state.candidates || state.candidates.length === 0) {
             throw new Error('No A-List data available. Please generate first.');
         }
-        return this.buildAlistHTML(state.candidates);
-    }
 
-    /**
-     * Build Xpose Newsletter HTML
-     */
-    buildXposeNewsletterHTML(featuredArticle, recentArticles, jobs) {
-        const jobsHTML = jobs.slice(0, 5).map((job, index) => `
-            <div style="flex: 0 0 48%; background: linear-gradient(135deg, #ffeef2 0%, #fff5f7 100%); border: 2px solid #bd203d; border-radius: 16px; padding: 20px; margin-bottom: 15px;">
-                <h3 style="color: #1b334d; font-size: 18px; margin: 0 0 10px 0;">${job.title || 'Untitled Job'}</h3>
-                <p style="color: #666; font-size: 14px; margin: 5px 0;"><strong>Company:</strong> ${job.company || 'N/A'}</p>
-                <p style="color: #666; font-size: 14px; margin: 5px 0;"><strong>Location:</strong> ${job.location || 'N/A'}</p>
-                <p style="color: #666; font-size: 14px; margin: 5px 0;"><strong>Type:</strong> ${job.workType || 'N/A'}</p>
-                <a href="${job.link || '#'}" style="display: inline-block; margin-top: 15px; padding: 10px 20px; background: #bd203d; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">APPLY NOW</a>
-            </div>
-        `).join('');
-
-        const recentArticlesHTML = recentArticles.map(article => `
-            <div style="display: flex; gap: 20px; margin-bottom: 30px; padding-bottom: 30px; border-bottom: 2px solid #e8f0f7;">
-                <img src="${article.image || 'https://via.placeholder.com/150'}" alt="${article.title}" style="width: 150px; height: 150px; object-fit: cover; border-radius: 12px; flex-shrink: 0;">
-                <div style="flex: 1;">
-                    <h3 style="color: #1b334d; font-size: 20px; margin: 0 0 10px 0;">${article.title}</h3>
-                    <p style="color: #666; font-size: 14px; line-height: 1.6; margin: 0 0 15px 0;">${article.excerpt}</p>
-                    <a href="${article.link}" style="display: inline-block; padding: 8px 16px; border: 2px solid #1b334d; color: #1b334d; text-decoration: none; border-radius: 8px; font-weight: bold;">READ NOW</a>
-                </div>
-            </div>
-        `).join('');
-
-        return `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Artisan XPOSE Newsletter</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: 'Source Sans Pro', Arial, sans-serif; background-color: #f4f4f4;">
-    <div style="max-width: 650px; margin: 0 auto; background: white;">
-        <!-- Header -->
-        <div style="background: linear-gradient(135deg, #1b334d 0%, #2a4a6b 100%); padding: 30px; text-align: center;">
-            <img src="https://artisan.com.au/wp-content/uploads/2023/01/artisan-logo-white.png" alt="Artisan" style="height: 50px;">
-            <div style="background: linear-gradient(135deg, #e8f0f7 0%, #d4e3f0 100%); color: #1b334d; padding: 8px 20px; border-radius: 20px; display: inline-block; margin-top: 15px; font-weight: bold;">
-                📰 ARTISAN XPOSE
-            </div>
-        </div>
-
-        <!-- Greeting -->
-        <div style="padding: 30px;">
-            <p style="font-size: 16px; color: #333; line-height: 1.6;">Hi there,</p>
-            <p style="font-size: 16px; color: #333; line-height: 1.6;">Welcome to the latest edition of Artisan XPOSE! Here are the top articles and opportunities we've curated for you.</p>
-        </div>
-
-        <!-- Featured Article -->
-        <div style="padding: 0 30px 30px 30px;">
-            <h2 style="color: #1b334d; font-size: 24px; margin-bottom: 20px; border-bottom: 3px solid #1b334d; padding-bottom: 10px;">✨ Featured Article</h2>
-            <div style="border: 3px solid #1b334d; border-radius: 16px; overflow: hidden; margin-bottom: 30px;">
-                <img src="${featuredArticle.image || 'https://via.placeholder.com/650x300'}" alt="${featuredArticle.title}" style="width: 100%; height: auto; display: block;">
-                <div style="padding: 25px;">
-                    <h3 style="color: #1b334d; font-size: 26px; margin: 0 0 15px 0;">${featuredArticle.title}</h3>
-                    <p style="color: #666; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">${featuredArticle.excerpt}</p>
-                    <a href="${featuredArticle.link}" style="display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #1b334d 0%, #2a4a6b 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 10px rgba(27,51,77,0.3);">READ FULL ARTICLE</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Recent Articles -->
-        <div style="padding: 0 30px 30px 30px;">
-            <h2 style="color: #1b334d; font-size: 24px; margin-bottom: 20px; border-bottom: 3px solid #1b334d; padding-bottom: 10px;">📚 Recent Articles</h2>
-            ${recentArticlesHTML}
-        </div>
-
-        <!-- Hot Jobs -->
-        ${jobs.length > 0 ? `
-        <div style="padding: 0 30px 30px 30px;">
-            <h2 style="color: #bd203d; font-size: 24px; margin-bottom: 20px; border-bottom: 3px solid #bd203d; padding-bottom: 10px;">🔥 Hot Jobs</h2>
-            <div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: space-between;">
-                ${jobsHTML}
-            </div>
-        </div>
-        ` : ''}
-
-        <!-- Footer -->
-        <div style="background: #1b334d; color: white; padding: 30px; text-align: center;">
-            <p style="margin: 0 0 10px 0; font-size: 14px;">MEL (03) 9514 1000 | SYD (02) 8214 4666 | BNE (07) 3333 1833</p>
-            <p style="margin: 0; font-size: 12px; color: #ccc;">© ${new Date().getFullYear()} Artisan. All rights reserved.</p>
-        </div>
-    </div>
-</body>
-</html>
-        `;
-    }
-
-    /**
-     * Build Single Article HTML
-     */
-    buildSingleArticleHTML(article) {
-        return `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${article.title}</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: 'Source Sans Pro', Arial, sans-serif; background-color: #f4f4f4;">
-    <div style="max-width: 650px; margin: 0 auto; background: white;">
-        <!-- Header -->
-        <div style="background: linear-gradient(135deg, #1b334d 0%, #2a4a6b 100%); padding: 30px; text-align: center;">
-            <img src="https://artisan.com.au/wp-content/uploads/2023/01/artisan-logo-white.png" alt="Artisan" style="height: 50px;">
-            <div style="background: linear-gradient(135deg, #e8f0f7 0%, #d4e3f0 100%); color: #1b334d; padding: 8px 20px; border-radius: 20px; display: inline-block; margin-top: 15px; font-weight: bold;">
-                📰 ARTISAN XPOSE
-            </div>
-        </div>
-
-        <!-- Greeting -->
-        <div style="padding: 30px;">
-            <p style="font-size: 16px; color: #333; line-height: 1.6;">Hi there,</p>
-            <p style="font-size: 16px; color: #333; line-height: 1.6;">We thought you'd enjoy this article from Artisan.</p>
-        </div>
-
-        <!-- Article -->
-        <div style="padding: 0 30px 30px 30px;">
-            <div style="border: 3px solid #1b334d; border-radius: 16px; overflow: hidden;">
-                <img src="${article.image || 'https://via.placeholder.com/650x300'}" alt="${article.title}" style="width: 100%; height: auto; display: block;">
-                <div style="padding: 30px; text-align: center;">
-                    <h1 style="color: #1b334d; font-size: 32px; margin: 0 0 20px 0;">${article.title}</h1>
-                    <div style="background: #f9f9f9; border-left: 4px solid #1b334d; padding: 20px; margin: 20px 0; text-align: left;">
-                        <p style="color: #666; font-size: 16px; line-height: 1.8; margin: 0;">${article.excerpt}</p>
-                    </div>
-                    <a href="${article.link}" style="display: inline-block; padding: 15px 40px; background: linear-gradient(135deg, #1b334d 0%, #2a4a6b 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 18px; box-shadow: 0 4px 10px rgba(27,51,77,0.3); margin-top: 20px;">READ FULL ARTICLE</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- CTA -->
-        <div style="background: linear-gradient(135deg, #ffeef2 0%, #fff5f7 100%); padding: 30px; margin: 0 30px 30px 30px; border-radius: 16px; text-align: center; border: 2px solid #bd203d;">
-            <h3 style="color: #bd203d; font-size: 22px; margin: 0 0 15px 0;">Looking for Your Next Opportunity?</h3>
-            <p style="color: #666; font-size: 16px; margin: 0 0 20px 0;">Check out our latest job openings!</p>
-            <a href="https://artisan.com.au/jobs" style="display: inline-block; padding: 12px 30px; background: #bd203d; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">VIEW ALL JOBS</a>
-        </div>
-
-        <!-- Footer -->
-        <div style="background: #1b334d; color: white; padding: 30px; text-align: center;">
-            <p style="margin: 0 0 10px 0; font-size: 14px;">MEL (03) 9514 1000 | SYD (02) 8214 4666 | BNE (07) 3333 1833</p>
-            <p style="margin: 0; font-size: 12px; color: #ccc;">© ${new Date().getFullYear()} Artisan. All rights reserved.</p>
-        </div>
-    </div>
-</body>
-</html>
-        `;
-    }
-
-    /**
-     * Build Single Job HTML
-     */
-    buildSingleJobHTML(job) {
-        return `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${job.title}</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: 'Source Sans Pro', Arial, sans-serif; background-color: #f4f4f4;">
-    <div style="max-width: 650px; margin: 0 auto; background: white;">
-        <!-- Header -->
-        <div style="background: linear-gradient(135deg, #2980b9 0%, #3498db 100%); padding: 30px; text-align: center;">
-            <img src="https://artisan.com.au/wp-content/uploads/2023/01/artisan-logo-white.png" alt="Artisan" style="height: 50px;">
-            <h2 style="color: white; margin: 15px 0 0 0; font-size: 24px;">New Job Alert</h2>
-        </div>
-
-        <!-- Job Details -->
-        <div style="padding: 40px;">
-            <h1 style="color: #1b334d; font-size: 28px; margin: 0 0 20px 0;">${job.title}</h1>
-            <div style="background: #f9f9f9; border-left: 4px solid #2980b9; padding: 20px; margin-bottom: 30px;">
-                <p style="margin: 5px 0; color: #666; font-size: 16px;"><strong>Company:</strong> ${job.company || 'N/A'}</p>
-                <p style="margin: 5px 0; color: #666; font-size: 16px;"><strong>Location:</strong> ${job.location || 'N/A'}</p>
-                <p style="margin: 5px 0; color: #666; font-size: 16px;"><strong>Type:</strong> ${job.workType || 'N/A'}</p>
-                <p style="margin: 5px 0; color: #666; font-size: 16px;"><strong>Category:</strong> ${job.category || 'N/A'}</p>
-            </div>
-            ${job.description ? `
-            <div style="margin-bottom: 30px;">
-                <h3 style="color: #1b334d; font-size: 20px; margin: 0 0 15px 0;">Job Description</h3>
-                <p style="color: #666; font-size: 15px; line-height: 1.6;">${job.description}</p>
-            </div>
-            ` : ''}
-            <div style="text-align: center;">
-                <a href="${job.link || '#'}" style="display: inline-block; padding: 15px 40px; background: linear-gradient(135deg, #2980b9 0%, #3498db 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 18px; box-shadow: 0 4px 10px rgba(41,128,185,0.3);">APPLY NOW</a>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <div style="background: #1b334d; color: white; padding: 30px; text-align: center;">
-            <p style="margin: 0 0 10px 0; font-size: 14px;">MEL (03) 9514 1000 | SYD (02) 8214 4666 | BNE (07) 3333 1833</p>
-            <p style="margin: 0; font-size: 12px; color: #ccc;">© ${new Date().getFullYear()} Artisan. All rights reserved.</p>
-        </div>
-    </div>
-</body>
-</html>
-        `;
-    }
-    
-    /**
-     * Build A-List HTML
-     */
-    buildAlistHTML(candidates) {
-        const candidatesHTML = candidates.map(candidate => `
-            <div style="background: linear-gradient(135deg, #f3e8ff 0%, #f9f5ff 100%); border: 2px solid #9b59b6; border-radius: 16px; padding: 25px; margin-bottom: 20px;">
-                <h3 style="color: #1b334d; font-size: 22px; margin: 0 0 15px 0;">${candidate.firstName} ${candidate.lastName}</h3>
-                <p style="color: #666; font-size: 16px; margin: 5px 0;"><strong>Position:</strong> ${candidate.position || 'N/A'}</p>
-                <p style="color: #666; font-size: 16px; margin: 5px 0;"><strong>Email:</strong> ${candidate.email || 'N/A'}</p>
-                <p style="color: #666; font-size: 16px; margin: 5px 0;"><strong>Phone:</strong> ${candidate.phone || 'N/A'}</p>
-                ${candidate.skills ? `<p style="color: #666; font-size: 14px; margin: 10px 0 0 0;"><strong>Skills:</strong> ${candidate.skills}</p>` : ''}
-            </div>
-        `).join('');
+        const template = await this.loadTemplate('brevo_template_alist');
         
-        return `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Artisan A-List</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: 'Source Sans Pro', Arial, sans-serif; background-color: #f4f4f4;">
-    <div style="max-width: 650px; margin: 0 auto; background: white;">
-        <!-- Header -->
-        <div style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); padding: 30px; text-align: center;">
-            <img src="https://artisan.com.au/wp-content/uploads/2023/01/artisan-logo-white.png" alt="Artisan" style="height: 50px;">
-            <h2 style="color: white; margin: 15px 0 0 0; font-size: 24px;">Artisan A-List</h2>
-        </div>
+        const data = {
+            contact: {
+                FIRSTNAME: 'Preview',
+                LASTNAME: 'User',
+                EMAIL: 'preview@artisan.com.au'
+            },
+            params: {
+                candidates: state.candidates.map(candidate => ({
+                    name: candidate.name || candidate.firstName + ' ' + candidate.lastName,
+                    title: candidate.title || candidate.currentJobTitle,
+                    location: candidate.location,
+                    summary: candidate.summary || candidate.bio || '',
+                    skills: candidate.skills ? candidate.skills.join(', ') : ''
+                }))
+            }
+        };
 
-        <!-- Greeting -->
-        <div style="padding: 30px;">
-            <p style="font-size: 16px; color: #333; line-height: 1.6;">Hi there,</p>
-            <p style="font-size: 16px; color: #333; line-height: 1.6;">Here are the top candidates from our recent interviews. These professionals are ready for their next opportunity!</p>
-        </div>
-
-        <!-- Candidates -->
-        <div style="padding: 0 30px 30px 30px;">
-            <h2 style="color: #9b59b6; font-size: 24px; margin-bottom: 20px; border-bottom: 3px solid #9b59b6; padding-bottom: 10px;">Featured Candidates</h2>
-            ${candidatesHTML}
-        </div>
-
-        <!-- Footer -->
-        <div style="background: #1b334d; color: white; padding: 30px; text-align: center;">
-            <p style="margin: 0 0 10px 0; font-size: 14px;">MEL (03) 9514 1000 | SYD (02) 8214 4666 | BNE (07) 3333 1833</p>
-            <p style="margin: 0; font-size: 12px; color: #ccc;">© ${new Date().getFullYear()} Artisan. All rights reserved.</p>
-        </div>
-    </div>
-</body>
-</html>
-        `;
+        return this.replaceTemplateVariables(template, data);
     }
 }
 
