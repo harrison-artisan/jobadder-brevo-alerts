@@ -89,11 +89,11 @@ class XposeController {
                 });
             }
 
-            await brevoService.sendTransactionalEmail({
-                templateId: parseInt(process.env.XPOSE_NEWSLETTER_TEMPLATE_ID),
-                to: [{ email: testEmail }],
-                params: this.state,
-            });
+            await brevoService.sendBatchEmail(
+                [{ email: testEmail, name: 'Test User' }],
+                parseInt(process.env.BREVO_XPOSE_NEWSLETTER_TEMPLATE_ID),
+                this.state
+            );
 
             await this.saveState({ state: 'TESTED' });
             console.log(`✅ Test email sent to ${testEmail}`);
@@ -122,7 +122,7 @@ class XposeController {
         }
 
         try {
-            const recipients = await brevoService.getContactsWithAttribute('JOB_ALERTS', 'Yes');
+            const recipients = await brevoService.getJobAlertContacts();
             if (recipients.length === 0) {
                 return res.status(404).json({ 
                     success: false, 
@@ -135,11 +135,11 @@ class XposeController {
                 ? [{ email: process.env.TEST_EMAIL }] 
                 : recipients;
 
-            await brevoService.sendTransactionalEmail({
-                templateId: parseInt(process.env.XPOSE_NEWSLETTER_TEMPLATE_ID),
-                to: finalRecipients,
-                params: this.state,
-            });
+            await brevoService.sendBatchEmail(
+                finalRecipients,
+                parseInt(process.env.BREVO_XPOSE_NEWSLETTER_TEMPLATE_ID),
+                this.state
+            );
 
             await this.saveState({ state: 'SENT' });
             console.log(`✅ Xpose sent to ${finalRecipients.length} recipients.`);
@@ -195,11 +195,11 @@ class XposeController {
                 });
             }
 
-            await brevoService.sendTransactionalEmail({
-                templateId: parseInt(process.env.BREVO_XPOSE_SINGLE_ARTICLE_TEMPLATE_ID),
-                to: [{ email: testEmail }],
-                params: { article },
-            });
+            await brevoService.sendBatchEmail(
+                [{ email: testEmail, name: 'Test User' }],
+                parseInt(process.env.BREVO_XPOSE_SINGLE_ARTICLE_TEMPLATE_ID),
+                { article }
+            );
 
             console.log(`✅ Test single article ${articleId} sent to ${testEmail}.`);
             res.json({ 
@@ -229,7 +229,7 @@ class XposeController {
                 });
             }
 
-            const recipients = await brevoService.getContactsWithAttribute('JOB_ALERTS', 'Yes');
+            const recipients = await brevoService.getJobAlertContacts();
             if (recipients.length === 0) {
                 return res.status(404).json({ 
                     success: false, 
@@ -242,11 +242,11 @@ class XposeController {
                 ? [{ email: process.env.TEST_EMAIL }] 
                 : recipients;
 
-            await brevoService.sendTransactionalEmail({
-                templateId: parseInt(process.env.XPOSE_SINGLE_ARTICLE_TEMPLATE_ID),
-                to: finalRecipients,
-                params: { article },
-            });
+            await brevoService.sendBatchEmail(
+                finalRecipients,
+                parseInt(process.env.BREVO_XPOSE_SINGLE_ARTICLE_TEMPLATE_ID),
+                { article }
+            );
 
             console.log(`✅ Single article ${articleId} sent to ${finalRecipients.length} recipients.`);
             res.json({ 
@@ -270,4 +270,3 @@ class XposeController {
 }
 
 module.exports = new XposeController();
-
