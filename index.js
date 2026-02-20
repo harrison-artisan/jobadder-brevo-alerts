@@ -268,6 +268,14 @@ app.get('/api/preview/job/:jobId', async (req, res) => {
   }
 });
 
+app.get('/api/preview/alist', async (req, res) => {
+  try {
+    await candidateAlertsController.previewAlist(req, res);
+  } catch (error) {
+    res.status(500).send('<div style="padding: 40px; text-align: center;"><h2>Error</h2><p>' + error.message + '</p></div>');
+  }
+});
+
 app.post('/api/xpose/send-article/:articleId', async (req, res) => {
   try {
     if (!jobadderService.isAuthorized()) {
