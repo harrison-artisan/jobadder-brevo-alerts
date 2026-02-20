@@ -30,14 +30,21 @@ class EmailPreviewService {
     /**
      * Render HTML preview for single job alert
      */
-    async renderSingleJob(jobId) {
-        const jobDetails = await jobadderService.getJobDetails(jobId);
-        if (!jobDetails) {
+    async renderSingleJob(job) {
+        if (!job) {
             throw new Error('Job not found');
         }
-
-        const formattedJob = jobadderService.formatJobForEmail(jobDetails);
-        return this.buildSingleJobHTML(formattedJob);
+        return this.buildSingleJobHTML(job);
+    }
+    
+    /**
+     * Render HTML preview for A-List
+     */
+    async renderAlist(state) {
+        if (!state || !state.candidates || state.candidates.length === 0) {
+            throw new Error('No A-List data available. Please generate first.');
+        }
+        return this.buildAlistHTML(state.candidates);
     }
 
     /**
@@ -239,6 +246,60 @@ class EmailPreviewService {
 </html>
         `;
     }
+    
+    /**
+     * Build A-List HTML
+     */
+    buildAlistHTML(candidates) {
+        const candidatesHTML = candidates.map(candidate => `
+            <div style="background: linear-gradient(135deg, #f3e8ff 0%, #f9f5ff 100%); border: 2px solid #9b59b6; border-radius: 16px; padding: 25px; margin-bottom: 20px;">
+                <h3 style="color: #1b334d; font-size: 22px; margin: 0 0 15px 0;">${candidate.firstName} ${candidate.lastName}</h3>
+                <p style="color: #666; font-size: 16px; margin: 5px 0;"><strong>Position:</strong> ${candidate.position || 'N/A'}</p>
+                <p style="color: #666; font-size: 16px; margin: 5px 0;"><strong>Email:</strong> ${candidate.email || 'N/A'}</p>
+                <p style="color: #666; font-size: 16px; margin: 5px 0;"><strong>Phone:</strong> ${candidate.phone || 'N/A'}</p>
+                ${candidate.skills ? `<p style="color: #666; font-size: 14px; margin: 10px 0 0 0;"><strong>Skills:</strong> ${candidate.skills}</p>` : ''}
+            </div>
+        `).join('');
+        
+        return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artisan A-List</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Source Sans Pro', Arial, sans-serif; background-color: #f4f4f4;">
+    <div style="max-width: 650px; margin: 0 auto; background: white;">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); padding: 30px; text-align: center;">
+            <img src="https://artisan.com.au/wp-content/uploads/2023/01/artisan-logo-white.png" alt="Artisan" style="height: 50px;">
+            <h2 style="color: white; margin: 15px 0 0 0; font-size: 24px;">Artisan A-List</h2>
+        </div>
+
+        <!-- Greeting -->
+        <div style="padding: 30px;">
+            <p style="font-size: 16px; color: #333; line-height: 1.6;">Hi there,</p>
+            <p style="font-size: 16px; color: #333; line-height: 1.6;">Here are the top candidates from our recent interviews. These professionals are ready for their next opportunity!</p>
+        </div>
+
+        <!-- Candidates -->
+        <div style="padding: 0 30px 30px 30px;">
+            <h2 style="color: #9b59b6; font-size: 24px; margin-bottom: 20px; border-bottom: 3px solid #9b59b6; padding-bottom: 10px;">Featured Candidates</h2>
+            ${candidatesHTML}
+        </div>
+
+        <!-- Footer -->
+        <div style="background: #1b334d; color: white; padding: 30px; text-align: center;">
+            <p style="margin: 0 0 10px 0; font-size: 14px;">MEL (03) 9514 1000 | SYD (02) 8214 4666 | BNE (07) 3333 1833</p>
+            <p style="margin: 0; font-size: 12px; color: #ccc;">© ${new Date().getFullYear()} Artisan. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
+        `;
+    }
 }
 
 module.exports = new EmailPreviewService();
+
