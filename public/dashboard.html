@@ -2054,8 +2054,8 @@
             
             const iframe = document.createElement('iframe');
             iframe.className = 'preview-iframe';
-            iframe.src = url;
             iframe.style.display = 'none';
+            iframe.style.pointerEvents = 'none'; // Prevent iframe from capturing clicks
             currentIframe = iframe;
             
             // Set timeout for loading
@@ -2078,10 +2078,19 @@
                 clearTimeout(previewTimeout);
                 iframe.style.display = 'block';
                 previewPanel.innerHTML = '';
-                previewPanel.appendChild(iframe);
                 
-                // Add click handler to iframe wrapper
-                iframe.addEventListener('click', () => openPreviewModal(url));
+                // Create wrapper for click handling
+                const wrapper = document.createElement('div');
+                wrapper.style.position = 'relative';
+                wrapper.style.width = '100%';
+                wrapper.style.height = '100%';
+                wrapper.style.cursor = 'pointer';
+                
+                wrapper.appendChild(iframe);
+                previewPanel.appendChild(wrapper);
+                
+                // Add click handler to wrapper, not iframe
+                wrapper.addEventListener('click', () => openPreviewModal(url));
             };
             
             iframe.onerror = (error) => {
@@ -2101,6 +2110,9 @@
                 showToast('Preview failed to load - check console', 'error');
                 currentIframe = null;
             };
+            
+            // Set src AFTER setting up handlers to prevent race conditions
+            iframe.src = url;
             
             // Append iframe to start loading
             previewPanel.appendChild(iframe);
