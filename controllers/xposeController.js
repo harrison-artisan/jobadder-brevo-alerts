@@ -270,3 +270,39 @@ class XposeController {
 }
 
 module.exports = new XposeController();
+
+    // --- Preview Endpoints ---
+
+    previewNewsletter = async (req, res) => {
+        try {
+            await this.loadState();
+            const emailPreviewService = require('../services/emailPreviewService');
+            const html = await emailPreviewService.renderXposeNewsletter(this.state);
+            res.send(html);
+        } catch (error) {
+            console.error('❌ Error generating newsletter preview:', error);
+            res.status(500).send(`
+                <div style="padding: 40px; text-align: center; font-family: Arial, sans-serif;">
+                    <h2 style="color: #e74c3c;">Preview Unavailable</h2>
+                    <p style="color: #666;">${error.message}</p>
+                </div>
+            `);
+        }
+    };
+
+    previewSingleArticle = async (req, res) => {
+        const { articleId } = req.params;
+        try {
+            const emailPreviewService = require('../services/emailPreviewService');
+            const html = await emailPreviewService.renderSingleArticle(articleId);
+            res.send(html);
+        } catch (error) {
+            console.error(`❌ Error generating article ${articleId} preview:`, error);
+            res.status(500).send(`
+                <div style="padding: 40px; text-align: center; font-family: Arial, sans-serif;">
+                    <h2 style="color: #e74c3c;">Preview Unavailable</h2>
+                    <p style="color: #666;">${error.message}</p>
+                </div>
+            `);
+        }
+    };
