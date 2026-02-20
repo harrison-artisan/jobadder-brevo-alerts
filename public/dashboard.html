@@ -698,7 +698,7 @@
         /* ========== PREVIEW PANEL & MODAL ========== */
         .main-layout {
             display: grid;
-            grid-template-columns: 70% 30%;
+            grid-template-columns: 7fr 3fr;
             gap: 20px;
         }
         
@@ -710,7 +710,7 @@
             background: rgba(255, 255, 255, 0.12);
             backdrop-filter: blur(20px);
             border-radius: 10px;
-            padding: 20px;
+            padding: 0;
             border: 1px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             overflow: hidden;
@@ -2047,6 +2047,7 @@
             }
             if (currentIframe) {
                 currentIframe.remove();
+                currentIframe = null;
             }
             
             previewPanel.innerHTML = `
@@ -2059,13 +2060,14 @@
             
             const iframe = document.createElement('iframe');
             iframe.className = 'preview-iframe';
-            iframe.style.display = 'none';
-            iframe.style.pointerEvents = 'none'; // Prevent iframe from capturing clicks
+            iframe.style.opacity = '0';
+            iframe.style.transition = 'opacity 0.3s ease';
+            iframe.style.minWidth = '650px'; // Force desktop view
             currentIframe = iframe;
             
             // Set timeout for loading
             previewTimeout = setTimeout(() => {
-                if (iframe.style.display === 'none') {
+                if (iframe.style.opacity === '0') {
                     previewPanel.innerHTML = `
                         <div class="preview-empty">
                             <div>
@@ -2075,22 +2077,15 @@
                             </div>
                         </div>
                     `;
-                    currentIframe = null;
+                    if (currentIframe) {
+                        currentIframe.remove();
+                        currentIframe = null;
+                    }
                 }
             }, 10000); // 10 second timeout
             
             iframe.onload = () => {
                 clearTimeout(previewTimeout);
-                
-                // Remove iframe from hidden container
-                if (iframe.parentElement) {
-                    const hiddenContainer = iframe.parentElement;
-                    iframe.remove();
-                    hiddenContainer.remove();
-                }
-                
-                iframe.style.display = 'block';
-                iframe.style.position = 'static';
                 previewPanel.innerHTML = '';
                 
                 // Create wrapper for click handling
@@ -2098,10 +2093,16 @@
                 wrapper.style.position = 'relative';
                 wrapper.style.width = '100%';
                 wrapper.style.height = '100%';
+                wrapper.style.overflow = 'auto'; // Allow scrolling for desktop view
                 wrapper.style.cursor = 'pointer';
                 
                 wrapper.appendChild(iframe);
                 previewPanel.appendChild(wrapper);
+                
+                // Fade in
+                setTimeout(() => {
+                    iframe.style.opacity = '1';
+                }, 50);
                 
                 // Add click handler to wrapper, not iframe
                 wrapper.addEventListener('click', () => openPreviewModal(url));
@@ -2125,16 +2126,7 @@
                 currentIframe = null;
             };
             
-            // Append iframe to a hidden container so it can load
-            const hiddenContainer = document.createElement('div');
-            hiddenContainer.style.position = 'absolute';
-            hiddenContainer.style.left = '-9999px';
-            hiddenContainer.style.width = '1px';
-            hiddenContainer.style.height = '1px';
-            hiddenContainer.appendChild(iframe);
-            document.body.appendChild(hiddenContainer);
-            
-            // Set src AFTER appending to DOM
+            // Set src to start loading
             iframe.src = url;
         }
         
