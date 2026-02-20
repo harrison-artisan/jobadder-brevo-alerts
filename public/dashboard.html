@@ -199,7 +199,8 @@
         .button-group {
             display: flex;
             gap: 15px;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
+            align-items: center;
         }
         
         .btn {
@@ -246,6 +247,11 @@
         
         .btn-success {
             background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            color: white;
+        }
+        
+        .btn-preview {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
             color: white;
         }
         
@@ -1069,7 +1075,7 @@
                 </select>
                 
                 <div class="button-group" style="margin-top: 15px;">
-                    <button class="btn btn-secondary" onclick="previewSingleJob()" id="btnPreviewJob" disabled style="background: #6c757d; border-color: #6c757d;">
+                    <button class="btn btn-preview" onclick="previewSingleJob()" id="btnPreviewJob" disabled>
                         Preview
                     </button>
                     <button class="btn btn-primary" onclick="sendSingleJobAlert()" id="btnSingleJob">
@@ -1116,7 +1122,7 @@
                     <button class="btn btn-info" id="btnRegenerate" disabled>
                         Regenerate
                     </button>
-                    <button class="btn btn-secondary" id="btnPreviewAlist" disabled style="background: #6c757d; border-color: #6c757d;">
+                    <button class="btn btn-preview" id="btnPreviewAlist" disabled>
                         Preview
                     </button>
                     <button class="btn btn-warning" id="btnSendTest" disabled>
@@ -1174,7 +1180,7 @@
                     <button class="btn btn-info" id="btnRegenerateXpose" disabled>
                         Regenerate
                     </button>
-                    <button class="btn btn-secondary" id="btnPreviewXpose" disabled style="background: #6c757d; border-color: #6c757d;">
+                    <button class="btn btn-preview" id="btnPreviewXpose" disabled>
                         Preview
                     </button>
                     <button class="btn btn-warning" id="btnSendTestXpose" disabled>
@@ -1193,7 +1199,7 @@
                 </select>
                 
                 <div class="button-group">
-                    <button class="btn btn-secondary" onclick="previewSingleArticle()" id="btnPreviewArticle" disabled style="background: #6c757d; border-color: #6c757d;">
+                    <button class="btn btn-preview" onclick="previewSingleArticle()" id="btnPreviewArticle" disabled>
                         Preview
                     </button>
                     <button class="btn btn-warning" onclick="sendTestSingleArticle()" id="btnTestSingleArticle">
@@ -1988,33 +1994,88 @@
         }
         
         // ========== PREVIEW PANEL FUNCTIONS ==========
+        let previewTimeout = null;
+        let currentIframe = null;
+        
         function loadPreview(url) {
             const previewPanel = document.getElementById('preview-panel');
+            
+            // Cancel any existing preview
+            if (previewTimeout) {
+                clearTimeout(previewTimeout);
+            }
+            if (currentIframe) {
+                currentIframe.remove();
+            }
+            
             previewPanel.innerHTML = `
                 <div class="preview-loading">
                     <div class="spinner-large"></div>
                     <p>Loading preview...</p>
+                    <button class="btn btn-secondary" onclick="cancelPreview()" style="margin-top: 20px;">Cancel</button>
                 </div>
             `;
             
             const iframe = document.createElement('iframe');
             iframe.className = 'preview-iframe';
             iframe.src = url;
+            iframe.style.display = 'none';
+            currentIframe = iframe;
+            
+            // Set timeout for loading
+            previewTimeout = setTimeout(() => {
+                if (iframe.style.display === 'none') {
+                    previewPanel.innerHTML = `
+                        <div class="preview-empty">
+                            <div>
+                                <p style="font-size: 48px;">⏱️</p>
+                                <p>Preview timed out</p>
+                                <p style="font-size: 14px; color: #999; margin-top: 10px;">The preview took too long to load</p>
+                            </div>
+                        </div>
+                    `;
+                    currentIframe = null;
+                }
+            }, 10000); // 10 second timeout
+            
             iframe.onload = () => {
+                clearTimeout(previewTimeout);
+                iframe.style.display = 'block';
                 previewPanel.innerHTML = '';
                 previewPanel.appendChild(iframe);
-                iframe.onclick = () => openPreviewModal(url);
+                
+                // Add click handler to iframe wrapper
+                iframe.addEventListener('click', () => openPreviewModal(url));
             };
+            
             iframe.onerror = () => {
+                clearTimeout(previewTimeout);
                 previewPanel.innerHTML = `
                     <div class="preview-empty">
                         <div>
                             <p style="font-size: 48px;">❌</p>
                             <p>Preview unavailable</p>
+                            <p style="font-size: 14px; color: #999; margin-top: 10px;">Failed to load preview</p>
                         </div>
                     </div>
                 `;
+                currentIframe = null;
             };
+            
+            // Append iframe to start loading
+            previewPanel.appendChild(iframe);
+        }
+        
+        function cancelPreview() {
+            if (previewTimeout) {
+                clearTimeout(previewTimeout);
+            }
+            if (currentIframe) {
+                currentIframe.remove();
+                currentIframe = null;
+            }
+            clearPreview();
+            showToast('Preview cancelled', 'info');
         }
         
         function clearPreview() {
