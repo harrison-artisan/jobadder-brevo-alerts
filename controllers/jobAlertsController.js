@@ -150,6 +150,42 @@ class JobAlertsController {
       throw error;
     }
   }
+
+  // Preview single job alert
+  previewSingleJob = async (req, res) => {
+    const { jobId } = req.params;
+    try {
+      console.log(`\n======== 🔍 PREVIEWING JOB ${jobId} ========`);
+      
+      // Fetch job details
+      const job = await jobadderService.getJobDetails(jobId);
+      if (!job) {
+        return res.status(404).send(`
+          <div style="padding: 40px; text-align: center; font-family: Arial, sans-serif;">
+            <h2 style="color: #e74c3c;">Job Not Found</h2>
+            <p style="color: #666;">Job ID ${jobId} could not be found.</p>
+          </div>
+        `);
+      }
+      
+      // Format job for email
+      const formattedJob = jobadderService.formatJobForEmail(job);
+      
+      // Use emailPreviewService to render the preview
+      const emailPreviewService = require('../services/emailPreviewService');
+      const html = await emailPreviewService.renderSingleJob(formattedJob);
+      res.send(html);
+    } catch (error) {
+      console.error(`❌ Error generating job ${jobId} preview:`, error);
+      res.status(500).send(`
+        <div style="padding: 40px; text-align: center; font-family: Arial, sans-serif;">
+          <h2 style="color: #e74c3c;">Preview Unavailable</h2>
+          <p style="color: #666;">${error.message}</p>
+        </div>
+      `);
+    }
+  };
 }
 
 module.exports = new JobAlertsController();
+
