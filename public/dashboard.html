@@ -1274,6 +1274,9 @@
             // Add active class to clicked tab
             event.target.classList.add('active');
             
+            // Clear preview when switching tabs
+            clearPreview();
+            
             // Load articles when switching to Xpose tab
             if (tabName === 'xpose') {
                 loadArticles();
@@ -2116,8 +2119,7 @@
             // Set src AFTER setting up handlers to prevent race conditions
             iframe.src = url;
             
-            // Append iframe to start loading
-            previewPanel.appendChild(iframe);
+            // Don't append iframe to DOM - it will load in background and be added in onload
         }
         
         function cancelPreview() {
