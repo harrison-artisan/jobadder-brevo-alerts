@@ -267,9 +267,6 @@ class XposeController {
         await this.loadState();
         res.json({ success: true, state: this.state });
     };
-}
-
-module.exports = new XposeController();
 
     // --- Preview Endpoints ---
 
@@ -306,3 +303,6 @@ module.exports = new XposeController();
             `);
         }
     };
+}
+
+module.exports = new XposeController();
