@@ -1068,9 +1068,14 @@
                     <option value="">Loading jobs...</option>
                 </select>
                 
-                <button class="btn btn-primary" onclick="sendSingleJobAlert()" id="btnSingleJob">
-                    Send Job Alert
-                </button>
+                <div class="button-group" style="margin-top: 15px;">
+                    <button class="btn btn-secondary" onclick="previewSingleJob()" id="btnPreviewJob" disabled style="background: #6c757d; border-color: #6c757d;">
+                        Preview
+                    </button>
+                    <button class="btn btn-primary" onclick="sendSingleJobAlert()" id="btnSingleJob">
+                        Send Job Alert
+                    </button>
+                </div>
                 
                 <div class="result-box" id="resultBox"></div>
             </div>
@@ -1110,6 +1115,9 @@
                     </button>
                     <button class="btn btn-info" id="btnRegenerate" disabled>
                         Regenerate
+                    </button>
+                    <button class="btn btn-secondary" id="btnPreviewAlist" disabled style="background: #6c757d; border-color: #6c757d;">
+                        Preview
                     </button>
                     <button class="btn btn-warning" id="btnSendTest" disabled>
                         Send Test
@@ -1158,13 +1166,16 @@
             </div>
 
             <div class="actions-card">
-                <h2>🗞️ Xpose Newsletter</h2>
+                <h2>Xpose Newsletter</h2>
                 <div class="button-group">
                     <button class="btn btn-info" id="btnGenerateXpose">
                         Generate Newsletter
                     </button>
                     <button class="btn btn-info" id="btnRegenerateXpose" disabled>
                         Regenerate
+                    </button>
+                    <button class="btn btn-secondary" id="btnPreviewXpose" disabled style="background: #6c757d; border-color: #6c757d;">
+                        Preview
                     </button>
                     <button class="btn btn-warning" id="btnSendTestXpose" disabled>
                         Send Test
@@ -1176,12 +1187,15 @@
             </div>
 
             <div class="actions-card">
-                <h2>📄 Send Single Article</h2>
+                <h2>Send Single Article</h2>
                 <select id="articleSelector">
                     <option value="">Loading articles...</option>
                 </select>
                 
                 <div class="button-group">
+                    <button class="btn btn-secondary" onclick="previewSingleArticle()" id="btnPreviewArticle" disabled style="background: #6c757d; border-color: #6c757d;">
+                        Preview
+                    </button>
                     <button class="btn btn-warning" onclick="sendTestSingleArticle()" id="btnTestSingleArticle">
                         Send Test Article
                     </button>
@@ -1433,6 +1447,12 @@
                         option.textContent = `${job.title} - ID: ${job.adId} - Ref: ${job.reference}`;
                         selector.appendChild(option);
                     });
+                    
+                    // Enable Preview button when job is selected
+                    selector.addEventListener('change', function() {
+                        const previewBtn = document.getElementById('btnPreviewJob');
+                        previewBtn.disabled = !this.value;
+                    });
                 } else if (!response.ok) {
                     selector.innerHTML = '<option value="">Error loading jobs</option>';
                     document.getElementById('activeJobsCount').textContent = '0';
@@ -1547,6 +1567,7 @@
             
             btnGenerate.disabled = false;
             btnRegenerate.disabled = !(stateUpper === 'GENERATED' || stateUpper === 'TESTED');
+            document.getElementById('btnPreviewAlist').disabled = !(stateUpper === 'GENERATED' || stateUpper === 'TESTED');
             btnSendTest.disabled = !(stateUpper === 'GENERATED' || stateUpper === 'TESTED');
             btnApprove.disabled = stateUpper !== 'TESTED';
             
@@ -1743,6 +1764,7 @@
             const isTested = xposeState.state === 'TESTED';
 
             document.getElementById('btnRegenerateXpose').disabled = !isGenerated && !isTested;
+            document.getElementById('btnPreviewXpose').disabled = !isGenerated && !isTested;
             document.getElementById('btnSendTestXpose').disabled = !isGenerated && !isTested;
             document.getElementById('btnApproveAndSendXpose').disabled = !isTested;
         }
@@ -1764,8 +1786,7 @@
                     xposeState = result.data;
                     const articleCount = (result.data.recentArticles?.length || 0) + 1;
                     const jobCount = result.data.jobs?.length || 0;
-                    showToast(`✅ Generated: ${articleCount} articles, ${jobCount} jobs`, 'success');
-                    loadPreview('/api/preview/xpose-newsletter');
+                    showToast(`✅ Generated: ${articleCount} articles, ${jobCount} jobs. Click Preview to view!`, 'success');
                 } else {
                     showToast(`❌ ${result.message}`, 'error');
                 }
@@ -1853,13 +1874,10 @@
                         option.textContent = article.title;
                         select.appendChild(option);
                     });
-                    // Load preview when article is selected
+                    // Enable Preview button when article is selected
                     select.addEventListener('change', function() {
-                        if (this.value) {
-                            loadPreview(`/api/preview/xpose-article/${this.value}`);
-                        } else {
-                            clearPreview();
-                        }
+                        const previewBtn = document.getElementById('btnPreviewArticle');
+                        previewBtn.disabled = !this.value;
                     });
                 } else {
                     select.innerHTML = '<option value="">No articles found</option>';
@@ -2029,11 +2047,51 @@
                 closePreviewModal();
             }
         });
+        
+        // ========== PREVIEW BUTTON FUNCTIONS ==========
+        function previewXposeNewsletter() {
+            if (!xposeState || xposeState.state === 'EMPTY') {
+                showToast('❌ Generate newsletter first', 'error');
+                return;
+            }
+            showToast('Loading preview...', 'info');
+            loadPreview('/api/preview/xpose-newsletter');
+        }
+        
+        function previewSingleArticle() {
+            const articleId = document.getElementById('articleSelector').value;
+            if (!articleId) {
+                showToast('❌ Select an article first', 'error');
+                return;
+            }
+            showToast('Loading preview...', 'info');
+            loadPreview(`/api/preview/xpose-article/${articleId}`);
+        }
+        
+        function previewAlist() {
+            if (!alistState || alistState.state === 'EMPTY') {
+                showToast('❌ Generate A-List first', 'error');
+                return;
+            }
+            showToast('Loading preview...', 'info');
+            loadPreview('/api/preview/alist');
+        }
+        
+        function previewSingleJob() {
+            const jobId = document.getElementById('jobSelector').value;
+            if (!jobId) {
+                showToast('❌ Select a job first', 'error');
+                return;
+            }
+            showToast('Loading preview...', 'info');
+            loadPreview(`/api/preview/job/${jobId}`);
+        }
 
         // Event listeners
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('btnGenerateXpose')?.addEventListener('click', generateXpose);
             document.getElementById('btnRegenerateXpose')?.addEventListener('click', generateXpose);
+            document.getElementById('btnPreviewXpose')?.addEventListener('click', previewXposeNewsletter);
             document.getElementById('btnSendTestXpose')?.addEventListener('click', sendTestXpose);
             document.getElementById('btnApproveAndSendXpose')?.addEventListener('click', sendAllXpose);
         });
