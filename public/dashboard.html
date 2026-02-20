@@ -161,6 +161,11 @@
             box-shadow: 0 4px 15px rgba(189, 32, 61, 0.4);
         }
         
+        .tab.xpose.active {
+            background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
+            box-shadow: 0 4px 15px rgba(41, 128, 185, 0.4);
+        }
+        
         /* Tab Content */
         .tab-content {
             display: none;
@@ -784,6 +789,9 @@
             <button class="tab alist" onclick="switchTab('alist')">
                 A-List
             </button>
+            <button class="tab xpose" onclick="switchTab('xpose')">
+                Xpose
+            </button>
         </div>
         
         <!-- Job Alerts Tab -->
@@ -885,6 +893,60 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Xpose Tab -->
+        <div id="xpose-content" class="tab-content">
+            <div class="status-grid">
+                <div class="status-card">
+                    <h3>Current State</h3>
+                    <div class="status-value" style="font-size: 16px;">
+                        <span class="status-badge EMPTY" id="xposeStateBadge">EMPTY</span>
+                    </div>
+                    <div class="status-label" id="xposeStateTimestamp">No newsletter generated</div>
+                </div>
+                
+                <div class="status-card">
+                    <h3>Articles</h3>
+                    <div class="status-value" style="color: white;" id="xposeArticlesCount">0</div>
+                    <div class="status-label">in newsletter</div>
+                </div>
+                
+                <div class="status-card">
+                    <h3>Jobs</h3>
+                    <div class="status-value" style="color: white;" id="xposeJobsCount">0</div>
+                    <div class="status-label">in newsletter</div>
+                </div>
+            </div>
+
+            <div class="actions-card">
+                <h2>🗞️ Xpose Newsletter</h2>
+                <div class="button-group">
+                    <button class="btn btn-info" id="btnGenerateXpose">
+                        Generate Newsletter
+                    </button>
+                    <button class="btn btn-info" id="btnRegenerateXpose" disabled>
+                        Regenerate
+                    </button>
+                    <button class="btn btn-warning" id="btnSendTestXpose" disabled>
+                        Send Test
+                    </button>
+                    <button class="btn btn-success" id="btnApproveAndSendXpose" disabled>
+                        Approve & Send
+                    </button>
+                </div>
+            </div>
+
+            <div class="actions-card">
+                <h2>📄 Send Single Article</h2>
+                <select id="articleSelector">
+                    <option value="">Loading articles...</option>
+                </select>
+                
+                <button class="btn btn-primary" onclick="sendSingleArticle()" id="btnSingleArticle">
+                    Send Article
+                </button>
+            </div>
+        </div>
     </div>
     
     <script>
@@ -919,6 +981,11 @@
             
             // Add active class to clicked tab
             event.target.classList.add('active');
+            
+            // Load articles when switching to Xpose tab
+            if (tabName === 'xpose') {
+                loadArticles();
+            }
         }
         
         async function checkBrevoStatus() {
@@ -1389,7 +1456,163 @@
             
             return date.toLocaleDateString();
         }
+
+        // ===============================================
+        // XPOSE NEWSLETTER FUNCTIONS
+        // ===============================================
+        let xposeState = { state: 'EMPTY' };
+
+        function updateXposeUI() {
+            const stateBadge = document.getElementById('xposeStateBadge');
+            const stateTimestamp = document.getElementById('xposeStateTimestamp');
+            const articlesCount = document.getElementById('xposeArticlesCount');
+            const jobsCount = document.getElementById('xposeJobsCount');
+            
+            stateBadge.textContent = xposeState.state;
+            stateBadge.className = 'status-badge ' + xposeState.state;
+            
+            if (xposeState.generatedAt) {
+                stateTimestamp.textContent = formatTimestamp(xposeState.generatedAt);
+            } else {
+                stateTimestamp.textContent = 'No newsletter generated';
+            }
+            
+            const articleCount = (xposeState.featuredArticle ? 1 : 0) + (xposeState.recentArticles?.length || 0);
+            articlesCount.textContent = articleCount;
+            jobsCount.textContent = xposeState.jobs?.length || 0;
+
+            const isGenerated = xposeState.state === 'GENERATED';
+            const isTested = xposeState.state === 'TESTED';
+
+            document.getElementById('btnRegenerateXpose').disabled = !isGenerated && !isTested;
+            document.getElementById('btnSendTestXpose').disabled = !isGenerated && !isTested;
+            document.getElementById('btnApproveAndSendXpose').disabled = !isTested;
+        }
+
+        async function generateXpose() {
+            const btn = document.getElementById('btnGenerateXpose');
+            btn.disabled = true;
+            btn.textContent = 'Generating...';
+            
+            try {
+                const response = await fetch('/api/xpose/generate', { method: 'POST' });
+                const result = await response.json();
+                if (result.success) {
+                    xposeState = result.data;
+                    showResult('Newsletter generated successfully!', 'success');
+                } else {
+                    showResult(result.message, 'error');
+                }
+            } catch (error) {
+                showResult('Error: ' + error.message, 'error');
+            }
+            
+            btn.disabled = false;
+            btn.textContent = 'Generate Newsletter';
+            updateXposeUI();
+        }
+
+        async function sendTestXpose() {
+            const btn = document.getElementById('btnSendTestXpose');
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+            
+            try {
+                const response = await fetch('/api/xpose/send-test', { method: 'POST' });
+                const result = await response.json();
+                if (result.success) {
+                    xposeState.state = 'TESTED';
+                    showResult('Test email sent!', 'success');
+                } else {
+                    showResult(result.message, 'error');
+                }
+            } catch (error) {
+                showResult('Error: ' + error.message, 'error');
+            }
+            
+            btn.disabled = false;
+            btn.textContent = 'Send Test';
+            updateXposeUI();
+        }
+
+        async function sendAllXpose() {
+            if (!confirm('Send newsletter to all contacts?')) return;
+            
+            const btn = document.getElementById('btnApproveAndSendXpose');
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+            
+            try {
+                const response = await fetch('/api/xpose/send', { method: 'POST' });
+                const result = await response.json();
+                if (result.success) {
+                    xposeState = { state: 'EMPTY' };
+                    showResult(result.message, 'success');
+                } else {
+                    showResult(result.message, 'error');
+                }
+            } catch (error) {
+                showResult('Error: ' + error.message, 'error');
+            }
+            
+            btn.disabled = false;
+            btn.textContent = 'Approve & Send';
+            updateXposeUI();
+        }
+
+        async function loadArticles() {
+            const select = document.getElementById('articleSelector');
+            try {
+                const response = await fetch('/api/xpose/articles');
+                const result = await response.json();
+                if (result.success && result.articles.length > 0) {
+                    select.innerHTML = '<option value="">Select an article...</option>';
+                    result.articles.forEach(article => {
+                        const option = document.createElement('option');
+                        option.value = article.id;
+                        option.textContent = article.title;
+                        select.appendChild(option);
+                    });
+                } else {
+                    select.innerHTML = '<option value="">No articles found</option>';
+                }
+            } catch (error) {
+                select.innerHTML = '<option value="">Error loading</option>';
+            }
+        }
+
+        async function sendSingleArticle() {
+            const articleId = document.getElementById('articleSelector').value;
+            if (!articleId) {
+                showResult('Please select an article', 'error');
+                return;
+            }
+
+            if (!confirm('Send this article to all contacts?')) return;
+
+            const btn = document.getElementById('btnSingleArticle');
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+            
+            try {
+                const response = await fetch(`/api/xpose/send-article/${articleId}`, { method: 'POST' });
+                const result = await response.json();
+                showResult(result.message, result.success ? 'success' : 'error');
+            } catch (error) {
+                showResult('Error: ' + error.message, 'error');
+            }
+            
+            btn.disabled = false;
+            btn.textContent = 'Send Article';
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('btnGenerateXpose')?.addEventListener('click', generateXpose);
+            document.getElementById('btnRegenerateXpose')?.addEventListener('click', generateXpose);
+            document.getElementById('btnSendTestXpose')?.addEventListener('click', sendTestXpose);
+            document.getElementById('btnApproveAndSendXpose')?.addEventListener('click', sendAllXpose);
+        });
     </script>
 </body>
 </html>
-
