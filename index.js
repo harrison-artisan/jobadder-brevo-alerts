@@ -243,6 +243,31 @@ app.post('/api/xpose/send-test-article/:articleId', async (req, res) => {
   }
 });
 
+// Preview routes
+app.get('/api/preview/xpose-newsletter', async (req, res) => {
+  try {
+    await xposeController.previewNewsletter(req, res);
+  } catch (error) {
+    res.status(500).send('<div style="padding: 40px; text-align: center;"><h2>Error</h2><p>' + error.message + '</p></div>');
+  }
+});
+
+app.get('/api/preview/xpose-article/:articleId', async (req, res) => {
+  try {
+    await xposeController.previewSingleArticle(req, res);
+  } catch (error) {
+    res.status(500).send('<div style="padding: 40px; text-align: center;"><h2>Error</h2><p>' + error.message + '</p></div>');
+  }
+});
+
+app.get('/api/preview/job/:jobId', async (req, res) => {
+  try {
+    await jobAlertsController.previewSingleJob(req, res);
+  } catch (error) {
+    res.status(500).send('<div style="padding: 40px; text-align: center;"><h2>Error</h2><p>' + error.message + '</p></div>');
+  }
+});
+
 app.post('/api/xpose/send-article/:articleId', async (req, res) => {
   try {
     if (!jobadderService.isAuthorized()) {
