@@ -235,14 +235,18 @@ class EmailPreviewService {
                 EMAIL: 'preview@artisan.com.au'
             },
             params: {
-                candidates: state.candidates.map(candidate => ({
+                candidates: state.candidates.map((candidate, index) => ({
+                    number: index + 1,
                     name: candidate.name || candidate.firstName + ' ' + candidate.lastName,
                     title: candidate.title || candidate.currentJobTitle,
                     location: candidate.location,
                     summary: candidate.summary || candidate.bio || '',
-                    skills: candidate.skills ? candidate.skills.join(', ') : ''
+                    skills: candidate.skills ? candidate.skills.join(', ') : '',
+                    image_url: candidate.photo || 'https://via.placeholder.com/100',
+                    profile_url: candidate.profileUrl || '#'
                 }))
-            }
+            },
+            unsubscribe: 'https://artisan.com.au/unsubscribe'
         };
 
         return this.replaceTemplateVariables(template, data);
