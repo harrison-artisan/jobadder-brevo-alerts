@@ -174,9 +174,51 @@ class XposeController {
         }
     };
 
+    sendTestSingleArticle = async (req, res) => {
+        const { articleId } = req.params;
+        console.log(`\n======== 🧪 SENDING TEST SINGLE ARTICLE ${articleId} ========`);
+
+        try {
+            const article = await wordpressService.getArticleById(articleId);
+            if (!article) {
+                return res.status(404).json({ 
+                    success: false, 
+                    message: 'Article not found.' 
+                });
+            }
+
+            const testEmail = process.env.TEST_EMAIL;
+            if (!testEmail) {
+                return res.status(500).json({ 
+                    success: false, 
+                    message: 'TEST_EMAIL not configured.' 
+                });
+            }
+
+            await brevoService.sendTransactionalEmail({
+                templateId: parseInt(process.env.BREVO_XPOSE_SINGLE_ARTICLE_TEMPLATE_ID),
+                to: [{ email: testEmail }],
+                params: { article },
+            });
+
+            console.log(`✅ Test single article ${articleId} sent to ${testEmail}.`);
+            res.json({ 
+                success: true, 
+                message: `Test article sent to ${testEmail}.` 
+            });
+
+        } catch (error) {
+            console.error(`❌ Error sending test single article ${articleId}:`, error);
+            res.status(500).json({ 
+                success: false, 
+                message: error.message 
+            });
+        }
+    };
+
     sendSingleArticle = async (req, res) => {
         const { articleId } = req.params;
-        console.log(`\n======== 📄 SENDING SINGLE ARTICLE: ${articleId} ========`);
+        console.log(`\n======== 📄 SENDING SINGLE ARTICLE ${articleId} ========`);
 
         try {
             const article = await wordpressService.getArticleById(articleId);
@@ -228,3 +270,4 @@ class XposeController {
 }
 
 module.exports = new XposeController();
+
