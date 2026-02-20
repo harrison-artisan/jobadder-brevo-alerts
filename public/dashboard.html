@@ -1131,9 +1131,6 @@
                     <button class="btn btn-purple" id="btnGenerate">
                         Generate A-List
                     </button>
-                    <button class="btn btn-info" id="btnRegenerate" disabled>
-                        Regenerate
-                    </button>
                     <button class="btn btn-preview" id="btnPreviewAlist" disabled>
                         Preview
                     </button>
@@ -1188,9 +1185,6 @@
                 <div class="button-group">
                     <button class="btn btn-info" id="btnGenerateXpose">
                         Generate Newsletter
-                    </button>
-                    <button class="btn btn-info" id="btnRegenerateXpose" disabled>
-                        Regenerate
                     </button>
                     <button class="btn btn-preview" id="btnPreviewXpose" disabled>
                         Preview
@@ -1659,6 +1653,8 @@
                 
                 if (response.ok) {
                     showMessage('A-List generated successfully!', 'success');
+                    // Change button text to Regenerate
+                    document.getElementById('btnGenerate').textContent = 'Regenerate';
                     await loadAListState();
                 } else {
                     showMessage('Error: ' + (data.error || 'Failed to generate A-List'), 'error');
