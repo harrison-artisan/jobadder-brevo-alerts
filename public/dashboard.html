@@ -2081,7 +2081,16 @@
             
             iframe.onload = () => {
                 clearTimeout(previewTimeout);
+                
+                // Remove iframe from hidden container
+                if (iframe.parentElement) {
+                    const hiddenContainer = iframe.parentElement;
+                    iframe.remove();
+                    hiddenContainer.remove();
+                }
+                
                 iframe.style.display = 'block';
+                iframe.style.position = 'static';
                 previewPanel.innerHTML = '';
                 
                 // Create wrapper for click handling
@@ -2116,10 +2125,17 @@
                 currentIframe = null;
             };
             
-            // Set src AFTER setting up handlers to prevent race conditions
-            iframe.src = url;
+            // Append iframe to a hidden container so it can load
+            const hiddenContainer = document.createElement('div');
+            hiddenContainer.style.position = 'absolute';
+            hiddenContainer.style.left = '-9999px';
+            hiddenContainer.style.width = '1px';
+            hiddenContainer.style.height = '1px';
+            hiddenContainer.appendChild(iframe);
+            document.body.appendChild(hiddenContainer);
             
-            // Don't append iframe to DOM - it will load in background and be added in onload
+            // Set src AFTER appending to DOM
+            iframe.src = url;
         }
         
         function cancelPreview() {
@@ -2220,11 +2236,15 @@
 
         // Event listeners
         document.addEventListener('DOMContentLoaded', function() {
+            // Xpose event listeners
             document.getElementById('btnGenerateXpose')?.addEventListener('click', generateXpose);
             document.getElementById('btnRegenerateXpose')?.addEventListener('click', generateXpose);
             document.getElementById('btnPreviewXpose')?.addEventListener('click', previewXposeNewsletter);
             document.getElementById('btnSendTestXpose')?.addEventListener('click', sendTestXpose);
             document.getElementById('btnApproveAndSendXpose')?.addEventListener('click', sendAllXpose);
+            
+            // A-List preview button
+            document.getElementById('btnPreviewAlist')?.addEventListener('click', previewAlist);
         });
     </script>
 </body>
