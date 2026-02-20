@@ -942,9 +942,14 @@
                     <option value="">Loading articles...</option>
                 </select>
                 
-                <button class="btn btn-primary" onclick="sendSingleArticle()" id="btnSingleArticle">
-                    Send Article
-                </button>
+                <div class="button-group">
+                    <button class="btn btn-warning" onclick="sendTestSingleArticle()" id="btnTestSingleArticle">
+                        Send Test Article
+                    </button>
+                    <button class="btn btn-primary" onclick="sendSingleArticle()" id="btnSingleArticle">
+                        Send Article to All
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -1581,6 +1586,29 @@
             }
         }
 
+        async function sendTestSingleArticle() {
+            const articleId = document.getElementById('articleSelector').value;
+            if (!articleId) {
+                showResult('Please select an article', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btnTestSingleArticle');
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+            
+            try {
+                const response = await fetch(`/api/xpose/send-test-article/${articleId}`, { method: 'POST' });
+                const result = await response.json();
+                showResult(result.message, result.success ? 'success' : 'error');
+            } catch (error) {
+                showResult('Error: ' + error.message, 'error');
+            }
+            
+            btn.disabled = false;
+            btn.textContent = 'Send Test Article';
+        }
+
         async function sendSingleArticle() {
             const articleId = document.getElementById('articleSelector').value;
             if (!articleId) {
@@ -1603,7 +1631,7 @@
             }
             
             btn.disabled = false;
-            btn.textContent = 'Send Article';
+            btn.textContent = 'Send Article to All';
         }
 
         // Event listeners
