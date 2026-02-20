@@ -14,18 +14,13 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, #0f1c2e 0%, #1b334d 25%, #2c5282 50%, #34495e 75%, #3d5a80 100%);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
+            background-size: 100% 100%;
             min-height: 100vh;
             padding: 40px 20px;
             position: relative;
         }
         
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
+
         
         .container {
             max-width: 1400px;
@@ -687,9 +682,249 @@
                 grid-template-columns: 1fr;
             }
         }
+        
+        /* ========== PREVIEW PANEL & MODAL ========== */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 60% 40%;
+            gap: 30px;
+        }
+        
+        .preview-panel {
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 100px);
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(20px);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .preview-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .preview-empty p:first-child {
+            font-size: 48px;
+            margin: 0;
+        }
+        
+        .preview-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            flex-direction: column;
+            gap: 20px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .preview-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .preview-iframe:hover {
+            transform: scale(1.01);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Preview Modal */
+        .preview-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .preview-modal.active {
+            display: flex;
+        }
+        
+        .preview-modal-content {
+            width: 90%;
+            max-width: 900px;
+            height: 90vh;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .preview-modal-header {
+            background: #1b334d;
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .preview-modal-header h3 {
+            margin: 0;
+            font-size: 20px;
+        }
+        
+        .preview-modal-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .preview-modal-body {
+            flex: 1;
+            overflow: auto;
+        }
+        
+        .preview-modal-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10001;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .toast {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+        
+        .toast.success { border-left: 4px solid #27ae60; }
+        .toast.error { border-left: 4px solid #e74c3c; }
+        .toast.info { border-left: 4px solid #3498db; }
+        .toast.loading { border-left: 4px solid #f39c12; }
+        
+        .toast-icon {
+            font-size: 20px;
+        }
+        
+        .toast-message {
+            flex: 1;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-left: 10px;
+        }
+        
+        .spinner-large {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Mobile Responsive for Preview */
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .preview-panel {
+                position: relative;
+                height: 500px;
+                order: 2;
+            }
+            
+            .control-panel {
+                order: 1;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toast-container"></div>
+    
+    <!-- Preview Modal -->
+    <div class="preview-modal" id="preview-modal">
+        <div class="preview-modal-content">
+            <div class="preview-modal-header">
+                <h3>📧 Email Preview</h3>
+                <div class="preview-modal-actions">
+                    <button class="btn btn-primary" onclick="closePreviewModal()" style="padding: 10px 20px;">✕ Close</button>
+                </div>
+            </div>
+            <div class="preview-modal-body">
+                <iframe id="preview-modal-iframe" class="preview-modal-iframe"></iframe>
+            </div>
+        </div>
+    </div>
+    
     <div class="container">
         <!-- Header -->
         <div class="header">
@@ -781,8 +1016,12 @@
             </div>
         </div>
         
-        <!-- Tab Navigation -->
-        <div class="tabs">
+        <!-- Main Layout: Control Panel + Preview Panel -->
+        <div class="main-layout">
+            <!-- Control Panel (Left Side) -->
+            <div class="control-panel">
+                <!-- Tab Navigation -->
+                <div class="tabs">
             <button class="tab active" onclick="switchTab('job-alerts')">
                 Job Alerts
             </button>
@@ -952,6 +1191,20 @@
                 </div>
             </div>
         </div>
+            </div>
+            <!-- End Control Panel -->
+            
+            <!-- Preview Panel (Right Side) -->
+            <div class="preview-panel" id="preview-panel">
+                <div class="preview-empty">
+                    <div>
+                        <p>📧</p>
+                        <p>Generate or select an email to preview</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End Main Layout -->
     </div>
     
     <script>
@@ -1497,42 +1750,57 @@
         async function generateXpose() {
             const btn = document.getElementById('btnGenerateXpose');
             btn.disabled = true;
-            btn.textContent = 'Generating...';
+            btn.innerHTML = 'Generating... <span class="spinner"></span>';
+            
+            const loadingToast = showToast('Generating newsletter...', 'loading');
             
             try {
                 const response = await fetch('/api/xpose/generate', { method: 'POST' });
                 const result = await response.json();
+                
+                loadingToast.remove();
+                
                 if (result.success) {
                     xposeState = result.data;
-                    showResult('Newsletter generated successfully!', 'success');
+                    const articleCount = (result.data.recentArticles?.length || 0) + 1;
+                    const jobCount = result.data.jobs?.length || 0;
+                    showToast(`✅ Generated: ${articleCount} articles, ${jobCount} jobs`, 'success');
+                    loadPreview('/api/preview/xpose-newsletter');
                 } else {
-                    showResult(result.message, 'error');
+                    showToast(`❌ ${result.message}`, 'error');
                 }
             } catch (error) {
-                showResult('Error: ' + error.message, 'error');
+                loadingToast.remove();
+                showToast(`❌ Failed to generate: ${error.message}`, 'error');
             }
             
             btn.disabled = false;
-            btn.textContent = 'Generate Newsletter';
+            btn.textContent = 'Regenerate Newsletter';
             updateXposeUI();
         }
 
         async function sendTestXpose() {
             const btn = document.getElementById('btnSendTestXpose');
             btn.disabled = true;
-            btn.textContent = 'Sending...';
+            btn.innerHTML = 'Sending... <span class="spinner"></span>';
+            
+            const loadingToast = showToast('Sending test email...', 'loading');
             
             try {
                 const response = await fetch('/api/xpose/send-test', { method: 'POST' });
                 const result = await response.json();
+                
+                loadingToast.remove();
+                
                 if (result.success) {
                     xposeState.state = 'TESTED';
-                    showResult('Test email sent!', 'success');
+                    showToast('✅ Test sent to harrison@artisan.com.au', 'success');
                 } else {
-                    showResult(result.message, 'error');
+                    showToast(`❌ ${result.message}`, 'error');
                 }
             } catch (error) {
-                showResult('Error: ' + error.message, 'error');
+                loadingToast.remove();
+                showToast(`❌ Failed to send: ${error.message}`, 'error');
             }
             
             btn.disabled = false;
@@ -1545,19 +1813,26 @@
             
             const btn = document.getElementById('btnApproveAndSendXpose');
             btn.disabled = true;
-            btn.textContent = 'Sending...';
+            btn.innerHTML = 'Sending... <span class="spinner"></span>';
+            
+            const loadingToast = showToast('Sending to all contacts...', 'loading');
             
             try {
                 const response = await fetch('/api/xpose/send', { method: 'POST' });
                 const result = await response.json();
+                
+                loadingToast.remove();
+                
                 if (result.success) {
                     xposeState = { state: 'EMPTY' };
-                    showResult(result.message, 'success');
+                    showToast(`✅ ${result.message}`, 'success');
+                    clearPreview();
                 } else {
-                    showResult(result.message, 'error');
+                    showToast(`❌ ${result.message}`, 'error');
                 }
             } catch (error) {
-                showResult('Error: ' + error.message, 'error');
+                loadingToast.remove();
+                showToast(`❌ Failed to send: ${error.message}`, 'error');
             }
             
             btn.disabled = false;
@@ -1578,31 +1853,50 @@
                         option.textContent = article.title;
                         select.appendChild(option);
                     });
+                    // Load preview when article is selected
+                    select.addEventListener('change', function() {
+                        if (this.value) {
+                            loadPreview(`/api/preview/xpose-article/${this.value}`);
+                        } else {
+                            clearPreview();
+                        }
+                    });
                 } else {
                     select.innerHTML = '<option value="">No articles found</option>';
                 }
             } catch (error) {
                 select.innerHTML = '<option value="">Error loading</option>';
+                showToast('❌ Failed to load articles', 'error');
             }
         }
 
         async function sendTestSingleArticle() {
             const articleId = document.getElementById('articleSelector').value;
             if (!articleId) {
-                showResult('Please select an article', 'error');
+                showToast('❌ Please select an article', 'error');
                 return;
             }
 
             const btn = document.getElementById('btnTestSingleArticle');
             btn.disabled = true;
-            btn.textContent = 'Sending...';
+            btn.innerHTML = 'Sending... <span class="spinner"></span>';
+            
+            const loadingToast = showToast('Sending test article...', 'loading');
             
             try {
                 const response = await fetch(`/api/xpose/send-test-article/${articleId}`, { method: 'POST' });
                 const result = await response.json();
-                showResult(result.message, result.success ? 'success' : 'error');
+                
+                loadingToast.remove();
+                
+                if (result.success) {
+                    showToast('✅ Test article sent to harrison@artisan.com.au', 'success');
+                } else {
+                    showToast(`❌ ${result.message}`, 'error');
+                }
             } catch (error) {
-                showResult('Error: ' + error.message, 'error');
+                loadingToast.remove();
+                showToast(`❌ Failed to send: ${error.message}`, 'error');
             }
             
             btn.disabled = false;
@@ -1612,7 +1906,7 @@
         async function sendSingleArticle() {
             const articleId = document.getElementById('articleSelector').value;
             if (!articleId) {
-                showResult('Please select an article', 'error');
+                showToast('❌ Please select an article', 'error');
                 return;
             }
 
@@ -1620,19 +1914,121 @@
 
             const btn = document.getElementById('btnSingleArticle');
             btn.disabled = true;
-            btn.textContent = 'Sending...';
+            btn.innerHTML = 'Sending... <span class="spinner"></span>';
+            
+            const loadingToast = showToast('Sending article to all contacts...', 'loading');
             
             try {
                 const response = await fetch(`/api/xpose/send-article/${articleId}`, { method: 'POST' });
                 const result = await response.json();
-                showResult(result.message, result.success ? 'success' : 'error');
+                
+                loadingToast.remove();
+                
+                if (result.success) {
+                    showToast(`✅ ${result.message}`, 'success');
+                    clearPreview();
+                } else {
+                    showToast(`❌ ${result.message}`, 'error');
+                }
             } catch (error) {
-                showResult('Error: ' + error.message, 'error');
+                loadingToast.remove();
+                showToast(`❌ Failed to send: ${error.message}`, 'error');
             }
             
             btn.disabled = false;
             btn.textContent = 'Send Article to All';
         }
+
+        // ========== TOAST NOTIFICATION SYSTEM ==========
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: '✅',
+                error: '❌',
+                info: 'ℹ️',
+                loading: '⏳'
+            };
+            
+            toast.innerHTML = `
+                <span class="toast-icon">${icons[type]}</span>
+                <span class="toast-message">${message}</span>
+            `;
+            
+            container.appendChild(toast);
+            
+            if (type !== 'loading') {
+                setTimeout(() => {
+                    toast.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+            
+            return toast;
+        }
+        
+        // ========== PREVIEW PANEL FUNCTIONS ==========
+        function loadPreview(url) {
+            const previewPanel = document.getElementById('preview-panel');
+            previewPanel.innerHTML = `
+                <div class="preview-loading">
+                    <div class="spinner-large"></div>
+                    <p>Loading preview...</p>
+                </div>
+            `;
+            
+            const iframe = document.createElement('iframe');
+            iframe.className = 'preview-iframe';
+            iframe.src = url;
+            iframe.onload = () => {
+                previewPanel.innerHTML = '';
+                previewPanel.appendChild(iframe);
+                iframe.onclick = () => openPreviewModal(url);
+            };
+            iframe.onerror = () => {
+                previewPanel.innerHTML = `
+                    <div class="preview-empty">
+                        <div>
+                            <p style="font-size: 48px;">❌</p>
+                            <p>Preview unavailable</p>
+                        </div>
+                    </div>
+                `;
+            };
+        }
+        
+        function clearPreview() {
+            const previewPanel = document.getElementById('preview-panel');
+            previewPanel.innerHTML = `
+                <div class="preview-empty">
+                    <div>
+                        <p>📧</p>
+                        <p>Generate or select an email to preview</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function openPreviewModal(url) {
+            const modal = document.getElementById('preview-modal');
+            const iframe = document.getElementById('preview-modal-iframe');
+            iframe.src = url;
+            modal.classList.add('active');
+        }
+        
+        function closePreviewModal() {
+            const modal = document.getElementById('preview-modal');
+            modal.classList.remove('active');
+        }
+        
+        // Close modal on background click
+        document.getElementById('preview-modal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePreviewModal();
+            }
+        });
 
         // Event listeners
         document.addEventListener('DOMContentLoaded', function() {
