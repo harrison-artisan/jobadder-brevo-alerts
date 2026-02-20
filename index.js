@@ -229,6 +229,20 @@ app.get('/api/xpose/articles', async (req, res) => {
   }
 });
 
+app.post('/api/xpose/send-test-article/:articleId', async (req, res) => {
+  try {
+    if (!jobadderService.isAuthorized()) {
+      return res.status(401).json({ 
+        error: 'Not authorized', 
+        message: 'Please complete JobAdder authorization at /auth/jobadder' 
+      });
+    }
+    await xposeController.sendTestSingleArticle(req, res);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/xpose/send-article/:articleId', async (req, res) => {
   try {
     if (!jobadderService.isAuthorized()) {
