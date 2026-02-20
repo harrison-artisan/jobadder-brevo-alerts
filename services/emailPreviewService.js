@@ -41,6 +41,15 @@ class EmailPreviewService {
 
         // Replace simple params variables
         if (data.params) {
+            // Job alert variables (flat structure)
+            if (data.params.job_title) {
+                result = result.replace(/\{\{\s*params\.job_title\s*\}\}/g, data.params.job_title || '');
+                result = result.replace(/\{\{\s*params\.location\s*\}\}/g, data.params.location || '');
+                result = result.replace(/\{\{\s*params\.job_type\s*\}\}/g, data.params.job_type || '');
+                result = result.replace(/\{\{\s*params\.job_description\s*\}\}/g, data.params.job_description || '');
+                result = result.replace(/\{\{\s*params\.apply_url\s*\}\}/g, data.params.apply_url || '#');
+            }
+            
             // Featured article
             if (data.params.featuredArticle) {
                 const fa = data.params.featuredArticle;
@@ -198,14 +207,11 @@ class EmailPreviewService {
                 EMAIL: 'preview@artisan.com.au'
             },
             params: {
-                job: {
-                    title: job.title,
-                    company: job.company || 'Artisan',
-                    location: job.location,
-                    type: job.workType || job.type,
-                    summary: job.summary || job.description || '',
-                    url: job.link || job.url || '#'
-                }
+                job_title: job.title,
+                location: job.location,
+                job_type: job.workType || job.type,
+                job_description: job.summary || job.description || '',
+                apply_url: job.link || job.url || '#'
             }
         };
 
@@ -244,4 +250,3 @@ class EmailPreviewService {
 }
 
 module.exports = new EmailPreviewService();
-
