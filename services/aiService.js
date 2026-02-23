@@ -34,41 +34,43 @@ class AIService {
       // Build anonymized context about the candidate
       const context = this.buildAnonymizedContext(candidate);
       
-      const prompt = `Create a compelling, anonymized professional summary for this candidate for a recruitment email.
+      const prompt = `You are writing a COMPELLING, EXCITING recruitment pitch to sell this candidate to potential employers. Make them want to hire this person immediately!
 
 ${context}
 
 CRITICAL REQUIREMENTS:
 - DO NOT include any names (first name, last name, or any proper names)
-- DO NOT include any company names or employer names
+- DO NOT include any company names or employer names  
 - DO NOT use gender-specific pronouns (he/she/his/her) - use they/their/them or avoid pronouns entirely
 - DO NOT include overly personal details (age, location specifics, personal life)
 - DO generalize overly specific job titles - remove codes, numbers, internal jargon, make them readable and professional
-- DO focus on skills, expertise, experience level, and value proposition
-- DO make it compelling and highlight what makes them stand out
-- DO write in third person or use neutral language
-- VARY the opening - DO NOT always start with An experienced - use different structures for variety
-- Keep it concise (2-3 sentences maximum)
-- Professional tone suitable for client-facing recruitment email
-- Make it SELL the candidate without revealing their identity
 
-Example varied openings you can use:
-- Specializing in [area] with [X] years of proven success...
-- A creative professional who excels at...
-- With a strong background in [field], this candidate brings...
-- Known for [strength], this professional has...
-- Bringing [X] years of expertise in...
-- This talented professional combines...
-- Recognized for excellence in...
+WRITING STYLE - MAKE IT EXCITING:
+- Use their actual experience and skills to create a COMPELLING narrative
+- Highlight specific achievements, strengths, and unique value
+- Use power words: exceptional, outstanding, proven, award-winning, innovative, strategic, transformative
+- VARY the opening - DO NOT repeat structures - be creative and dynamic
+- Make employers think "I need to meet this person NOW"
+- Focus on IMPACT and RESULTS they can deliver
+- 2-3 punchy sentences that SELL
 
-Example good output: Specializing in digital design and brand strategy with over 8 years of proven success. Excels at leading cross-functional teams and delivering award-winning campaigns. Known for innovative problem-solving and consistently exceeding client expectations.`;
+VARIED OPENING EXAMPLES (use different ones each time):
+- "A strategic [role] who transforms [area] through..."
+- "With [X] years mastering [skill], this professional delivers..."
+- "Combining [skill] with [skill], this candidate excels at..."
+- "This [role] brings a rare blend of [quality] and [quality]..."
+- "Known for [achievement], this professional specializes in..."
+- "An innovative [role] with a track record of..."
+- "Exceptional at [skill], with proven success in..."
+
+EXAMPLE OUTPUT: A strategic brand designer who transforms complex ideas into award-winning visual campaigns. With 10+ years leading creative teams at top agencies, brings exceptional expertise in digital storytelling and brand identity. Known for delivering results that exceed expectations and driving measurable business impact.`;
 
       console.log(`  🤖 Generating anonymized AI summary for candidate ${candidate.candidateId}...`);
       
       const response = await client.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [{ role: 'user', content: prompt }],
-        temperature: 0.8, // Increased for more variety
+        temperature: 0.9, // High temperature for maximum variety and creativity
         max_tokens: 150
       });
       
