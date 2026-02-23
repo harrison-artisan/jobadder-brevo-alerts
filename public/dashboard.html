@@ -2126,7 +2126,23 @@
                 currentIframe = null;
             };
             
-            // Set src to start loading
+            // CRITICAL FIX: Append iframe to a hidden container BEFORE setting src
+            // This ensures the iframe is in the DOM and can actually load content
+            let hiddenContainer = document.getElementById('iframe-loader-container');
+            if (!hiddenContainer) {
+                hiddenContainer = document.createElement('div');
+                hiddenContainer.id = 'iframe-loader-container';
+                hiddenContainer.style.position = 'absolute';
+                hiddenContainer.style.left = '-9999px';
+                hiddenContainer.style.top = '-9999px';
+                hiddenContainer.style.width = '1px';
+                hiddenContainer.style.height = '1px';
+                hiddenContainer.style.overflow = 'hidden';
+                document.body.appendChild(hiddenContainer);
+            }
+            hiddenContainer.appendChild(iframe);
+            
+            // NOW set src - iframe is in DOM and will load properly
             iframe.src = url;
         }
         
