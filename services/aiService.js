@@ -4,6 +4,8 @@ class AIService {
   constructor() {
     this.ollama = null;
     this.modelName = 'llama3.2:3b'; // Lightweight, fast, free model
+    this.ollamaChecked = false;
+    this.ollamaAvailable = false;
   }
 
   /**
@@ -19,10 +21,53 @@ class AIService {
   }
 
   /**
+   * Check if Ollama is available with retry logic
+   */
+  async checkOllamaAvailability(retries = 3) {
+    // Only check once per batch
+    if (this.ollamaChecked) {
+      return this.ollamaAvailable;
+    }
+
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        const client = await this.getOllamaClient();
+        
+        // Try to list models
+        await client.list();
+        
+        this.ollamaChecked = true;
+        this.ollamaAvailable = true;
+        console.log(`✅ Ollama connection successful`);
+        return true;
+        
+      } catch (error) {
+        if (attempt < retries) {
+          console.log(`  ⏳ Ollama not ready (attempt ${attempt}/${retries}), retrying...`);
+          await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+        } else {
+          console.log(`  ⚠️  Ollama unavailable after ${retries} attempts: ${error.message}`);
+          this.ollamaChecked = true;
+          this.ollamaAvailable = false;
+          return false;
+        }
+      }
+    }
+    
+    return false;
+  }
+
+  /**
    * Check if Ollama is available and pull model if needed
    */
   async ensureModelReady() {
     try {
+      // Check if Ollama is available
+      const available = await this.checkOllamaAvailability();
+      if (!available) {
+        return false;
+      }
+
       const client = await this.getOllamaClient();
       
       // Check if model exists
@@ -31,13 +76,14 @@ class AIService {
       
       if (!modelExists) {
         console.log(`📥 Pulling ${this.modelName} model (one-time setup, ~2GB)...`);
+        console.log(`   This may take 2-3 minutes...`);
         await client.pull({ model: this.modelName });
         console.log(`✅ Model ready!`);
       }
       
       return true;
     } catch (error) {
-      console.log(`⚠️  Ollama not available: ${error.message}`);
+      console.log(`⚠️  Ollama model check failed: ${error.message}`);
       return false;
     }
   }
@@ -47,17 +93,20 @@ class AIService {
    */
   async generateCandidateSummary(candidate) {
     try {
-      console.log(`  🤖 Generating AI summary for candidate ${candidate.candidateId}...`);
-      
       // Try to use Ollama
       const ollamaReady = await this.ensureModelReady();
       
       if (ollamaReady && candidate.summary && candidate.summary.trim().length > 50) {
-        return await this.generateWithOllama(candidate);
+        try {
+          return await this.generateWithOllama(candidate);
+        } catch (error) {
+          console.log(`  ⚠️  Ollama generation failed for candidate ${candidate.candidateId}: ${error.message}`);
+          console.log(`  📝 Falling back to manual processing...`);
+          return this.createCompellingSummary(candidate);
+        }
       }
       
       // Fallback to manual processing
-      console.log(`  📝 Using manual processing for candidate ${candidate.candidateId}...`);
       return this.createCompellingSummary(candidate);
       
     } catch (error) {
@@ -115,6 +164,8 @@ REQUIREMENTS:
 
 OUTPUT ONLY THE SUMMARY - NO EXPLANATIONS OR EXTRA TEXT.`;
 
+    console.log(`    🤖 Generating with Ollama...`);
+    
     const response = await client.generate({
       model: this.modelName,
       prompt: prompt,
