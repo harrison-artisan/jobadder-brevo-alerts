@@ -223,3 +223,4 @@ class JobAlertsController {
 }
 
 module.exports = new JobAlertsController();
+
