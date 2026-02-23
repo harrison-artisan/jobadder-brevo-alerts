@@ -121,8 +121,8 @@ class WordpressService {
         const title = decodeHtmlEntities(post.title.rendered);
         const excerpt = decodeHtmlEntities(post.excerpt.rendered);
 
-        // Truncate excerpt to ~200 chars and ensure it ends with ...
-        const maxLength = 200;
+        // Truncate excerpt to ~400 chars and ensure it ends with ...
+        const maxLength = 400;
         const truncatedExcerpt = excerpt.length > maxLength
             ? excerpt.substring(0, maxLength).replace(/\s+\S*$/, '') + '...'
             : excerpt;
