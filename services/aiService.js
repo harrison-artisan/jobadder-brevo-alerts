@@ -1,20 +1,45 @@
-const OpenAI = require('openai');
+const { Ollama } = require('ollama');
 
 class AIService {
   constructor() {
-    this.openai = null;
+    this.ollama = null;
+    this.modelName = 'llama3.2:3b'; // Lightweight, fast, free model
   }
 
   /**
-   * Get or create OpenAI client (lazy initialization)
+   * Get or create Ollama client
    */
-  getOpenAIClient() {
-    if (!this.openai && process.env.OPENAI_API_KEY) {
-      this.openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY
+  async getOllamaClient() {
+    if (!this.ollama) {
+      this.ollama = new Ollama({
+        host: process.env.OLLAMA_HOST || 'http://127.0.0.1:11434'
       });
     }
-    return this.openai;
+    return this.ollama;
+  }
+
+  /**
+   * Check if Ollama is available and pull model if needed
+   */
+  async ensureModelReady() {
+    try {
+      const client = await this.getOllamaClient();
+      
+      // Check if model exists
+      const models = await client.list();
+      const modelExists = models.models?.some(m => m.name.includes('llama3.2'));
+      
+      if (!modelExists) {
+        console.log(`📥 Pulling ${this.modelName} model (one-time setup, ~2GB)...`);
+        await client.pull({ model: this.modelName });
+        console.log(`✅ Model ready!`);
+      }
+      
+      return true;
+    } catch (error) {
+      console.log(`⚠️  Ollama not available: ${error.message}`);
+      return false;
+    }
   }
 
   /**
@@ -22,12 +47,122 @@ class AIService {
    */
   async generateCandidateSummary(candidate) {
     try {
-      console.log(`  📝 Processing summary for candidate ${candidate.candidateId}...`);
-      return this.processJobAdderSummary(candidate);
+      console.log(`  🤖 Generating AI summary for candidate ${candidate.candidateId}...`);
+      
+      // Try to use Ollama
+      const ollamaReady = await this.ensureModelReady();
+      
+      if (ollamaReady && candidate.summary && candidate.summary.trim().length > 50) {
+        return await this.generateWithOllama(candidate);
+      }
+      
+      // Fallback to manual processing
+      console.log(`  📝 Using manual processing for candidate ${candidate.candidateId}...`);
+      return this.createCompellingSummary(candidate);
+      
     } catch (error) {
-      console.error(`❌ Error processing summary for candidate ${candidate.candidateId}:`, error.message);
-      return this.buildBasicSummary(candidate);
+      console.error(`❌ Error generating summary for candidate ${candidate.candidateId}:`, error.message);
+      return this.createCompellingSummary(candidate);
     }
+  }
+
+  /**
+   * Generate summary using Ollama AI
+   */
+  async generateWithOllama(candidate) {
+    const client = await this.getOllamaClient();
+    
+    // Get job title
+    const title = this.generalizeJobTitle(
+      candidate.employment?.current?.position || 
+      candidate.employment?.ideal?.position || 
+      ''
+    );
+    
+    // Get years of experience
+    const yearsExp = this.calculateYearsOfExperience(candidate);
+    const expText = yearsExp >= 15 ? `over ${yearsExp} years` :
+                    yearsExp >= 10 ? `${yearsExp}+ years` :
+                    yearsExp > 0 ? `${yearsExp} years` : 'extensive';
+    
+    // Get skills
+    const skills = candidate.skillTags?.slice(0, 5).join(', ') || '';
+    
+    // Pre-clean the bio
+    let bio = candidate.summary.trim();
+    bio = this.removeNames(bio, candidate);
+    bio = this.removeCompanyNames(bio, candidate);
+    
+    // Create the prompt
+    const prompt = `Rewrite this candidate bio into a compelling 3-4 sentence professional summary for a recruitment email.
+
+CANDIDATE INFO:
+Job Title: ${title || 'Professional'}
+Experience: ${expText}
+Skills: ${skills || 'various professional skills'}
+Bio: ${bio.substring(0, 500)}
+
+REQUIREMENTS:
+- Write EXACTLY 3-4 sentences (no more, no less)
+- Remove ALL names (first names, last names, any proper names)
+- Remove ALL company names (replace with "a leading organisation" or "a top company")
+- Use gender-neutral language (they/their/them instead of he/she/his/her)
+- Use Australian spelling: specialising, recognised, organised, analyse, realise
+- Use Title Case for job titles (e.g., "Senior Designer" not "senior designer")
+- Make it compelling and exciting - sell this candidate!
+- Focus on achievements, skills, and impact
+- Keep the real content from their bio, just clean it up
+
+OUTPUT ONLY THE SUMMARY - NO EXPLANATIONS OR EXTRA TEXT.`;
+
+    const response = await client.generate({
+      model: this.modelName,
+      prompt: prompt,
+      stream: false,
+      options: {
+        temperature: 0.7,
+        top_p: 0.9,
+        num_predict: 200
+      }
+    });
+    
+    let summary = response.response.trim();
+    
+    // Post-process to ensure quality
+    summary = this.cleanupSummary(summary, candidate);
+    
+    console.log(`    ✅ AI summary generated (${summary.length} chars)`);
+    
+    return summary;
+  }
+
+  /**
+   * Cleanup and validate AI-generated summary
+   */
+  cleanupSummary(summary, candidate) {
+    // Remove any remaining names
+    summary = this.removeNames(summary, candidate);
+    summary = this.removeCompanyNames(summary, candidate);
+    
+    // Ensure gender-neutral
+    summary = this.removeGenderPronouns(summary);
+    
+    // Apply Australian spelling
+    summary = this.applyAustralianSpelling(summary);
+    
+    // Clean formatting
+    summary = summary.replace(/\s+/g, ' ').trim();
+    summary = summary.replace(/\s+([.,!?])/g, '$1');
+    
+    // Remove any quotes the AI might have added
+    summary = summary.replace(/^["']|["']$/g, '');
+    
+    // Ensure proper ending
+    if (!summary.match(/[.!?]$/)) {
+      summary += '.';
+    }
+    
+    return summary;
   }
 
   /**
@@ -51,6 +186,82 @@ class AIService {
   }
 
   /**
+   * Generalize and clean job titles
+   */
+  generalizeJobTitle(title) {
+    if (!title) return '';
+    
+    let generalized = title.trim();
+    
+    // Remove codes in parentheses or brackets
+    generalized = generalized.replace(/\s*[\(\[].*?[\)\]]/g, '');
+    
+    // Remove trailing numbers and codes
+    generalized = generalized.replace(/\s*[-–—]\s*\d+.*$/g, '');
+    generalized = generalized.replace(/\s+\d+$/g, '');
+    
+    // Remove common internal codes/prefixes
+    generalized = generalized.replace(/^[A-Z]{2,4}[-_]\d+\s*/g, '');
+    
+    // Remove business indicators
+    if (generalized.match(/\b(Pty|Ltd|LLC|Inc|Limited|Corporation|Corp)\b/i) || generalized.includes('&')) {
+      return '';
+    }
+    
+    // Check for all caps (likely business name)
+    if (generalized === generalized.toUpperCase() && generalized.length > 3) {
+      return '';
+    }
+    
+    // Remove problematic words
+    const problematicWords = ['intern', 'freelance', 'professional', 'owner', 'founder', 'self employed', 'self-employed'];
+    const lowerTitle = generalized.toLowerCase();
+    
+    for (const word of problematicWords) {
+      if (lowerTitle.includes(word)) {
+        if (lowerTitle === word || lowerTitle === word + 's') {
+          return '';
+        }
+        const regex = new RegExp(`\\b${word}\\b`, 'gi');
+        generalized = generalized.replace(regex, '').trim();
+      }
+    }
+    
+    // Clean up extra whitespace
+    generalized = generalized.replace(/\s+/g, ' ').trim();
+    
+    if (generalized.length < 3) {
+      return '';
+    }
+    
+    // Convert to Title Case
+    return this.toTitleCase(generalized);
+  }
+
+  /**
+   * Calculate years of experience
+   */
+  calculateYearsOfExperience(candidate) {
+    if (!candidate.employment?.history || candidate.employment.history.length === 0) {
+      return 0;
+    }
+    
+    let totalMonths = 0;
+    
+    candidate.employment.history.forEach(job => {
+      const startDate = job.start?.date ? new Date(job.start.date) : null;
+      const endDate = job.end?.date ? new Date(job.end.date) : new Date();
+      
+      if (startDate) {
+        const months = (endDate - startDate) / (1000 * 60 * 60 * 24 * 30);
+        totalMonths += Math.max(0, months);
+      }
+    });
+    
+    return Math.round(totalMonths / 12);
+  }
+
+  /**
    * Remove names from text
    */
   removeNames(text, candidate) {
@@ -58,7 +269,6 @@ class AIService {
     
     let cleaned = text;
     
-    // Remove first and last name
     if (candidate.firstName) {
       const regex = new RegExp(`\\b${candidate.firstName}\\b`, 'gi');
       cleaned = cleaned.replace(regex, '');
@@ -68,9 +278,6 @@ class AIService {
       const regex = new RegExp(`\\b${candidate.lastName}\\b`, 'gi');
       cleaned = cleaned.replace(regex, '');
     }
-    
-    // Clean up double spaces
-    cleaned = cleaned.replace(/\s+/g, ' ').trim();
     
     return cleaned;
   }
@@ -83,13 +290,11 @@ class AIService {
     
     let cleaned = text;
     
-    // Current company
     if (candidate.employment?.current?.company) {
       const regex = new RegExp(`\\b${candidate.employment.current.company}\\b`, 'gi');
       cleaned = cleaned.replace(regex, 'a leading organisation');
     }
     
-    // Employment history companies
     if (candidate.employment?.history) {
       candidate.employment.history.forEach(job => {
         if (job.employer) {
@@ -103,14 +308,13 @@ class AIService {
   }
 
   /**
-   * Remove gender pronouns
+   * Remove gender pronouns and fix grammar
    */
   removeGenderPronouns(text) {
     if (!text) return '';
     
     let cleaned = text;
     
-    // Replace pronouns - be careful with word boundaries
     cleaned = cleaned.replace(/\bhe\b/gi, 'they');
     cleaned = cleaned.replace(/\bshe\b/gi, 'they');
     cleaned = cleaned.replace(/\bhis\b/gi, 'their');
@@ -118,7 +322,7 @@ class AIService {
     cleaned = cleaned.replace(/\bhim\b/gi, 'them');
     cleaned = cleaned.replace(/\bhers\b/gi, 'theirs');
     
-    // Fix grammar issues from pronoun replacement
+    // Fix grammar
     cleaned = cleaned.replace(/\bthey is\b/gi, 'they are');
     cleaned = cleaned.replace(/\bthey has\b/gi, 'they have');
     cleaned = cleaned.replace(/\bthey was\b/gi, 'they were');
@@ -149,11 +353,7 @@ class AIService {
       'optimizing': 'optimising',
       'optimized': 'optimised',
       'realize': 'realise',
-      'realized': 'realised',
-      'color': 'colour',
-      'colors': 'colours',
-      'favorite': 'favourite',
-      'center': 'centre'
+      'realized': 'realised'
     };
     
     let result = text;
@@ -166,142 +366,63 @@ class AIService {
   }
 
   /**
-   * Process the JobAdder summary - this is the main function
+   * Create a compelling summary manually (fallback)
    */
-  processJobAdderSummary(candidate) {
-    // If they have a summary, use it!
-    if (candidate.summary && candidate.summary.trim().length > 50) {
-      let summary = candidate.summary.trim();
-      
-      // Step 1: Remove names
-      summary = this.removeNames(summary, candidate);
-      
-      // Step 2: Remove company names
-      summary = this.removeCompanyNames(summary, candidate);
-      
-      // Step 3: Remove gender pronouns
-      summary = this.removeGenderPronouns(summary);
-      
-      // Step 4: Apply Australian spelling
-      summary = this.applyAustralianSpelling(summary);
-      
-      // Step 5: Extract first 2-3 compelling sentences (about 200-300 chars)
-      const sentences = summary.split(/(?<=[.!?])\s+/);
-      let result = '';
-      let charCount = 0;
-      
-      for (let i = 0; i < sentences.length && i < 5; i++) {
-        const sentence = sentences[i].trim();
-        if (sentence.length > 15) { // Skip very short sentences
-          result += sentence + ' ';
-          charCount += sentence.length;
-          
-          // Stop after 2-3 good sentences or ~250 chars
-          if (charCount >= 200 && i >= 1) {
-            break;
-          }
-        }
-      }
-      
-      // Step 6: Clean up formatting
-      result = result.trim();
-      result = result.replace(/\s+/g, ' '); // Remove double spaces
-      result = result.replace(/\s+([.,!?])/g, '$1'); // Fix spacing before punctuation
-      
-      // Step 7: Ensure it ends with proper punctuation
-      if (!result.match(/[.!?]$/)) {
-        result += '.';
-      }
-      
-      // Step 8: Add experience context if not mentioned and we have it
-      const yearsExp = this.calculateYearsOfExperience(candidate);
-      if (yearsExp > 0 && !result.match(/\d+\s*(year|yr)/i)) {
-        const expText = yearsExp >= 10 ? `over ${yearsExp} years` : `${yearsExp}+ years`;
-        const title = this.getJobTitle(candidate);
-        
-        // Add as opening if we can
-        if (title) {
-          result = `A ${title} with ${expText} of experience. ${result}`;
-        }
-      }
-      
-      return result;
-    }
+  createCompellingSummary(candidate) {
+    const title = this.generalizeJobTitle(
+      candidate.employment?.current?.position || 
+      candidate.employment?.ideal?.position || 
+      ''
+    );
     
-    // If no summary, build from available data
-    return this.buildBasicSummary(candidate);
-  }
-
-  /**
-   * Get job title with proper formatting
-   */
-  getJobTitle(candidate) {
-    let title = candidate.employment?.current?.position || 
-                candidate.employment?.ideal?.position || 
-                '';
-    
-    if (!title) return '';
-    
-    // Clean up title
-    title = title.replace(/\s*[\(\[].*?[\)\]]/g, ''); // Remove brackets
-    title = title.replace(/\s*[-–—]\s*\d+.*$/g, ''); // Remove trailing numbers
-    title = title.replace(/\s+\d+$/g, ''); // Remove ending numbers
-    title = title.replace(/^[A-Z]{2,4}[-_]\d+\s*/g, ''); // Remove codes
-    title = title.trim();
-    
-    // Convert to Title Case
-    return this.toTitleCase(title);
-  }
-
-  /**
-   * Calculate years of experience
-   */
-  calculateYearsOfExperience(candidate) {
-    if (!candidate.employment?.history || candidate.employment.history.length === 0) {
-      return 0;
-    }
-    
-    let totalMonths = 0;
-    
-    candidate.employment.history.forEach(job => {
-      const startDate = job.start?.date ? new Date(job.start.date) : null;
-      const endDate = job.end?.date ? new Date(job.end.date) : new Date();
-      
-      if (startDate) {
-        const months = (endDate - startDate) / (1000 * 60 * 60 * 24 * 30);
-        totalMonths += Math.max(0, months);
-      }
-    });
-    
-    return Math.round(totalMonths / 12);
-  }
-
-  /**
-   * Build basic summary when no JobAdder summary exists
-   */
-  buildBasicSummary(candidate) {
-    const title = this.getJobTitle(candidate);
     const yearsExp = this.calculateYearsOfExperience(candidate);
-    const skills = candidate.skillTags?.slice(0, 5).join(', ') || '';
+    const skills = candidate.skillTags?.slice(0, 5) || [];
     
-    if (!title) {
-      return 'An experienced professional with a proven track record of delivering exceptional results.';
-    }
+    let sentences = [];
     
-    let summary = '';
-    
-    if (yearsExp > 0) {
-      const expText = yearsExp >= 10 ? `over ${yearsExp} years` : `${yearsExp}+ years`;
-      summary = `A ${title} with ${expText} of professional experience`;
+    // Opening sentence
+    if (title && yearsExp > 0) {
+      const expText = yearsExp >= 15 ? `over ${yearsExp} years` :
+                      yearsExp >= 10 ? `${yearsExp}+ years` :
+                      `${yearsExp} years`;
+      sentences.push(`A ${title} with ${expText} of professional experience.`);
+    } else if (title) {
+      sentences.push(`An experienced ${title} with a proven track record.`);
     } else {
-      summary = `An experienced ${title}`;
+      sentences.push(`An experienced professional with a proven track record.`);
     }
     
-    if (skills) {
-      summary += ` specialising in ${skills}`;
+    // Extract from bio if available
+    if (candidate.summary && candidate.summary.trim().length > 50) {
+      let bio = candidate.summary.trim();
+      bio = this.removeNames(bio, candidate);
+      bio = this.removeCompanyNames(bio, candidate);
+      bio = this.removeGenderPronouns(bio);
+      
+      const bioSentences = bio.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 20);
+      if (bioSentences.length > 0) {
+        sentences.push(...bioSentences.slice(0, 2));
+      }
     }
     
-    summary += '. Brings a strong track record of delivering high-quality outcomes and exceeding expectations.';
+    // Add skills if needed
+    if (sentences.length < 3 && skills.length >= 3) {
+      const skillList = skills.slice(0, 3).join(', ');
+      sentences.push(`Specialises in ${skillList} with a focus on delivering exceptional results.`);
+    }
+    
+    // Final sentence if needed
+    if (sentences.length < 3) {
+      sentences.push(`Brings strong analytical skills and a commitment to excellence.`);
+    }
+    
+    let summary = sentences.slice(0, 4).join(' ');
+    summary = this.applyAustralianSpelling(summary);
+    summary = summary.replace(/\s+/g, ' ').trim();
+    
+    if (!summary.match(/[.!?]$/)) {
+      summary += '.';
+    }
     
     return summary;
   }
@@ -310,16 +431,17 @@ class AIService {
    * Generate summaries for multiple candidates in parallel
    */
   async generateBatchSummaries(candidates) {
-    console.log(`\n📝 Processing summaries for ${candidates.length} candidates...`);
+    console.log(`\n🤖 Generating AI summaries for ${candidates.length} candidates...`);
     
     const summaries = await Promise.all(
       candidates.map(candidate => this.generateCandidateSummary(candidate))
     );
     
-    console.log('✅ All summaries processed\n');
+    console.log('✅ All summaries generated\n');
     
     return summaries;
   }
 }
 
 module.exports = new AIService();
+
