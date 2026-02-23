@@ -40,17 +40,23 @@ class XposeController {
                 });
             }
 
-            const jobs = await jobadderService.getLiveJobs();
+            const rawJobs = await jobadderService.getLiveJobs();
 
             const featuredArticle = articles[0];
             const recentArticles = articles.slice(1);
+
+            // Format jobs through formatJobForEmail so the template receives
+            // the correct field names: job_title, location, job_type, job_description, apply_url
+            const jobs = rawJobs
+                .slice(0, 5)
+                .map(job => jobadderService.formatJobForEmail(job));
 
             const newState = {
                 state: 'GENERATED',
                 generatedAt: new Date().toISOString(),
                 featuredArticle,
                 recentArticles,
-                jobs: jobs.slice(0, 5), // Include up to 5 live jobs
+                jobs,
             };
 
             await this.saveState(newState);
@@ -306,4 +312,3 @@ class XposeController {
 }
 
 module.exports = new XposeController();
-
