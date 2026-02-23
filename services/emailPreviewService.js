@@ -28,93 +28,109 @@ class EmailPreviewService {
     }
 
     /**
-     * Replace Brevo template variables with actual data
-     * Handles both {{ contact.X }} and {{ params.X }} syntax
+     * Safely get nested property from object using dot notation
+     * Example: get({a: {b: {c: 5}}}, 'a.b.c') returns 5
+     */
+    getNestedProperty(obj, path, defaultValue = '') {
+        if (!path || !obj) return defaultValue;
+        
+        const keys = path.split('.');
+        let result = obj;
+        
+        for (const key of keys) {
+            if (result === null || result === undefined || typeof result !== 'object') {
+                return defaultValue;
+            }
+            result = result[key];
+        }
+        
+        return result !== undefined && result !== null ? result : defaultValue;
+    }
+
+    /**
+     * Generic template variable replacement using recursive logic
+     * Handles both {{ variable.path }} and {% for item in array %} syntax
      */
     replaceTemplateVariables(html, data) {
         let result = html;
 
-        // Replace contact variables
-        result = result.replace(/\{\{\s*contact\.FIRSTNAME\s*\}\}/g, data.contact?.FIRSTNAME || 'there');
-        result = result.replace(/\{\{\s*contact\.LASTNAME\s*\}\}/g, data.contact?.LASTNAME || '');
-        result = result.replace(/\{\{\s*contact\.EMAIL\s*\}\}/g, data.contact?.EMAIL || '');
+        // Step 1: Handle {% for %} loops first (they need to be processed before simple variables)
+        result = result.replace(/\{%\s*for\s+(\w+)\s+in\s+([\w.]+)\s*%\}([\s\S]*?)\{%\s*endfor\s*%\}/g, 
+            (match, itemName, arrayPath, loopContent) => {
+                // Get the array from data using the path
+                const array = this.getNestedProperty(data, arrayPath, []);
+                
+                if (!Array.isArray(array) || array.length === 0) {
+                    return ''; // Empty loop if no data
+                }
+                
+                // Render the loop content for each item
+                return array.map((item, index) => {
+                    // Create a new data context with the loop item
+                    const loopData = {
+                        ...data,
+                        [itemName]: item,
+                        loop: {
+                            index: index,
+                            index0: index,
+                            index1: index + 1,
+                            first: index === 0,
+                            last: index === array.length - 1,
+                            length: array.length
+                        }
+                    };
+                    
+                    // Recursively process the loop content
+                    return this.replaceTemplateVariables(loopContent, loopData);
+                }).join('');
+            }
+        );
 
-        // Replace simple params variables
-        if (data.params) {
-            // Job alert variables (flat structure)
-            if (data.params.job_title) {
-                result = result.replace(/\{\{\s*params\.job_title\s*\}\}/g, data.params.job_title || '');
-                result = result.replace(/\{\{\s*params\.location\s*\}\}/g, data.params.location || '');
-                result = result.replace(/\{\{\s*params\.job_type\s*\}\}/g, data.params.job_type || '');
-                result = result.replace(/\{\{\s*params\.job_description\s*\}\}/g, data.params.job_description || '');
-                result = result.replace(/\{\{\s*params\.apply_url\s*\}\}/g, data.params.apply_url || '#');
+        // Step 2: Handle {% if %} conditionals (for loop.index checks, etc.)
+        result = result.replace(/\{%\s*if\s+([^%]+)\s*%\}([\s\S]*?)(?:\{%\s*else\s*%\}([\s\S]*?))?\{%\s*endif\s*%\}/g,
+            (match, condition, trueBlock, falseBlock) => {
+                // Simple condition evaluation for loop.index patterns
+                const evalCondition = (cond, data) => {
+                    // Handle: loop.index % 2 == 0 (even)
+                    if (/loop\.index\s*%\s*2\s*==\s*0/.test(cond)) {
+                        return data.loop && data.loop.index % 2 === 0;
+                    }
+                    // Handle: loop.index % 2 == 1 (odd)
+                    if (/loop\.index\s*%\s*2\s*==\s*1/.test(cond)) {
+                        return data.loop && data.loop.index % 2 === 1;
+                    }
+                    // Handle: not loop.last
+                    if (/not\s+loop\.last/.test(cond)) {
+                        return data.loop && !data.loop.last;
+                    }
+                    // Handle: loop.first
+                    if (/loop\.first/.test(cond)) {
+                        return data.loop && data.loop.first;
+                    }
+                    // Handle: loop.last
+                    if (/loop\.last/.test(cond)) {
+                        return data.loop && data.loop.last;
+                    }
+                    return false;
+                };
+                
+                const conditionMet = evalCondition(condition, data);
+                return conditionMet ? trueBlock : (falseBlock || '');
+            }
+        );
+
+        // Step 3: Replace all {{ variable.path }} with actual values
+        result = result.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (match, varPath) => {
+            const value = this.getNestedProperty(data, varPath, '');
+            
+            // Handle special cases for URLs - don't replace if it's a placeholder
+            if (varPath === 'unsubscribe' && value === '') {
+                return 'https://artisan.com.au/unsubscribe';
             }
             
-            // Featured article
-            if (data.params.featuredArticle) {
-                const fa = data.params.featuredArticle;
-                result = result.replace(/\{\{\s*params\.featuredArticle\.title\s*\}\}/g, fa.title || '');
-                result = result.replace(/\{\{\s*params\.featuredArticle\.excerpt\s*\}\}/g, fa.excerpt || '');
-                result = result.replace(/\{\{\s*params\.featuredArticle\.link\s*\}\}/g, fa.link || '#');
-                result = result.replace(/\{\{\s*params\.featuredArticle\.featuredImage\s*\}\}/g, fa.featuredImage || fa.image || 'https://via.placeholder.com/650x300');
-            }
+            return value;
+        });
 
-            // Handle loops for recent articles
-            if (data.params.recentArticles && Array.isArray(data.params.recentArticles)) {
-                const articleLoopRegex = /\{%\s*for\s+article\s+in\s+params\.recentArticles\s*%\}([\s\S]*?)\{%\s*endfor\s*%\}/g;
-                result = result.replace(articleLoopRegex, (match, template) => {
-                    return data.params.recentArticles.map(article => {
-                        let articleHtml = template;
-                        articleHtml = articleHtml.replace(/\{\{\s*article\.title\s*\}\}/g, article.title || '');
-                        articleHtml = articleHtml.replace(/\{\{\s*article\.excerpt\s*\}\}/g, article.excerpt || '');
-                        articleHtml = articleHtml.replace(/\{\{\s*article\.link\s*\}\}/g, article.link || '#');
-                        articleHtml = articleHtml.replace(/\{\{\s*article\.featuredImage\s*\}\}/g, article.featuredImage || article.image || 'https://via.placeholder.com/150');
-                        return articleHtml;
-                    }).join('');
-                });
-            }
-
-            // Handle loops for jobs
-            if (data.params.jobs && Array.isArray(data.params.jobs)) {
-                const jobLoopRegex = /\{%\s*for\s+job\s+in\s+params\.jobs\s*%\}([\s\S]*?)\{%\s*endfor\s*%\}/g;
-                result = result.replace(jobLoopRegex, (match, template) => {
-                    return data.params.jobs.map((job, index) => {
-                        let jobHtml = template;
-                        jobHtml = jobHtml.replace(/\{\{\s*job\.title\s*\}\}/g, job.title || '');
-                        jobHtml = jobHtml.replace(/\{\{\s*job\.location\s*\}\}/g, job.location || '');
-                        jobHtml = jobHtml.replace(/\{\{\s*job\.type\s*\}\}/g, job.type || job.workType || '');
-                        jobHtml = jobHtml.replace(/\{\{\s*job\.summary\s*\}\}/g, job.summary || job.description || '');
-                        jobHtml = jobHtml.replace(/\{\{\s*job\.url\s*\}\}/g, job.url || job.link || '#');
-                        
-                        // Handle loop.index for conditional formatting
-                        jobHtml = jobHtml.replace(/\{%\s*if\s+loop\.index\s*%\s*2\s*==\s*1\s*%\}(.*?)\{%\s*else\s*%\}(.*?)\{%\s*endif\s*%\}/g, 
-                            (m, odd, even) => (index % 2 === 0) ? odd : even);
-                        
-                        return jobHtml;
-                    }).join('');
-                });
-            }
-
-            // Handle loops for candidates (A-List)
-            if (data.params.candidates && Array.isArray(data.params.candidates)) {
-                const candidateLoopRegex = /\{%\s*for\s+candidate\s+in\s+params\.candidates\s*%\}([\s\S]*?)\{%\s*endfor\s*%\}/g;
-                result = result.replace(candidateLoopRegex, (match, template) => {
-                    return data.params.candidates.map(candidate => {
-                        let candidateHtml = template;
-                        candidateHtml = candidateHtml.replace(/\{\{\s*candidate\.name\s*\}\}/g, candidate.name || '');
-                        candidateHtml = candidateHtml.replace(/\{\{\s*candidate\.title\s*\}\}/g, candidate.title || '');
-                        candidateHtml = candidateHtml.replace(/\{\{\s*candidate\.location\s*\}\}/g, candidate.location || '');
-                        candidateHtml = candidateHtml.replace(/\{\{\s*candidate\.summary\s*\}\}/g, candidate.summary || '');
-                        candidateHtml = candidateHtml.replace(/\{\{\s*candidate\.skills\s*\}\}/g, candidate.skills || '');
-                        return candidateHtml;
-                    }).join('');
-                });
-            }
-        }
-
-        // Clean up any remaining template syntax
-        result = result.replace(/\{%\s*if\s+loop\.index\s*%\s*2\s*==\s*0\s+and\s+not\s+loop\.last\s*%\}[\s\S]*?\{%\s*endif\s*%\}/g, '');
-        
         return result;
     }
 
@@ -154,7 +170,8 @@ class EmailPreviewService {
                     summary: job.summary || job.description || '',
                     url: job.link || job.url || '#'
                 }))
-            }
+            },
+            unsubscribe: 'https://artisan.com.au/unsubscribe'
         };
 
         return this.replaceTemplateVariables(template, data);
@@ -184,7 +201,8 @@ class EmailPreviewService {
                     link: article.link,
                     featuredImage: article.image || article.featuredImage
                 }
-            }
+            },
+            unsubscribe: 'https://artisan.com.au/unsubscribe'
         };
 
         return this.replaceTemplateVariables(template, data);
@@ -212,7 +230,8 @@ class EmailPreviewService {
                 job_type: job.workType || job.type,
                 job_description: job.summary || job.description || '',
                 apply_url: job.link || job.url || '#'
-            }
+            },
+            unsubscribe: 'https://artisan.com.au/unsubscribe'
         };
 
         return this.replaceTemplateVariables(template, data);
