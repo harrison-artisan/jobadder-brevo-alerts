@@ -205,4 +205,3 @@ process.on('SIGTERM', () => {
   console.log('SIGTERM signal received: closing HTTP server');
   process.exit(0);
 });
-
