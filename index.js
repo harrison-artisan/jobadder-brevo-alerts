@@ -54,21 +54,13 @@ app.get('/auth/callback', async (req, res) => {
     return res.status(400).send('No authorization code received');
   }
   
-  try {
-    await jobadderService.exchangeCodeForTokens(code);
-    res.send(`
-      <html>
-        <body style="font-family: Arial, sans-serif; padding: 40px; text-align: center;">
-          <h1 style="color: #27AE60;">✅ Authorization Successful!</h1>
-          <p>JobAdder has been connected successfully.</p>
-          <p>You can now close this window and use the job alerts system.</p>
-          <a href="/" style="display: inline-block; margin-top: 20px; padding: 10px 20px; background: #E74C3C; color: white; text-decoration: none; border-radius: 4px;">Go to Dashboard</a>
-        </body>
-      </html>
-    `);
-  } catch (error) {
-    res.status(500).send(`Authorization failed: ${error.message}`);
-  }
+try {
+  await jobadderService.exchangeCodeForTokens(code);
+  res.redirect('/dashboard');
+} catch (error) {
+  res.status(500).send(`Authorization failed: ${error.message}`);
+}
+  
 });
 
 // Webhook endpoint for JobAdder
