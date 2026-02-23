@@ -203,3 +203,4 @@ class JobTrackingService {
 }
 
 module.exports = new JobTrackingService();
+
