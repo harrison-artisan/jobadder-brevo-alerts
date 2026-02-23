@@ -25,10 +25,10 @@ class AIService {
     try {
       const client = this.getOpenAIClient();
       
-      // If no OpenAI client available, use fallback immediately
+      // If no OpenAI client available, use intelligent fallback
       if (!client) {
-        console.log(`  ⚠️  OpenAI not configured, using fallback for candidate ${candidate.candidateId}`);
-        return this.getFallbackSummary(candidate);
+        console.log(`  📝 Using intelligent summary rewriter for candidate ${candidate.candidateId}...`);
+        return this.getIntelligentSummary(candidate);
       }
       
       // Build anonymized context about the candidate
@@ -80,8 +80,8 @@ EXAMPLE OUTPUT: A strategic brand designer who transforms complex ideas into awa
     } catch (error) {
       console.error(`❌ Error generating AI summary for candidate ${candidate.candidateId}:`, error.message);
       
-      // Fallback to anonymized summary
-      return this.getFallbackSummary(candidate);
+      // Fallback to intelligent summary
+      return this.getIntelligentSummary(candidate);
     }
   }
 
@@ -195,28 +195,31 @@ EXAMPLE OUTPUT: A strategic brand designer who transforms complex ideas into awa
     // Remove candidate's first and last name
     if (candidate.firstName) {
       const firstNameRegex = new RegExp(candidate.firstName, 'gi');
-      cleaned = cleaned.replace(firstNameRegex, '[redacted]');
+      cleaned = cleaned.replace(firstNameRegex, '');
     }
     
     if (candidate.lastName) {
       const lastNameRegex = new RegExp(candidate.lastName, 'gi');
-      cleaned = cleaned.replace(lastNameRegex, '[redacted]');
+      cleaned = cleaned.replace(lastNameRegex, '');
     }
     
     // Remove company names from employment history
     if (candidate.employment?.current?.company) {
       const companyRegex = new RegExp(candidate.employment.current.company, 'gi');
-      cleaned = cleaned.replace(companyRegex, '[company]');
+      cleaned = cleaned.replace(companyRegex, 'a leading organisation');
     }
     
     if (candidate.employment?.history) {
       candidate.employment.history.forEach(job => {
         if (job.employer) {
           const employerRegex = new RegExp(job.employer, 'gi');
-          cleaned = cleaned.replace(employerRegex, '[company]');
+          cleaned = cleaned.replace(employerRegex, 'a top organisation');
         }
       });
     }
+    
+    // Clean up extra spaces
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
     
     return cleaned;
   }
@@ -238,40 +241,143 @@ EXAMPLE OUTPUT: A strategic brand designer who transforms complex ideas into awa
     sanitized = sanitized.replace(/\bher\b/gi, 'their');
     sanitized = sanitized.replace(/\bhers\b/gi, 'theirs');
     
-    // Remove [redacted] or [company] placeholders if they appear
-    sanitized = sanitized.replace(/\[redacted\]/gi, 'the candidate');
-    sanitized = sanitized.replace(/\[company\]/gi, 'a leading organization');
-    
     return sanitized;
   }
 
   /**
-   * Get fallback anonymized summary if AI generation fails
+   * Get intelligent summary by rewriting the candidate's actual bio
+   * This is used when no AI API is available
    */
-  getFallbackSummary(candidate) {
-    // Generate anonymized summary from available data
-    const yearsExp = this.calculateYearsOfExperience(candidate);
-    const expText = yearsExp > 0 ? `over ${yearsExp} years` : 'significant';
+  getIntelligentSummary(candidate) {
+    // Start with their actual summary if available
+    if (candidate.summary && candidate.summary.length > 50) {
+      let summary = candidate.summary;
+      
+      // Remove names and company names
+      summary = this.removeNamesFromText(summary, candidate);
+      
+      // Remove gender pronouns
+      summary = this.sanitizeSummary(summary, candidate);
+      
+      // Extract the most compelling parts (first 2-3 sentences)
+      const sentences = summary.split(/[.!?]+/).filter(s => s.trim().length > 20);
+      
+      if (sentences.length >= 2) {
+        // Take first 2-3 sentences and make them compelling
+        let result = sentences.slice(0, 3).join('. ').trim();
+        
+        // Ensure it ends with a period
+        if (!result.endsWith('.')) {
+          result += '.';
+        }
+        
+        // Add power words if missing
+        result = this.enhanceSummary(result, candidate);
+        
+        return result;
+      }
+    }
     
+    // If no good summary, build one from available data
+    return this.buildSummaryFromData(candidate);
+  }
+
+  /**
+   * Enhance a summary with power words and better phrasing
+   */
+  enhanceSummary(summary, candidate) {
+    let enhanced = summary;
+    
+    // Get years of experience
+    const yearsExp = this.calculateYearsOfExperience(candidate);
+    
+    // Add experience context if not already mentioned
+    if (yearsExp > 0 && !enhanced.match(/\d+\s*(year|yr)/i)) {
+      const expPhrase = yearsExp >= 10 ? `over ${yearsExp} years` : `${yearsExp}+ years`;
+      
+      // Try to insert experience mention naturally
+      if (enhanced.match(/experience|expertise|background/i)) {
+        enhanced = enhanced.replace(
+          /(experience|expertise|background)/i,
+          `$1 spanning ${expPhrase}`
+        );
+      }
+    }
+    
+    // Replace weak words with power words
+    const replacements = {
+      'good at': 'excels at',
+      'skilled in': 'specialising in',
+      'knows': 'masters',
+      'worked on': 'delivered',
+      'helped': 'drove',
+      'made': 'created',
+      'did': 'executed',
+      'can do': 'delivers',
+      'able to': 'capable of driving'
+    };
+    
+    for (const [weak, strong] of Object.entries(replacements)) {
+      const regex = new RegExp(weak, 'gi');
+      enhanced = enhanced.replace(regex, strong);
+    }
+    
+    // Ensure Australian spelling
+    enhanced = enhanced.replace(/specializing/gi, 'specialising');
+    enhanced = enhanced.replace(/recognized/gi, 'recognised');
+    enhanced = enhanced.replace(/organized/gi, 'organised');
+    enhanced = enhanced.replace(/organization/gi, 'organisation');
+    
+    return enhanced;
+  }
+
+  /**
+   * Build a compelling summary from candidate data when bio is not available
+   */
+  buildSummaryFromData(candidate) {
+    const parts = [];
+    
+    // Get title
     const title = this.generalizeJobTitle(
       candidate.employment?.current?.position || 
       candidate.employment?.ideal?.position || 
       'professional'
     );
     
-    const skills = candidate.skillTags?.slice(0, 3).join(', ') || 'various skills';
+    // Get years of experience
+    const yearsExp = this.calculateYearsOfExperience(candidate);
+    const expText = yearsExp >= 10 ? `over ${yearsExp} years` : 
+                    yearsExp > 0 ? `${yearsExp}+ years` : 'extensive';
     
-    // Vary the fallback opening too
-    const openings = [
-      `Specializing in ${skills} with ${expText} of experience as a ${title}.`,
-      `A talented ${title} bringing ${expText} of expertise in ${skills}.`,
-      `With ${expText} in the field, this ${title} excels at ${skills}.`,
-      `Known for excellence in ${skills}, this ${title} has ${expText} of proven success.`
-    ];
+    // Get top skills
+    const skills = candidate.skillTags?.slice(0, 5) || [];
     
-    const randomOpening = openings[Math.floor(Math.random() * openings.length)];
+    // Build opening based on available data
+    if (skills.length >= 3) {
+      const skillList = skills.slice(0, 3).join(', ');
+      parts.push(`A ${title} specialising in ${skillList} with ${expText} of proven experience.`);
+    } else if (skills.length > 0) {
+      parts.push(`An experienced ${title} with ${expText} in the field, bringing expertise in ${skills.join(' and ')}.`);
+    } else {
+      parts.push(`A seasoned ${title} with ${expText} of professional experience.`);
+    }
     
-    return `${randomOpening} Brings a strong track record of delivering results and contributing to team success.`;
+    // Add work history context if available
+    if (candidate.employment?.history && candidate.employment.history.length > 0) {
+      const positions = candidate.employment.history
+        .slice(0, 2)
+        .map(job => this.generalizeJobTitle(job.position))
+        .filter(pos => pos && pos !== title);
+      
+      if (positions.length > 0) {
+        parts.push(`Background includes roles as ${positions.join(' and ')}.`);
+      }
+    }
+    
+    // Add closing statement
+    parts.push('Brings a strong track record of delivering exceptional results and driving meaningful impact.');
+    
+    return parts.join(' ');
   }
 
   /**
@@ -281,7 +387,7 @@ EXAMPLE OUTPUT: A strategic brand designer who transforms complex ideas into awa
     const client = this.getOpenAIClient();
     
     if (!client) {
-      console.log(`\n⚠️  OpenAI API key not configured - using fallback summaries for all candidates`);
+      console.log(`\n📝 Using intelligent summary rewriter for ${candidates.length} candidates...`);
     } else {
       console.log(`\n🤖 Generating anonymized AI summaries for ${candidates.length} candidates...`);
     }
@@ -297,4 +403,3 @@ EXAMPLE OUTPUT: A strategic brand designer who transforms complex ideas into awa
 }
 
 module.exports = new AIService();
-
