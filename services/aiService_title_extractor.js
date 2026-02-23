@@ -5,13 +5,19 @@ const OpenAI = require('openai');
  */
 async function extractJobTitleFromSummary(candidate) {
   try {
+    // Check if API key is available
+    if (!process.env.OPENAI_API_KEY) {
+      console.log(`  ⚠️  OpenAI API key not configured, skipping AI title extraction`);
+      return null;
+    }
+    
+    if (!candidate.summary) {
+      return null;
+    }
+    
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY
     });
-    
-    if (!openai || !candidate.summary) {
-      return null;
-    }
     
     const prompt = `Extract the most appropriate job title for this candidate based on their professional summary. 
 
@@ -72,3 +78,4 @@ Examples of BAD titles (don't return these):
 }
 
 module.exports = { extractJobTitleFromSummary };
+
