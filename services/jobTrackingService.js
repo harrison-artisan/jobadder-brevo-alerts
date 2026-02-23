@@ -5,6 +5,7 @@ class JobTrackingService {
   constructor() {
     this.trackingFile = path.join(__dirname, '../data/sent_jobs.json');
     this.stateFile = path.join(__dirname, '../data/daily_alerts_state.json');
+    this.singleJobTrackingFile = path.join(__dirname, '../data/single_job_alerts.json');
     this.dataDir = path.join(__dirname, '../data');
     this.ensureDataDirectory();
   }
@@ -121,6 +122,83 @@ class JobTrackingService {
   toggleState() {
     const currentState = this.getState();
     return this.setState(!currentState.activated);
+  }
+
+  /**
+   * Get today's date string (YYYY-MM-DD)
+   */
+  getTodayDateString() {
+    const now = new Date();
+    return now.toISOString().split('T')[0];
+  }
+
+  /**
+   * Check if a single job alert was already sent today
+   */
+  wasSingleJobSentToday(adId) {
+    try {
+      if (!fs.existsSync(this.singleJobTrackingFile)) {
+        return false;
+      }
+
+      const data = fs.readFileSync(this.singleJobTrackingFile, 'utf8');
+      const tracking = JSON.parse(data);
+      const today = this.getTodayDateString();
+
+      // Check if this job was sent today
+      if (tracking[today] && tracking[today].includes(adId)) {
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Error checking single job tracking:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Record that a single job alert was sent
+   */
+  recordSingleJobSent(adId) {
+    try {
+      let tracking = {};
+
+      // Read existing tracking data
+      if (fs.existsSync(this.singleJobTrackingFile)) {
+        const data = fs.readFileSync(this.singleJobTrackingFile, 'utf8');
+        tracking = JSON.parse(data);
+      }
+
+      const today = this.getTodayDateString();
+
+      // Initialize today's array if it doesn't exist
+      if (!tracking[today]) {
+        tracking[today] = [];
+      }
+
+      // Add job ID if not already present
+      if (!tracking[today].includes(adId)) {
+        tracking[today].push(adId);
+      }
+
+      // Clean up old dates (keep only last 7 days)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const cutoffDate = sevenDaysAgo.toISOString().split('T')[0];
+
+      Object.keys(tracking).forEach(date => {
+        if (date < cutoffDate) {
+          delete tracking[date];
+        }
+      });
+
+      // Write updated tracking
+      fs.writeFileSync(this.singleJobTrackingFile, JSON.stringify(tracking, null, 2));
+      console.log(`✅ Recorded single job alert: Job ${adId} sent on ${today}`);
+    } catch (error) {
+      console.error('Error recording single job alert:', error);
+    }
   }
 }
 
