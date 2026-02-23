@@ -2050,6 +2050,7 @@
                 currentIframe = null;
             }
             
+            // Show loading spinner
             previewPanel.innerHTML = `
                 <div class="preview-loading">
                     <div class="spinner-large"></div>
@@ -2058,16 +2059,29 @@
                 </div>
             `;
             
+            // Create wrapper for click handling and iframe container
+            const wrapper = document.createElement('div');
+            wrapper.style.position = 'relative';
+            wrapper.style.width = '100%';
+            wrapper.style.height = '100%';
+            wrapper.style.overflow = 'auto';
+            wrapper.style.cursor = 'pointer';
+            
             const iframe = document.createElement('iframe');
             iframe.className = 'preview-iframe';
-            iframe.style.opacity = '0';
-            iframe.style.transition = 'opacity 0.3s ease';
-            iframe.style.minWidth = '650px'; // Force desktop view
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.border = 'none';
+            iframe.style.minWidth = '650px';
+            iframe.style.display = 'none'; // Hidden until loaded
             currentIframe = iframe;
+            
+            // Add iframe to wrapper
+            wrapper.appendChild(iframe);
             
             // Set timeout for loading
             previewTimeout = setTimeout(() => {
-                if (iframe.style.opacity === '0') {
+                if (iframe.style.display === 'none') {
                     previewPanel.innerHTML = `
                         <div class="preview-empty">
                             <div>
@@ -2082,30 +2096,17 @@
                         currentIframe = null;
                     }
                 }
-            }, 10000); // 10 second timeout
+            }, 10000);
             
             iframe.onload = () => {
                 clearTimeout(previewTimeout);
+                
+                // Replace loading spinner with iframe
                 previewPanel.innerHTML = '';
-                
-                // Create wrapper for click handling
-                const wrapper = document.createElement('div');
-                wrapper.style.position = 'relative';
-                wrapper.style.width = '100%';
-                wrapper.style.height = '100%';
-                wrapper.style.overflow = 'auto'; // Allow scrolling for desktop view
-                wrapper.style.cursor = 'pointer';
-                
-                wrapper.appendChild(iframe);
                 previewPanel.appendChild(wrapper);
                 
-                // Fade in
-                setTimeout(() => {
-                    iframe.style.opacity = '1';
-                }, 50);
-                
-                // Add click handler to wrapper, not iframe
-                wrapper.addEventListener('click', () => openPreviewModal(url));
+                // Show iframe
+                iframe.style.display = 'block';
             };
             
             iframe.onerror = (error) => {
@@ -2126,23 +2127,13 @@
                 currentIframe = null;
             };
             
-            // CRITICAL FIX: Append iframe to a hidden container BEFORE setting src
-            // This ensures the iframe is in the DOM and can actually load content
-            let hiddenContainer = document.getElementById('iframe-loader-container');
-            if (!hiddenContainer) {
-                hiddenContainer = document.createElement('div');
-                hiddenContainer.id = 'iframe-loader-container';
-                hiddenContainer.style.position = 'absolute';
-                hiddenContainer.style.left = '-9999px';
-                hiddenContainer.style.top = '-9999px';
-                hiddenContainer.style.width = '1px';
-                hiddenContainer.style.height = '1px';
-                hiddenContainer.style.overflow = 'hidden';
-                document.body.appendChild(hiddenContainer);
-            }
-            hiddenContainer.appendChild(iframe);
+            // Add click handler to wrapper to open modal
+            wrapper.addEventListener('click', (e) => {
+                console.log('Preview clicked, opening modal');
+                openPreviewModal(url);
+            });
             
-            // NOW set src - iframe is in DOM and will load properly
+            // Set src to start loading
             iframe.src = url;
         }
         
