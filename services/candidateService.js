@@ -307,12 +307,24 @@ class CandidateService {
     const genericTitles = [
       'freelance', 'freelancer', 'owner', 'consultant', 'contractor',
       'self-employed', 'independent', 'director', 'partner', 'designer',
-      'creative', 'professional'
+      'creative', 'professional', 'founder', 'creator', 'ceo', 'principal',
+      'managing director', 'md', 'co-founder', 'business owner'
     ];
     
     const isGeneric = (title) => {
       if (!title) return true;
       const lowerTitle = title.toLowerCase().trim();
+      
+      // Filter out titles with ALL CAPS (likely business names like "ALTRIMENTI")
+      if (title === title.toUpperCase() && title.length > 3) {
+        return true;
+      }
+      
+      // Check if it contains business name indicators
+      const businessIndicators = ['pty', 'ltd', 'llc', 'inc', 'corp', '&', 'and'];
+      if (businessIndicators.some(indicator => lowerTitle.includes(indicator))) {
+        return true;
+      }
       
       // Check if it's ONLY a generic word (not "Senior Designer" which is fine)
       const words = lowerTitle.split(/\s+/);
@@ -320,11 +332,18 @@ class CandidateService {
         return true;
       }
       
-      // Check if it starts with generic + space (like "Freelance " or "Owner ")
-      return genericTitles.some(generic => 
-        lowerTitle === generic || 
-        (lowerTitle.startsWith(generic + ' ') && words.length <= 2)
-      );
+      // Check if it contains generic terms like "Owner", "Founder"
+      return genericTitles.some(generic => {
+        // Exact match
+        if (lowerTitle === generic) return true;
+        // Starts with generic ("Freelance Designer")
+        if (lowerTitle.startsWith(generic + ' ') && words.length <= 2) return true;
+        // Ends with generic ("ALTRIMENTI Founder")
+        if (lowerTitle.endsWith(' ' + generic)) return true;
+        // Contains "& generic" ("Founder & Creator")
+        if (lowerTitle.includes('& ' + generic) || lowerTitle.includes('and ' + generic)) return true;
+        return false;
+      });
     };
     
     // Check current position
@@ -400,16 +419,21 @@ class CandidateService {
     const yearsExp = this.calculateYearsOfExperience(candidate);
     const currentTitle = this.getCurrentTitle(candidate);
     
+    const title = currentTitle || 'Creative Professional';
+    const mailtoSubject = `Send me more information about ${title} - Candidate #${candidate.candidateId}`;
+    const mailtoLink = `mailto:reply@artisan.com.au?subject=${encodeURIComponent(mailtoSubject)}`;
+    
     return {
       number: position,
       name: `${candidate.firstName} ${candidate.lastName}`,
-      title: currentTitle || 'Creative Professional',
+      title: title,
       experience: `${yearsExp} ${yearsExp === 1 ? 'Year' : 'Years'}`,
       summary: aiSummary,
       profile_url: `https://app.jobadder.com/candidates/${candidate.candidateId}`,
       avatar_url: candidate.links?.photo || null,
       image_url: this.CANDIDATE_IMAGES[position - 1] || this.CANDIDATE_IMAGES[0],
-      candidateId: candidate.candidateId
+      candidateId: candidate.candidateId,
+      mailto_link: mailtoLink
     };
   }
 }
