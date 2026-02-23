@@ -1,32 +1,12 @@
 const candidateService = require('../services/candidateService');
 const aiService = require('../services/aiService');
 const brevoService = require('../services/brevoService');
-const wordpressService = require('../services/wordpressService');
 const fs = require('fs');
 const path = require('path');
 
 class CandidateAlertsController {
   constructor() {
     this.stateFile = path.join(__dirname, '../.alist-state.json');
-  }
-
-  /**
-   * Fetch the latest 3 articles from WordPress for use in the A-LIST email.
-   * Returns named params { article1, article2, article3 } — safe fallback to null if WP is unavailable.
-   */
-  async getLatestArticles() {
-    try {
-      const articles = await wordpressService.getLatestArticles(3);
-      const list = articles || [];
-      return {
-        article1: list[0] || null,
-        article2: list[1] || null,
-        article3: list[2] || null,
-      };
-    } catch (err) {
-      console.warn('⚠️  Could not fetch WordPress articles for A-LIST email:', err.message);
-      return { article1: null, article2: null, article3: null };
-    }
   }
 
   /**
@@ -132,16 +112,16 @@ class CandidateAlertsController {
       console.log(`📧 Sending to: ${testEmail}`);
       console.log(`📋 Template ID: ${process.env.A_LIST_TEMPLATE_ID}`);
       console.log(`👥 Candidates: ${state.candidates.length}`);
-
-      // Fetch latest 3 WordPress articles
-      console.log('📰 Fetching latest articles from WordPress...');
-      const articleParams = await this.getLatestArticles();
+      
+      // Log candidate data for debugging
+      console.log('📊 Sample candidate data being sent:');
+      console.log(JSON.stringify(state.candidates[0], null, 2));
       
       // Send email via Brevo
       await brevoService.sendBatchEmail(
         testRecipient,
         process.env.A_LIST_TEMPLATE_ID,
-        { candidates: state.candidates, ...articleParams }
+        { candidates: state.candidates }
       );
       
       // Update state
@@ -200,16 +180,12 @@ class CandidateAlertsController {
       console.log(`📧 Sending to ${recipients.length} recipients`);
       console.log(`📋 Template ID: ${process.env.A_LIST_TEMPLATE_ID}`);
       console.log(`👥 Candidates: ${state.candidates.length}`);
-
-      // Fetch latest 3 WordPress articles
-      console.log('📰 Fetching latest articles from WordPress...');
-      const articleParams = await this.getLatestArticles();
       
       // Send email via Brevo
       await brevoService.sendBatchEmail(
         recipients,
         process.env.A_LIST_TEMPLATE_ID,
-        { candidates: state.candidates, ...articleParams }
+        { candidates: state.candidates }
       );
       
       // Update state to SENT
@@ -303,40 +279,6 @@ class CandidateAlertsController {
       console.error('❌ Error saving state:', error);
     }
   }
-
-  /**
-   * Preview A-List
-   */
-  previewAlist = async (req, res) => {
-    try {
-      console.log('\n======== 🔍 PREVIEWING A-LIST ========');
-      
-      const state = this.loadState();
-      
-      if (!state || state.state === 'EMPTY' || !state.candidates || state.candidates.length === 0) {
-        return res.status(404).send(`
-          <div style="padding: 40px; text-align: center; font-family: Arial, sans-serif;">
-            <h2 style="color: #e74c3c;">No A-List Generated</h2>
-            <p style="color: #666;">Please generate an A-List first before previewing.</p>
-          </div>
-        `);
-      }
-      
-      // Use emailPreviewService to render the preview
-      const emailPreviewService = require('../services/emailPreviewService');
-      const html = await emailPreviewService.renderAlist(state);
-      res.send(html);
-    } catch (error) {
-      console.error('❌ Error generating A-List preview:', error);
-      res.status(500).send(`
-        <div style="padding: 40px; text-align: center; font-family: Arial, sans-serif;">
-          <h2 style="color: #e74c3c;">Preview Unavailable</h2>
-          <p style="color: #666;">${error.message}</p>
-        </div>
-      `);
-    }
-  };
 }
 
 module.exports = new CandidateAlertsController();
-
