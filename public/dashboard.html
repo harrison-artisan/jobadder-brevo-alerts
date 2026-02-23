@@ -74,7 +74,7 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-radius: 10px;
-            padding: 30px;
+            padding: 20px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
             transition: all 0.3s ease;
@@ -89,7 +89,7 @@
         .status-card h3 {
             color: rgba(255, 255, 255, 0.9);
             font-size: 14px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -98,7 +98,7 @@
         .status-value {
             font-size: 24px;
             font-weight: 700;
-            margin: 15px 0;
+            margin: 10px 0;
         }
         
         .status-value.success {
@@ -698,7 +698,7 @@
         /* ========== PREVIEW PANEL & MODAL ========== */
         .main-layout {
             display: grid;
-            grid-template-columns: 70% 30%;
+            grid-template-columns: 7fr 3fr;
             gap: 20px;
         }
         
@@ -1258,6 +1258,9 @@
         }
         
         function switchTab(tabName) {
+            // Clear preview when switching tabs
+            clearPreview();
+            
             // Hide all tab contents
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.remove('active');
@@ -2056,13 +2059,25 @@
             
             const iframe = document.createElement('iframe');
             iframe.className = 'preview-iframe';
-            iframe.style.display = 'none';
-            iframe.style.pointerEvents = 'none'; // Prevent iframe from capturing clicks
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.border = 'none';
+            iframe.style.minWidth = '650px';
             currentIframe = iframe;
+            
+            // Create wrapper for click handling
+            const wrapper = document.createElement('div');
+            wrapper.style.position = 'relative';
+            wrapper.style.width = '100%';
+            wrapper.style.height = '100%';
+            wrapper.style.cursor = 'pointer';
+            wrapper.style.overflow = 'auto';
+            wrapper.appendChild(iframe);
             
             // Set timeout for loading
             previewTimeout = setTimeout(() => {
-                if (iframe.style.display === 'none') {
+                // Check if preview panel still has loading spinner
+                if (previewPanel.querySelector('.preview-loading')) {
                     previewPanel.innerHTML = `
                         <div class="preview-empty">
                             <div>
@@ -2078,20 +2093,12 @@
             
             iframe.onload = () => {
                 clearTimeout(previewTimeout);
-                iframe.style.display = 'block';
+                
+                // Replace loading spinner with iframe wrapper
                 previewPanel.innerHTML = '';
-                
-                // Create wrapper for click handling
-                const wrapper = document.createElement('div');
-                wrapper.style.position = 'relative';
-                wrapper.style.width = '100%';
-                wrapper.style.height = '100%';
-                wrapper.style.cursor = 'pointer';
-                
-                wrapper.appendChild(iframe);
                 previewPanel.appendChild(wrapper);
                 
-                // Add click handler to wrapper, not iframe
+                // Add click handler to wrapper
                 wrapper.addEventListener('click', () => openPreviewModal(url));
             };
             
@@ -2113,10 +2120,21 @@
                 currentIframe = null;
             };
             
-            // CRITICAL: Append iframe to DOM BEFORE setting src so it can load
-            previewPanel.appendChild(iframe);
+            // Append wrapper (with iframe) to a hidden container to load
+            let hiddenLoader = document.getElementById('preview-hidden-loader');
+            if (!hiddenLoader) {
+                hiddenLoader = document.createElement('div');
+                hiddenLoader.id = 'preview-hidden-loader';
+                hiddenLoader.style.position = 'absolute';
+                hiddenLoader.style.left = '-9999px';
+                hiddenLoader.style.width = '1px';
+                hiddenLoader.style.height = '1px';
+                hiddenLoader.style.overflow = 'hidden';
+                document.body.appendChild(hiddenLoader);
+            }
+            hiddenLoader.appendChild(wrapper);
             
-            // Now set src - iframe is in DOM and will load
+            // Set src to start loading
             iframe.src = url;
         }
         
