@@ -253,21 +253,51 @@ class CandidateService {
 
   /**
    * Get current job title for candidate
+   * Avoids generic titles like Freelance, Owner, Consultant
    */
   getCurrentTitle(candidate) {
+    const genericTitles = [
+      'freelance', 'freelancer', 'owner', 'consultant', 'contractor',
+      'self-employed', 'independent', 'director', 'partner'
+    ];
+    
+    const isGeneric = (title) => {
+      if (!title) return true;
+      const lowerTitle = title.toLowerCase().trim();
+      return genericTitles.some(generic => lowerTitle === generic || lowerTitle.startsWith(generic + ' '));
+    };
+    
+    // Check current position
+    if (candidate.employment?.current?.position) {
+      const currentTitle = candidate.employment.current.position;
+      if (!isGeneric(currentTitle)) {
+        return currentTitle;
+      }
+    }
+    
+    // If current is generic, look through work history for more specific title
+    if (candidate.employment?.history && candidate.employment.history.length > 0) {
+      for (const job of candidate.employment.history) {
+        if (job.position && !isGeneric(job.position)) {
+          return job.position;
+        }
+      }
+    }
+    
+    // Check ideal position
+    if (candidate.employment?.ideal?.position) {
+      const idealTitle = candidate.employment.ideal.position;
+      if (!isGeneric(idealTitle)) {
+        return idealTitle;
+      }
+    }
+    
+    // Last resort: use current even if generic, or default
     if (candidate.employment?.current?.position) {
       return candidate.employment.current.position;
     }
     
-    if (candidate.employment?.ideal?.position) {
-      return candidate.employment.ideal.position;
-    }
-    
-    if (candidate.employment?.history && candidate.employment.history.length > 0) {
-      return candidate.employment.history[0].position || 'Professional';
-    }
-    
-    return 'Professional';
+    return 'Creative Professional';
   }
 
   /**
@@ -292,3 +322,4 @@ class CandidateService {
 }
 
 module.exports = new CandidateService();
+
