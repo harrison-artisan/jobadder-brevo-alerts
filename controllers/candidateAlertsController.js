@@ -121,7 +121,7 @@ class CandidateAlertsController {
       console.log(JSON.stringify(state.candidates[0], null, 2));
       
       // Fetch latest articles from WordPress
-      const articles = await wordpressService.getLatestPosts(3);
+      const articles = await wordpressService.getLatestArticles(3);
       
       // Send email via Brevo
       await brevoService.sendBatchEmail(
@@ -193,7 +193,7 @@ class CandidateAlertsController {
       console.log(`👥 Candidates: ${state.candidates.length}`);
       
       // Fetch latest articles from WordPress
-      const articles = await wordpressService.getLatestPosts(3);
+      const articles = await wordpressService.getLatestArticles(3);
       
       // Send email via Brevo
       await brevoService.sendBatchEmail(
