@@ -1,6 +1,7 @@
 const candidateService = require('../services/candidateService');
 const aiService = require('../services/aiService');
 const brevoService = require('../services/brevoService');
+const wordpressService = require('../services/wordpressService');
 const fs = require('fs');
 const path = require('path');
 
@@ -117,11 +118,19 @@ class CandidateAlertsController {
       console.log('📊 Sample candidate data being sent:');
       console.log(JSON.stringify(state.candidates[0], null, 2));
       
+      // Fetch latest articles from WordPress
+      const articles = await wordpressService.getLatestPosts(3);
+      
       // Send email via Brevo
       await brevoService.sendBatchEmail(
         testRecipient,
         process.env.A_LIST_TEMPLATE_ID,
-        { candidates: state.candidates }
+        { 
+          candidates: state.candidates,
+          article1: articles[0],
+          article2: articles[1],
+          article3: articles[2]
+        }
       );
       
       // Update state
@@ -181,11 +190,19 @@ class CandidateAlertsController {
       console.log(`📋 Template ID: ${process.env.A_LIST_TEMPLATE_ID}`);
       console.log(`👥 Candidates: ${state.candidates.length}`);
       
+      // Fetch latest articles from WordPress
+      const articles = await wordpressService.getLatestPosts(3);
+      
       // Send email via Brevo
       await brevoService.sendBatchEmail(
         recipients,
         process.env.A_LIST_TEMPLATE_ID,
-        { candidates: state.candidates }
+        { 
+          candidates: state.candidates,
+          article1: articles[0],
+          article2: articles[1],
+          article3: articles[2]
+        }
       );
       
       // Update state to SENT
