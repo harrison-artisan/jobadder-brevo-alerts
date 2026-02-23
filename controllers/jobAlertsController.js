@@ -135,6 +135,17 @@ class JobAlertsController {
     console.log(`\n🔄 Sending single job alert for ad ID: ${adId}...`);
     
     try {
+      // 0. Check if this job was already sent today
+      const alreadySent = jobTrackingService.wasSingleJobSentToday(parseInt(adId));
+      if (alreadySent) {
+        console.log(`⏸️  Job ${adId} was already sent today. Skipping to prevent duplicate.`);
+        return { 
+          success: false, 
+          message: `This job alert was already sent today. Please wait until tomorrow to send it again.`,
+          alreadySent: true
+        };
+      }
+
       // 1. Fetch all live jobs and find the one with matching adId
       const liveJobs = await jobadderService.getLiveJobs();
       const jobAd = liveJobs.find(job => job.adId === parseInt(adId));
@@ -160,6 +171,9 @@ class JobAlertsController {
         process.env.SINGLE_JOB_ALERT_TEMPLATE_ID,
         formattedJob
       );
+
+      // 4. Record that this job was sent today
+      jobTrackingService.recordSingleJobSent(parseInt(adId));
 
       console.log('✅ Single job alert sent successfully!\n');
       return { 
@@ -209,4 +223,3 @@ class JobAlertsController {
 }
 
 module.exports = new JobAlertsController();
-
