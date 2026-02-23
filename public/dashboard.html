@@ -2063,6 +2063,8 @@
             iframe.style.height = '100%';
             iframe.style.border = 'none';
             iframe.style.minWidth = '650px';
+            iframe.style.opacity = '0';
+            iframe.style.transition = 'opacity 0.3s ease';
             currentIframe = iframe;
             
             // Create wrapper for click handling
@@ -2072,6 +2074,10 @@
             wrapper.style.height = '100%';
             wrapper.style.cursor = 'pointer';
             wrapper.style.overflow = 'auto';
+            
+            // Add click handler to wrapper BEFORE appending
+            wrapper.addEventListener('click', () => openPreviewModal(url));
+            
             wrapper.appendChild(iframe);
             
             // Set timeout for loading
@@ -2094,12 +2100,16 @@
             iframe.onload = () => {
                 clearTimeout(previewTimeout);
                 
-                // Replace loading spinner with iframe wrapper
+                // Clear loading spinner
                 previewPanel.innerHTML = '';
+                
+                // Add wrapper with iframe
                 previewPanel.appendChild(wrapper);
                 
-                // Add click handler to wrapper
-                wrapper.addEventListener('click', () => openPreviewModal(url));
+                // Fade in iframe
+                setTimeout(() => {
+                    iframe.style.opacity = '1';
+                }, 50);
             };
             
             iframe.onerror = (error) => {
@@ -2119,20 +2129,6 @@
                 showToast('Preview failed to load - check console', 'error');
                 currentIframe = null;
             };
-            
-            // Append wrapper (with iframe) to a hidden container to load
-            let hiddenLoader = document.getElementById('preview-hidden-loader');
-            if (!hiddenLoader) {
-                hiddenLoader = document.createElement('div');
-                hiddenLoader.id = 'preview-hidden-loader';
-                hiddenLoader.style.position = 'absolute';
-                hiddenLoader.style.left = '-9999px';
-                hiddenLoader.style.width = '1px';
-                hiddenLoader.style.height = '1px';
-                hiddenLoader.style.overflow = 'hidden';
-                document.body.appendChild(hiddenLoader);
-            }
-            hiddenLoader.appendChild(wrapper);
             
             // Set src to start loading
             iframe.src = url;
@@ -2241,6 +2237,9 @@
             document.getElementById('btnPreviewXpose')?.addEventListener('click', previewXposeNewsletter);
             document.getElementById('btnSendTestXpose')?.addEventListener('click', sendTestXpose);
             document.getElementById('btnApproveAndSendXpose')?.addEventListener('click', sendAllXpose);
+            
+            // A-List event listener
+            document.getElementById('btnPreviewAlist')?.addEventListener('click', previewAlist);
         });
     </script>
 </body>
