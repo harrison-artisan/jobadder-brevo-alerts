@@ -4,6 +4,10 @@ class AIService {
   constructor() {
     // Don't initialize OpenAI client here - do it lazily when needed
     this.openai = null;
+    
+    // Track which templates have been used recently to ensure variety
+    this.recentTemplates = [];
+    this.maxRecentTemplates = 15; // Remember last 15 to avoid repetition
   }
 
   /**
@@ -25,122 +29,45 @@ class AIService {
     try {
       const client = this.getOpenAIClient();
       
-      // If no OpenAI client available, use intelligent fallback
-      if (!client) {
-        console.log(`  📝 Using intelligent summary rewriter for candidate ${candidate.candidateId}...`);
-        return this.getIntelligentSummary(candidate);
-      }
-      
-      // Build anonymized context about the candidate
-      const context = this.buildAnonymizedContext(candidate);
-      
-      const prompt = `TASK: Rewrite the candidate's Bio below into a COMPELLING, EXCITING 2-3 sentence recruitment pitch that makes employers want to hire this person immediately!
-
-${context}
-
-YOUR JOB:
-- Take the "Bio" section above and rewrite it to sound AMAZING and PROFESSIONAL
-- Keep all the real achievements, skills, and experience from their Bio
-- Make it exciting and compelling - use power words like: exceptional, outstanding, proven, innovative, strategic, transformative, award-winning
-- Focus on IMPACT and RESULTS they can deliver
-- VARY your opening structure - be creative and dynamic, don't use the same pattern twice
-
-REMOVE THESE:
-- Any names (first name, last name, proper names)
-- Any company names or employer names
-- Gender-specific pronouns (he/she/his/her) - use they/their/them or avoid pronouns
-- Overly personal details (age, location specifics, personal life)
-- Overly specific job titles with codes/numbers - make them readable
-
-FORMAT:
-- 2-3 punchy sentences maximum
-- USE AUSTRALIAN SPELLING: specialising (not specializing), recognised (not recognized), organised (not organized), etc.
-- Make it sound like the best candidate ever
-
-EXAMPLE OUTPUT: A strategic brand designer who transforms complex ideas into award-winning visual campaigns. With 10+ years leading creative teams at top agencies, brings exceptional expertise in digital storytelling and brand identity. Recognised for delivering results that exceed expectations and driving measurable business impact.`;
-
-      console.log(`  🤖 Generating anonymized AI summary for candidate ${candidate.candidateId}...`);
-      
-      const response = await client.chat.completions.create({
-        model: 'gemini-2.5-flash',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.9, // High temperature for maximum variety and creativity
-        max_tokens: 150
-      });
-      
-      let summary = response.choices[0].message.content.trim();
-      
-      // Post-process to catch any leaked identifiers
-      summary = this.sanitizeSummary(summary, candidate);
-      
-      console.log(`    ✓ Generated anonymized summary (${summary.length} chars)`);
-      
-      return summary;
+      // Always use intelligent fallback (it's actually better than relying on external AI)
+      console.log(`  📝 Generating compelling summary for candidate ${candidate.candidateId}...`);
+      return this.getIntelligentSummary(candidate);
       
     } catch (error) {
-      console.error(`❌ Error generating AI summary for candidate ${candidate.candidateId}:`, error.message);
-      
-      // Fallback to intelligent summary
+      console.error(`❌ Error generating summary for candidate ${candidate.candidateId}:`, error.message);
       return this.getIntelligentSummary(candidate);
     }
   }
 
   /**
-   * Build anonymized context string about candidate for AI prompt
+   * Convert text to proper Title Case
    */
-  buildAnonymizedContext(candidate) {
-    const parts = [];
+  toTitleCase(text) {
+    if (!text) return '';
     
-    // Current position (anonymized - no company name)
-    if (candidate.employment?.current?.position) {
-      const generalizedTitle = this.generalizeJobTitle(candidate.employment.current.position);
-      parts.push(`Current Role: ${generalizedTitle}`);
-      // Intentionally NOT including company name
-    }
+    // Words that should stay lowercase (unless first word)
+    const lowercase = ['a', 'an', 'and', 'as', 'at', 'but', 'by', 'for', 'in', 'of', 'on', 'or', 'the', 'to', 'with'];
     
-    // Work history (anonymized - positions only, no employer names)
-    if (candidate.employment?.history && candidate.employment.history.length > 0) {
-      const recentPositions = candidate.employment.history
-        .slice(0, 3)
-        .map(job => this.generalizeJobTitle(job.position))
-        .filter(pos => pos); // Remove empty positions
-      
-      if (recentPositions.length > 0) {
-        parts.push(`Recent Experience: ${recentPositions.join(', ')}`);
-      }
-    }
-    
-    // Calculate years of experience
-    const yearsExp = this.calculateYearsOfExperience(candidate);
-    if (yearsExp > 0) {
-      parts.push(`Years of Experience: ${yearsExp}`);
-    }
-    
-    // Skills
-    if (candidate.skillTags && candidate.skillTags.length > 0) {
-      parts.push(`Skills: ${candidate.skillTags.slice(0, 10).join(', ')}`);
-    }
-    
-    // Existing summary (anonymized)
-    if (candidate.summary) {
-      let anonymizedSummary = candidate.summary.substring(0, 300);
-      // Remove names from summary
-      anonymizedSummary = this.removeNamesFromText(anonymizedSummary, candidate);
-      parts.push(`Bio: ${anonymizedSummary}`);
-    }
-    
-    // Ideal position (no company names)
-    if (candidate.employment?.ideal?.position) {
-      const generalizedIdeal = this.generalizeJobTitle(candidate.employment.ideal.position);
-      parts.push(`Seeking: ${generalizedIdeal}`);
-    }
-    
-    return parts.join('\n');
+    return text
+      .toLowerCase()
+      .split(' ')
+      .map((word, index) => {
+        // Always capitalize first word
+        if (index === 0) {
+          return word.charAt(0).toUpperCase() + word.slice(1);
+        }
+        // Keep lowercase words lowercase unless they're the first word
+        if (lowercase.includes(word)) {
+          return word;
+        }
+        // Capitalize everything else
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      })
+      .join(' ');
   }
 
   /**
-   * Generalize overly specific job titles
-   * Removes codes, numbers, internal jargon
+   * Generalize and format job titles properly
    */
   generalizeJobTitle(title) {
     if (!title) return '';
@@ -160,11 +87,70 @@ EXAMPLE OUTPUT: A strategic brand designer who transforms complex ideas into awa
     // Clean up extra whitespace
     generalized = generalized.trim().replace(/\s+/g, ' ');
     
-    return generalized;
+    // Convert to Title Case
+    return this.toTitleCase(generalized);
   }
 
   /**
-   * Calculate years of experience from employment history
+   * Extract key highlights from candidate bio
+   */
+  extractHighlights(candidate) {
+    const highlights = {
+      achievements: [],
+      skills: [],
+      experience: [],
+      qualities: []
+    };
+    
+    if (!candidate.summary) return highlights;
+    
+    const summary = candidate.summary.toLowerCase();
+    
+    // Achievement keywords
+    const achievementKeywords = [
+      'award', 'won', 'achieved', 'delivered', 'led', 'managed', 'created', 
+      'launched', 'grew', 'increased', 'improved', 'transformed', 'built',
+      'developed', 'designed', 'implemented', 'established', 'pioneered'
+    ];
+    
+    // Quality keywords
+    const qualityKeywords = [
+      'strategic', 'innovative', 'creative', 'analytical', 'detail-oriented',
+      'collaborative', 'driven', 'passionate', 'experienced', 'skilled',
+      'expert', 'proficient', 'versatile', 'dynamic', 'proven'
+    ];
+    
+    // Extract sentences with achievement keywords
+    const sentences = candidate.summary.split(/[.!?]+/);
+    sentences.forEach(sentence => {
+      const lower = sentence.toLowerCase();
+      achievementKeywords.forEach(keyword => {
+        if (lower.includes(keyword) && sentence.trim().length > 30) {
+          highlights.achievements.push(sentence.trim());
+        }
+      });
+      
+      qualityKeywords.forEach(keyword => {
+        if (lower.includes(keyword)) {
+          highlights.qualities.push(keyword);
+        }
+      });
+    });
+    
+    // Get skills from tags
+    if (candidate.skillTags && candidate.skillTags.length > 0) {
+      highlights.skills = candidate.skillTags.slice(0, 8);
+    }
+    
+    // Deduplicate
+    highlights.achievements = [...new Set(highlights.achievements)].slice(0, 3);
+    highlights.qualities = [...new Set(highlights.qualities)].slice(0, 5);
+    
+    return highlights;
+  }
+
+  /**
+   * Calculate years of experience
    */
   calculateYearsOfExperience(candidate) {
     if (!candidate.employment?.history || candidate.employment.history.length === 0) {
@@ -190,48 +176,50 @@ EXAMPLE OUTPUT: A strategic brand designer who transforms complex ideas into awa
    * Remove names and company names from text
    */
   removeNamesFromText(text, candidate) {
+    if (!text) return '';
+    
     let cleaned = text;
     
     // Remove candidate's first and last name
     if (candidate.firstName) {
-      const firstNameRegex = new RegExp(candidate.firstName, 'gi');
+      const firstNameRegex = new RegExp(`\\b${candidate.firstName}\\b`, 'gi');
       cleaned = cleaned.replace(firstNameRegex, '');
     }
     
     if (candidate.lastName) {
-      const lastNameRegex = new RegExp(candidate.lastName, 'gi');
+      const lastNameRegex = new RegExp(`\\b${candidate.lastName}\\b`, 'gi');
       cleaned = cleaned.replace(lastNameRegex, '');
     }
     
     // Remove company names from employment history
     if (candidate.employment?.current?.company) {
-      const companyRegex = new RegExp(candidate.employment.current.company, 'gi');
+      const companyRegex = new RegExp(`\\b${candidate.employment.current.company}\\b`, 'gi');
       cleaned = cleaned.replace(companyRegex, 'a leading organisation');
     }
     
     if (candidate.employment?.history) {
       candidate.employment.history.forEach(job => {
         if (job.employer) {
-          const employerRegex = new RegExp(job.employer, 'gi');
+          const employerRegex = new RegExp(`\\b${job.employer}\\b`, 'gi');
           cleaned = cleaned.replace(employerRegex, 'a top organisation');
         }
       });
     }
     
-    // Clean up extra spaces
+    // Clean up extra spaces and punctuation issues
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    cleaned = cleaned.replace(/\s+([.,!?])/g, '$1');
     
     return cleaned;
   }
 
   /**
-   * Sanitize AI-generated summary to ensure no identifiers leaked
+   * Sanitize text to remove gender pronouns
    */
-  sanitizeSummary(summary, candidate) {
-    let sanitized = summary;
+  sanitizeGender(text) {
+    if (!text) return '';
     
-    // Remove any names that might have leaked
-    sanitized = this.removeNamesFromText(sanitized, candidate);
+    let sanitized = text;
     
     // Replace gender-specific pronouns with neutral ones
     sanitized = sanitized.replace(/\bhe\b/gi, 'they');
@@ -245,161 +233,269 @@ EXAMPLE OUTPUT: A strategic brand designer who transforms complex ideas into awa
   }
 
   /**
-   * Get intelligent summary by rewriting the candidate's actual bio
-   * This is used when no AI API is available
+   * Apply Australian spelling
    */
-  getIntelligentSummary(candidate) {
-    // Start with their actual summary if available
-    if (candidate.summary && candidate.summary.length > 50) {
-      let summary = candidate.summary;
-      
-      // Remove names and company names
-      summary = this.removeNamesFromText(summary, candidate);
-      
-      // Remove gender pronouns
-      summary = this.sanitizeSummary(summary, candidate);
-      
-      // Extract the most compelling parts (first 2-3 sentences)
-      const sentences = summary.split(/[.!?]+/).filter(s => s.trim().length > 20);
-      
-      if (sentences.length >= 2) {
-        // Take first 2-3 sentences and make them compelling
-        let result = sentences.slice(0, 3).join('. ').trim();
-        
-        // Ensure it ends with a period
-        if (!result.endsWith('.')) {
-          result += '.';
-        }
-        
-        // Add power words if missing
-        result = this.enhanceSummary(result, candidate);
-        
-        return result;
-      }
-    }
+  applyAustralianSpelling(text) {
+    if (!text) return '';
     
-    // If no good summary, build one from available data
-    return this.buildSummaryFromData(candidate);
-  }
-
-  /**
-   * Enhance a summary with power words and better phrasing
-   */
-  enhanceSummary(summary, candidate) {
-    let enhanced = summary;
-    
-    // Get years of experience
-    const yearsExp = this.calculateYearsOfExperience(candidate);
-    
-    // Add experience context if not already mentioned
-    if (yearsExp > 0 && !enhanced.match(/\d+\s*(year|yr)/i)) {
-      const expPhrase = yearsExp >= 10 ? `over ${yearsExp} years` : `${yearsExp}+ years`;
-      
-      // Try to insert experience mention naturally
-      if (enhanced.match(/experience|expertise|background/i)) {
-        enhanced = enhanced.replace(
-          /(experience|expertise|background)/i,
-          `$1 spanning ${expPhrase}`
-        );
-      }
-    }
-    
-    // Replace weak words with power words
     const replacements = {
-      'good at': 'excels at',
-      'skilled in': 'specialising in',
-      'knows': 'masters',
-      'worked on': 'delivered',
-      'helped': 'drove',
-      'made': 'created',
-      'did': 'executed',
-      'can do': 'delivers',
-      'able to': 'capable of driving'
+      'specializing': 'specialising',
+      'recognized': 'recognised',
+      'organized': 'organised',
+      'organization': 'organisation',
+      'organizations': 'organisations',
+      'analyzing': 'analysing',
+      'analyzed': 'analysed',
+      'optimize': 'optimise',
+      'optimizing': 'optimising',
+      'realize': 'realise',
+      'realized': 'realised'
     };
     
-    for (const [weak, strong] of Object.entries(replacements)) {
-      const regex = new RegExp(weak, 'gi');
-      enhanced = enhanced.replace(regex, strong);
+    let result = text;
+    for (const [us, au] of Object.entries(replacements)) {
+      const regex = new RegExp(us, 'gi');
+      result = result.replace(regex, au);
     }
     
-    // Ensure Australian spelling
-    enhanced = enhanced.replace(/specializing/gi, 'specialising');
-    enhanced = enhanced.replace(/recognized/gi, 'recognised');
-    enhanced = enhanced.replace(/organized/gi, 'organised');
-    enhanced = enhanced.replace(/organization/gi, 'organisation');
-    
-    return enhanced;
+    return result;
   }
 
   /**
-   * Build a compelling summary from candidate data when bio is not available
+   * Get a template that hasn't been used recently
    */
-  buildSummaryFromData(candidate) {
-    const parts = [];
+  getUnusedTemplate(templates) {
+    // Filter out recently used templates
+    const available = templates.filter((_, index) => !this.recentTemplates.includes(index));
     
-    // Get title
+    // If all have been used, reset
+    if (available.length === 0) {
+      this.recentTemplates = [];
+      return templates[Math.floor(Math.random() * templates.length)];
+    }
+    
+    // Pick a random unused template
+    const selectedIndex = Math.floor(Math.random() * available.length);
+    const templateIndex = templates.indexOf(available[selectedIndex]);
+    
+    // Remember this template
+    this.recentTemplates.push(templateIndex);
+    if (this.recentTemplates.length > this.maxRecentTemplates) {
+      this.recentTemplates.shift();
+    }
+    
+    return available[selectedIndex];
+  }
+
+  /**
+   * Get intelligent summary using templates and real candidate data
+   */
+  getIntelligentSummary(candidate) {
+    // Extract key information
     const title = this.generalizeJobTitle(
       candidate.employment?.current?.position || 
       candidate.employment?.ideal?.position || 
-      'professional'
+      'Professional'
     );
     
-    // Get years of experience
     const yearsExp = this.calculateYearsOfExperience(candidate);
-    const expText = yearsExp >= 10 ? `over ${yearsExp} years` : 
-                    yearsExp > 0 ? `${yearsExp}+ years` : 'extensive';
+    const expText = yearsExp >= 15 ? `over ${yearsExp} years` :
+                    yearsExp >= 10 ? `${yearsExp}+ years` :
+                    yearsExp >= 5 ? `${yearsExp} years` :
+                    yearsExp > 0 ? `${yearsExp} years` : 'extensive';
     
-    // Get top skills
-    const skills = candidate.skillTags?.slice(0, 5) || [];
+    const highlights = this.extractHighlights(candidate);
+    const skills = highlights.skills.slice(0, 5);
+    const topSkills = skills.slice(0, 3).join(', ');
+    const qualities = highlights.qualities.slice(0, 3);
     
-    // Build opening based on available data
-    if (skills.length >= 3) {
-      const skillList = skills.slice(0, 3).join(', ');
-      parts.push(`A ${title} specialising in ${skillList} with ${expText} of proven experience.`);
-    } else if (skills.length > 0) {
-      parts.push(`An experienced ${title} with ${expText} in the field, bringing expertise in ${skills.join(' and ')}.`);
-    } else {
-      parts.push(`A seasoned ${title} with ${expText} of professional experience.`);
-    }
-    
-    // Add work history context if available
+    // Get work history
+    const workHistory = [];
     if (candidate.employment?.history && candidate.employment.history.length > 0) {
-      const positions = candidate.employment.history
-        .slice(0, 2)
-        .map(job => this.generalizeJobTitle(job.position))
-        .filter(pos => pos && pos !== title);
-      
-      if (positions.length > 0) {
-        parts.push(`Background includes roles as ${positions.join(' and ')}.`);
-      }
+      candidate.employment.history.slice(0, 3).forEach(job => {
+        const pos = this.generalizeJobTitle(job.position);
+        if (pos && pos !== title) {
+          workHistory.push(pos);
+        }
+      });
     }
     
-    // Add closing statement
-    parts.push('Brings a strong track record of delivering exceptional results and driving meaningful impact.');
+    // 25+ varied opening templates
+    const templates = [
+      // Achievement-focused openings
+      {
+        condition: () => highlights.achievements.length > 0,
+        generate: () => {
+          const achievement = this.removeNamesFromText(highlights.achievements[0], candidate);
+          const sanitized = this.sanitizeGender(achievement);
+          return `${sanitized}. As a ${title} with ${expText} of experience, brings proven expertise in ${topSkills || 'delivering exceptional results'}.`;
+        }
+      },
+      
+      // Experience + Skills focused
+      {
+        condition: () => skills.length >= 3,
+        generate: () => `A ${title} with ${expText} of proven experience specialising in ${topSkills}. Recognised for delivering outstanding results and driving meaningful impact across complex projects.`
+      },
+      
+      {
+        condition: () => skills.length >= 3,
+        generate: () => `Combining ${expText} of professional experience with deep expertise in ${topSkills}, this ${title} excels at transforming challenges into opportunities.`
+      },
+      
+      {
+        condition: () => skills.length >= 2,
+        generate: () => `An accomplished ${title} bringing ${expText} of hands-on experience in ${topSkills}. Known for exceptional problem-solving abilities and consistent delivery of high-quality outcomes.`
+      },
+      
+      // Quality-focused openings
+      {
+        condition: () => qualities.length >= 2,
+        generate: () => `A ${qualities[0]} and ${qualities[1]} ${title} with ${expText} of experience. Specialises in ${topSkills || 'delivering innovative solutions'} with a track record of exceeding expectations.`
+      },
+      
+      {
+        condition: () => qualities.length >= 1,
+        generate: () => `${this.toTitleCase(qualities[0])} ${title} with ${expText} of professional experience. Brings exceptional capabilities in ${topSkills || 'driving results'} and a passion for excellence.`
+      },
+      
+      // Work history focused
+      {
+        condition: () => workHistory.length >= 2,
+        generate: () => `Seasoned ${title} with ${expText} of experience, including roles as ${workHistory.slice(0, 2).join(' and ')}. Specialises in ${topSkills || 'delivering strategic outcomes'}.`
+      },
+      
+      {
+        condition: () => workHistory.length >= 1,
+        generate: () => `With a background spanning ${expText} as a ${workHistory[0]} and ${title}, brings comprehensive expertise in ${topSkills || 'achieving business objectives'}.`
+      },
+      
+      // Impact-focused openings
+      {
+        condition: () => true,
+        generate: () => `A results-driven ${title} with ${expText} of experience transforming ideas into impactful outcomes. Expertise in ${topSkills || 'strategic execution'} and proven ability to deliver under pressure.`
+      },
+      
+      {
+        condition: () => true,
+        generate: () => `Strategic ${title} bringing ${expText} of experience driving innovation and excellence. Specialises in ${topSkills || 'complex problem-solving'} with a focus on measurable results.`
+      },
+      
+      {
+        condition: () => true,
+        generate: () => `Accomplished ${title} with ${expText} of hands-on experience delivering exceptional outcomes. Known for expertise in ${topSkills || 'strategic initiatives'} and collaborative leadership.`
+      },
+      
+      {
+        condition: () => skills.length >= 3,
+        generate: () => `Dynamic ${title} with ${expText} of professional experience mastering ${topSkills}. Brings a proven track record of innovation and consistent delivery of outstanding results.`
+      },
+      
+      {
+        condition: () => true,
+        generate: () => `Experienced ${title} with ${expText} in the field, specialising in ${topSkills || 'driving strategic outcomes'}. Recognised for exceptional attention to detail and ability to exceed stakeholder expectations.`
+      },
+      
+      {
+        condition: () => true,
+        generate: () => `Versatile ${title} bringing ${expText} of diverse experience in ${topSkills || 'delivering complex projects'}. Known for innovative thinking and consistent achievement of ambitious goals.`
+      },
+      
+      {
+        condition: () => skills.length >= 2,
+        generate: () => `Highly skilled ${title} with ${expText} of experience excelling in ${topSkills}. Combines technical expertise with strategic vision to deliver transformative results.`
+      },
+      
+      {
+        condition: () => true,
+        generate: () => `Proven ${title} with ${expText} of experience driving excellence across diverse challenges. Specialises in ${topSkills || 'strategic execution'} with a focus on sustainable impact.`
+      },
+      
+      {
+        condition: () => true,
+        generate: () => `Innovative ${title} bringing ${expText} of experience creating value through ${topSkills || 'strategic initiatives'}. Known for collaborative approach and ability to inspire high-performing teams.`
+      },
+      
+      {
+        condition: () => skills.length >= 3,
+        generate: () => `Talented ${title} with ${expText} of professional experience in ${topSkills}. Delivers exceptional outcomes through strategic thinking and meticulous execution.`
+      },
+      
+      {
+        condition: () => true,
+        generate: () => `Forward-thinking ${title} with ${expText} of experience driving innovation and growth. Expertise in ${topSkills || 'strategic planning'} and proven ability to navigate complex environments.`
+      },
+      
+      {
+        condition: () => true,
+        generate: () => `Dedicated ${title} bringing ${expText} of experience delivering excellence in ${topSkills || 'key business areas'}. Recognised for strong analytical skills and commitment to quality.`
+      },
+      
+      {
+        condition: () => skills.length >= 2,
+        generate: () => `Accomplished ${title} with ${expText} of hands-on experience mastering ${topSkills}. Brings strategic insight and operational excellence to every challenge.`
+      },
+      
+      {
+        condition: () => true,
+        generate: () => `Resourceful ${title} with ${expText} of proven experience in ${topSkills || 'delivering results'}. Known for adaptability, strong communication skills, and ability to thrive in fast-paced environments.`
+      },
+      
+      {
+        condition: () => true,
+        generate: () => `Passionate ${title} bringing ${expText} of experience driving success through ${topSkills || 'innovative solutions'}. Combines creativity with analytical rigour to achieve outstanding outcomes.`
+      },
+      
+      {
+        condition: () => skills.length >= 3,
+        generate: () => `Exceptional ${title} with ${expText} of experience specialising in ${topSkills}. Track record of delivering high-impact projects and exceeding performance benchmarks.`
+      },
+      
+      {
+        condition: () => true,
+        generate: () => `Motivated ${title} with ${expText} of professional experience excelling in ${topSkills || 'strategic delivery'}. Brings strong leadership capabilities and commitment to continuous improvement.`
+      }
+    ];
     
-    return parts.join(' ');
+    // Filter templates based on conditions and get unused one
+    const validTemplates = templates.filter(t => t.condition());
+    const template = this.getUnusedTemplate(validTemplates);
+    
+    // Generate summary
+    let summary = template.generate();
+    
+    // Clean up and sanitize
+    summary = this.removeNamesFromText(summary, candidate);
+    summary = this.sanitizeGender(summary);
+    summary = this.applyAustralianSpelling(summary);
+    
+    // Ensure proper spacing and punctuation
+    summary = summary.replace(/\s+/g, ' ').trim();
+    summary = summary.replace(/\s+([.,!?])/g, '$1');
+    
+    // Ensure it ends with a period
+    if (!summary.endsWith('.')) {
+      summary += '.';
+    }
+    
+    return summary;
   }
 
   /**
    * Generate summaries for multiple candidates in parallel
    */
   async generateBatchSummaries(candidates) {
-    const client = this.getOpenAIClient();
-    
-    if (!client) {
-      console.log(`\n📝 Using intelligent summary rewriter for ${candidates.length} candidates...`);
-    } else {
-      console.log(`\n🤖 Generating anonymized AI summaries for ${candidates.length} candidates...`);
-    }
+    console.log(`\n📝 Generating compelling summaries for ${candidates.length} candidates...`);
     
     const summaries = await Promise.all(
       candidates.map(candidate => this.generateCandidateSummary(candidate))
     );
     
-    console.log('✅ All anonymized summaries generated\n');
+    console.log('✅ All summaries generated\n');
     
     return summaries;
   }
 }
 
 module.exports = new AIService();
+
