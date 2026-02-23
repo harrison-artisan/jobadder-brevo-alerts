@@ -306,3 +306,4 @@ class XposeController {
 }
 
 module.exports = new XposeController();
+
