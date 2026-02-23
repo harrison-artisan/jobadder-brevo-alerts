@@ -39,13 +39,15 @@ class CandidateAlertsController {
       const summaries = await aiService.generateBatchSummaries(selectedCandidates);
       
       // 4. Format candidates for email
-      const candidatesWithSummaries = selectedCandidates.map((candidate, index) => {
-        return candidateService.formatCandidateForEmail(
-          candidate, 
-          index + 1, 
-          summaries[index]
-        );
-      });
+      const candidatesWithSummaries = await Promise.all(
+        selectedCandidates.map((candidate, index) => {
+          return candidateService.formatCandidateForEmail(
+            candidate, 
+            index + 1, 
+            summaries[index]
+          );
+        })
+      );
       
       // 5. Save state
       const state = {
@@ -299,3 +301,4 @@ class CandidateAlertsController {
 }
 
 module.exports = new CandidateAlertsController();
+
