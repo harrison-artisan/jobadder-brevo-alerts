@@ -11,10 +11,15 @@ class JobAlertsController {
   async getLatestArticles() {
     try {
       const articles = await wordpressService.getLatestArticles(3);
-      return articles || [];
+      const list = articles || [];
+      return {
+        article1: list[0] || null,
+        article2: list[1] || null,
+        article3: list[2] || null,
+      };
     } catch (err) {
       console.warn('⚠️  Could not fetch WordPress articles for email:', err.message);
-      return [];
+      return { article1: null, article2: null, article3: null };
     }
   }
 
@@ -60,7 +65,7 @@ class JobAlertsController {
 
       // 5. Fetch latest 3 WordPress articles for the Creative Community section
       console.log('📰 Fetching latest articles from WordPress...');
-      const articles = await this.getLatestArticles();
+      const articleParams = await this.getLatestArticles();
 
       // 6. Get recipients from Brevo
       console.log('👥 Fetching recipients from Brevo...');
@@ -76,7 +81,7 @@ class JobAlertsController {
       await brevoService.sendBatchEmail(
         recipients,
         process.env.DAILY_ROUNDUP_TEMPLATE_ID,
-        { jobs: jobsData, job_count: jobsData.length, articles }
+        { jobs: jobsData, job_count: jobsData.length, ...articleParams }
       );
 
       // 8. Update tracking file with all current job IDs
@@ -120,7 +125,7 @@ class JobAlertsController {
 
       // 3. Fetch latest 3 WordPress articles
       console.log('📰 Fetching latest articles from WordPress...');
-      const articles = await this.getLatestArticles();
+      const articleParams = await this.getLatestArticles();
 
       // 4. Get recipients
       console.log('👥 Fetching recipients from Brevo...');
@@ -136,7 +141,7 @@ class JobAlertsController {
       await brevoService.sendSingleEmail(
         recipients,
         process.env.SINGLE_JOB_ALERT_TEMPLATE_ID,
-        { ...formattedJob, articles }
+        { ...formattedJob, ...articleParams }
       );
 
       console.log('✅ Job alert sent successfully!\n');
@@ -181,7 +186,7 @@ class JobAlertsController {
 
       // 2. Fetch latest 3 WordPress articles
       console.log('📰 Fetching latest articles from WordPress...');
-      const articles = await this.getLatestArticles();
+      const articleParams = await this.getLatestArticles();
 
       // 3. Get recipients
       const recipients = await brevoService.getJobAlertContacts();
@@ -195,7 +200,7 @@ class JobAlertsController {
       await brevoService.sendSingleEmail(
         recipients,
         process.env.SINGLE_JOB_ALERT_TEMPLATE_ID,
-        { ...formattedJob, articles }
+        { ...formattedJob, ...articleParams }
       );
 
       // 5. Record that this job was sent today
@@ -249,4 +254,3 @@ class JobAlertsController {
 }
 
 module.exports = new JobAlertsController();
-
