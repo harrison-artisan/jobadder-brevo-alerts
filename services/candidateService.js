@@ -1,6 +1,5 @@
 const axios = require('axios');
 const jobadderService = require('./jobadderService');
-const { extractJobTitleFromSummary } = require('./aiService_title_extractor');
 
 class CandidateService {
   constructor() {
@@ -402,40 +401,45 @@ class CandidateService {
       }
     }
     
-    // Last resort: Use AI to extract job title from summary
-    if (candidate.summary) {
-      console.log(`  🤖 Using AI to extract job title for ${candidate.firstName} ${candidate.lastName}...`);
-      const aiTitle = await extractJobTitleFromSummary(candidate);
-      if (aiTitle && !isGeneric(aiTitle)) {
-        console.log(`    ✓ AI extracted: ${aiTitle}`);
-        return aiTitle;
-      }
-    }
-    
     // No usable title found - candidate will be filtered out
     return null;
   }
 
   /**
-   * Extract a job title from candidate summary/bio
+   * Extract a job title from candidate summary/bio using improved regex patterns
    */
   extractTitleFromSummary(summary) {
     if (!summary) return null;
     
-    // Common patterns in summaries
+    // Expanded patterns to catch more job titles
     const patterns = [
-      /(?:experienced|senior|lead|principal|head of)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,3})/i,
-      /(?:I am a|I'm a|As a)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,3})/i,
-      /(?:working as|work as)\s+(?:a|an)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,3})/i,
-      /([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})\s+(?:with|specializing|focused)/i
+      // "Senior Art Director", "Lead Designer", etc.
+      /(?:experienced|senior|lead|principal|head of|chief)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,4})/i,
+      // "I am a Creative Director"
+      /(?:I am a|I'm a|I am an|I'm an|As a|As an)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,4})/i,
+      // "working as a Brand Strategist"
+      /(?:working as|work as|currently|currently working as)\s+(?:a|an)?\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,4})/i,
+      // "Brand Strategist with 10 years"
+      /([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})\s+(?:with|specializing|specialising|focused|passionate)/i,
+      // "Creative Director at"
+      /([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})\s+(?:at|for)\s+[A-Z]/i,
+      // Start of summary: "Digital Designer based in"
+      /^([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})\s+(?:based|located|living)/i,
+      // "role as a UX Designer"
+      /(?:role as|position as|job as)\s+(?:a|an)?\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,4})/i
     ];
     
     for (const pattern of patterns) {
       const match = summary.match(pattern);
       if (match && match[1]) {
-        const title = match[1].trim();
-        // Make sure it's not just a single generic word
-        if (title.split(/\s+/).length >= 2) {
+        let title = match[1].trim();
+        
+        // Clean up the title
+        title = title.replace(/\s+/g, ' '); // Normalize spaces
+        
+        // Must be at least 2 words to avoid single generic words
+        const words = title.split(/\s+/);
+        if (words.length >= 2) {
           return title;
         }
       }
