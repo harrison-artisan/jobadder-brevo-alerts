@@ -311,3 +311,4 @@ class CandidateAlertsController {
 }
 
 module.exports = new CandidateAlertsController();
+
