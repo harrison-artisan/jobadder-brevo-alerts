@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cron = require('node-cron');
 const jobAlertsController = require('./controllers/jobAlertsController');
+const candidateAlertsController = require('./controllers/candidateAlertsController');
+const xposeController = require('./controllers/xposeController');
 const jobadderService = require('./services/jobadderService');
 const jobTrackingService = require('./services/jobTrackingService');
 
@@ -144,6 +146,204 @@ app.post('/api/daily-alerts/toggle', (req, res) => {
   try {
     const newState = jobTrackingService.toggleState();
     res.json(newState);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// A-List API endpoints
+app.get('/api/alist/state', async (req, res) => {
+  try {
+    const state = candidateAlertsController.getState();
+    res.json(state);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/alist/generate', async (req, res) => {
+  try {
+    if (!jobadderService.isAuthorized()) {
+      return res.status(401).json({ 
+        error: 'Not authorized', 
+        message: 'Please complete JobAdder authorization at /auth/jobadder' 
+      });
+    }
+    const result = await candidateAlertsController.generateAList();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/alist/send-test', async (req, res) => {
+  try {
+    if (!jobadderService.isAuthorized()) {
+      return res.status(401).json({ 
+        error: 'Not authorized', 
+        message: 'Please complete JobAdder authorization at /auth/jobadder' 
+      });
+    }
+    const result = await candidateAlertsController.sendTest();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/alist/send', async (req, res) => {
+  try {
+    if (!jobadderService.isAuthorized()) {
+      return res.status(401).json({ 
+        error: 'Not authorized', 
+        message: 'Please complete JobAdder authorization at /auth/jobadder' 
+      });
+    }
+    const result = await candidateAlertsController.sendToAll();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/alist/reset', async (req, res) => {
+  try {
+    const result = candidateAlertsController.resetState();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ===============================================
+// XPOSE NEWSLETTER API ENDPOINTS
+// ===============================================
+app.get('/api/xpose/state', async (req, res) => {
+  try {
+    if (!jobadderService.isAuthorized()) {
+      return res.status(401).json({ 
+        error: 'Not authorized', 
+        message: 'Please complete JobAdder authorization at /auth/jobadder' 
+      });
+    }
+    await xposeController.getState(req, res);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/xpose/generate', async (req, res) => {
+  try {
+    if (!jobadderService.isAuthorized()) {
+      return res.status(401).json({ 
+        error: 'Not authorized', 
+        message: 'Please complete JobAdder authorization at /auth/jobadder' 
+      });
+    }
+    await xposeController.generateXpose(req, res);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/xpose/send-test', async (req, res) => {
+  try {
+    if (!jobadderService.isAuthorized()) {
+      return res.status(401).json({ 
+        error: 'Not authorized', 
+        message: 'Please complete JobAdder authorization at /auth/jobadder' 
+      });
+    }
+    await xposeController.sendTest(req, res);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/xpose/send', async (req, res) => {
+  try {
+    if (!jobadderService.isAuthorized()) {
+      return res.status(401).json({ 
+        error: 'Not authorized', 
+        message: 'Please complete JobAdder authorization at /auth/jobadder' 
+      });
+    }
+    await xposeController.sendToAll(req, res);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/xpose/articles', async (req, res) => {
+  try {
+    if (!jobadderService.isAuthorized()) {
+      return res.status(401).json({ 
+        error: 'Not authorized', 
+        message: 'Please complete JobAdder authorization at /auth/jobadder' 
+      });
+    }
+    await xposeController.getAllArticles(req, res);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/xpose/send-test-article/:articleId', async (req, res) => {
+  try {
+    if (!jobadderService.isAuthorized()) {
+      return res.status(401).json({ 
+        error: 'Not authorized', 
+        message: 'Please complete JobAdder authorization at /auth/jobadder' 
+      });
+    }
+    await xposeController.sendTestSingleArticle(req, res);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Preview routes
+app.get('/api/preview/xpose-newsletter', async (req, res) => {
+  try {
+    await xposeController.previewNewsletter(req, res);
+  } catch (error) {
+    res.status(500).send('<div style="padding: 40px; text-align: center;"><h2>Error</h2><p>' + error.message + '</p></div>');
+  }
+});
+
+app.get('/api/preview/xpose-article/:articleId', async (req, res) => {
+  try {
+    await xposeController.previewSingleArticle(req, res);
+  } catch (error) {
+    res.status(500).send('<div style="padding: 40px; text-align: center;"><h2>Error</h2><p>' + error.message + '</p></div>');
+  }
+});
+
+app.get('/api/preview/job/:jobId', async (req, res) => {
+  try {
+    await jobAlertsController.previewSingleJob(req, res);
+  } catch (error) {
+    res.status(500).send('<div style="padding: 40px; text-align: center;"><h2>Error</h2><p>' + error.message + '</p></div>');
+  }
+});
+
+app.get('/api/preview/alist', async (req, res) => {
+  try {
+    await candidateAlertsController.previewAlist(req, res);
+  } catch (error) {
+    res.status(500).send('<div style="padding: 40px; text-align: center;"><h2>Error</h2><p>' + error.message + '</p></div>');
+  }
+});
+
+app.post('/api/xpose/send-article/:articleId', async (req, res) => {
+  try {
+    if (!jobadderService.isAuthorized()) {
+      return res.status(401).json({ 
+        error: 'Not authorized', 
+        message: 'Please complete JobAdder authorization at /auth/jobadder' 
+      });
+    }
+    await xposeController.sendSingleArticle(req, res);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
