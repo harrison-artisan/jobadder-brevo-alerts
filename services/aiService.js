@@ -77,10 +77,10 @@ REQUIREMENTS:
 
 OUTPUT ONLY THE SUMMARY - NO EXPLANATIONS OR EXTRA TEXT.`;
 
-      console.log(`    🤖 Generating with Manus AI (gemini-2.5-flash)...`);
+      console.log(`    🤖 Generating with OpenAI (gpt-4o-mini)...`);
       
       const response = await client.chat.completions.create({
-        model: 'gemini-2.5-flash',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -411,7 +411,7 @@ OUTPUT ONLY THE SUMMARY - NO EXPLANATIONS OR EXTRA TEXT.`;
     if (!client) {
       console.log(`\n⚠️  OPENAI_API_KEY not configured - using manual summaries for all candidates`);
     } else {
-      console.log(`\n🤖 Generating AI summaries for ${candidates.length} candidates using Manus API...`);
+      console.log(`\n🤖 Generating AI summaries for ${candidates.length} candidates using OpenAI...`);
     }
     
     const summaries = await Promise.all(
