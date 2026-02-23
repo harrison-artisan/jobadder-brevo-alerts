@@ -1,14 +1,22 @@
 const jobadderService = require('../services/jobadderService');
 const brevoService = require('../services/brevoService');
+const jobTrackingService = require('../services/jobTrackingService');
 
 class JobAlertsController {
   /**
-   * Send daily roundup of all live jobs
+   * Send daily roundup of all live jobs (ONLY if new jobs detected)
    */
   async sendDailyRoundup() {
     console.log('\n🔄 Starting daily job roundup...');
     
     try {
+      // 0. Check if daily alerts are activated
+      const state = jobTrackingService.getState();
+      if (!state.activated) {
+        console.log('⏸️  Daily alerts are deactivated. Skipping roundup.');
+        return { success: true, message: 'Daily alerts are deactivated' };
+      }
+
       // 1. Fetch all live jobs from JobAdder
       console.log('📋 Fetching live jobs from JobAdder...');
       const liveJobs = await jobadderService.getLiveJobs();
@@ -18,14 +26,24 @@ class JobAlertsController {
         return { success: true, message: 'No live jobs to send' };
       }
 
-      // 2. Limit to 5 most recent jobs
-      const recentJobs = liveJobs.slice(0, 5);
-      console.log(`📊 Limiting to ${recentJobs.length} most recent jobs (out of ${liveJobs.length} total)`);
+      // 2. Check for new jobs
+      const jobCheck = jobTrackingService.checkForNewJobs(liveJobs);
+      
+      if (!jobCheck.hasNewJobs) {
+        console.log('⏭️  No new jobs detected. Skipping email send to avoid duplicates.');
+        return { success: true, message: 'No new jobs posted today' };
+      }
 
-      // 3. Format jobs for email (as data array, not HTML)
+      console.log(`🆕 ${jobCheck.newJobIds.length} new job(s) detected! Proceeding with email...`);
+
+      // 3. Limit to 10 most recent jobs (increased from 5)
+      const recentJobs = liveJobs.slice(0, 10);
+      console.log(`📊 Sending ${recentJobs.length} most recent jobs (out of ${liveJobs.length} total)`);
+
+      // 4. Format jobs for email (as data array, not HTML)
       const jobsData = recentJobs.map(job => jobadderService.formatJobForEmail(job));
 
-      // 4. Get recipients from Brevo
+      // 5. Get recipients from Brevo
       console.log('👥 Fetching recipients from Brevo...');
       const recipients = await brevoService.getJobAlertContacts();
 
@@ -34,7 +52,7 @@ class JobAlertsController {
         return { success: true, message: 'No recipients found' };
       }
 
-      // 5. Send batch email with job data array
+      // 6. Send batch email with job data array
       console.log(`📧 Sending daily roundup to ${recipients.length} recipients...`);
       await brevoService.sendBatchEmail(
         recipients,
@@ -42,10 +60,13 @@ class JobAlertsController {
         { jobs: jobsData, job_count: jobsData.length }
       );
 
+      // 7. Update tracking file with all current job IDs
+      jobTrackingService.updateSentJobIds(jobCheck.allCurrentJobIds);
+
       console.log('✅ Daily roundup completed successfully!\n');
       return { 
         success: true, 
-        message: `Sent ${recentJobs.length} most recent jobs to ${recipients.length} recipients` 
+        message: `Sent ${recentJobs.length} jobs (${jobCheck.newJobIds.length} new) to ${recipients.length} recipients` 
       };
     } catch (error) {
       console.error('❌ Error in daily roundup:', error);
