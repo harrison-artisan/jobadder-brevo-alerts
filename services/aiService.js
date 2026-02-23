@@ -53,17 +53,19 @@ WRITING STYLE - MAKE IT EXCITING:
 - Make employers think "I need to meet this person NOW"
 - Focus on IMPACT and RESULTS they can deliver
 - 2-3 punchy sentences that SELL
+- USE AUSTRALIAN SPELLING: specialising (not specializing), recognised (not recognized), organised (not organized), etc.
 
 VARIED OPENING EXAMPLES (use different ones each time):
 - "A strategic [role] who transforms [area] through..."
 - "With [X] years mastering [skill], this professional delivers..."
 - "Combining [skill] with [skill], this candidate excels at..."
 - "This [role] brings a rare blend of [quality] and [quality]..."
-- "Known for [achievement], this professional specializes in..."
+- "Known for [achievement], this professional specialises in..."
 - "An innovative [role] with a track record of..."
 - "Exceptional at [skill], with proven success in..."
+- "Recognised for excellence in [area], this candidate..."
 
-EXAMPLE OUTPUT: A strategic brand designer who transforms complex ideas into award-winning visual campaigns. With 10+ years leading creative teams at top agencies, brings exceptional expertise in digital storytelling and brand identity. Known for delivering results that exceed expectations and driving measurable business impact.`;
+EXAMPLE OUTPUT: A strategic brand designer who transforms complex ideas into award-winning visual campaigns. With 10+ years leading creative teams at top agencies, brings exceptional expertise in digital storytelling and brand identity. Recognised for delivering results that exceed expectations and driving measurable business impact.`;
 
       console.log(`  🤖 Generating anonymized AI summary for candidate ${candidate.candidateId}...`);
       
@@ -269,7 +271,7 @@ EXAMPLE OUTPUT: A strategic brand designer who transforms complex ideas into awa
     
     // Vary the fallback opening too
     const openings = [
-      `Specializing in ${skills} with ${expText} of experience as a ${title}.`,
+      `Specialising in ${skills} with ${expText} of experience as a ${title}.`,
       `A talented ${title} bringing ${expText} of expertise in ${skills}.`,
       `With ${expText} in the field, this ${title} excels at ${skills}.`,
       `Known for excellence in ${skills}, this ${title} has ${expText} of proven success.`
