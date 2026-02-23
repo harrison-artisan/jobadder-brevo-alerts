@@ -698,7 +698,7 @@
         /* ========== PREVIEW PANEL & MODAL ========== */
         .main-layout {
             display: grid;
-            grid-template-columns: 7fr 3fr;
+            grid-template-columns: 70% 30%;
             gap: 20px;
         }
         
@@ -710,7 +710,7 @@
             background: rgba(255, 255, 255, 0.12);
             backdrop-filter: blur(20px);
             border-radius: 10px;
-            padding: 0;
+            padding: 20px;
             border: 1px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             overflow: hidden;
@@ -1273,9 +1273,6 @@
             
             // Add active class to clicked tab
             event.target.classList.add('active');
-            
-            // Clear preview when switching tabs
-            clearPreview();
             
             // Load articles when switching to Xpose tab
             if (tabName === 'xpose') {
@@ -2047,10 +2044,8 @@
             }
             if (currentIframe) {
                 currentIframe.remove();
-                currentIframe = null;
             }
             
-            // Show loading spinner
             previewPanel.innerHTML = `
                 <div class="preview-loading">
                     <div class="spinner-large"></div>
@@ -2059,25 +2054,11 @@
                 </div>
             `;
             
-            // Create wrapper for click handling and iframe container
-            const wrapper = document.createElement('div');
-            wrapper.style.position = 'relative';
-            wrapper.style.width = '100%';
-            wrapper.style.height = '100%';
-            wrapper.style.overflow = 'auto';
-            wrapper.style.cursor = 'pointer';
-            
             const iframe = document.createElement('iframe');
             iframe.className = 'preview-iframe';
-            iframe.style.width = '100%';
-            iframe.style.height = '100%';
-            iframe.style.border = 'none';
-            iframe.style.minWidth = '650px';
-            iframe.style.display = 'none'; // Hidden until loaded
+            iframe.style.display = 'none';
+            iframe.style.pointerEvents = 'none'; // Prevent iframe from capturing clicks
             currentIframe = iframe;
-            
-            // Add iframe to wrapper
-            wrapper.appendChild(iframe);
             
             // Set timeout for loading
             previewTimeout = setTimeout(() => {
@@ -2091,22 +2072,27 @@
                             </div>
                         </div>
                     `;
-                    if (currentIframe) {
-                        currentIframe.remove();
-                        currentIframe = null;
-                    }
+                    currentIframe = null;
                 }
-            }, 10000);
+            }, 10000); // 10 second timeout
             
             iframe.onload = () => {
                 clearTimeout(previewTimeout);
-                
-                // Replace loading spinner with iframe
+                iframe.style.display = 'block';
                 previewPanel.innerHTML = '';
+                
+                // Create wrapper for click handling
+                const wrapper = document.createElement('div');
+                wrapper.style.position = 'relative';
+                wrapper.style.width = '100%';
+                wrapper.style.height = '100%';
+                wrapper.style.cursor = 'pointer';
+                
+                wrapper.appendChild(iframe);
                 previewPanel.appendChild(wrapper);
                 
-                // Show iframe
-                iframe.style.display = 'block';
+                // Add click handler to wrapper, not iframe
+                wrapper.addEventListener('click', () => openPreviewModal(url));
             };
             
             iframe.onerror = (error) => {
@@ -2127,13 +2113,10 @@
                 currentIframe = null;
             };
             
-            // Add click handler to wrapper to open modal
-            wrapper.addEventListener('click', (e) => {
-                console.log('Preview clicked, opening modal');
-                openPreviewModal(url);
-            });
+            // CRITICAL: Append iframe to DOM BEFORE setting src so it can load
+            previewPanel.appendChild(iframe);
             
-            // Set src to start loading
+            // Now set src - iframe is in DOM and will load
             iframe.src = url;
         }
         
@@ -2235,15 +2218,11 @@
 
         // Event listeners
         document.addEventListener('DOMContentLoaded', function() {
-            // Xpose event listeners
             document.getElementById('btnGenerateXpose')?.addEventListener('click', generateXpose);
             document.getElementById('btnRegenerateXpose')?.addEventListener('click', generateXpose);
             document.getElementById('btnPreviewXpose')?.addEventListener('click', previewXposeNewsletter);
             document.getElementById('btnSendTestXpose')?.addEventListener('click', sendTestXpose);
             document.getElementById('btnApproveAndSendXpose')?.addEventListener('click', sendAllXpose);
-            
-            // A-List preview button
-            document.getElementById('btnPreviewAlist')?.addEventListener('click', previewAlist);
         });
     </script>
 </body>
