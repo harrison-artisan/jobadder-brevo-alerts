@@ -1,8 +1,23 @@
 const jobadderService = require('../services/jobadderService');
 const brevoService = require('../services/brevoService');
 const jobTrackingService = require('../services/jobTrackingService');
+const wordpressService = require('../services/wordpressService');
 
 class JobAlertsController {
+  /**
+   * Fetch the latest 3 articles from WordPress for use in job alert emails.
+   * Returns a safe fallback empty array if the fetch fails.
+   */
+  async getLatestArticles() {
+    try {
+      const articles = await wordpressService.getLatestArticles(3);
+      return articles || [];
+    } catch (err) {
+      console.warn('⚠️  Could not fetch WordPress articles for email:', err.message);
+      return [];
+    }
+  }
+
   /**
    * Send daily roundup of all live jobs (ONLY if new jobs detected)
    */
@@ -36,14 +51,18 @@ class JobAlertsController {
 
       console.log(`🆕 ${jobCheck.newJobIds.length} new job(s) detected! Proceeding with email...`);
 
-      // 3. Limit to 10 most recent jobs (increased from 5)
+      // 3. Limit to 10 most recent jobs
       const recentJobs = liveJobs.slice(0, 10);
       console.log(`📊 Sending ${recentJobs.length} most recent jobs (out of ${liveJobs.length} total)`);
 
-      // 4. Format jobs for email (as data array, not HTML)
+      // 4. Format jobs for email
       const jobsData = recentJobs.map(job => jobadderService.formatJobForEmail(job));
 
-      // 5. Get recipients from Brevo
+      // 5. Fetch latest 3 WordPress articles for the Creative Community section
+      console.log('📰 Fetching latest articles from WordPress...');
+      const articles = await this.getLatestArticles();
+
+      // 6. Get recipients from Brevo
       console.log('👥 Fetching recipients from Brevo...');
       const recipients = await brevoService.getJobAlertContacts();
 
@@ -52,15 +71,15 @@ class JobAlertsController {
         return { success: true, message: 'No recipients found' };
       }
 
-      // 6. Send batch email with job data array
+      // 7. Send batch email with job data array and articles
       console.log(`📧 Sending daily roundup to ${recipients.length} recipients...`);
       await brevoService.sendBatchEmail(
         recipients,
         process.env.DAILY_ROUNDUP_TEMPLATE_ID,
-        { jobs: jobsData, job_count: jobsData.length }
+        { jobs: jobsData, job_count: jobsData.length, articles }
       );
 
-      // 7. Update tracking file with all current job IDs
+      // 8. Update tracking file with all current job IDs
       jobTrackingService.updateSentJobIds(jobCheck.allCurrentJobIds);
 
       console.log('✅ Daily roundup completed successfully!\n');
@@ -85,7 +104,6 @@ class JobAlertsController {
       console.log('Webhook data:', JSON.stringify(webhookData, null, 2));
 
       // Extract job ID from webhook payload
-      // The structure may vary, adjust based on actual webhook payload
       const jobId = webhookData.job?.jobId || webhookData.jobId;
 
       if (!jobId) {
@@ -100,7 +118,11 @@ class JobAlertsController {
       // 2. Format job for email
       const formattedJob = jobadderService.formatJobForEmail(jobDetails);
 
-      // 3. Get recipients
+      // 3. Fetch latest 3 WordPress articles
+      console.log('📰 Fetching latest articles from WordPress...');
+      const articles = await this.getLatestArticles();
+
+      // 4. Get recipients
       console.log('👥 Fetching recipients from Brevo...');
       const recipients = await brevoService.getJobAlertContacts();
 
@@ -109,12 +131,12 @@ class JobAlertsController {
         return res.status(200).json({ message: 'No recipients found' });
       }
 
-      // 4. Send single job alert
+      // 5. Send single job alert with articles
       console.log(`📧 Sending job alert to ${recipients.length} recipients...`);
       await brevoService.sendSingleEmail(
         recipients,
         process.env.SINGLE_JOB_ALERT_TEMPLATE_ID,
-        formattedJob
+        { ...formattedJob, articles }
       );
 
       console.log('✅ Job alert sent successfully!\n');
@@ -157,7 +179,11 @@ class JobAlertsController {
       
       const formattedJob = jobadderService.formatJobForEmail(jobAd);
 
-      // 2. Get recipients
+      // 2. Fetch latest 3 WordPress articles
+      console.log('📰 Fetching latest articles from WordPress...');
+      const articles = await this.getLatestArticles();
+
+      // 3. Get recipients
       const recipients = await brevoService.getJobAlertContacts();
 
       if (!recipients || recipients.length === 0) {
@@ -165,14 +191,14 @@ class JobAlertsController {
         return { success: true, message: 'No recipients found' };
       }
 
-      // 3. Send email
+      // 4. Send email with articles
       await brevoService.sendSingleEmail(
         recipients,
         process.env.SINGLE_JOB_ALERT_TEMPLATE_ID,
-        formattedJob
+        { ...formattedJob, articles }
       );
 
-      // 4. Record that this job was sent today
+      // 5. Record that this job was sent today
       jobTrackingService.recordSingleJobSent(parseInt(adId));
 
       console.log('✅ Single job alert sent successfully!\n');
