@@ -19,7 +19,7 @@ class AIService {
   }
 
   /**
-   * Generate a professional summary for a candidate
+   * Generate an anonymized, gender-neutral professional summary for a candidate
    */
   async generateCandidateSummary(candidate) {
     try {
@@ -27,25 +27,32 @@ class AIService {
       
       // If no OpenAI client available, use fallback immediately
       if (!client) {
-        console.log(`  ⚠️  OpenAI not configured, using fallback for ${candidate.firstName} ${candidate.lastName}`);
+        console.log(`  ⚠️  OpenAI not configured, using fallback for candidate ${candidate.candidateId}`);
         return this.getFallbackSummary(candidate);
       }
       
-      // Build context about the candidate
-      const context = this.buildCandidateContext(candidate);
+      // Build anonymized context about the candidate
+      const context = this.buildAnonymizedContext(candidate);
       
-      const prompt = `Create a compelling 2-3 sentence professional summary for this candidate for a recruitment email:
+      const prompt = `Create a compelling, anonymized professional summary for this candidate for a recruitment email.
 
 ${context}
 
-Requirements:
-- Write in third person
-- Focus on expertise, value proposition, and key strengths
-- Make it engaging and highlight what makes them stand out
+CRITICAL REQUIREMENTS:
+- DO NOT include any names (first name, last name, or any proper names)
+- DO NOT include any company names or employer names
+- DO NOT use gender-specific pronouns (he/she/his/her) - use "they/their/them" or avoid pronouns entirely
+- DO NOT include overly personal details (age, location specifics, personal life)
+- DO focus on skills, expertise, experience level, and value proposition
+- DO make it compelling and highlight what makes them stand out
+- DO write in third person or use neutral language
 - Keep it concise (2-3 sentences maximum)
-- Professional tone suitable for client-facing recruitment email`;
+- Professional tone suitable for client-facing recruitment email
+- Make it SELL the candidate without revealing their identity
 
-      console.log(`  🤖 Generating AI summary for ${candidate.firstName} ${candidate.lastName}...`);
+Example good output: "An experienced creative professional with over 8 years in digital design and brand strategy. Brings expertise in leading cross-functional teams and delivering award-winning campaigns. Known for innovative problem-solving and a strong track record of exceeding client expectations."`;
+
+      console.log(`  🤖 Generating anonymized AI summary for candidate ${candidate.candidateId}...`);
       
       const response = await client.chat.completions.create({
         model: 'gpt-4o-mini',
@@ -54,42 +61,51 @@ Requirements:
         max_tokens: 150
       });
       
-      const summary = response.choices[0].message.content.trim();
-      console.log(`    ✓ Generated summary (${summary.length} chars)`);
+      let summary = response.choices[0].message.content.trim();
+      
+      // Post-process to catch any leaked identifiers
+      summary = this.sanitizeSummary(summary, candidate);
+      
+      console.log(`    ✓ Generated anonymized summary (${summary.length} chars)`);
       
       return summary;
       
     } catch (error) {
       console.error(`❌ Error generating AI summary for candidate ${candidate.candidateId}:`, error.message);
       
-      // Fallback to candidate's existing summary or generic text
+      // Fallback to anonymized summary
       return this.getFallbackSummary(candidate);
     }
   }
 
   /**
-   * Build context string about candidate for AI prompt
+   * Build anonymized context string about candidate for AI prompt
    */
-  buildCandidateContext(candidate) {
+  buildAnonymizedContext(candidate) {
     const parts = [];
     
-    // Name
-    parts.push(`Name: ${candidate.firstName} ${candidate.lastName}`);
-    
-    // Current position
+    // Current position (anonymized - no company name)
     if (candidate.employment?.current?.position) {
       parts.push(`Current Role: ${candidate.employment.current.position}`);
-      if (candidate.employment.current.company) {
-        parts.push(`Company: ${candidate.employment.current.company}`);
+      // Intentionally NOT including company name
+    }
+    
+    // Work history (anonymized - positions only, no employer names)
+    if (candidate.employment?.history && candidate.employment.history.length > 0) {
+      const recentPositions = candidate.employment.history
+        .slice(0, 3)
+        .map(job => job.position)
+        .filter(pos => pos); // Remove empty positions
+      
+      if (recentPositions.length > 0) {
+        parts.push(`Recent Experience: ${recentPositions.join(', ')}`);
       }
     }
     
-    // Work history
-    if (candidate.employment?.history && candidate.employment.history.length > 0) {
-      const recentJobs = candidate.employment.history.slice(0, 3).map(job => {
-        return `${job.position}${job.employer ? ` at ${job.employer}` : ''}`;
-      });
-      parts.push(`Recent Experience: ${recentJobs.join('; ')}`);
+    // Calculate years of experience
+    const yearsExp = this.calculateYearsOfExperience(candidate);
+    if (yearsExp > 0) {
+      parts.push(`Years of Experience: ${yearsExp}`);
     }
     
     // Skills
@@ -97,12 +113,15 @@ Requirements:
       parts.push(`Skills: ${candidate.skillTags.slice(0, 10).join(', ')}`);
     }
     
-    // Existing summary
+    // Existing summary (anonymized)
     if (candidate.summary) {
-      parts.push(`Bio: ${candidate.summary.substring(0, 300)}`);
+      let anonymizedSummary = candidate.summary.substring(0, 300);
+      // Remove names from summary
+      anonymizedSummary = this.removeNamesFromText(anonymizedSummary, candidate);
+      parts.push(`Bio: ${anonymizedSummary}`);
     }
     
-    // Ideal position
+    // Ideal position (no company names)
     if (candidate.employment?.ideal?.position) {
       parts.push(`Seeking: ${candidate.employment.ideal.position}`);
     }
@@ -111,24 +130,102 @@ Requirements:
   }
 
   /**
-   * Get fallback summary if AI generation fails
+   * Calculate years of experience from employment history
    */
-  getFallbackSummary(candidate) {
-    // Use existing summary if available
-    if (candidate.summary) {
-      // Truncate to reasonable length
-      const summary = candidate.summary.substring(0, 250);
-      return summary.length < candidate.summary.length ? summary + '...' : summary;
+  calculateYearsOfExperience(candidate) {
+    if (!candidate.employment?.history || candidate.employment.history.length === 0) {
+      return 0;
     }
     
-    // Generate basic summary from available data
+    let totalMonths = 0;
+    
+    candidate.employment.history.forEach(job => {
+      const startDate = job.start?.date ? new Date(job.start.date) : null;
+      const endDate = job.end?.date ? new Date(job.end.date) : new Date();
+      
+      if (startDate) {
+        const months = (endDate - startDate) / (1000 * 60 * 60 * 24 * 30);
+        totalMonths += Math.max(0, months);
+      }
+    });
+    
+    return Math.round(totalMonths / 12);
+  }
+
+  /**
+   * Remove names and company names from text
+   */
+  removeNamesFromText(text, candidate) {
+    let cleaned = text;
+    
+    // Remove candidate's first and last name
+    if (candidate.firstName) {
+      const firstNameRegex = new RegExp(candidate.firstName, 'gi');
+      cleaned = cleaned.replace(firstNameRegex, '[redacted]');
+    }
+    
+    if (candidate.lastName) {
+      const lastNameRegex = new RegExp(candidate.lastName, 'gi');
+      cleaned = cleaned.replace(lastNameRegex, '[redacted]');
+    }
+    
+    // Remove company names from employment history
+    if (candidate.employment?.current?.company) {
+      const companyRegex = new RegExp(candidate.employment.current.company, 'gi');
+      cleaned = cleaned.replace(companyRegex, '[company]');
+    }
+    
+    if (candidate.employment?.history) {
+      candidate.employment.history.forEach(job => {
+        if (job.employer) {
+          const employerRegex = new RegExp(job.employer, 'gi');
+          cleaned = cleaned.replace(employerRegex, '[company]');
+        }
+      });
+    }
+    
+    return cleaned;
+  }
+
+  /**
+   * Sanitize AI-generated summary to ensure no identifiers leaked
+   */
+  sanitizeSummary(summary, candidate) {
+    let sanitized = summary;
+    
+    // Remove any names that might have leaked
+    sanitized = this.removeNamesFromText(sanitized, candidate);
+    
+    // Replace gender-specific pronouns with neutral ones
+    sanitized = sanitized.replace(/\bhe\b/gi, 'they');
+    sanitized = sanitized.replace(/\bhis\b/gi, 'their');
+    sanitized = sanitized.replace(/\bhim\b/gi, 'them');
+    sanitized = sanitized.replace(/\bshe\b/gi, 'they');
+    sanitized = sanitized.replace(/\bher\b/gi, 'their');
+    sanitized = sanitized.replace(/\bhers\b/gi, 'theirs');
+    
+    // Remove [redacted] or [company] placeholders if they appear
+    sanitized = sanitized.replace(/\[redacted\]/gi, 'the candidate');
+    sanitized = sanitized.replace(/\[company\]/gi, 'a leading organization');
+    
+    return sanitized;
+  }
+
+  /**
+   * Get fallback anonymized summary if AI generation fails
+   */
+  getFallbackSummary(candidate) {
+    // Generate anonymized summary from available data
+    const yearsExp = this.calculateYearsOfExperience(candidate);
+    const expText = yearsExp > 0 ? `over ${yearsExp} years` : 'significant';
+    
     const title = candidate.employment?.current?.position || 
                   candidate.employment?.ideal?.position || 
-                  'Professional';
+                  'professional';
     
     const skills = candidate.skillTags?.slice(0, 3).join(', ') || 'various skills';
     
-    return `An experienced ${title} with expertise in ${skills}. Brings a strong track record of delivering results and contributing to team success.`;
+    return `An experienced ${title} with ${expText} of expertise in ${skills}. Brings a strong track record of delivering results and contributing to team success.`;
   }
 
   /**
@@ -140,14 +237,14 @@ Requirements:
     if (!client) {
       console.log(`\n⚠️  OpenAI API key not configured - using fallback summaries for all candidates`);
     } else {
-      console.log(`\n🤖 Generating AI summaries for ${candidates.length} candidates...`);
+      console.log(`\n🤖 Generating anonymized AI summaries for ${candidates.length} candidates...`);
     }
     
     const summaries = await Promise.all(
       candidates.map(candidate => this.generateCandidateSummary(candidate))
     );
     
-    console.log('✅ All summaries generated\n');
+    console.log('✅ All anonymized summaries generated\n');
     
     return summaries;
   }
