@@ -1,190 +1,114 @@
-const { Ollama } = require('ollama');
+const OpenAI = require('openai');
 
 class AIService {
   constructor() {
-    this.ollama = null;
-    this.modelName = 'llama3.2:3b'; // Lightweight, fast, free model
-    this.ollamaChecked = false;
-    this.ollamaAvailable = false;
+    this.client = null;
   }
 
   /**
-   * Get or create Ollama client
+   * Get or create OpenAI client (configured for Manus API)
    */
-  async getOllamaClient() {
-    if (!this.ollama) {
-      this.ollama = new Ollama({
-        host: process.env.OLLAMA_HOST || 'http://127.0.0.1:11434'
+  getClient() {
+    if (!this.client && process.env.OPENAI_API_KEY) {
+      this.client = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY
       });
     }
-    return this.ollama;
+    return this.client;
   }
 
   /**
-   * Check if Ollama is available with retry logic
-   */
-  async checkOllamaAvailability(retries = 3) {
-    // Only check once per batch
-    if (this.ollamaChecked) {
-      return this.ollamaAvailable;
-    }
-
-    for (let attempt = 1; attempt <= retries; attempt++) {
-      try {
-        const client = await this.getOllamaClient();
-        
-        // Try to list models
-        await client.list();
-        
-        this.ollamaChecked = true;
-        this.ollamaAvailable = true;
-        console.log(`✅ Ollama connection successful`);
-        return true;
-        
-      } catch (error) {
-        if (attempt < retries) {
-          console.log(`  ⏳ Ollama not ready (attempt ${attempt}/${retries}), retrying...`);
-          await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
-        } else {
-          console.log(`  ⚠️  Ollama unavailable after ${retries} attempts: ${error.message}`);
-          this.ollamaChecked = true;
-          this.ollamaAvailable = false;
-          return false;
-        }
-      }
-    }
-    
-    return false;
-  }
-
-  /**
-   * Check if Ollama is available and pull model if needed
-   */
-  async ensureModelReady() {
-    try {
-      // Check if Ollama is available
-      const available = await this.checkOllamaAvailability();
-      if (!available) {
-        return false;
-      }
-
-      const client = await this.getOllamaClient();
-      
-      // Check if model exists
-      const models = await client.list();
-      const modelExists = models.models?.some(m => m.name.includes('llama3.2'));
-      
-      if (!modelExists) {
-        console.log(`📥 Pulling ${this.modelName} model (one-time setup, ~2GB)...`);
-        console.log(`   This may take 2-3 minutes...`);
-        await client.pull({ model: this.modelName });
-        console.log(`✅ Model ready!`);
-      }
-      
-      return true;
-    } catch (error) {
-      console.log(`⚠️  Ollama model check failed: ${error.message}`);
-      return false;
-    }
-  }
-
-  /**
-   * Generate an anonymized, gender-neutral professional summary for a candidate
+   * Generate an anonymized, gender-neutral professional summary for a candidate using Manus API
    */
   async generateCandidateSummary(candidate) {
     try {
-      // Try to use Ollama
-      const ollamaReady = await this.ensureModelReady();
+      const client = this.getClient();
       
-      if (ollamaReady && candidate.summary && candidate.summary.trim().length > 50) {
-        try {
-          return await this.generateWithOllama(candidate);
-        } catch (error) {
-          console.log(`  ⚠️  Ollama generation failed for candidate ${candidate.candidateId}: ${error.message}`);
-          console.log(`  📝 Falling back to manual processing...`);
-          return this.createCompellingSummary(candidate);
-        }
+      // If no API key, use fallback
+      if (!client) {
+        console.log(`  📝 No API key, using manual processing for candidate ${candidate.candidateId}...`);
+        return this.createManualSummary(candidate);
+      }
+
+      // Get candidate info
+      const title = this.generalizeJobTitle(
+        candidate.employment?.current?.position || 
+        candidate.employment?.ideal?.position || 
+        ''
+      );
+      
+      const yearsExp = this.calculateYearsOfExperience(candidate);
+      const expText = yearsExp >= 15 ? `over ${yearsExp} years` :
+                      yearsExp >= 10 ? `${yearsExp}+ years` :
+                      yearsExp > 0 ? `${yearsExp} years` : 'extensive';
+      
+      const skills = candidate.skillTags?.slice(0, 5).join(', ') || '';
+      
+      // Pre-clean the bio
+      let bio = candidate.summary?.trim() || '';
+      if (bio.length < 50) {
+        console.log(`  📝 No bio available, using manual processing for candidate ${candidate.candidateId}...`);
+        return this.createManualSummary(candidate);
       }
       
-      // Fallback to manual processing
-      return this.createCompellingSummary(candidate);
+      bio = this.removeNames(bio, candidate);
+      bio = this.removeCompanyNames(bio, candidate);
       
-    } catch (error) {
-      console.error(`❌ Error generating summary for candidate ${candidate.candidateId}:`, error.message);
-      return this.createCompellingSummary(candidate);
-    }
-  }
-
-  /**
-   * Generate summary using Ollama AI
-   */
-  async generateWithOllama(candidate) {
-    const client = await this.getOllamaClient();
-    
-    // Get job title
-    const title = this.generalizeJobTitle(
-      candidate.employment?.current?.position || 
-      candidate.employment?.ideal?.position || 
-      ''
-    );
-    
-    // Get years of experience
-    const yearsExp = this.calculateYearsOfExperience(candidate);
-    const expText = yearsExp >= 15 ? `over ${yearsExp} years` :
-                    yearsExp >= 10 ? `${yearsExp}+ years` :
-                    yearsExp > 0 ? `${yearsExp} years` : 'extensive';
-    
-    // Get skills
-    const skills = candidate.skillTags?.slice(0, 5).join(', ') || '';
-    
-    // Pre-clean the bio
-    let bio = candidate.summary.trim();
-    bio = this.removeNames(bio, candidate);
-    bio = this.removeCompanyNames(bio, candidate);
-    
-    // Create the prompt
-    const prompt = `Rewrite this candidate bio into a compelling 3-4 sentence professional summary for a recruitment email.
+      // Create the prompt
+      const prompt = `Rewrite this candidate bio into a compelling 3-4 sentence professional summary for a recruitment email.
 
 CANDIDATE INFO:
 Job Title: ${title || 'Professional'}
 Experience: ${expText}
 Skills: ${skills || 'various professional skills'}
-Bio: ${bio.substring(0, 500)}
+Bio: ${bio.substring(0, 600)}
 
 REQUIREMENTS:
 - Write EXACTLY 3-4 sentences (no more, no less)
 - Remove ALL names (first names, last names, any proper names)
-- Remove ALL company names (replace with "a leading organisation" or "a top company")
+- Remove ALL company names (replace with "a leading organisation" or similar)
 - Use gender-neutral language (they/their/them instead of he/she/his/her)
 - Use Australian spelling: specialising, recognised, organised, analyse, realise
 - Use Title Case for job titles (e.g., "Senior Designer" not "senior designer")
 - Make it compelling and exciting - sell this candidate!
-- Focus on achievements, skills, and impact
+- Focus on achievements, skills, and impact from their bio
 - Keep the real content from their bio, just clean it up
+- Vary the opening - don't always start with "A [title] with..."
 
 OUTPUT ONLY THE SUMMARY - NO EXPLANATIONS OR EXTRA TEXT.`;
 
-    console.log(`    🤖 Generating with Ollama...`);
-    
-    const response = await client.generate({
-      model: this.modelName,
-      prompt: prompt,
-      stream: false,
-      options: {
-        temperature: 0.7,
-        top_p: 0.9,
-        num_predict: 200
-      }
-    });
-    
-    let summary = response.response.trim();
-    
-    // Post-process to ensure quality
-    summary = this.cleanupSummary(summary, candidate);
-    
-    console.log(`    ✅ AI summary generated (${summary.length} chars)`);
-    
-    return summary;
+      console.log(`    🤖 Generating with Manus AI (gemini-2.5-flash)...`);
+      
+      const response = await client.chat.completions.create({
+        model: 'gemini-2.5-flash',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert recruitment copywriter specialising in creating compelling, anonymized candidate summaries.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.8,
+        max_tokens: 250
+      });
+      
+      let summary = response.choices[0].message.content.trim();
+      
+      // Post-process to ensure quality
+      summary = this.cleanupSummary(summary, candidate);
+      
+      console.log(`    ✅ AI summary generated (${summary.length} chars)`);
+      
+      return summary;
+      
+    } catch (error) {
+      console.error(`  ⚠️  AI generation failed for candidate ${candidate.candidateId}: ${error.message}`);
+      console.log(`  📝 Falling back to manual processing...`);
+      return this.createManualSummary(candidate);
+    }
   }
 
   /**
@@ -417,9 +341,9 @@ OUTPUT ONLY THE SUMMARY - NO EXPLANATIONS OR EXTRA TEXT.`;
   }
 
   /**
-   * Create a compelling summary manually (fallback)
+   * Create a manual summary (fallback when AI not available)
    */
-  createCompellingSummary(candidate) {
+  createManualSummary(candidate) {
     const title = this.generalizeJobTitle(
       candidate.employment?.current?.position || 
       candidate.employment?.ideal?.position || 
@@ -482,7 +406,13 @@ OUTPUT ONLY THE SUMMARY - NO EXPLANATIONS OR EXTRA TEXT.`;
    * Generate summaries for multiple candidates in parallel
    */
   async generateBatchSummaries(candidates) {
-    console.log(`\n🤖 Generating AI summaries for ${candidates.length} candidates...`);
+    const client = this.getClient();
+    
+    if (!client) {
+      console.log(`\n⚠️  OPENAI_API_KEY not configured - using manual summaries for all candidates`);
+    } else {
+      console.log(`\n🤖 Generating AI summaries for ${candidates.length} candidates using Manus API...`);
+    }
     
     const summaries = await Promise.all(
       candidates.map(candidate => this.generateCandidateSummary(candidate))
