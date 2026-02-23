@@ -41,23 +41,34 @@ ${context}
 CRITICAL REQUIREMENTS:
 - DO NOT include any names (first name, last name, or any proper names)
 - DO NOT include any company names or employer names
-- DO NOT use gender-specific pronouns (he/she/his/her) - use "they/their/them" or avoid pronouns entirely
+- DO NOT use gender-specific pronouns (he/she/his/her) - use they/their/them or avoid pronouns entirely
 - DO NOT include overly personal details (age, location specifics, personal life)
+- DO generalize overly specific job titles - remove codes, numbers, internal jargon, make them readable and professional
 - DO focus on skills, expertise, experience level, and value proposition
 - DO make it compelling and highlight what makes them stand out
 - DO write in third person or use neutral language
+- VARY the opening - DO NOT always start with An experienced - use different structures for variety
 - Keep it concise (2-3 sentences maximum)
 - Professional tone suitable for client-facing recruitment email
 - Make it SELL the candidate without revealing their identity
 
-Example good output: "An experienced creative professional with over 8 years in digital design and brand strategy. Brings expertise in leading cross-functional teams and delivering award-winning campaigns. Known for innovative problem-solving and a strong track record of exceeding client expectations."`;
+Example varied openings you can use:
+- Specializing in [area] with [X] years of proven success...
+- A creative professional who excels at...
+- With a strong background in [field], this candidate brings...
+- Known for [strength], this professional has...
+- Bringing [X] years of expertise in...
+- This talented professional combines...
+- Recognized for excellence in...
+
+Example good output: Specializing in digital design and brand strategy with over 8 years of proven success. Excels at leading cross-functional teams and delivering award-winning campaigns. Known for innovative problem-solving and consistently exceeding client expectations.`;
 
       console.log(`  🤖 Generating anonymized AI summary for candidate ${candidate.candidateId}...`);
       
       const response = await client.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
+        temperature: 0.8, // Increased for more variety
         max_tokens: 150
       });
       
@@ -86,7 +97,8 @@ Example good output: "An experienced creative professional with over 8 years in 
     
     // Current position (anonymized - no company name)
     if (candidate.employment?.current?.position) {
-      parts.push(`Current Role: ${candidate.employment.current.position}`);
+      const generalizedTitle = this.generalizeJobTitle(candidate.employment.current.position);
+      parts.push(`Current Role: ${generalizedTitle}`);
       // Intentionally NOT including company name
     }
     
@@ -94,7 +106,7 @@ Example good output: "An experienced creative professional with over 8 years in 
     if (candidate.employment?.history && candidate.employment.history.length > 0) {
       const recentPositions = candidate.employment.history
         .slice(0, 3)
-        .map(job => job.position)
+        .map(job => this.generalizeJobTitle(job.position))
         .filter(pos => pos); // Remove empty positions
       
       if (recentPositions.length > 0) {
@@ -123,10 +135,36 @@ Example good output: "An experienced creative professional with over 8 years in 
     
     // Ideal position (no company names)
     if (candidate.employment?.ideal?.position) {
-      parts.push(`Seeking: ${candidate.employment.ideal.position}`);
+      const generalizedIdeal = this.generalizeJobTitle(candidate.employment.ideal.position);
+      parts.push(`Seeking: ${generalizedIdeal}`);
     }
     
     return parts.join('\n');
+  }
+
+  /**
+   * Generalize overly specific job titles
+   * Removes codes, numbers, internal jargon
+   */
+  generalizeJobTitle(title) {
+    if (!title) return '';
+    
+    let generalized = title;
+    
+    // Remove codes in parentheses or brackets
+    generalized = generalized.replace(/\s*[\(\[].*?[\)\]]/g, '');
+    
+    // Remove trailing numbers and codes
+    generalized = generalized.replace(/\s*[-–—]\s*\d+.*$/g, '');
+    generalized = generalized.replace(/\s+\d+$/g, '');
+    
+    // Remove common internal codes/prefixes
+    generalized = generalized.replace(/^[A-Z]{2,4}[-_]\d+\s*/g, '');
+    
+    // Clean up extra whitespace
+    generalized = generalized.trim().replace(/\s+/g, ' ');
+    
+    return generalized;
   }
 
   /**
@@ -219,13 +257,25 @@ Example good output: "An experienced creative professional with over 8 years in 
     const yearsExp = this.calculateYearsOfExperience(candidate);
     const expText = yearsExp > 0 ? `over ${yearsExp} years` : 'significant';
     
-    const title = candidate.employment?.current?.position || 
-                  candidate.employment?.ideal?.position || 
-                  'professional';
+    const title = this.generalizeJobTitle(
+      candidate.employment?.current?.position || 
+      candidate.employment?.ideal?.position || 
+      'professional'
+    );
     
     const skills = candidate.skillTags?.slice(0, 3).join(', ') || 'various skills';
     
-    return `An experienced ${title} with ${expText} of expertise in ${skills}. Brings a strong track record of delivering results and contributing to team success.`;
+    // Vary the fallback opening too
+    const openings = [
+      `Specializing in ${skills} with ${expText} of experience as a ${title}.`,
+      `A talented ${title} bringing ${expText} of expertise in ${skills}.`,
+      `With ${expText} in the field, this ${title} excels at ${skills}.`,
+      `Known for excellence in ${skills}, this ${title} has ${expText} of proven success.`
+    ];
+    
+    const randomOpening = openings[Math.floor(Math.random() * openings.length)];
+    
+    return `${randomOpening} Brings a strong track record of delivering results and contributing to team success.`;
   }
 
   /**
@@ -251,3 +301,4 @@ Example good output: "An experienced creative professional with over 8 years in 
 }
 
 module.exports = new AIService();
+
