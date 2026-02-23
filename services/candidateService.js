@@ -1,5 +1,6 @@
 const axios = require('axios');
 const jobadderService = require('./jobadderService');
+const { extractJobTitleFromSummary } = require('./aiService_title_extractor');
 
 class CandidateService {
   constructor() {
@@ -70,7 +71,7 @@ class CandidateService {
     console.log(`✅ Retrieved ${candidates.length} candidate profiles`);
     
     // Filter out juniors and interns
-    const filteredCandidates = this.filterQualifiedCandidates(candidates);
+    const filteredCandidates = await this.filterQualifiedCandidates(candidates);
     console.log(`✅ ${filteredCandidates.length} qualified candidates after filtering\n`);
     
     return filteredCandidates;
@@ -216,7 +217,7 @@ class CandidateService {
   /**
    * Filter out juniors, interns, and candidates with unusable titles
    */
-  filterQualifiedCandidates(candidates) {
+  async filterQualifiedCandidates(candidates) {
     const excludeKeywords = [
       'junior', 'intern', 'internship', 'graduate', 'trainee', 'student',
       'entry level', 'entry-level', 'assistant'
@@ -228,32 +229,54 @@ class CandidateService {
       return excludeKeywords.some(keyword => lowerText.includes(keyword));
     };
     
-    return candidates.filter(candidate => {
-      // Check current position
-      if (candidate.employment?.current?.position) {
-        if (hasExcludedKeyword(candidate.employment.current.position)) {
-          console.log(`  ⊘ Filtered out: ${candidate.firstName} ${candidate.lastName} (${candidate.employment.current.position})`);
-          return false;
+    // Use Promise.all to check all candidates asynchronously
+    const results = await Promise.all(
+      candidates.map(async (candidate) => {
+        // Check current position
+        if (candidate.employment?.current?.position) {
+          if (hasExcludedKeyword(candidate.employment.current.position)) {
+            console.log(`  ⊘ Filtered out: ${candidate.firstName} ${candidate.lastName} (${candidate.employment.current.position})`);
+            return null;
+          }
         }
-      }
-      
-      // Check ideal position
-      if (candidate.employment?.ideal?.position) {
-        if (hasExcludedKeyword(candidate.employment.ideal.position)) {
-          console.log(`  ⊘ Filtered out: ${candidate.firstName} ${candidate.lastName} (seeking ${candidate.employment.ideal.position})`);
-          return false;
+        
+        // Check ideal position
+        if (candidate.employment?.ideal?.position) {
+          if (hasExcludedKeyword(candidate.employment.ideal.position)) {
+            console.log(`  ⊘ Filtered out: ${candidate.firstName} ${candidate.lastName} (seeking ${candidate.employment.ideal.position})`);
+            return null;
+          }
         }
-      }
-      
-      // Check if we can extract a usable title
-      const title = this.getCurrentTitle(candidate);
-      if (!title || title === 'Creative Professional') {
-        console.log(`  ⊘ Filtered out: ${candidate.firstName} ${candidate.lastName} (no usable job title)`);
-        return false;
-      }
-      
-      return true;
-    });
+        
+        // Check ALL employment history for excluded keywords
+        if (candidate.employment?.history && candidate.employment.history.length > 0) {
+          for (const job of candidate.employment.history) {
+            if (job.position && hasExcludedKeyword(job.position)) {
+              console.log(`  ⊘ Filtered out: ${candidate.firstName} ${candidate.lastName} (history: ${job.position})`);
+              return null;
+            }
+          }
+        }
+        
+        // Check summary/bio for excluded keywords
+        if (candidate.summary && hasExcludedKeyword(candidate.summary)) {
+          console.log(`  ⊘ Filtered out: ${candidate.firstName} ${candidate.lastName} (intern/junior mentioned in summary)`);
+          return null;
+        }
+        
+        // Check if we can extract a usable title (async now)
+        const title = await this.getCurrentTitle(candidate);
+        if (!title || title === 'Creative Professional') {
+          console.log(`  ⊘ Filtered out: ${candidate.firstName} ${candidate.lastName} (no usable job title)`);
+          return null;
+        }
+        
+        return candidate;
+      })
+    );
+    
+    // Filter out nulls
+    return results.filter(candidate => candidate !== null);
   }
 
   /**
@@ -301,9 +324,9 @@ class CandidateService {
   /**
    * Get current job title for candidate
    * Avoids generic titles like Freelance, Owner, Consultant
-   * Extracts from summary if needed
+   * Uses AI to extract from summary if needed
    */
-  getCurrentTitle(candidate) {
+  async getCurrentTitle(candidate) {
     const genericTitles = [
       'freelance', 'freelancer', 'owner', 'consultant', 'contractor',
       'self-employed', 'independent', 'director', 'partner', 'designer',
@@ -371,7 +394,7 @@ class CandidateService {
       }
     }
     
-    // Try to extract from summary
+    // Try to extract from summary using regex patterns
     if (candidate.summary) {
       const extractedTitle = this.extractTitleFromSummary(candidate.summary);
       if (extractedTitle && !isGeneric(extractedTitle)) {
@@ -379,8 +402,17 @@ class CandidateService {
       }
     }
     
-    // Last resort: return null to indicate no usable title found
-    // This will cause the candidate to be filtered out
+    // Last resort: Use AI to extract job title from summary
+    if (candidate.summary) {
+      console.log(`  🤖 Using AI to extract job title for ${candidate.firstName} ${candidate.lastName}...`);
+      const aiTitle = await extractJobTitleFromSummary(candidate);
+      if (aiTitle && !isGeneric(aiTitle)) {
+        console.log(`    ✓ AI extracted: ${aiTitle}`);
+        return aiTitle;
+      }
+    }
+    
+    // No usable title found - candidate will be filtered out
     return null;
   }
 
@@ -415,9 +447,9 @@ class CandidateService {
   /**
    * Format candidate for email template
    */
-  formatCandidateForEmail(candidate, position, aiSummary) {
+  async formatCandidateForEmail(candidate, position, aiSummary) {
     const yearsExp = this.calculateYearsOfExperience(candidate);
-    const currentTitle = this.getCurrentTitle(candidate);
+    const currentTitle = await this.getCurrentTitle(candidate);
     
     const title = currentTitle || 'Creative Professional';
     const mailtoSubject = `Send me more information about ${title} - Candidate #${candidate.candidateId}`;
