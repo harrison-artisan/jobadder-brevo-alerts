@@ -67,9 +67,13 @@ class CandidateService {
     // Fetch full candidate details
     console.log('🔄 Fetching candidate profiles...');
     const candidates = await this.fetchCandidateDetails(candidateIds);
-    console.log(`✅ Retrieved ${candidates.length} candidate profiles\n`);
+    console.log(`✅ Retrieved ${candidates.length} candidate profiles`);
     
-    return candidates;
+    // Filter out juniors and interns
+    const filteredCandidates = this.filterQualifiedCandidates(candidates);
+    console.log(`✅ ${filteredCandidates.length} qualified candidates after filtering\n`);
+    
+    return filteredCandidates;
   }
 
   /**
@@ -210,6 +214,49 @@ class CandidateService {
   }
 
   /**
+   * Filter out juniors, interns, and candidates with unusable titles
+   */
+  filterQualifiedCandidates(candidates) {
+    const excludeKeywords = [
+      'junior', 'intern', 'internship', 'graduate', 'trainee', 'student',
+      'entry level', 'entry-level', 'assistant'
+    ];
+    
+    const hasExcludedKeyword = (text) => {
+      if (!text) return false;
+      const lowerText = text.toLowerCase();
+      return excludeKeywords.some(keyword => lowerText.includes(keyword));
+    };
+    
+    return candidates.filter(candidate => {
+      // Check current position
+      if (candidate.employment?.current?.position) {
+        if (hasExcludedKeyword(candidate.employment.current.position)) {
+          console.log(`  ⊘ Filtered out: ${candidate.firstName} ${candidate.lastName} (${candidate.employment.current.position})`);
+          return false;
+        }
+      }
+      
+      // Check ideal position
+      if (candidate.employment?.ideal?.position) {
+        if (hasExcludedKeyword(candidate.employment.ideal.position)) {
+          console.log(`  ⊘ Filtered out: ${candidate.firstName} ${candidate.lastName} (seeking ${candidate.employment.ideal.position})`);
+          return false;
+        }
+      }
+      
+      // Check if we can extract a usable title
+      const title = this.getCurrentTitle(candidate);
+      if (!title || title === 'Creative Professional') {
+        console.log(`  ⊘ Filtered out: ${candidate.firstName} ${candidate.lastName} (no usable job title)`);
+        return false;
+      }
+      
+      return true;
+    });
+  }
+
+  /**
    * Randomly select N candidates from the pool
    */
   selectRandomCandidates(candidates, count = 5) {
@@ -254,17 +301,30 @@ class CandidateService {
   /**
    * Get current job title for candidate
    * Avoids generic titles like Freelance, Owner, Consultant
+   * Extracts from summary if needed
    */
   getCurrentTitle(candidate) {
     const genericTitles = [
       'freelance', 'freelancer', 'owner', 'consultant', 'contractor',
-      'self-employed', 'independent', 'director', 'partner'
+      'self-employed', 'independent', 'director', 'partner', 'designer',
+      'creative', 'professional'
     ];
     
     const isGeneric = (title) => {
       if (!title) return true;
       const lowerTitle = title.toLowerCase().trim();
-      return genericTitles.some(generic => lowerTitle === generic || lowerTitle.startsWith(generic + ' '));
+      
+      // Check if it's ONLY a generic word (not "Senior Designer" which is fine)
+      const words = lowerTitle.split(/\s+/);
+      if (words.length === 1 && genericTitles.includes(words[0])) {
+        return true;
+      }
+      
+      // Check if it starts with generic + space (like "Freelance " or "Owner ")
+      return genericTitles.some(generic => 
+        lowerTitle === generic || 
+        (lowerTitle.startsWith(generic + ' ') && words.length <= 2)
+      );
     };
     
     // Check current position
@@ -292,12 +352,45 @@ class CandidateService {
       }
     }
     
-    // Last resort: use current even if generic, or default
-    if (candidate.employment?.current?.position) {
-      return candidate.employment.current.position;
+    // Try to extract from summary
+    if (candidate.summary) {
+      const extractedTitle = this.extractTitleFromSummary(candidate.summary);
+      if (extractedTitle && !isGeneric(extractedTitle)) {
+        return extractedTitle;
+      }
     }
     
-    return 'Creative Professional';
+    // Last resort: return null to indicate no usable title found
+    // This will cause the candidate to be filtered out
+    return null;
+  }
+
+  /**
+   * Extract a job title from candidate summary/bio
+   */
+  extractTitleFromSummary(summary) {
+    if (!summary) return null;
+    
+    // Common patterns in summaries
+    const patterns = [
+      /(?:experienced|senior|lead|principal|head of)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,3})/i,
+      /(?:I am a|I'm a|As a)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,3})/i,
+      /(?:working as|work as)\s+(?:a|an)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,3})/i,
+      /([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})\s+(?:with|specializing|focused)/i
+    ];
+    
+    for (const pattern of patterns) {
+      const match = summary.match(pattern);
+      if (match && match[1]) {
+        const title = match[1].trim();
+        // Make sure it's not just a single generic word
+        if (title.split(/\s+/).length >= 2) {
+          return title;
+        }
+      }
+    }
+    
+    return null;
   }
 
   /**
@@ -310,7 +403,7 @@ class CandidateService {
     return {
       number: position,
       name: `${candidate.firstName} ${candidate.lastName}`,
-      title: currentTitle,
+      title: currentTitle || 'Creative Professional',
       experience: `${yearsExp} ${yearsExp === 1 ? 'Year' : 'Years'}`,
       summary: aiSummary,
       profile_url: `https://app.jobadder.com/candidates/${candidate.candidateId}`,
@@ -322,4 +415,3 @@ class CandidateService {
 }
 
 module.exports = new CandidateService();
-
