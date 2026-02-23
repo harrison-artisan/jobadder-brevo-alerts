@@ -1,12 +1,32 @@
 const candidateService = require('../services/candidateService');
 const aiService = require('../services/aiService');
 const brevoService = require('../services/brevoService');
+const wordpressService = require('../services/wordpressService');
 const fs = require('fs');
 const path = require('path');
 
 class CandidateAlertsController {
   constructor() {
     this.stateFile = path.join(__dirname, '../.alist-state.json');
+  }
+
+  /**
+   * Fetch the latest 3 articles from WordPress for use in the A-LIST email.
+   * Returns named params { article1, article2, article3 } — safe fallback to null if WP is unavailable.
+   */
+  async getLatestArticles() {
+    try {
+      const articles = await wordpressService.getLatestArticles(3);
+      const list = articles || [];
+      return {
+        article1: list[0] || null,
+        article2: list[1] || null,
+        article3: list[2] || null,
+      };
+    } catch (err) {
+      console.warn('⚠️  Could not fetch WordPress articles for A-LIST email:', err.message);
+      return { article1: null, article2: null, article3: null };
+    }
   }
 
   /**
@@ -112,12 +132,16 @@ class CandidateAlertsController {
       console.log(`📧 Sending to: ${testEmail}`);
       console.log(`📋 Template ID: ${process.env.A_LIST_TEMPLATE_ID}`);
       console.log(`👥 Candidates: ${state.candidates.length}`);
+
+      // Fetch latest 3 WordPress articles
+      console.log('📰 Fetching latest articles from WordPress...');
+      const articleParams = await this.getLatestArticles();
       
       // Send email via Brevo
       await brevoService.sendBatchEmail(
         testRecipient,
         process.env.A_LIST_TEMPLATE_ID,
-        { candidates: state.candidates }
+        { candidates: state.candidates, ...articleParams }
       );
       
       // Update state
@@ -176,12 +200,16 @@ class CandidateAlertsController {
       console.log(`📧 Sending to ${recipients.length} recipients`);
       console.log(`📋 Template ID: ${process.env.A_LIST_TEMPLATE_ID}`);
       console.log(`👥 Candidates: ${state.candidates.length}`);
+
+      // Fetch latest 3 WordPress articles
+      console.log('📰 Fetching latest articles from WordPress...');
+      const articleParams = await this.getLatestArticles();
       
       // Send email via Brevo
       await brevoService.sendBatchEmail(
         recipients,
         process.env.A_LIST_TEMPLATE_ID,
-        { candidates: state.candidates }
+        { candidates: state.candidates, ...articleParams }
       );
       
       // Update state to SENT
