@@ -300,6 +300,58 @@ class CandidateAlertsController {
       console.error('❌ Error saving state:', error);
     }
   }
+  
+  /**
+   * Schedule A-List send for next Friday at 9:00 AM Melbourne time
+   */
+  async scheduleForFriday(options = {}) {
+    const cron = require('node-cron');
+    const moment = require('moment-timezone');
+    
+    try {
+      // Calculate next Friday 9:00 AM Melbourne time
+      const now = moment().tz('Australia/Melbourne');
+      let nextFriday = now.clone();
+      
+      // Find next Friday
+      while (nextFriday.day() !== 5) {
+        nextFriday.add(1, 'day');
+      }
+      
+      // If today is Friday and it's past 9am, go to next Friday
+      if (now.day() === 5 && now.hour() >= 9) {
+        nextFriday.add(7, 'days');
+      }
+      
+      // Set to 9:00 AM
+      nextFriday.hour(9).minute(0).second(0);
+      
+      const scheduledFor = nextFriday.format('dddd, MMMM D, YYYY [at] h:mm A');
+      
+      // Schedule cron job for Friday 9am Melbourne time (0 9 * * 5)
+      // Note: This is a one-time schedule - in production you'd want to persist this
+      cron.schedule('0 9 * * 5', async () => {
+        console.log('📅 Executing scheduled A-List send...');
+        await this.sendToAll(options);
+      }, {
+        timezone: 'Australia/Melbourne'
+      });
+      
+      console.log(`📅 A-List scheduled for ${scheduledFor}`);
+      
+      return {
+        success: true,
+        scheduledFor,
+        message: 'A-List scheduled successfully'
+      };
+    } catch (error) {
+      console.error('❌ Error scheduling A-List:', error);
+      return {
+        success: false,
+        message: error.message
+      };
+    }
+  }
 }
 
 module.exports = new CandidateAlertsController();
