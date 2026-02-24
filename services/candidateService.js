@@ -464,7 +464,7 @@ class CandidateService {
     const cleanedTitle = aiService.generalizeJobTitle(rawTitle, candidate.summary || '') || 'Creative Professional';
     
     const mailtoSubject = `Send me more information about ${cleanedTitle} - Candidate #${candidate.candidateId}`;
-    const mailtoLink = `mailto:reply@artisan.com.au?subject=${encodeURIComponent(mailtoSubject)}`;
+    const mailtoLink = `mailto:artisan@artisan.com.au?subject=${encodeURIComponent(mailtoSubject)}`;
     
     return {
       number: position,
