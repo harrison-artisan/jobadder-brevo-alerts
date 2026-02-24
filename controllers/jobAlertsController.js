@@ -25,8 +25,11 @@ class JobAlertsController {
 
   /**
    * Send daily roundup of all live jobs (ONLY if new jobs detected)
+   * @param {Object} options - Sending options
+   * @param {string} options.recipientType - 'segment' or 'list'
+   * @param {string} options.recipientId - Segment or List ID
    */
-  async sendDailyRoundup() {
+  async sendDailyRoundup(options = {}) {
     console.log('\n🔄 Starting daily job roundup...');
     
     try {
@@ -68,8 +71,23 @@ class JobAlertsController {
       const articleParams = await this.getLatestArticles();
 
       // 6. Get recipients from Brevo
-      console.log('👥 Fetching recipients from Brevo...');
-      const recipients = await brevoService.getJobAlertContacts();
+      let recipients;
+      
+      if (options.recipientId && options.recipientType) {
+        console.log(`👥 Fetching recipients from ${options.recipientType} #${options.recipientId}...`);
+        
+        if (options.recipientType === 'segment') {
+          recipients = await brevoService.getSegmentContacts(options.recipientId);
+        } else if (options.recipientType === 'list') {
+          recipients = await brevoService.getListContacts(options.recipientId);
+        } else {
+          throw new Error('Invalid recipient type. Must be "segment" or "list"');
+        }
+      } else {
+        // Fallback to old method (JOB_ALERTS attribute)
+        console.log('👥 Fetching recipients from Brevo (JOB_ALERTS = Yes)...');
+        recipients = await brevoService.getJobAlertContacts();
+      }
 
       if (!recipients || recipients.length === 0) {
         console.log('⚠️  No recipients with JOB_ALERTS = Yes found. Skipping email send.');
@@ -157,8 +175,12 @@ class JobAlertsController {
 
   /**
    * Manual trigger for single job alert (for testing or consultant use)
+   * @param {number} adId - Job ad ID
+   * @param {Object} options - Sending options
+   * @param {string} options.recipientType - 'segment' or 'list'
+   * @param {string} options.recipientId - Segment or List ID
    */
-  async sendSingleJobAlert(adId) {
+  async sendSingleJobAlert(adId, options = {}) {
     console.log(`\n🔄 Sending single job alert for ad ID: ${adId}...`);
     
     try {
@@ -189,7 +211,23 @@ class JobAlertsController {
       const articleParams = await this.getLatestArticles();
 
       // 3. Get recipients
-      const recipients = await brevoService.getJobAlertContacts();
+      let recipients;
+      
+      if (options.recipientId && options.recipientType) {
+        console.log(`👥 Fetching recipients from ${options.recipientType} #${options.recipientId}...`);
+        
+        if (options.recipientType === 'segment') {
+          recipients = await brevoService.getSegmentContacts(options.recipientId);
+        } else if (options.recipientType === 'list') {
+          recipients = await brevoService.getListContacts(options.recipientId);
+        } else {
+          throw new Error('Invalid recipient type. Must be "segment" or "list"');
+        }
+      } else {
+        // Fallback to old method (JOB_ALERTS attribute)
+        console.log('👥 Fetching recipients from Brevo (JOB_ALERTS = Yes)...');
+        recipients = await brevoService.getJobAlertContacts();
+      }
 
       if (!recipients || recipients.length === 0) {
         console.log('⚠️  No recipients found.');
