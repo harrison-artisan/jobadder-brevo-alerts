@@ -44,18 +44,28 @@ class AIService {
       
       const skills = candidate.skillTags?.slice(0, 5).join(', ') || '';
       
-      // Pre-clean the bio
+      // Build work history summary
+      const workHistory = candidate.employment?.history?.slice(0, 3).map(job => {
+        const position = job.position || '';
+        const employer = job.employer || '';
+        return `${position}${employer ? ' at ' + employer : ''}`;
+      }).filter(h => h.trim()).join(', ') || '';
+      
+      // Pre-clean the bio if it exists
       let bio = candidate.summary?.trim() || '';
-      if (bio.length < 50) {
-        console.log(`  📝 No bio available, using manual processing for candidate ${candidate.candidateId}...`);
-        return this.createManualSummary(candidate);
+      let hasBio = bio.length >= 50;
+      
+      if (hasBio) {
+        bio = this.removeNames(bio, candidate);
+        bio = this.removeCompanyNames(bio, candidate);
       }
       
-      bio = this.removeNames(bio, candidate);
-      bio = this.removeCompanyNames(bio, candidate);
+      // Create the prompt based on whether we have a bio or not
+      let prompt;
       
-      // Create the prompt
-      const prompt = `Rewrite this candidate bio into a compelling 3-4 sentence professional summary for a recruitment email.
+      if (hasBio) {
+        // Prompt for candidates WITH a bio
+        prompt = `Rewrite this candidate bio into a compelling 3-4 sentence professional summary for a recruitment email.
 
 CANDIDATE INFO:
 Job Title: ${title || 'Professional'}
@@ -64,7 +74,7 @@ Skills: ${skills || 'various professional skills'}
 Bio: ${bio.substring(0, 600)}
 
 REQUIREMENTS:
-- Write EXACTLY 3-4 sentences (no more, no less)
+- Write EXACTLY 3-4 sentences (around 350 characters total)
 - Remove ALL names (first names, last names, any proper names)
 - Remove ALL company names (replace with "a leading organisation" or similar)
 - Use gender-neutral language (they/their/them instead of he/she/his/her)
@@ -74,8 +84,33 @@ REQUIREMENTS:
 - Focus on achievements, skills, and impact from their bio
 - Keep the real content from their bio, just clean it up
 - Vary the opening - don't always start with "A [title] with..."
+- No grammar errors, no business names, no overly specific language
 
 OUTPUT ONLY THE SUMMARY - NO EXPLANATIONS OR EXTRA TEXT.`;
+      } else {
+        // Prompt for candidates WITHOUT a bio - build from available data
+        prompt = `Create a compelling 3-4 sentence professional summary for this candidate for a recruitment email.
+
+CANDIDATE INFO:
+Job Title: ${title || 'Professional'}
+Experience: ${expText}
+Skills: ${skills || 'various professional skills'}
+Work History: ${workHistory || 'diverse professional background'}
+
+REQUIREMENTS:
+- Write EXACTLY 3-4 sentences (around 350 characters total)
+- Use the job title, experience, and skills to create a compelling narrative
+- Make them sound amazing and professional - sell this candidate!
+- Use gender-neutral language (they/their/them)
+- Use Australian spelling: specialising, recognised, organised, analyse, realise
+- Use Title Case for job titles (e.g., "Senior Designer" not "senior designer")
+- Focus on their expertise, capabilities, and professional strengths
+- Vary the opening - don't always start with "A [title] with..."
+- No grammar errors, no business names, no overly specific language
+- Create a unique summary that stands out
+
+OUTPUT ONLY THE SUMMARY - NO EXPLANATIONS OR EXTRA TEXT.`;
+      }
 
       console.log(`    🤖 Generating with OpenAI (gpt-4o-mini)...`);
       
