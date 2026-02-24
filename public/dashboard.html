@@ -1236,11 +1236,6 @@
             <div class="actions-card">
                     <h2>Automated Daily Alerts</h2>
                     
-                    <!-- Locked Segment Display -->
-                    <div class="recipient-locked" style="display: block; margin-bottom: 20px;">
-                        <p><span class="lock-icon">🔒</span><strong>Recipients:</strong> JOB_ALERTS = Yes <span style="font-size: 12px; color: #7f8c8d;">(Default segment - will be updated)</span></p>
-                    </div>
-                    
                     <div style="background: #F6F7F9; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(27, 51, 77, 0.1); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);">
                         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
                             <div style="flex: 1; min-width: 250px;">
@@ -1251,6 +1246,11 @@
                                 Toggle
                             </button>
                         </div>
+                    </div>
+                    
+                    <!-- Locked Segment Display -->
+                    <div class="recipient-locked" style="display: block; margin-top: 20px;">
+                        <p><span class="lock-icon">🔒</span><strong>Recipients:</strong> JOB_ALERTS = Yes <span style="font-size: 12px; color: #7f8c8d;">(Default segment - will be updated)</span></p>
                     </div>
                 </div>
                 
@@ -1278,14 +1278,19 @@
                         </div>
                     </div>
                 <div id="dailyRecipientPreview" style="display: none;" class="recipient-preview">
-                    <h4>📊 Preview</h4>
+                    <h4>📊 Data Selected</h4>
                     <p><strong>Name:</strong> <span id="dailyPreviewName">-</span></p>
                     <p><strong>Contacts:</strong> <span id="dailyPreviewCount" class="count">0</span></p>
                     <p><strong>Last Updated:</strong> <span id="dailyPreviewUpdated">-</span></p>
                 </div>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                 <button id="btnConfirmDailyRecipient" class="btn-confirm" onclick="confirmDailyRecipient()" disabled>
                     Confirm Selection
                 </button>
+                <button id="btnRemoveDailyRecipient" class="btn" style="background: #e74c3c; display: none;" onclick="removeDailyRecipient()">
+                    Remove
+                </button>
+                </div>
                 <div id="dailyRecipientLocked" style="display: none;" class="recipient-locked">
                     <p><span class="lock-icon">🔒</span><strong>Locked:</strong> <span id="lockedDailyRecipientName">-</span> (<span id="lockedDailyRecipientCount">0</span> contacts)</p>
                 </div>
@@ -1322,7 +1327,7 @@
                         </div>
                     </div>
                 <div id="singleJobRecipientPreview" style="display: none;" class="recipient-preview">
-                    <h4>📊 Preview</h4>
+                    <h4>📊 Data Selected</h4>
                     <p><strong>Name:</strong> <span id="singleJobPreviewName">-</span></p>
                     <p><strong>Contacts:</strong> <span id="singleJobPreviewCount" class="count">0</span></p>
                     <p><strong>Last Updated:</strong> <span id="singleJobPreviewUpdated">-</span></p>
@@ -1401,7 +1406,7 @@
                     </div>
                 </div>
                 <div id="recipientPreview" style="display: none;" class="recipient-preview">
-                    <h4>📊 Preview</h4>
+                    <h4>📊 Data Selected</h4>
                     <p><strong>Name:</strong> <span id="previewName">-</span></p>
                     <p><strong>Contacts:</strong> <span id="previewCount" class="count">0</span></p>
                     <p><strong>Last Updated:</strong> <span id="previewUpdated">-</span></p>
@@ -1496,7 +1501,7 @@
                     </div>
                 </div>
                 <div id="xposeRecipientPreview" style="display: none;" class="recipient-preview">
-                    <h4>📊 Preview</h4>
+                    <h4>📊 Data Selected</h4>
                     <p><strong>Name:</strong> <span id="xposePreviewName">-</span></p>
                     <p><strong>Contacts:</strong> <span id="xposePreviewCount" class="count">0</span></p>
                     <p><strong>Last Updated:</strong> <span id="xposePreviewUpdated">-</span></p>
@@ -1554,7 +1559,7 @@
                     </div>
                 </div>
                 <div id="articleRecipientPreview" style="display: none;" class="recipient-preview">
-                    <h4>📊 Preview</h4>
+                    <h4>📊 Data Selected</h4>
                     <p><strong>Name:</strong> <span id="articlePreviewName">-</span></p>
                     <p><strong>Contacts:</strong> <span id="articlePreviewCount" class="count">0</span></p>
                     <p><strong>Last Updated:</strong> <span id="articlePreviewUpdated">-</span></p>
@@ -1583,6 +1588,7 @@
                     </button>
                 </div>
             </div>
+        </div>
         </div>
             <!-- End Control Panel -->
             
