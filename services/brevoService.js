@@ -129,7 +129,129 @@ class BrevoService {
   async sendSingleEmail(recipients, templateId, params) {
     return this.sendBatchEmail(recipients, templateId, params);
   }
+
+  /**
+   * Get all segments from Brevo
+   */
+  async getSegments() {
+    try {
+      const response = await axios.get(`${this.baseUrl}/contacts/segments`, {
+        headers: {
+          'api-key': this.apiKey,
+          'Content-Type': 'application/json'
+        },
+        params: {
+          limit: 50,
+          sort: 'desc'
+        }
+      });
+
+      console.log(`✅ Found ${response.data.segments?.length || 0} segments`);
+      return response.data.segments || [];
+    } catch (error) {
+      console.error('❌ Error fetching Brevo segments:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all lists from Brevo
+   */
+  async getLists() {
+    try {
+      const response = await axios.get(`${this.baseUrl}/contacts/lists`, {
+        headers: {
+          'api-key': this.apiKey,
+          'Content-Type': 'application/json'
+        },
+        params: {
+          limit: 50
+        }
+      });
+
+      console.log(`✅ Found ${response.data.lists?.length || 0} lists`);
+      return response.data.lists || [];
+    } catch (error) {
+      console.error('❌ Error fetching Brevo lists:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Get contacts from a specific segment
+   */
+  async getSegmentContacts(segmentId) {
+    // TEST MODE: Return only test email
+    if (this.testMode && this.testEmail) {
+      console.log(`🧪 TEST MODE: Using test email ${this.testEmail}`);
+      return [{
+        email: this.testEmail,
+        name: 'Test User'
+      }];
+    }
+
+    // PRODUCTION MODE: Fetch from Brevo
+    try {
+      const response = await axios.get(`${this.baseUrl}/contacts/segments/${segmentId}/contacts`, {
+        headers: {
+          'api-key': this.apiKey,
+          'Content-Type': 'application/json'
+        },
+        params: {
+          limit: 500
+        }
+      });
+
+      const contacts = response.data.contacts || [];
+      console.log(`✅ Found ${contacts.length} contacts in segment ${segmentId}`);
+      
+      return contacts.map(contact => ({
+        email: contact.email,
+        name: `${contact.attributes?.FIRSTNAME || ''} ${contact.attributes?.LASTNAME || ''}`.trim() || contact.email
+      }));
+    } catch (error) {
+      console.error(`❌ Error fetching contacts from segment ${segmentId}:`, error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Get contacts from a specific list
+   */
+  async getListContacts(listId) {
+    // TEST MODE: Return only test email
+    if (this.testMode && this.testEmail) {
+      console.log(`🧪 TEST MODE: Using test email ${this.testEmail}`);
+      return [{
+        email: this.testEmail,
+        name: 'Test User'
+      }];
+    }
+
+    // PRODUCTION MODE: Fetch from Brevo
+    try {
+      const response = await axios.get(`${this.baseUrl}/contacts/lists/${listId}/contacts`, {
+        headers: {
+          'api-key': this.apiKey,
+          'Content-Type': 'application/json'
+        },
+        params: {
+          limit: 500
+        }
+      });
+
+      const contacts = response.data.contacts || [];
+      console.log(`✅ Found ${contacts.length} contacts in list ${listId}`);
+      
+      return contacts.map(contact => ({
+        email: contact.email,
+        name: `${contact.attributes?.FIRSTNAME || ''} ${contact.attributes?.LASTNAME || ''}`.trim() || contact.email
+      }));
+    } catch (error) {
+      console.error(`❌ Error fetching contacts from list ${listId}:`, error.response?.data || error.message);
+      throw error;
+    }
+  }
 }
 
 module.exports = new BrevoService();
-
