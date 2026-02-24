@@ -1332,9 +1332,14 @@
                     <p><strong>Contacts:</strong> <span id="singleJobPreviewCount" class="count">0</span></p>
                     <p><strong>Last Updated:</strong> <span id="singleJobPreviewUpdated">-</span></p>
                 </div>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                 <button id="btnConfirmSingleJobRecipient" class="btn-confirm" onclick="confirmSingleJobRecipient()" disabled>
                     Confirm Selection
                 </button>
+                <button id="btnRemoveSingleJobRecipient" class="btn" style="background: #e74c3c; display: none;" onclick="removeSingleJobRecipient()">
+                    Remove
+                </button>
+                </div>
                 <div id="singleJobRecipientLocked" style="display: none;" class="recipient-locked">
                     <p><span class="lock-icon">🔒</span><strong>Locked:</strong> <span id="lockedSingleJobRecipientName">-</span> (<span id="lockedSingleJobRecipientCount">0</span> contacts)</p>
                 </div>
@@ -1411,10 +1416,15 @@
                     <p><strong>Contacts:</strong> <span id="previewCount" class="count">0</span></p>
                     <p><strong>Last Updated:</strong> <span id="previewUpdated">-</span></p>
                 </div>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                 <button id="btnConfirmRecipient" class="btn-confirm" onclick="confirmRecipient()" disabled>
                     Confirm Selection
                 </button>
-                    <div id="recipientLocked" style="display: none;" class="recipient-locked">
+                <button id="btnRemoveRecipient" class="btn" style="background: #e74c3c; display: none;" onclick="removeRecipient()">
+                    Remove
+                </button>
+                </div>
+                <div id="recipientLocked" style="display: none;" class="recipient-locked">
                         <p><span class="lock-icon">🔒</span><strong>Locked:</strong> <span id="lockedRecipientName">-</span> (<span id="lockedRecipientCount">0</span> contacts)</p>
                     </div>
                 </div>
@@ -1506,10 +1516,15 @@
                     <p><strong>Contacts:</strong> <span id="xposePreviewCount" class="count">0</span></p>
                     <p><strong>Last Updated:</strong> <span id="xposePreviewUpdated">-</span></p>
                 </div>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                 <button id="btnConfirmXposeRecipient" class="btn-confirm" onclick="confirmXposeRecipient()" disabled>
                     Confirm Selection
                 </button>
-                    <div id="xposeRecipientLocked" style="display: none;" class="recipient-locked">
+                <button id="btnRemoveXposeRecipient" class="btn" style="background: #e74c3c; display: none;" onclick="removeXposeRecipient()">
+                    Remove
+                </button>
+                </div>
+                <div id="xposeRecipientLocked" style="display: none;" class="recipient-locked">
                         <p><span class="lock-icon">🔒</span><strong>Locked:</strong> <span id="lockedXposeRecipientName">-</span> (<span id="lockedXposeRecipientCount">0</span> contacts)</p>
                     </div>
                 </div>
@@ -1564,10 +1579,15 @@
                     <p><strong>Contacts:</strong> <span id="articlePreviewCount" class="count">0</span></p>
                     <p><strong>Last Updated:</strong> <span id="articlePreviewUpdated">-</span></p>
                 </div>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                 <button id="btnConfirmArticleRecipient" class="btn-confirm" onclick="confirmArticleRecipient()" disabled>
                     Confirm Selection
                 </button>
-                    <div id="articleRecipientLocked" style="display: none;" class="recipient-locked">
+                <button id="btnRemoveArticleRecipient" class="btn" style="background: #e74c3c; display: none;" onclick="removeArticleRecipient()">
+                    Remove
+                </button>
+                </div>
+                <div id="articleRecipientLocked" style="display: none;" class="recipient-locked">
                         <p><span class="lock-icon">🔒</span><strong>Locked:</strong> <span id="lockedArticleRecipientName">-</span> (<span id="lockedArticleRecipientCount">0</span> contacts)</p>
                     </div>
                 </div>
@@ -3096,6 +3116,8 @@
             document.getElementById('lockedRecipientName').textContent = confirmedRecipients.alist.name;
             document.getElementById('lockedRecipientCount').textContent = confirmedRecipients.alist.count;
             document.getElementById('recipientLocked').style.display = 'block';
+            document.getElementById('btnConfirmRecipient').style.display = 'none';
+            document.getElementById('btnRemoveRecipient').style.display = 'block';
             document.getElementById('recipientPreview').style.display = 'none';
             document.getElementById('btnConfirmRecipient').classList.add('confirmed');
             document.getElementById('btnConfirmRecipient').textContent = '✅ Confirmed';
@@ -3122,6 +3144,8 @@
             document.getElementById('lockedDailyRecipientCount').textContent = confirmedRecipients.daily.count;
             document.getElementById('dailyRecipientLocked').style.display = 'block';
             document.getElementById('dailyRecipientPreview').style.display = 'none';
+            document.getElementById('btnConfirmDailyRecipient').style.display = 'none';
+            document.getElementById('btnRemoveDailyRecipient').style.display = 'block';
             document.getElementById('btnConfirmDailyRecipient').classList.add('confirmed');
             document.getElementById('btnConfirmDailyRecipient').textContent = '✅ Confirmed';
             
@@ -3146,6 +3170,8 @@
             document.getElementById('lockedSingleJobRecipientCount').textContent = confirmedRecipients.singleJob.count;
             document.getElementById('singleJobRecipientLocked').style.display = 'block';
             document.getElementById('singleJobRecipientPreview').style.display = 'none';
+            document.getElementById('btnConfirmSingleJobRecipient').style.display = 'none';
+            document.getElementById('btnRemoveSingleJobRecipient').style.display = 'block';
             document.getElementById('btnConfirmSingleJobRecipient').classList.add('confirmed');
             document.getElementById('btnConfirmSingleJobRecipient').textContent = '✅ Confirmed';
             
@@ -3170,11 +3196,59 @@
             document.getElementById('lockedXposeRecipientCount').textContent = confirmedRecipients.xpose.count;
             document.getElementById('xposeRecipientLocked').style.display = 'block';
             document.getElementById('xposeRecipientPreview').style.display = 'none';
+            document.getElementById('btnConfirmXposeRecipient').style.display = 'none';
+            document.getElementById('btnRemoveXposeRecipient').style.display = 'block';
             document.getElementById('btnConfirmXposeRecipient').classList.add('confirmed');
             document.getElementById('btnConfirmXposeRecipient').textContent = '✅ Confirmed';
             
             typeSelector.disabled = true;
             recipientSelector.disabled = true;
+        }
+        
+        // Remove functions for all selectors
+        function removeRecipient() {
+            confirmedRecipients.alist = null;
+            document.getElementById('recipientLocked').style.display = 'none';
+            document.getElementById('btnConfirmRecipient').style.display = 'block';
+            document.getElementById('btnRemoveRecipient').style.display = 'none';
+            document.getElementById('recipientType').disabled = false;
+            document.getElementById('recipientSelector').disabled = false;
+        }
+        
+        function removeDailyRecipient() {
+            confirmedRecipients.daily = null;
+            document.getElementById('dailyRecipientLocked').style.display = 'none';
+            document.getElementById('btnConfirmDailyRecipient').style.display = 'block';
+            document.getElementById('btnRemoveDailyRecipient').style.display = 'none';
+            document.getElementById('dailyRecipientType').disabled = false;
+            document.getElementById('dailyRecipientSelector').disabled = false;
+        }
+        
+        function removeSingleJobRecipient() {
+            confirmedRecipients.singleJob = null;
+            document.getElementById('singleJobRecipientLocked').style.display = 'none';
+            document.getElementById('btnConfirmSingleJobRecipient').style.display = 'block';
+            document.getElementById('btnRemoveSingleJobRecipient').style.display = 'none';
+            document.getElementById('singleJobRecipientType').disabled = false;
+            document.getElementById('singleJobRecipientSelector').disabled = false;
+        }
+        
+        function removeXposeRecipient() {
+            confirmedRecipients.xpose = null;
+            document.getElementById('xposeRecipientLocked').style.display = 'none';
+            document.getElementById('btnConfirmXposeRecipient').style.display = 'block';
+            document.getElementById('btnRemoveXposeRecipient').style.display = 'none';
+            document.getElementById('xposeRecipientType').disabled = false;
+            document.getElementById('xposeRecipientSelector').disabled = false;
+        }
+        
+        function removeArticleRecipient() {
+            confirmedRecipients.article = null;
+            document.getElementById('articleRecipientLocked').style.display = 'none';
+            document.getElementById('btnConfirmArticleRecipient').style.display = 'block';
+            document.getElementById('btnRemoveArticleRecipient').style.display = 'none';
+            document.getElementById('articleRecipientType').disabled = false;
+            document.getElementById('articleRecipientSelector').disabled = false;
         }
         
         // Single Article confirmation
@@ -3194,6 +3268,8 @@
             document.getElementById('lockedArticleRecipientCount').textContent = confirmedRecipients.article.count;
             document.getElementById('articleRecipientLocked').style.display = 'block';
             document.getElementById('articleRecipientPreview').style.display = 'none';
+            document.getElementById('btnConfirmArticleRecipient').style.display = 'none';
+            document.getElementById('btnRemoveArticleRecipient').style.display = 'block';
             document.getElementById('btnConfirmArticleRecipient').classList.add('confirmed');
             document.getElementById('btnConfirmArticleRecipient').textContent = '✅ Confirmed';
             
