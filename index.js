@@ -143,6 +143,27 @@ app.post('/api/daily-alerts/toggle', (req, res) => {
   }
 });
 
+// Brevo Segments and Lists API
+const brevoService = require('./services/brevoService');
+
+app.get('/api/brevo/segments', async (req, res) => {
+  try {
+    const segments = await brevoService.getSegments();
+    res.json({ segments });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/brevo/lists', async (req, res) => {
+  try {
+    const lists = await brevoService.getLists();
+    res.json({ lists });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // A-List API endpoints
 app.get('/api/alist/state', async (req, res) => {
   try {
@@ -191,7 +212,8 @@ app.post('/api/alist/send', async (req, res) => {
         message: 'Please complete JobAdder authorization at /auth/jobadder' 
       });
     }
-    const result = await candidateAlertsController.sendToAll();
+    const { recipientType, recipientId } = req.body;
+    const result = await candidateAlertsController.sendToAll({ recipientType, recipientId });
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
