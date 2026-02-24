@@ -464,7 +464,8 @@ class CandidateService {
     const cleanedTitle = aiService.generalizeJobTitle(rawTitle, candidate.summary || '') || 'Creative Professional';
     
     const mailtoSubject = `Send me more information about ${cleanedTitle} - Candidate #${candidate.candidateId}`;
-    const mailtoLink = `mailto:artisan@artisan.com.au?subject=${encodeURIComponent(mailtoSubject)}`;
+    // Add &body= to prevent Brevo from appending UTM to subject
+    const mailtoLink = `mailto:artisan@artisan.com.au?subject=${encodeURIComponent(mailtoSubject)}&body=`;
     
     return {
       number: position,
