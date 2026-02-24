@@ -2454,9 +2454,11 @@
                         const option = document.createElement('option');
                         option.value = item.id;
                         option.setAttribute('data-name', item.name);
-                        option.setAttribute('data-count', item.contacts || 0);
+                        // Segments use 'uniqueSubscribers', Lists use 'totalSubscribers' or 'uniqueSubscribers'
+                        const contactCount = item.uniqueSubscribers || item.totalSubscribers || 0;
+                        option.setAttribute('data-count', contactCount);
                         option.setAttribute('data-updated', item.modifiedAt || item.createdAt || '-');
-                        option.textContent = `${item.name} (${item.contacts || 0} contacts)`;
+                        option.textContent = `${item.name} (${contactCount} contacts)`;
                         recipientSelector.appendChild(option);
                     });
                 } else {
