@@ -102,7 +102,8 @@ app.post('/trigger/daily-roundup', async (req, res) => {
         message: 'Please complete JobAdder authorization at /auth/jobadder' 
       });
     }
-    const result = await jobAlertsController.sendDailyRoundup();
+    const { recipientType, recipientId } = req.body;
+    const result = await jobAlertsController.sendDailyRoundup({ recipientType, recipientId });
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -117,7 +118,8 @@ app.post('/trigger/single-job/:adId', async (req, res) => {
         message: 'Please complete JobAdder authorization at /auth/jobadder' 
       });
     }
-    const result = await jobAlertsController.sendSingleJobAlert(req.params.adId);
+    const { recipientType, recipientId } = req.body;
+    const result = await jobAlertsController.sendSingleJobAlert(req.params.adId, { recipientType, recipientId });
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
