@@ -128,7 +128,27 @@ class XposeController {
         }
 
         try {
-            const recipients = await brevoService.getJobAlertContacts();
+            const { recipientType, recipientId } = req.body;
+            let recipients;
+            
+            if (recipientId && recipientType) {
+                console.log(`👥 Fetching recipients from ${recipientType} #${recipientId}...`);
+                
+                if (recipientType === 'segment') {
+                    recipients = await brevoService.getSegmentContacts(recipientId);
+                } else if (recipientType === 'list') {
+                    recipients = await brevoService.getListContacts(recipientId);
+                } else {
+                    return res.status(400).json({ 
+                        success: false, 
+                        message: 'Invalid recipient type. Must be "segment" or "list"' 
+                    });
+                }
+            } else {
+                // Fallback to old method (JOB_ALERTS attribute)
+                console.log('👥 Fetching recipients from Brevo (JOB_ALERTS = Yes)...');
+                recipients = await brevoService.getJobAlertContacts();
+            }
             if (recipients.length === 0) {
                 return res.status(404).json({ 
                     success: false, 
@@ -235,7 +255,27 @@ class XposeController {
                 });
             }
 
-            const recipients = await brevoService.getJobAlertContacts();
+            const { recipientType, recipientId } = req.body;
+            let recipients;
+            
+            if (recipientId && recipientType) {
+                console.log(`👥 Fetching recipients from ${recipientType} #${recipientId}...`);
+                
+                if (recipientType === 'segment') {
+                    recipients = await brevoService.getSegmentContacts(recipientId);
+                } else if (recipientType === 'list') {
+                    recipients = await brevoService.getListContacts(recipientId);
+                } else {
+                    return res.status(400).json({ 
+                        success: false, 
+                        message: 'Invalid recipient type. Must be "segment" or "list"' 
+                    });
+                }
+            } else {
+                // Fallback to old method (JOB_ALERTS attribute)
+                console.log('👥 Fetching recipients from Brevo (JOB_ALERTS = Yes)...');
+                recipients = await brevoService.getJobAlertContacts();
+            }
             if (recipients.length === 0) {
                 return res.status(404).json({ 
                     success: false, 
