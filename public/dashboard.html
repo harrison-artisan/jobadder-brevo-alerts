@@ -2453,12 +2453,26 @@
                     items.forEach(item => {
                         const option = document.createElement('option');
                         option.value = item.id;
-                        option.setAttribute('data-name', item.name);
-                        // Segments use 'uniqueSubscribers', Lists use 'totalSubscribers' or 'uniqueSubscribers'
+                        
+                        // Segments use 'segmentName', Lists use 'name'
+                        const itemName = type === 'segment' ? item.segmentName : item.name;
+                        option.setAttribute('data-name', itemName);
+                        
+                        // Lists have contact count, segments don't (would need separate API call)
                         const contactCount = item.uniqueSubscribers || item.totalSubscribers || 0;
                         option.setAttribute('data-count', contactCount);
-                        option.setAttribute('data-updated', item.modifiedAt || item.createdAt || '-');
-                        option.textContent = `${item.name} (${contactCount} contacts)`;
+                        
+                        // Segments use 'updatedAt', Lists use 'modifiedAt' or 'createdAt'
+                        const updatedDate = type === 'segment' ? item.updatedAt : (item.modifiedAt || item.createdAt);
+                        option.setAttribute('data-updated', updatedDate || '-');
+                        
+                        // Display format
+                        if (type === 'segment') {
+                            option.textContent = `${itemName} (Dynamic)`;
+                        } else {
+                            option.textContent = `${itemName} (${contactCount} contacts)`;
+                        }
+                        
                         recipientSelector.appendChild(option);
                     });
                 } else {
