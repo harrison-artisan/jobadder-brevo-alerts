@@ -31,11 +31,10 @@ class AIService {
       }
 
       // Get candidate info
-      const title = this.generalizeJobTitle(
-        candidate.employment?.current?.position || 
-        candidate.employment?.ideal?.position || 
-        ''
-      );
+      const rawTitle = candidate.employment?.current?.position || 
+                       candidate.employment?.ideal?.position || 
+                       '';
+      const title = this.generalizeJobTitle(rawTitle, candidate.summary || '');
       
       const yearsExp = this.calculateYearsOfExperience(candidate);
       const expText = yearsExp >= 15 ? `over ${yearsExp} years` :
@@ -74,9 +73,9 @@ Skills: ${skills || 'various professional skills'}
 Bio: ${bio.substring(0, 600)}
 
 REQUIREMENTS:
-- Write EXACTLY 3-4 sentences (around 350 characters total)
+- Write EXACTLY 3-4 sentences (MAX 300 characters total)
 - Remove ALL names (first names, last names, any proper names)
-- Remove ALL company names (replace with "a leading organisation" or similar)
+- Remove ALL company names and business names - do not mention any companies at all
 - Use gender-neutral language (they/their/them instead of he/she/his/her)
 - Use Australian spelling: specialising, recognised, organised, analyse, realise
 - Use Title Case for job titles (e.g., "Senior Designer" not "senior designer")
@@ -98,7 +97,7 @@ Skills: ${skills || 'various professional skills'}
 Work History: ${workHistory || 'diverse professional background'}
 
 REQUIREMENTS:
-- Write EXACTLY 3-4 sentences (around 350 characters total)
+- Write EXACTLY 3-4 sentences (MAX 300 characters total)
 - Use the job title, experience, and skills to create a compelling narrative
 - Make them sound amazing and professional - sell this candidate!
 - Use gender-neutral language (they/their/them)
@@ -198,10 +197,23 @@ OUTPUT ONLY THE SUMMARY - NO EXPLANATIONS OR EXTRA TEXT.`;
   /**
    * Generalize and clean job titles
    */
-  generalizeJobTitle(title) {
+  generalizeJobTitle(title, candidateSummary = '') {
     if (!title) return '';
     
     let generalized = title.trim();
+    
+    // Remove everything after pipe (|) - e.g., "Senior Designer | Company" → "Senior Designer"
+    if (generalized.includes('|')) {
+      generalized = generalized.split('|')[0].trim();
+    }
+    
+    // Remove everything after @ - e.g., "Designer @ Company" → "Designer"
+    if (generalized.includes('@')) {
+      generalized = generalized.split('@')[0].trim();
+    }
+    
+    // Remove everything after 'at' if it looks like a company - e.g., "Designer at Company" → "Designer"
+    generalized = generalized.replace(/\s+at\s+[A-Z][a-zA-Z\s&]+$/i, '');
     
     // Remove codes in parentheses or brackets
     generalized = generalized.replace(/\s*[\(\[].*?[\)\]]/g, '');
@@ -223,13 +235,25 @@ OUTPUT ONLY THE SUMMARY - NO EXPLANATIONS OR EXTRA TEXT.`;
       return '';
     }
     
-    // Remove problematic words
-    const problematicWords = ['intern', 'freelance', 'professional', 'owner', 'founder', 'self employed', 'self-employed'];
+    // If title is too generic, try to extract better title from summary
+    const genericTitles = ['team leader', 'manager', 'consultant', 'specialist', 'coordinator', 'executive', 'professional'];
     const lowerTitle = generalized.toLowerCase();
     
+    if (genericTitles.includes(lowerTitle) && candidateSummary) {
+      // Try to extract a better title from the summary
+      const betterTitle = this.extractTitleFromSummary(candidateSummary);
+      if (betterTitle && betterTitle.length > generalized.length) {
+        generalized = betterTitle;
+      }
+    }
+    
+    // Remove problematic words
+    const problematicWords = ['intern', 'freelance', 'professional', 'owner', 'founder', 'self employed', 'self-employed'];
+    const currentLowerTitle = generalized.toLowerCase();
+    
     for (const word of problematicWords) {
-      if (lowerTitle.includes(word)) {
-        if (lowerTitle === word || lowerTitle === word + 's') {
+      if (currentLowerTitle.includes(word)) {
+        if (currentLowerTitle === word || currentLowerTitle === word + 's') {
           return '';
         }
         const regex = new RegExp(`\\b${word}\\b`, 'gi');
@@ -246,6 +270,29 @@ OUTPUT ONLY THE SUMMARY - NO EXPLANATIONS OR EXTRA TEXT.`;
     
     // Convert to Title Case
     return this.toTitleCase(generalized);
+  }
+
+  /**
+   * Extract a better job title from candidate summary
+   */
+  extractTitleFromSummary(summary) {
+    if (!summary || summary.length < 20) return '';
+    
+    // Look for patterns like "Partner and Creative Director", "Senior Designer", etc.
+    const titlePatterns = [
+      /\b(Partner|Director|Manager|Designer|Developer|Consultant|Specialist|Lead|Head|Chief)\s+(?:and\s+)?(?:[A-Z][a-z]+\s+)*(?:Partner|Director|Manager|Designer|Developer|Consultant|Specialist|Lead|Head|Chief)\b/i,
+      /\b(?:Senior|Junior|Lead|Principal|Associate|Executive)\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\s+(?:Director|Manager|Designer|Developer|Consultant|Specialist)\b/i,
+      /\b(?:Creative|Digital|Brand|Marketing|Product|Technical|Art)\s+(?:Director|Manager|Designer|Lead|Head)\b/i
+    ];
+    
+    for (const pattern of titlePatterns) {
+      const match = summary.match(pattern);
+      if (match) {
+        return match[0].trim();
+      }
+    }
+    
+    return '';
   }
 
   /**
@@ -460,3 +507,4 @@ OUTPUT ONLY THE SUMMARY - NO EXPLANATIONS OR EXTRA TEXT.`;
 }
 
 module.exports = new AIService();
+
