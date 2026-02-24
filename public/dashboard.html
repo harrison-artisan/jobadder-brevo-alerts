@@ -40,24 +40,34 @@
         }
         
         .header {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border-radius: 10px;
             padding: 40px;
             margin-bottom: 40px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+        
+        .header-logo {
+            width: 80px;
+            height: 80px;
+            flex-shrink: 0;
         }
         
         .header h1 {
-            color: #1b334d;
+            color: rgba(255, 255, 255, 0.95);
             font-size: 32px;
             margin-bottom: 10px;
             font-weight: 800;
         }
         
         .header p {
-            color: #34495e;
+            color: rgba(255, 255, 255, 0.8);
             font-size: 16px;
         }
         
@@ -184,17 +194,18 @@
         
         /* Actions Card */
         .actions-card {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.12);
             backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border-radius: 10px;
             padding: 40px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             margin-bottom: 40px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
         .actions-card h2 {
-            color: #1b334d;
+            color: rgba(255, 255, 255, 0.95);
             font-size: 24px;
             margin-bottom: 25px;
             font-weight: 700;
@@ -1054,8 +1065,11 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1>Artisan Dashboard</h1>
-            <p>Job Alerts & A-List Management System</p>
+            <img src="/artisan-logo.png" alt="Artisan Logo" class="header-logo">
+            <div>
+                <h1>Artisan Dashboard [Harrison 2.0]</h1>
+                <p>Job Alerts & A-List Management System</p>
+            </div>
         </div>
         
         <!-- Desktop: Global Status Cards - Always Visible -->
@@ -1091,8 +1105,8 @@
             
             <div class="status-card">
                 <h3>OpenAI</h3>
-                <div class="status-value" style="font-size: 16px; color: white;" id="openaiStatus">Checking...</div>
-                <div class="status-label" id="openaiStatusLabel">API Connection</div>
+                <div class="status-value success" id="openaiStatus">●</div>
+                <div class="status-label" id="openaiStatusLabel">Checking...</div>
             </div>
             
             <div class="status-card">
@@ -1195,7 +1209,7 @@
 
             <!-- Daily Automated Alerts Container -->
             <div class="actions-card">
-                    <h2>⏰ Automated Daily Alerts</h2>
+                    <h2>Automated Daily Alerts</h2>
                     
                     <!-- Locked Segment Display -->
                     <div class="recipient-locked" style="display: block; margin-bottom: 20px;">
@@ -1209,7 +1223,7 @@
                                 <div style="font-size: 13px; color: #7f8c8d;" id="dailyAlertsDescription">Checking status...</div>
                             </div>
                             <button class="btn btn-success" onclick="toggleDailyAlerts()" id="btnToggleAlerts" style="min-width: 140px;">
-                                🔄 Toggle
+                                Toggle
                             </button>
                         </div>
                     </div>
@@ -1217,11 +1231,11 @@
                 
                 <!-- Daily Manual Roundup Container -->
                 <div class="actions-card">
-                    <h2>📧 Daily Manual Roundup</h2>
+                    <h2>Daily Manual Roundup</h2>
                     
                     <!-- Recipient Selector -->
                     <div class="recipient-selector">
-                        <h3>👥 Select Recipients</h3>
+                        <h3>Select Recipients</h3>
                     <div class="selector-row">
                         <div class="selector-group">
                             <label for="dailyRecipientType">Recipient Type</label>
@@ -1245,7 +1259,7 @@
                     <p><strong>Last Updated:</strong> <span id="dailyPreviewUpdated">-</span></p>
                 </div>
                 <button id="btnConfirmDailyRecipient" class="btn-confirm" onclick="confirmDailyRecipient()" disabled>
-                    🔒 Confirm Selection
+                    Confirm Selection
                 </button>
                 <div id="dailyRecipientLocked" style="display: none;" class="recipient-locked">
                     <p><span class="lock-icon">🔒</span><strong>Locked:</strong> <span id="lockedDailyRecipientName">-</span> (<span id="lockedDailyRecipientCount">0</span> contacts)</p>
@@ -1261,11 +1275,11 @@
                 
                 <!-- On-Demand Single Job Alert Container -->
                 <div class="actions-card">
-                    <h2>📤 On-Demand Job Alert</h2>
+                    <h2>On-Demand Job Alert</h2>
                     
                     <!-- Recipient Selector -->
                     <div class="recipient-selector">
-                        <h3>👥 Select Recipients</h3>
+                        <h3>Select Recipients</h3>
                     <div class="selector-row">
                         <div class="selector-group">
                             <label for="singleJobRecipientType">Recipient Type</label>
@@ -1289,7 +1303,7 @@
                     <p><strong>Last Updated:</strong> <span id="singleJobPreviewUpdated">-</span></p>
                 </div>
                 <button id="btnConfirmSingleJobRecipient" class="btn-confirm" onclick="confirmSingleJobRecipient()" disabled>
-                    🔒 Confirm Selection
+                    Confirm Selection
                 </button>
                 <div id="singleJobRecipientLocked" style="display: none;" class="recipient-locked">
                     <p><span class="lock-icon">🔒</span><strong>Locked:</strong> <span id="lockedSingleJobRecipientName">-</span> (<span id="lockedSingleJobRecipientCount">0</span> contacts)</p>
@@ -1340,11 +1354,11 @@
             <div id="alistMessageBox" class="message"></div>
 
             <div class="actions-card">
-                <h2>🌟 A-List Candidate Email</h2>
+                <h2>A-List Candidate Email</h2>
                 
                 <!-- Recipient Selector -->
                 <div class="recipient-selector">
-                    <h3>👥 Select Recipients</h3>
+                    <h3>Select Recipients</h3>
                 <div class="selector-row">
                     <div class="selector-group">
                         <label for="recipientType">Recipient Type</label>
@@ -1368,7 +1382,7 @@
                     <p><strong>Last Updated:</strong> <span id="previewUpdated">-</span></p>
                 </div>
                 <button id="btnConfirmRecipient" class="btn-confirm" onclick="confirmRecipient()" disabled>
-                    🔒 Confirm Selection
+                    Confirm Selection
                 </button>
                     <div id="recipientLocked" style="display: none;" class="recipient-locked">
                         <p><span class="lock-icon">🔒</span><strong>Locked:</strong> <span id="lockedRecipientName">-</span> (<span id="lockedRecipientCount">0</span> contacts)</p>
@@ -1386,10 +1400,10 @@
                         Send Test
                     </button>
                     <button class="btn btn-info" id="btnScheduleAList" disabled>
-                        📅 Approve & Schedule
+                        Approve & Schedule
                     </button>
                     <button class="btn btn-success" id="btnSendNowAList" disabled>
-                        🚀 Send Now
+                        Send Now
                     </button>
                 </div>
                 <div style="margin-top: 10px; font-size: 13px; color: #7f8c8d; text-align: center;">
@@ -1435,11 +1449,11 @@
             </div>
 
             <div class="actions-card">
-                <h2>📰 Xpose Newsletter</h2>
+                <h2>Xpose Newsletter</h2>
                 
                 <!-- Recipient Selector -->
                 <div class="recipient-selector">
-                    <h3>👥 Select Recipients</h3>
+                    <h3>Select Recipients</h3>
                 <div class="selector-row">
                     <div class="selector-group">
                         <label for="xposeRecipientType">Recipient Type</label>
@@ -1463,7 +1477,7 @@
                     <p><strong>Last Updated:</strong> <span id="xposePreviewUpdated">-</span></p>
                 </div>
                 <button id="btnConfirmXposeRecipient" class="btn-confirm" onclick="confirmXposeRecipient()" disabled>
-                    🔒 Confirm Selection
+                    Confirm Selection
                 </button>
                     <div id="xposeRecipientLocked" style="display: none;" class="recipient-locked">
                         <p><span class="lock-icon">🔒</span><strong>Locked:</strong> <span id="lockedXposeRecipientName">-</span> (<span id="lockedXposeRecipientCount">0</span> contacts)</p>
@@ -1481,10 +1495,10 @@
                         Send Test
                     </button>
                     <button class="btn btn-info" id="btnScheduleXpose" disabled>
-                        📅 Approve & Schedule
+                        Approve & Schedule
                     </button>
                     <button class="btn btn-success" id="btnSendNowXpose" disabled>
-                        🚀 Send Now
+                        Send Now
                     </button>
                 </div>
                 <div style="margin-top: 10px; font-size: 13px; color: #7f8c8d; text-align: center;">
@@ -1493,11 +1507,11 @@
             </div>
 
             <div class="actions-card">
-                <h2>📄 Single Article</h2>
+                <h2>Single Article</h2>
                 
                 <!-- Recipient Selector -->
                 <div class="recipient-selector">
-                    <h3>👥 Select Recipients</h3>
+                    <h3>Select Recipients</h3>
                 <div class="selector-row">
                     <div class="selector-group">
                         <label for="articleRecipientType">Recipient Type</label>
@@ -1521,7 +1535,7 @@
                     <p><strong>Last Updated:</strong> <span id="articlePreviewUpdated">-</span></p>
                 </div>
                 <button id="btnConfirmArticleRecipient" class="btn-confirm" onclick="confirmArticleRecipient()" disabled>
-                    🔒 Confirm Selection
+                    Confirm Selection
                 </button>
                     <div id="articleRecipientLocked" style="display: none;" class="recipient-locked">
                         <p><span class="lock-icon">🔒</span><strong>Locked:</strong> <span id="lockedArticleRecipientName">-</span> (<span id="lockedArticleRecipientCount">0</span> contacts)</p>
@@ -1637,17 +1651,17 @@
                 const data = await response.json();
                 
                 if (data.status === 'connected') {
-                    statusEl.textContent = '✅ Connected';
-                    statusEl.style.color = '#27ae60';
-                    labelEl.textContent = 'API Ready';
+                    statusEl.textContent = '●';
+                    statusEl.className = 'status-value success';
+                    labelEl.textContent = 'Connected';
                 } else {
-                    statusEl.textContent = '❌ Disconnected';
-                    statusEl.style.color = '#e74c3c';
-                    labelEl.textContent = data.message || 'API Error';
+                    statusEl.textContent = '●';
+                    statusEl.className = 'status-value error';
+                    labelEl.textContent = 'Disconnected';
                 }
             } catch (error) {
-                statusEl.textContent = '⚠️ Unknown';
-                statusEl.style.color = '#f39c12';
+                statusEl.textContent = '●';
+                statusEl.className = 'status-value error';
                 labelEl.textContent = 'Check Failed';
             }
         }
@@ -2191,7 +2205,7 @@
             }
             
             btn.disabled = false;
-            btn.innerHTML = '📅 Approve & Schedule';
+            btn.innerHTML = 'Approve & Schedule';
         }
         
         async function sendNowAList() {
@@ -2431,7 +2445,7 @@
             }
             
             btn.disabled = false;
-            btn.innerHTML = '📅 Approve & Schedule';
+            btn.innerHTML = 'Approve & Schedule';
             updateXposeUI();
         }
         
@@ -2490,7 +2504,7 @@
             }
             
             btn.disabled = false;
-            btn.textContent = '🚀 Send Now';
+            btn.textContent = 'Send Now';
             updateXposeUI();
         }
 
