@@ -918,6 +918,80 @@
                 order: 1;
             }
         }
+        
+        /* Recipient Selector Styles */
+        .recipient-selector {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        .recipient-selector h3 {
+            color: #1b334d;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .selector-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        
+        .selector-group {
+            flex: 1;
+        }
+        
+        .selector-group label {
+            display: block;
+            color: #555;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .selector-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            transition: border-color 0.3s;
+        }
+        
+        .selector-group select:focus {
+            outline: none;
+            border-color: #bd203d;
+        }
+        
+        .recipient-preview {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #bd203d;
+        }
+        
+        .recipient-preview h4 {
+            color: #1b334d;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .recipient-preview p {
+            color: #666;
+            font-size: 13px;
+            margin: 4px 0;
+        }
+        
+        .recipient-preview .count {
+            color: #bd203d;
+            font-weight: 700;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -1142,6 +1216,33 @@
             </div>
 
             <div id="alistMessageBox" class="message"></div>
+
+            <!-- Recipient Selector -->
+            <div class="recipient-selector">
+                <h3>📧 Select Recipients</h3>
+                <div class="selector-row">
+                    <div class="selector-group">
+                        <label for="recipientType">Recipient Type</label>
+                        <select id="recipientType" onchange="loadRecipients()">
+                            <option value="">-- Select Type --</option>
+                            <option value="segment">Segment (Dynamic)</option>
+                            <option value="list">List (Static)</option>
+                        </select>
+                    </div>
+                    <div class="selector-group">
+                        <label for="recipientSelector">Select Segment/List</label>
+                        <select id="recipientSelector" disabled onchange="previewRecipients()">
+                            <option value="">-- Choose a segment or list --</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="recipientPreview" style="display: none;" class="recipient-preview">
+                    <h4>📊 Preview</h4>
+                    <p><strong>Name:</strong> <span id="previewName">-</span></p>
+                    <p><strong>Contacts:</strong> <span id="previewCount" class="count">0</span></p>
+                    <p><strong>Last Updated:</strong> <span id="previewUpdated">-</span></p>
+                </div>
+            </div>
 
             <div class="actions-card">
                 <h2>A-List Actions</h2>
@@ -1772,6 +1873,15 @@
         }
 
         async function approveAndSendAList() {
+            // Validate recipient selection
+            const recipientType = document.getElementById('recipientType').value;
+            const recipientId = document.getElementById('recipientSelector').value;
+            
+            if (!recipientType || !recipientId) {
+                showMessage('Please select a recipient segment or list before sending', 'error');
+                return;
+            }
+            
             if (!confirm('Are you sure you want to send the A-List? In test mode, it will only send to the test email.')) {
                 return;
             }
@@ -1780,7 +1890,14 @@
             
             try {
                 const response = await fetch('/api/alist/send', {
-                    method: 'POST'
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        recipientType,
+                        recipientId
+                    })
                 });
                 
                 const data = await response.json();
@@ -2317,3 +2434,72 @@
     </script>
 </body>
 </html>
+
+        // Load segments or lists based on type selection
+        async function loadRecipients() {
+            const typeSelector = document.getElementById('recipientType');
+            const recipientSelector = document.getElementById('recipientSelector');
+            const preview = document.getElementById('recipientPreview');
+            
+            const type = typeSelector.value;
+            
+            if (!type) {
+                recipientSelector.disabled = true;
+                recipientSelector.innerHTML = '<option value="">-- Choose a segment or list --</option>';
+                preview.style.display = 'none';
+                return;
+            }
+            
+            recipientSelector.disabled = false;
+            recipientSelector.innerHTML = '<option value="">Loading...</option>';
+            preview.style.display = 'none';
+            
+            try {
+                const endpoint = type === 'segment' ? '/api/brevo/segments' : '/api/brevo/lists';
+                const response = await fetch(endpoint);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const items = type === 'segment' ? data.segments : data.lists;
+                    
+                    recipientSelector.innerHTML = '<option value="">-- Choose a ' + type + ' --</option>';
+                    items.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.id;
+                        option.setAttribute('data-name', item.name);
+                        option.setAttribute('data-count', item.contacts || 0);
+                        option.setAttribute('data-updated', item.modifiedAt || item.createdAt || '-');
+                        option.textContent = `${item.name} (${item.contacts || 0} contacts)`;
+                        recipientSelector.appendChild(option);
+                    });
+                } else {
+                    recipientSelector.innerHTML = '<option value="">Error loading ' + type + 's</option>';
+                }
+            } catch (error) {
+                recipientSelector.innerHTML = '<option value="">Error loading ' + type + 's</option>';
+                console.error('Error loading recipients:', error);
+            }
+        }
+        
+        // Preview selected segment/list
+        function previewRecipients() {
+            const recipientSelector = document.getElementById('recipientSelector');
+            const preview = document.getElementById('recipientPreview');
+            const selectedOption = recipientSelector.options[recipientSelector.selectedIndex];
+            
+            if (!recipientSelector.value || recipientSelector.selectedIndex === 0) {
+                preview.style.display = 'none';
+                return;
+            }
+            
+            const name = selectedOption.getAttribute('data-name');
+            const count = selectedOption.getAttribute('data-count');
+            const updated = selectedOption.getAttribute('data-updated');
+            
+            document.getElementById('previewName').textContent = name;
+            document.getElementById('previewCount').textContent = count;
+            document.getElementById('previewUpdated').textContent = updated ? new Date(updated).toLocaleDateString() : '-';
+            
+            preview.style.display = 'block';
+        }
+        
