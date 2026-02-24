@@ -120,19 +120,11 @@ class CandidateAlertsController {
       console.log('📊 Sample candidate data being sent:');
       console.log(JSON.stringify(state.candidates[0], null, 2));
       
-      // Fetch latest articles from WordPress
-      const articles = await wordpressService.getLatestArticles(3);
-      
       // Send email via Brevo
       await brevoService.sendBatchEmail(
         testRecipient,
         process.env.A_LIST_TEMPLATE_ID,
-        { 
-          candidates: state.candidates,
-          article1: articles[0],
-          article2: articles[1],
-          article3: articles[2]
-        }
+        { candidates: state.candidates }
       );
       
       // Update state
@@ -161,8 +153,11 @@ class CandidateAlertsController {
 
   /**
    * Send to all recipients
+   * @param {Object} options - Sending options
+   * @param {string} options.recipientType - 'segment' or 'list'
+   * @param {string} options.recipientId - Segment or List ID
    */
-  async sendToAll() {
+  async sendToAll(options = {}) {
     console.log('\n📧 ========== SENDING TO ALL RECIPIENTS ==========');
     
     const state = this.loadState();
@@ -177,8 +172,23 @@ class CandidateAlertsController {
     
     try {
       // Get recipients from Brevo
-      console.log('👥 Fetching recipients from Brevo...');
-      const recipients = await brevoService.getJobAlertContacts();
+      let recipients;
+      
+      if (options.recipientId && options.recipientType) {
+        console.log(`👥 Fetching recipients from ${options.recipientType} #${options.recipientId}...`);
+        
+        if (options.recipientType === 'segment') {
+          recipients = await brevoService.getSegmentContacts(options.recipientId);
+        } else if (options.recipientType === 'list') {
+          recipients = await brevoService.getListContacts(options.recipientId);
+        } else {
+          throw new Error('Invalid recipient type. Must be "segment" or "list"');
+        }
+      } else {
+        // Fallback to old method (JOB_ALERTS attribute)
+        console.log('👥 Fetching recipients from Brevo (JOB_ALERTS = Yes)...');
+        recipients = await brevoService.getJobAlertContacts();
+      }
       
       if (!recipients || recipients.length === 0) {
         return {
@@ -192,19 +202,11 @@ class CandidateAlertsController {
       console.log(`📋 Template ID: ${process.env.A_LIST_TEMPLATE_ID}`);
       console.log(`👥 Candidates: ${state.candidates.length}`);
       
-      // Fetch latest articles from WordPress
-      const articles = await wordpressService.getLatestArticles(3);
-      
       // Send email via Brevo
       await brevoService.sendBatchEmail(
         recipients,
         process.env.A_LIST_TEMPLATE_ID,
-        { 
-          candidates: state.candidates,
-          article1: articles[0],
-          article2: articles[1],
-          article3: articles[2]
-        }
+        { candidates: state.candidates }
       );
       
       // Update state to SENT
@@ -301,4 +303,3 @@ class CandidateAlertsController {
 }
 
 module.exports = new CandidateAlertsController();
-
