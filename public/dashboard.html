@@ -64,7 +64,7 @@
         /* Global Status Grid */
         .global-status-grid {
             display: grid;
-            grid-template-columns: repeat(6, 1fr);
+            grid-template-columns: repeat(7, 1fr);
             gap: 20px;
             margin-bottom: 40px;
         }
@@ -976,6 +976,44 @@
             font-size: 16px;
         }
         
+        .btn-confirm {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        .btn-confirm:hover:not(:disabled) {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+        
+        .btn-confirm:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .btn-confirm.confirmed {
+            background: #6c757d;
+        }
+        
+        .recipient-locked {
+            background: #e8f5e9;
+            border-left: 4px solid #28a745;
+        }
+        
+        .recipient-locked .lock-icon {
+            color: #28a745;
+            font-size: 20px;
+            margin-right: 8px;
+        }
+        
         /* Mobile Responsive for Preview */
         @media (max-width: 1024px) {
             .main-layout {
@@ -1049,6 +1087,12 @@
                 <h3>WordPress</h3>
                 <div class="status-value success" id="wordpressStatus">●</div>
                 <div class="status-label" id="wordpressLabel">Checking...</div>
+            </div>
+            
+            <div class="status-card">
+                <h3>OpenAI</h3>
+                <div class="status-value" style="font-size: 16px; color: white;" id="openaiStatus">Checking...</div>
+                <div class="status-label" id="openaiStatusLabel">API Connection</div>
             </div>
             
             <div class="status-card">
@@ -1149,45 +1193,123 @@
                 </div>
             </div>
 
+            <!-- Daily Automated Alerts Container -->
             <div class="actions-card">
-                <h2>Job Alert Actions</h2>
-                
-                <!-- Daily Alerts Toggle Section -->
-                <div style="background: rgba(27, 51, 77, 0.05); padding: 20px; border-radius: 12px; margin-bottom: 30px; border: 2px solid rgba(27, 51, 77, 0.1);">
-                    <h3 style="color: #1b334d; font-size: 16px; margin-bottom: 15px; font-weight: 700;">⏰ Automated Daily Alerts</h3>
-                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
-                        <div style="flex: 1; min-width: 250px;">
-                            <div style="font-weight: 700; color: #1b334d; margin-bottom: 5px; font-size: 15px;" id="dailyAlertsStatus">Loading...</div>
-                            <div style="font-size: 13px; color: #7f8c8d;" id="dailyAlertsDescription">Checking status...</div>
+                    <h2>⏰ Automated Daily Alerts</h2>
+                    
+                    <!-- Locked Segment Display -->
+                    <div class="recipient-locked" style="display: block; margin-bottom: 20px;">
+                        <p><span class="lock-icon">🔒</span><strong>Recipients:</strong> JOB_ALERTS = Yes <span style="font-size: 12px; color: #7f8c8d;">(Default segment - will be updated)</span></p>
+                    </div>
+                    
+                    <div style="background: rgba(27, 51, 77, 0.05); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 2px solid rgba(27, 51, 77, 0.1);">
+                        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+                            <div style="flex: 1; min-width: 250px;">
+                                <div style="font-weight: 700; color: #1b334d; margin-bottom: 5px; font-size: 15px;" id="dailyAlertsStatus">Loading...</div>
+                                <div style="font-size: 13px; color: #7f8c8d;" id="dailyAlertsDescription">Checking status...</div>
+                            </div>
+                            <button class="btn btn-success" onclick="toggleDailyAlerts()" id="btnToggleAlerts" style="min-width: 140px;">
+                                🔄 Toggle
+                            </button>
                         </div>
-                        <button class="btn btn-success" onclick="toggleDailyAlerts()" id="btnToggleAlerts" style="min-width: 140px;">
-                            🔄 Toggle
+                    </div>
+                </div>
+                
+                <!-- Daily Manual Roundup Container -->
+                <div class="actions-card">
+                    <h2>📧 Daily Manual Roundup</h2>
+                    
+                    <!-- Recipient Selector -->
+                    <div class="recipient-selector">
+                        <h3>👥 Select Recipients</h3>
+                    <div class="selector-row">
+                        <div class="selector-group">
+                            <label for="dailyRecipientType">Recipient Type</label>
+                            <select id="dailyRecipientType" onchange="loadDailyRecipients()">
+                                <option value="">-- Select Type --</option>
+                                <option value="segment">Segment (Dynamic)</option>
+                                <option value="list">List (Static)</option>
+                            </select>
+                        </div>
+                        <div class="selector-group">
+                            <label for="dailyRecipientSelector">Select Segment/List</label>
+                            <select id="dailyRecipientSelector" disabled onchange="previewDailyRecipients()">
+                                <option value="">-- Choose a segment or list --</option>
+                            </select>
+                        </div>
+                    </div>
+                <div id="dailyRecipientPreview" style="display: none;" class="recipient-preview">
+                    <h4>📊 Preview</h4>
+                    <p><strong>Name:</strong> <span id="dailyPreviewName">-</span></p>
+                    <p><strong>Contacts:</strong> <span id="dailyPreviewCount" class="count">0</span></p>
+                    <p><strong>Last Updated:</strong> <span id="dailyPreviewUpdated">-</span></p>
+                </div>
+                <button id="btnConfirmDailyRecipient" class="btn-confirm" onclick="confirmDailyRecipient()" disabled>
+                    🔒 Confirm Selection
+                </button>
+                <div id="dailyRecipientLocked" style="display: none;" class="recipient-locked">
+                    <p><span class="lock-icon">🔒</span><strong>Locked:</strong> <span id="lockedDailyRecipientName">-</span> (<span id="lockedDailyRecipientCount">0</span> contacts)</p>
+                </div>
+            </div>
+                
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="triggerDailyRoundup()" id="btnDailyRoundup">
+                            Send Daily Roundup
                         </button>
                     </div>
                 </div>
                 
-                <h3 style="color: #1b334d; font-size: 16px; margin-bottom: 15px; font-weight: 700;">Manual Actions</h3>
-                <div class="button-group">
-                    <button class="btn btn-primary" onclick="triggerDailyRoundup()" id="btnDailyRoundup">
-                        Send Daily Roundup
-                    </button>
+                <!-- On-Demand Single Job Alert Container -->
+                <div class="actions-card">
+                    <h2>📤 On-Demand Job Alert</h2>
+                    
+                    <!-- Recipient Selector -->
+                    <div class="recipient-selector">
+                        <h3>👥 Select Recipients</h3>
+                    <div class="selector-row">
+                        <div class="selector-group">
+                            <label for="singleJobRecipientType">Recipient Type</label>
+                            <select id="singleJobRecipientType" onchange="loadSingleJobRecipients()">
+                                <option value="">-- Select Type --</option>
+                                <option value="segment">Segment (Dynamic)</option>
+                                <option value="list">List (Static)</option>
+                            </select>
+                        </div>
+                        <div class="selector-group">
+                            <label for="singleJobRecipientSelector">Select Segment/List</label>
+                            <select id="singleJobRecipientSelector" disabled onchange="previewSingleJobRecipients()">
+                                <option value="">-- Choose a segment or list --</option>
+                            </select>
+                        </div>
+                    </div>
+                <div id="singleJobRecipientPreview" style="display: none;" class="recipient-preview">
+                    <h4>📊 Preview</h4>
+                    <p><strong>Name:</strong> <span id="singleJobPreviewName">-</span></p>
+                    <p><strong>Contacts:</strong> <span id="singleJobPreviewCount" class="count">0</span></p>
+                    <p><strong>Last Updated:</strong> <span id="singleJobPreviewUpdated">-</span></p>
                 </div>
-                
-                <h3 style="margin: 30px 0 15px 0; color: #1b334d; font-size: 18px;">Send Single Job Alert</h3>
-                <select id="jobSelector">
-                    <option value="">Loading jobs...</option>
-                </select>
-                
-                <div class="button-group" style="margin-top: 15px;">
-                    <button class="btn btn-preview" onclick="previewSingleJob()" id="btnPreviewJob" disabled>
-                        Preview
-                    </button>
-                    <button class="btn btn-primary" onclick="sendSingleJobAlert()" id="btnSingleJob">
-                        Send Job Alert
-                    </button>
+                <button id="btnConfirmSingleJobRecipient" class="btn-confirm" onclick="confirmSingleJobRecipient()" disabled>
+                    🔒 Confirm Selection
+                </button>
+                <div id="singleJobRecipientLocked" style="display: none;" class="recipient-locked">
+                    <p><span class="lock-icon">🔒</span><strong>Locked:</strong> <span id="lockedSingleJobRecipientName">-</span> (<span id="lockedSingleJobRecipientCount">0</span> contacts)</p>
                 </div>
+            </div>
                 
-                <div class="result-box" id="resultBox"></div>
+                    <select id="jobSelector">
+                        <option value="">Loading jobs...</option>
+                    </select>
+                    
+                    <div class="button-group" style="margin-top: 15px;">
+                        <button class="btn btn-preview" onclick="previewSingleJob()" id="btnPreviewJob" disabled>
+                            Preview
+                        </button>
+                        <button class="btn btn-primary" onclick="sendSingleJobAlert()" id="btnSingleJob">
+                            Send Job Alert
+                        </button>
+                    </div>
+                    
+                    <div class="result-box" id="resultBox"></div>
             </div>
         </div>
         
@@ -1217,9 +1339,12 @@
 
             <div id="alistMessageBox" class="message"></div>
 
-            <!-- Recipient Selector -->
-            <div class="recipient-selector">
-                <h3>📧 Select Recipients</h3>
+            <div class="actions-card">
+                <h2>🌟 A-List Candidate Email</h2>
+                
+                <!-- Recipient Selector -->
+                <div class="recipient-selector">
+                    <h3>👥 Select Recipients</h3>
                 <div class="selector-row">
                     <div class="selector-group">
                         <label for="recipientType">Recipient Type</label>
@@ -1242,16 +1367,17 @@
                     <p><strong>Contacts:</strong> <span id="previewCount" class="count">0</span></p>
                     <p><strong>Last Updated:</strong> <span id="previewUpdated">-</span></p>
                 </div>
-            </div>
-
-            <div class="actions-card">
-                <h2>A-List Actions</h2>
+                <button id="btnConfirmRecipient" class="btn-confirm" onclick="confirmRecipient()" disabled>
+                    🔒 Confirm Selection
+                </button>
+                    <div id="recipientLocked" style="display: none;" class="recipient-locked">
+                        <p><span class="lock-icon">🔒</span><strong>Locked:</strong> <span id="lockedRecipientName">-</span> (<span id="lockedRecipientCount">0</span> contacts)</p>
+                    </div>
+                </div>
+                
                 <div class="button-group">
                     <button class="btn btn-purple" id="btnGenerate">
                         Generate A-List
-                    </button>
-                    <button class="btn btn-info" id="btnRegenerate" disabled>
-                        Regenerate
                     </button>
                     <button class="btn btn-preview" id="btnPreviewAlist" disabled>
                         Preview
@@ -1259,9 +1385,15 @@
                     <button class="btn btn-warning" id="btnSendTest" disabled>
                         Send Test
                     </button>
-                    <button class="btn btn-success" id="btnApproveAndSend" disabled>
-                        Approve & Send
+                    <button class="btn btn-info" id="btnScheduleAList" disabled>
+                        📅 Approve & Schedule
                     </button>
+                    <button class="btn btn-success" id="btnSendNowAList" disabled>
+                        🚀 Send Now
+                    </button>
+                </div>
+                <div style="margin-top: 10px; font-size: 13px; color: #7f8c8d; text-align: center;">
+                    <em>Scheduled send: Next Friday at 9:00 AM Melbourne time</em>
                 </div>
                 
                 <div class="loading-indicator" id="alistLoading">
@@ -1303,13 +1435,44 @@
             </div>
 
             <div class="actions-card">
-                <h2>Xpose Newsletter</h2>
+                <h2>📰 Xpose Newsletter</h2>
+                
+                <!-- Recipient Selector -->
+                <div class="recipient-selector">
+                    <h3>👥 Select Recipients</h3>
+                <div class="selector-row">
+                    <div class="selector-group">
+                        <label for="xposeRecipientType">Recipient Type</label>
+                        <select id="xposeRecipientType" onchange="loadXposeRecipients()">
+                            <option value="">-- Select Type --</option>
+                            <option value="segment">Segment (Dynamic)</option>
+                            <option value="list">List (Static)</option>
+                        </select>
+                    </div>
+                    <div class="selector-group">
+                        <label for="xposeRecipientSelector">Select Segment/List</label>
+                        <select id="xposeRecipientSelector" disabled onchange="previewXposeRecipients()">
+                            <option value="">-- Choose a segment or list --</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="xposeRecipientPreview" style="display: none;" class="recipient-preview">
+                    <h4>📊 Preview</h4>
+                    <p><strong>Name:</strong> <span id="xposePreviewName">-</span></p>
+                    <p><strong>Contacts:</strong> <span id="xposePreviewCount" class="count">0</span></p>
+                    <p><strong>Last Updated:</strong> <span id="xposePreviewUpdated">-</span></p>
+                </div>
+                <button id="btnConfirmXposeRecipient" class="btn-confirm" onclick="confirmXposeRecipient()" disabled>
+                    🔒 Confirm Selection
+                </button>
+                    <div id="xposeRecipientLocked" style="display: none;" class="recipient-locked">
+                        <p><span class="lock-icon">🔒</span><strong>Locked:</strong> <span id="lockedXposeRecipientName">-</span> (<span id="lockedXposeRecipientCount">0</span> contacts)</p>
+                    </div>
+                </div>
+                
                 <div class="button-group">
                     <button class="btn btn-info" id="btnGenerateXpose">
                         Generate Newsletter
-                    </button>
-                    <button class="btn btn-info" id="btnRegenerateXpose" disabled>
-                        Regenerate
                     </button>
                     <button class="btn btn-preview" id="btnPreviewXpose" disabled>
                         Preview
@@ -1317,14 +1480,54 @@
                     <button class="btn btn-warning" id="btnSendTestXpose" disabled>
                         Send Test
                     </button>
-                    <button class="btn btn-success" id="btnApproveAndSendXpose" disabled>
-                        Approve & Send
+                    <button class="btn btn-info" id="btnScheduleXpose" disabled>
+                        📅 Approve & Schedule
                     </button>
+                    <button class="btn btn-success" id="btnSendNowXpose" disabled>
+                        🚀 Send Now
+                    </button>
+                </div>
+                <div style="margin-top: 10px; font-size: 13px; color: #7f8c8d; text-align: center;">
+                    <em>Scheduled send: Next Thursday at 10:00 AM Melbourne time</em>
                 </div>
             </div>
 
             <div class="actions-card">
-                <h2>Send Single Article</h2>
+                <h2>📄 Single Article</h2>
+                
+                <!-- Recipient Selector -->
+                <div class="recipient-selector">
+                    <h3>👥 Select Recipients</h3>
+                <div class="selector-row">
+                    <div class="selector-group">
+                        <label for="articleRecipientType">Recipient Type</label>
+                        <select id="articleRecipientType" onchange="loadArticleRecipients()">
+                            <option value="">-- Select Type --</option>
+                            <option value="segment">Segment (Dynamic)</option>
+                            <option value="list">List (Static)</option>
+                        </select>
+                    </div>
+                    <div class="selector-group">
+                        <label for="articleRecipientSelector">Select Segment/List</label>
+                        <select id="articleRecipientSelector" disabled onchange="previewArticleRecipients()">
+                            <option value="">-- Choose a segment or list --</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="articleRecipientPreview" style="display: none;" class="recipient-preview">
+                    <h4>📊 Preview</h4>
+                    <p><strong>Name:</strong> <span id="articlePreviewName">-</span></p>
+                    <p><strong>Contacts:</strong> <span id="articlePreviewCount" class="count">0</span></p>
+                    <p><strong>Last Updated:</strong> <span id="articlePreviewUpdated">-</span></p>
+                </div>
+                <button id="btnConfirmArticleRecipient" class="btn-confirm" onclick="confirmArticleRecipient()" disabled>
+                    🔒 Confirm Selection
+                </button>
+                    <div id="articleRecipientLocked" style="display: none;" class="recipient-locked">
+                        <p><span class="lock-icon">🔒</span><strong>Locked:</strong> <span id="lockedArticleRecipientName">-</span> (<span id="lockedArticleRecipientCount">0</span> contacts)</p>
+                    </div>
+                </div>
+                
                 <select id="articleSelector">
                     <option value="">Loading articles...</option>
                 </select>
@@ -1342,7 +1545,6 @@
                 </div>
             </div>
         </div>
-            </div>
             <!-- End Control Panel -->
             
             <!-- Preview Panel (Right Side) -->
@@ -1426,10 +1628,37 @@
             }
         }
         
+        async function checkOpenAIStatus() {
+            const statusEl = document.getElementById('openaiStatus');
+            const labelEl = document.getElementById('openaiStatusLabel');
+            
+            try {
+                const response = await fetch('/api/openai/status');
+                const data = await response.json();
+                
+                if (data.status === 'connected') {
+                    statusEl.textContent = '✅ Connected';
+                    statusEl.style.color = '#27ae60';
+                    labelEl.textContent = 'API Ready';
+                } else {
+                    statusEl.textContent = '❌ Disconnected';
+                    statusEl.style.color = '#e74c3c';
+                    labelEl.textContent = data.message || 'API Error';
+                }
+            } catch (error) {
+                statusEl.textContent = '⚠️ Unknown';
+                statusEl.style.color = '#f39c12';
+                labelEl.textContent = 'Check Failed';
+            }
+        }
+        
         async function refreshStatus() {
             try {
                 const response = await fetch('/');
                 const data = await response.json();
+                
+                // Check OpenAI status
+                checkOpenAIStatus();
                 
                 // Update mode
                 const testMode = data.test_mode;
@@ -1563,6 +1792,26 @@
         // ========== JOB ALERTS FUNCTIONS ==========
         
         async function triggerDailyRoundup() {
+            // Validate confirmed recipient selection
+            if (!confirmedRecipients.daily) {
+                showResult('Please confirm your recipient selection before sending', 'error');
+                return;
+            }
+            
+            const recipientType = confirmedRecipients.daily.type;
+            const recipientId = confirmedRecipients.daily.id;
+            const recipientName = confirmedRecipients.daily.name;
+            const recipientCount = confirmedRecipients.daily.count;
+            
+            // Show confirmation popup
+            showConfirmation('Daily Job Roundup', recipientName, recipientCount, async (confirmed) => {
+                if (!confirmed) return;
+                
+                await executeDailyRoundup(recipientType, recipientId);
+            });
+        }
+        
+        async function executeDailyRoundup(recipientType, recipientId) {
             const btn = document.getElementById('btnDailyRoundup');
             const originalText = btn.innerHTML;
             
@@ -1571,7 +1820,14 @@
             
             try {
                 const response = await fetch('/trigger/daily-roundup', {
-                    method: 'POST'
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        recipientType,
+                        recipientId
+                    })
                 });
                 
                 const data = await response.json();
@@ -1641,6 +1897,26 @@
                 return;
             }
             
+            // Validate confirmed recipient selection
+            if (!confirmedRecipients.singleJob) {
+                showResult('Please confirm your recipient selection before sending', 'error');
+                return;
+            }
+            
+            const recipientType = confirmedRecipients.singleJob.type;
+            const recipientId = confirmedRecipients.singleJob.id;
+            const recipientName = confirmedRecipients.singleJob.name;
+            const recipientCount = confirmedRecipients.singleJob.count;
+            
+            // Show confirmation popup
+            showConfirmation('Single Job Alert', recipientName, recipientCount, async (confirmed) => {
+                if (!confirmed) return;
+                
+                await executeSingleJobAlert(adId, recipientType, recipientId);
+            });
+        }
+        
+        async function executeSingleJobAlert(adId, recipientType, recipientId) {
             const btn = document.getElementById('btnSingleJob');
             const originalText = btn.innerHTML;
             
@@ -1649,7 +1925,14 @@
             
             try {
                 const response = await fetch(`/trigger/single-job/${adId}`, {
-                    method: 'POST'
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        recipientType,
+                        recipientId
+                    })
                 });
                 
                 const data = await response.json();
@@ -1733,9 +2016,9 @@
         
         // Button event listeners for A-List
         document.getElementById('btnGenerate').addEventListener('click', generateAList);
-        document.getElementById('btnRegenerate').addEventListener('click', generateAList);
         document.getElementById('btnSendTest').addEventListener('click', sendAListTest);
-        document.getElementById('btnApproveAndSend').addEventListener('click', approveAndSendAList);
+        document.getElementById('btnScheduleAList').addEventListener('click', scheduleAList);
+        document.getElementById('btnSendNowAList').addEventListener('click', sendNowAList);
 
         async function loadAListState() {
             try {
@@ -1779,18 +2062,19 @@
             
             // Update button states
             const btnGenerate = document.getElementById('btnGenerate');
-            const btnRegenerate = document.getElementById('btnRegenerate');
             const btnSendTest = document.getElementById('btnSendTest');
-            const btnApprove = document.getElementById('btnApproveAndSend');
+            const btnSchedule = document.getElementById('btnScheduleAList');
+            const btnSendNow = document.getElementById('btnSendNowAList');
             
             // Update button states based on state string (uppercase)
             const stateUpper = state.state ? state.state.toUpperCase() : 'EMPTY';
             
             btnGenerate.disabled = false;
-            btnRegenerate.disabled = !(stateUpper === 'GENERATED' || stateUpper === 'TESTED');
+            // Regenerate button removed - Generate button allows regeneration
             document.getElementById('btnPreviewAlist').disabled = !(stateUpper === 'GENERATED' || stateUpper === 'TESTED');
             btnSendTest.disabled = !(stateUpper === 'GENERATED' || stateUpper === 'TESTED');
-            btnApprove.disabled = stateUpper !== 'TESTED';
+            btnSchedule.disabled = stateUpper !== 'TESTED';
+            btnSendNow.disabled = stateUpper !== 'TESTED';
             
             // Update candidates preview
             if (state.candidates && state.candidates.length > 0) {
@@ -1872,20 +2156,65 @@
             }
         }
 
-        async function approveAndSendAList() {
-            // Validate recipient selection
-            const recipientType = document.getElementById('recipientType').value;
-            const recipientId = document.getElementById('recipientSelector').value;
-            
-            if (!recipientType || !recipientId) {
-                showMessage('Please select a recipient segment or list before sending', 'error');
+        async function scheduleAList() {
+            // Validate confirmed recipient selection
+            if (!confirmedRecipients.alist) {
+                showMessage('Please confirm your recipient selection before scheduling', 'error');
                 return;
             }
             
-            if (!confirm('Are you sure you want to send the A-List? In test mode, it will only send to the test email.')) {
+            const recipientType = confirmedRecipients.alist.type;
+            const recipientId = confirmedRecipients.alist.id;
+            const recipientName = confirmedRecipients.alist.name;
+            const recipientCount = confirmedRecipients.alist.count;
+            
+            const btn = document.getElementById('btnScheduleAList');
+            btn.disabled = true;
+            btn.innerHTML = 'Scheduling... <span class="spinner"></span>';
+            
+            try {
+                const response = await fetch('/api/alist/schedule', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ recipientType, recipientId })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(`✅ A-List scheduled for ${result.scheduledFor}`, 'success');
+                } else {
+                    showMessage(`❌ Scheduling failed: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Error: ${error.message}`, 'error');
+            }
+            
+            btn.disabled = false;
+            btn.innerHTML = '📅 Approve & Schedule';
+        }
+        
+        async function sendNowAList() {
+            // Validate confirmed recipient selection
+            if (!confirmedRecipients.alist) {
+                showMessage('Please confirm your recipient selection before sending', 'error');
                 return;
             }
             
+            const recipientType = confirmedRecipients.alist.type;
+            const recipientId = confirmedRecipients.alist.id;
+            const recipientName = confirmedRecipients.alist.name;
+            const recipientCount = confirmedRecipients.alist.count;
+            
+            // Show confirmation popup
+            showConfirmation('A-List Candidate Email', recipientName, recipientCount, async (confirmed) => {
+                if (!confirmed) return;
+                
+                await executeAListSend(recipientType, recipientId);
+            });
+        }
+        
+        async function executeAListSend(recipientType, recipientId) {
             showLoading('Sending A-List...');
             
             try {
@@ -2000,10 +2329,11 @@
             const isGenerated = xposeState.state === 'GENERATED';
             const isTested = xposeState.state === 'TESTED';
 
-            document.getElementById('btnRegenerateXpose').disabled = !isGenerated && !isTested;
+            // Regenerate button removed - Generate button allows regeneration
             document.getElementById('btnPreviewXpose').disabled = !isGenerated && !isTested;
             document.getElementById('btnSendTestXpose').disabled = !isGenerated && !isTested;
-            document.getElementById('btnApproveAndSendXpose').disabled = !isTested;
+            document.getElementById('btnScheduleXpose').disabled = !isTested;
+            document.getElementById('btnSendNowXpose').disabled = !isTested;
         }
 
         async function generateXpose() {
@@ -2066,17 +2396,83 @@
             updateXposeUI();
         }
 
-        async function sendAllXpose() {
-            if (!confirm('Send newsletter to all contacts?')) return;
+        async function scheduleXpose() {
+            // Validate confirmed recipient selection
+            if (!confirmedRecipients.xpose) {
+                showToast('Please confirm your recipient selection before scheduling', 'error');
+                return;
+            }
             
-            const btn = document.getElementById('btnApproveAndSendXpose');
+            const recipientType = confirmedRecipients.xpose.type;
+            const recipientId = confirmedRecipients.xpose.id;
+            const recipientName = confirmedRecipients.xpose.name;
+            const recipientCount = confirmedRecipients.xpose.count;
+            
+            const btn = document.getElementById('btnScheduleXpose');
+            btn.disabled = true;
+            btn.innerHTML = 'Scheduling... <span class="spinner"></span>';
+            
+            try {
+                const response = await fetch('/api/xpose/schedule', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ recipientType, recipientId })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast(`✅ Xpose scheduled for ${result.scheduledFor}`, 'success');
+                } else {
+                    showToast(`❌ Scheduling failed: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showToast(`❌ Error: ${error.message}`, 'error');
+            }
+            
+            btn.disabled = false;
+            btn.innerHTML = '📅 Approve & Schedule';
+            updateXposeUI();
+        }
+        
+        async function sendNowXpose() {
+            // Validate confirmed recipient selection
+            if (!confirmedRecipients.xpose) {
+                showToast('Please confirm your recipient selection before sending', 'error');
+                return;
+            }
+            
+            const recipientType = confirmedRecipients.xpose.type;
+            const recipientId = confirmedRecipients.xpose.id;
+            const recipientName = confirmedRecipients.xpose.name;
+            const recipientCount = confirmedRecipients.xpose.count;
+            
+            // Show confirmation popup
+            showConfirmation('Xpose Newsletter', recipientName, recipientCount, async (confirmed) => {
+                if (!confirmed) return;
+                
+                await executeXposeSend(recipientType, recipientId);
+            });
+        }
+        
+        async function executeXposeSend(recipientType, recipientId) {
+            const btn = document.getElementById('btnSendNowXpose');
             btn.disabled = true;
             btn.innerHTML = 'Sending... <span class="spinner"></span>';
             
             const loadingToast = showToast('Sending to all contacts...', 'loading');
             
             try {
-                const response = await fetch('/api/xpose/send', { method: 'POST' });
+                const response = await fetch('/api/xpose/send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        recipientType,
+                        recipientId
+                    })
+                });
                 const result = await response.json();
                 
                 loadingToast.remove();
@@ -2094,7 +2490,7 @@
             }
             
             btn.disabled = false;
-            btn.textContent = 'Approve & Send';
+            btn.textContent = '🚀 Send Now';
             updateXposeUI();
         }
 
@@ -2164,9 +2560,27 @@
                 showToast('❌ Please select an article', 'error');
                 return;
             }
+            
+            // Validate confirmed recipient selection
+            if (!confirmedRecipients.article) {
+                showToast('Please confirm your recipient selection before sending', 'error');
+                return;
+            }
+            
+            const recipientType = confirmedRecipients.article.type;
+            const recipientId = confirmedRecipients.article.id;
+            const recipientName = confirmedRecipients.article.name;
+            const recipientCount = confirmedRecipients.article.count;
 
-            if (!confirm('Send this article to all contacts?')) return;
-
+            // Show confirmation popup
+            showConfirmation('Single Article', recipientName, recipientCount, async (confirmed) => {
+                if (!confirmed) return;
+                
+                await executeSingleArticleSend(articleId, recipientType, recipientId);
+            });
+        }
+        
+        async function executeSingleArticleSend(articleId, recipientType, recipientId) {
             const btn = document.getElementById('btnSingleArticle');
             btn.disabled = true;
             btn.innerHTML = 'Sending... <span class="spinner"></span>';
@@ -2174,7 +2588,16 @@
             const loadingToast = showToast('Sending article to all contacts...', 'loading');
             
             try {
-                const response = await fetch(`/api/xpose/send-article/${articleId}`, { method: 'POST' });
+                const response = await fetch(`/api/xpose/send-article/${articleId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        recipientType,
+                        recipientId
+                    })
+                });
                 const result = await response.json();
                 
                 loadingToast.remove();
@@ -2192,6 +2615,43 @@
             
             btn.disabled = false;
             btn.textContent = 'Send Article to All';
+        }
+
+        // ========== CONFIRMATION POPUP SYSTEM ==========
+        function showConfirmation(emailType, recipientName, recipientCount, callback) {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-AU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const timeStr = now.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', timeZone: 'Australia/Melbourne' });
+            
+            const message = `Confirm you are sending ${emailType} to ${recipientName} (${recipientCount} contacts) on ${dateStr} at ${timeStr} Melbourne time.`;
+            
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+            
+            const box = document.createElement('div');
+            box.style.cssText = 'background: white; padding: 30px; border-radius: 12px; max-width: 500px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);';
+            
+            box.innerHTML = `
+                <h3 style="margin: 0 0 20px 0; color: #1b334d; font-size: 20px;">⚠️ Confirm Send</h3>
+                <p style="margin: 0 0 25px 0; color: #333; line-height: 1.6;">${message}</p>
+                <div style="display: flex; gap: 15px; justify-content: flex-end;">
+                    <button id="cancelBtn" style="padding: 10px 20px; border: 2px solid #e74c3c; background: white; color: #e74c3c; border-radius: 6px; cursor: pointer; font-weight: 600;">❌ Cancel</button>
+                    <button id="confirmBtn" style="padding: 10px 20px; border: none; background: #27ae60; color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">✅ Confirm</button>
+                </div>
+            `;
+            
+            modal.appendChild(box);
+            document.body.appendChild(modal);
+            
+            document.getElementById('confirmBtn').onclick = () => {
+                document.body.removeChild(modal);
+                callback(true);
+            };
+            
+            document.getElementById('cancelBtn').onclick = () => {
+                document.body.removeChild(modal);
+                callback(false);
+            };
         }
 
         // ========== TOAST NOTIFICATION SYSTEM ==========
@@ -2422,8 +2882,282 @@
 
         // ========== RECIPIENT SELECTOR FUNCTIONS ==========
         
-        // Load segments or lists based on type selection
+        // Generic function to load recipients into a selector
+        async function loadRecipientsGeneric(typeElementId, selectorElementId, previewElementId) {
+            const typeSelector = document.getElementById(typeElementId);
+            const recipientSelector = document.getElementById(selectorElementId);
+            const preview = document.getElementById(previewElementId);
+            
+            const type = typeSelector.value;
+            
+            if (!type) {
+                recipientSelector.disabled = true;
+                recipientSelector.innerHTML = '<option value="">-- Choose a segment or list --</option>';
+                preview.style.display = 'none';
+                return;
+            }
+            
+            recipientSelector.disabled = false;
+            recipientSelector.innerHTML = '<option value="">Loading...</option>';
+            preview.style.display = 'none';
+            
+            try {
+                const endpoint = type === 'segment' ? '/api/brevo/segments' : '/api/brevo/lists';
+                const response = await fetch(endpoint);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const items = type === 'segment' ? data.segments : data.lists;
+                    
+                    recipientSelector.innerHTML = '<option value="">-- Choose a ' + type + ' --</option>';
+                    items.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.id;
+                        
+                        const itemName = type === 'segment' ? item.segmentName : item.name;
+                        option.setAttribute('data-name', itemName);
+                        
+                        const contactCount = item.uniqueSubscribers || item.totalSubscribers || 0;
+                        option.setAttribute('data-count', contactCount);
+                        
+                        const updatedDate = type === 'segment' ? item.updatedAt : (item.modifiedAt || item.createdAt);
+                        option.setAttribute('data-updated', updatedDate || '-');
+                        
+                        if (type === 'segment') {
+                            option.textContent = `${itemName} (Dynamic)`;
+                        } else {
+                            option.textContent = `${itemName} (${contactCount} contacts)`;
+                        }
+                        
+                        recipientSelector.appendChild(option);
+                    });
+                } else {
+                    recipientSelector.innerHTML = '<option value="">Error loading ' + type + 's</option>';
+                }
+            } catch (error) {
+                recipientSelector.innerHTML = '<option value="">Error loading ' + type + 's</option>';
+                console.error('Error loading recipients:', error);
+            }
+        }
+        
+        // Generic function to preview selected recipient
+        function previewRecipientsGeneric(selectorElementId, previewElementId, nameElementId, countElementId, updatedElementId) {
+            const recipientSelector = document.getElementById(selectorElementId);
+            const preview = document.getElementById(previewElementId);
+            const selectedOption = recipientSelector.options[recipientSelector.selectedIndex];
+            
+            if (!recipientSelector.value || recipientSelector.selectedIndex === 0) {
+                preview.style.display = 'none';
+                return;
+            }
+            
+            const name = selectedOption.getAttribute('data-name');
+            const count = selectedOption.getAttribute('data-count');
+            const updated = selectedOption.getAttribute('data-updated');
+            
+            document.getElementById(nameElementId).textContent = name;
+            document.getElementById(countElementId).textContent = count;
+            document.getElementById(updatedElementId).textContent = updated ? new Date(updated).toLocaleDateString() : '-';
+            
+            preview.style.display = 'block';
+        }
+        
+        // A-List recipient functions
         async function loadRecipients() {
+            await loadRecipientsGeneric('recipientType', 'recipientSelector', 'recipientPreview');
+        }
+        
+        function previewRecipients() {
+            previewRecipientsGeneric('recipientSelector', 'recipientPreview', 'previewName', 'previewCount', 'previewUpdated');
+            // Enable confirm button when preview is shown
+            const recipientSelector = document.getElementById('recipientSelector');
+            const confirmBtn = document.getElementById('btnConfirmRecipient');
+            confirmBtn.disabled = !recipientSelector.value;
+        }
+        
+        // Daily Job Alerts recipient functions
+        async function loadDailyRecipients() {
+            await loadRecipientsGeneric('dailyRecipientType', 'dailyRecipientSelector', 'dailyRecipientPreview');
+        }
+        
+        function previewDailyRecipients() {
+            previewRecipientsGeneric('dailyRecipientSelector', 'dailyRecipientPreview', 'dailyPreviewName', 'dailyPreviewCount', 'dailyPreviewUpdated');
+            const recipientSelector = document.getElementById('dailyRecipientSelector');
+            const confirmBtn = document.getElementById('btnConfirmDailyRecipient');
+            confirmBtn.disabled = !recipientSelector.value;
+        }
+        
+        // Single Job Alert recipient functions
+        async function loadSingleJobRecipients() {
+            await loadRecipientsGeneric('singleJobRecipientType', 'singleJobRecipientSelector', 'singleJobRecipientPreview');
+        }
+        
+        function previewSingleJobRecipients() {
+            previewRecipientsGeneric('singleJobRecipientSelector', 'singleJobRecipientPreview', 'singleJobPreviewName', 'singleJobPreviewCount', 'singleJobPreviewUpdated');
+            const recipientSelector = document.getElementById('singleJobRecipientSelector');
+            const confirmBtn = document.getElementById('btnConfirmSingleJobRecipient');
+            confirmBtn.disabled = !recipientSelector.value;
+        }
+        
+        // Xpose Newsletter recipient functions
+        async function loadXposeRecipients() {
+            await loadRecipientsGeneric('xposeRecipientType', 'xposeRecipientSelector', 'xposeRecipientPreview');
+        }
+        
+        function previewXposeRecipients() {
+            previewRecipientsGeneric('xposeRecipientSelector', 'xposeRecipientPreview', 'xposePreviewName', 'xposePreviewCount', 'xposePreviewUpdated');
+            const recipientSelector = document.getElementById('xposeRecipientSelector');
+            const confirmBtn = document.getElementById('btnConfirmXposeRecipient');
+            confirmBtn.disabled = !recipientSelector.value;
+        }
+        
+        // Single Article recipient functions
+        async function loadArticleRecipients() {
+            await loadRecipientsGeneric('articleRecipientType', 'articleRecipientSelector', 'articleRecipientPreview');
+        }
+        
+        function previewArticleRecipients() {
+            previewRecipientsGeneric('articleRecipientSelector', 'articleRecipientPreview', 'articlePreviewName', 'articlePreviewCount', 'articlePreviewUpdated');
+            const recipientSelector = document.getElementById('articleRecipientSelector');
+            const confirmBtn = document.getElementById('btnConfirmArticleRecipient');
+            confirmBtn.disabled = !recipientSelector.value;
+        }
+        
+        // ========== CONFIRMATION FUNCTIONS ==========
+        
+        // Global state to track confirmed selections
+        let confirmedRecipients = {
+            alist: null,
+            daily: null,
+            singleJob: null,
+            xpose: null,
+            article: null
+        };
+        
+        // A-List confirmation
+        function confirmRecipient() {
+            const typeSelector = document.getElementById('recipientType');
+            const recipientSelector = document.getElementById('recipientSelector');
+            const selectedOption = recipientSelector.options[recipientSelector.selectedIndex];
+            
+            confirmedRecipients.alist = {
+                type: typeSelector.value,
+                id: recipientSelector.value,
+                name: selectedOption.getAttribute('data-name'),
+                count: selectedOption.getAttribute('data-count')
+            };
+            
+            // Update UI
+            document.getElementById('lockedRecipientName').textContent = confirmedRecipients.alist.name;
+            document.getElementById('lockedRecipientCount').textContent = confirmedRecipients.alist.count;
+            document.getElementById('recipientLocked').style.display = 'block';
+            document.getElementById('recipientPreview').style.display = 'none';
+            document.getElementById('btnConfirmRecipient').classList.add('confirmed');
+            document.getElementById('btnConfirmRecipient').textContent = '✅ Confirmed';
+            
+            // Disable selectors
+            typeSelector.disabled = true;
+            recipientSelector.disabled = true;
+        }
+        
+        // Daily Job Alerts confirmation
+        function confirmDailyRecipient() {
+            const typeSelector = document.getElementById('dailyRecipientType');
+            const recipientSelector = document.getElementById('dailyRecipientSelector');
+            const selectedOption = recipientSelector.options[recipientSelector.selectedIndex];
+            
+            confirmedRecipients.daily = {
+                type: typeSelector.value,
+                id: recipientSelector.value,
+                name: selectedOption.getAttribute('data-name'),
+                count: selectedOption.getAttribute('data-count')
+            };
+            
+            document.getElementById('lockedDailyRecipientName').textContent = confirmedRecipients.daily.name;
+            document.getElementById('lockedDailyRecipientCount').textContent = confirmedRecipients.daily.count;
+            document.getElementById('dailyRecipientLocked').style.display = 'block';
+            document.getElementById('dailyRecipientPreview').style.display = 'none';
+            document.getElementById('btnConfirmDailyRecipient').classList.add('confirmed');
+            document.getElementById('btnConfirmDailyRecipient').textContent = '✅ Confirmed';
+            
+            typeSelector.disabled = true;
+            recipientSelector.disabled = true;
+        }
+        
+        // Single Job Alert confirmation
+        function confirmSingleJobRecipient() {
+            const typeSelector = document.getElementById('singleJobRecipientType');
+            const recipientSelector = document.getElementById('singleJobRecipientSelector');
+            const selectedOption = recipientSelector.options[recipientSelector.selectedIndex];
+            
+            confirmedRecipients.singleJob = {
+                type: typeSelector.value,
+                id: recipientSelector.value,
+                name: selectedOption.getAttribute('data-name'),
+                count: selectedOption.getAttribute('data-count')
+            };
+            
+            document.getElementById('lockedSingleJobRecipientName').textContent = confirmedRecipients.singleJob.name;
+            document.getElementById('lockedSingleJobRecipientCount').textContent = confirmedRecipients.singleJob.count;
+            document.getElementById('singleJobRecipientLocked').style.display = 'block';
+            document.getElementById('singleJobRecipientPreview').style.display = 'none';
+            document.getElementById('btnConfirmSingleJobRecipient').classList.add('confirmed');
+            document.getElementById('btnConfirmSingleJobRecipient').textContent = '✅ Confirmed';
+            
+            typeSelector.disabled = true;
+            recipientSelector.disabled = true;
+        }
+        
+        // Xpose Newsletter confirmation
+        function confirmXposeRecipient() {
+            const typeSelector = document.getElementById('xposeRecipientType');
+            const recipientSelector = document.getElementById('xposeRecipientSelector');
+            const selectedOption = recipientSelector.options[recipientSelector.selectedIndex];
+            
+            confirmedRecipients.xpose = {
+                type: typeSelector.value,
+                id: recipientSelector.value,
+                name: selectedOption.getAttribute('data-name'),
+                count: selectedOption.getAttribute('data-count')
+            };
+            
+            document.getElementById('lockedXposeRecipientName').textContent = confirmedRecipients.xpose.name;
+            document.getElementById('lockedXposeRecipientCount').textContent = confirmedRecipients.xpose.count;
+            document.getElementById('xposeRecipientLocked').style.display = 'block';
+            document.getElementById('xposeRecipientPreview').style.display = 'none';
+            document.getElementById('btnConfirmXposeRecipient').classList.add('confirmed');
+            document.getElementById('btnConfirmXposeRecipient').textContent = '✅ Confirmed';
+            
+            typeSelector.disabled = true;
+            recipientSelector.disabled = true;
+        }
+        
+        // Single Article confirmation
+        function confirmArticleRecipient() {
+            const typeSelector = document.getElementById('articleRecipientType');
+            const recipientSelector = document.getElementById('articleRecipientSelector');
+            const selectedOption = recipientSelector.options[recipientSelector.selectedIndex];
+            
+            confirmedRecipients.article = {
+                type: typeSelector.value,
+                id: recipientSelector.value,
+                name: selectedOption.getAttribute('data-name'),
+                count: selectedOption.getAttribute('data-count')
+            };
+            
+            document.getElementById('lockedArticleRecipientName').textContent = confirmedRecipients.article.name;
+            document.getElementById('lockedArticleRecipientCount').textContent = confirmedRecipients.article.count;
+            document.getElementById('articleRecipientLocked').style.display = 'block';
+            document.getElementById('articleRecipientPreview').style.display = 'none';
+            document.getElementById('btnConfirmArticleRecipient').classList.add('confirmed');
+            document.getElementById('btnConfirmArticleRecipient').textContent = '✅ Confirmed';
+            
+            typeSelector.disabled = true;
+            recipientSelector.disabled = true;
+        }
+        
+        // OLD A-LIST FUNCTION - TO BE REMOVED
+        async function OLD_loadRecipients() {
             const typeSelector = document.getElementById('recipientType');
             const recipientSelector = document.getElementById('recipientSelector');
             const preview = document.getElementById('recipientPreview');
@@ -2509,10 +3243,10 @@
         // Event listeners
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('btnGenerateXpose')?.addEventListener('click', generateXpose);
-            document.getElementById('btnRegenerateXpose')?.addEventListener('click', generateXpose);
             document.getElementById('btnPreviewXpose')?.addEventListener('click', previewXposeNewsletter);
             document.getElementById('btnSendTestXpose')?.addEventListener('click', sendTestXpose);
-            document.getElementById('btnApproveAndSendXpose')?.addEventListener('click', sendAllXpose);
+            document.getElementById('btnScheduleXpose')?.addEventListener('click', scheduleXpose);
+            document.getElementById('btnSendNowXpose')?.addEventListener('click', sendNowXpose);
             
             // A-List event listener
             document.getElementById('btnPreviewAlist')?.addEventListener('click', previewAlist);
