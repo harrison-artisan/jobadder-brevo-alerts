@@ -452,18 +452,25 @@ class CandidateService {
    * Format candidate for email template
    */
   async formatCandidateForEmail(candidate, position, aiSummary) {
-    const yearsExp = this.calculateYearsOfExperience(candidate);
-    const currentTitle = await this.getCurrentTitle(candidate);
+    // Import aiService to use its title cleaning logic
+    const aiService = require('./aiService');
     
-    const title = currentTitle || 'Creative Professional';
-    const mailtoSubject = `Send me more information about ${title} - Candidate #${candidate.candidateId}`;
+    // Get raw title from JobAdder
+    const rawTitle = candidate.employment?.current?.position || 
+                     candidate.employment?.ideal?.position || 
+                     '';
+    
+    // Clean the title using aiService (removes pipes, company names, etc.)
+    const cleanedTitle = aiService.generalizeJobTitle(rawTitle, candidate.summary || '') || 'Creative Professional';
+    
+    const mailtoSubject = `Send me more information about ${cleanedTitle} - Candidate #${candidate.candidateId}`;
     const mailtoLink = `mailto:reply@artisan.com.au?subject=${encodeURIComponent(mailtoSubject)}`;
     
     return {
       number: position,
       name: `${candidate.firstName} ${candidate.lastName}`,
-      title: title,
-      experience: `${yearsExp} ${yearsExp === 1 ? 'Year' : 'Years'}`,
+      title: cleanedTitle,
+      // experience field removed - no longer displayed in email
       summary: aiSummary,
       profile_url: `https://app.jobadder.com/candidates/${candidate.candidateId}`,
       avatar_url: candidate.links?.photo || null,
