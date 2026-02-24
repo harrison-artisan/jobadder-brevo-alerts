@@ -902,23 +902,6 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* Mobile Responsive for Preview */
-        @media (max-width: 1024px) {
-            .main-layout {
-                grid-template-columns: 1fr;
-            }
-            
-            .preview-panel {
-                position: relative;
-                height: 500px;
-                order: 2;
-            }
-            
-            .control-panel {
-                order: 1;
-            }
-        }
-        
         /* Recipient Selector Styles */
         .recipient-selector {
             background: rgba(255, 255, 255, 0.95);
@@ -991,6 +974,23 @@
             color: #bd203d;
             font-weight: 700;
             font-size: 16px;
+        }
+        
+        /* Mobile Responsive for Preview */
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .preview-panel {
+                position: relative;
+                height: 500px;
+                order: 2;
+            }
+            
+            .control-panel {
+                order: 1;
+            }
         }
     </style>
 </head>
@@ -2420,21 +2420,8 @@
             loadPreview(url);
         }
 
-        // Event listeners
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('btnGenerateXpose')?.addEventListener('click', generateXpose);
-            document.getElementById('btnRegenerateXpose')?.addEventListener('click', generateXpose);
-            document.getElementById('btnPreviewXpose')?.addEventListener('click', previewXposeNewsletter);
-            document.getElementById('btnSendTestXpose')?.addEventListener('click', sendTestXpose);
-            document.getElementById('btnApproveAndSendXpose')?.addEventListener('click', sendAllXpose);
-            
-            // A-List event listener
-            document.getElementById('btnPreviewAlist')?.addEventListener('click', previewAlist);
-        });
-    </script>
-</body>
-</html>
-
+        // ========== RECIPIENT SELECTOR FUNCTIONS ==========
+        
         // Load segments or lists based on type selection
         async function loadRecipients() {
             const typeSelector = document.getElementById('recipientType');
@@ -2502,4 +2489,18 @@
             
             preview.style.display = 'block';
         }
-        
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('btnGenerateXpose')?.addEventListener('click', generateXpose);
+            document.getElementById('btnRegenerateXpose')?.addEventListener('click', generateXpose);
+            document.getElementById('btnPreviewXpose')?.addEventListener('click', previewXposeNewsletter);
+            document.getElementById('btnSendTestXpose')?.addEventListener('click', sendTestXpose);
+            document.getElementById('btnApproveAndSendXpose')?.addEventListener('click', sendAllXpose);
+            
+            // A-List event listener
+            document.getElementById('btnPreviewAlist')?.addEventListener('click', previewAlist);
+        });
+    </script>
+</body>
+</html>
