@@ -145,6 +145,21 @@ app.post('/api/daily-alerts/toggle', (req, res) => {
   }
 });
 
+// OpenAI Status API
+app.get('/api/openai/status', async (req, res) => {
+  try {
+    // Simple check - try to access OpenAI API key
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (apiKey && apiKey.length > 0) {
+      res.json({ status: 'connected', message: 'OpenAI API key configured' });
+    } else {
+      res.json({ status: 'disconnected', message: 'OpenAI API key not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
 // Brevo Segments and Lists API
 const brevoService = require('./services/brevoService');
 
@@ -167,6 +182,16 @@ app.get('/api/brevo/lists', async (req, res) => {
 });
 
 // A-List API endpoints
+app.post('/api/alist/schedule', async (req, res) => {
+  try {
+    const { recipientType, recipientId } = req.body;
+    const result = await candidateAlertsController.scheduleForFriday({ recipientType, recipientId });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 app.get('/api/alist/state', async (req, res) => {
   try {
     const state = candidateAlertsController.getState();
@@ -245,6 +270,16 @@ app.get('/api/xpose/state', async (req, res) => {
     await xposeController.getState(req, res);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/xpose/schedule', async (req, res) => {
+  try {
+    const { recipientType, recipientId } = req.body;
+    const result = await xposeController.scheduleForThursday({ recipientType, recipientId });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
