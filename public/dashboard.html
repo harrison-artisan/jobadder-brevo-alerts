@@ -731,14 +731,14 @@
         /* ========== PREVIEW PANEL & MODAL ========== */
         .main-layout {
             display: grid;
-            grid-template-columns: 7fr 3fr;
-            gap: 20px;
+            grid-template-columns: 1fr 350px;
+            gap: 25px;
+            align-items: start;
         }
-        
-        .preview-panel {
+                .preview-panel {
             position: sticky;
             top: 20px;
-            height: 600px;
+            height: 700px;
             max-height: calc(100vh - 100px);
             background: rgba(255, 255, 255, 0.12);
             backdrop-filter: blur(20px);
@@ -747,6 +747,9 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }    overflow: hidden;
         }
         
         .preview-empty {
@@ -942,18 +945,6 @@
             border-radius: 10px;
             margin-bottom: 20px;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-            display: flex;
-            gap: 20px;
-            align-items: flex-start;
-        }
-        
-        .selector-content {
-            flex: 1;
-        }
-        
-        .selector-preview {
-            width: 300px;
-            flex-shrink: 0;
         }
         
         .recipient-selector h3 {
@@ -1269,7 +1260,6 @@
                     
                     <!-- Recipient Selector -->
                     <div class="recipient-selector">
-                        <div class="selector-content">
                         <h3>Select Recipients</h3>
                     <div class="selector-row">
                         <div class="selector-group">
@@ -1287,22 +1277,19 @@
                             </select>
                         </div>
                     </div>
+                <div id="dailyRecipientPreview" style="display: none;" class="recipient-preview">
+                    <h4>📊 Preview</h4>
+                    <p><strong>Name:</strong> <span id="dailyPreviewName">-</span></p>
+                    <p><strong>Contacts:</strong> <span id="dailyPreviewCount" class="count">0</span></p>
+                    <p><strong>Last Updated:</strong> <span id="dailyPreviewUpdated">-</span></p>
+                </div>
                 <button id="btnConfirmDailyRecipient" class="btn-confirm" onclick="confirmDailyRecipient()" disabled>
                     Confirm Selection
                 </button>
                 <div id="dailyRecipientLocked" style="display: none;" class="recipient-locked">
                     <p><span class="lock-icon">🔒</span><strong>Locked:</strong> <span id="lockedDailyRecipientName">-</span> (<span id="lockedDailyRecipientCount">0</span> contacts)</p>
                 </div>
-                        </div>
-                        <div class="selector-preview">
-                <div id="dailyRecipientPreview" style="display: none;" class="recipient-preview">
-                    <h4>Preview</h4>
-                    <p><strong>Name:</strong> <span id="dailyPreviewName">-</span></p>
-                    <p><strong>Contacts:</strong> <span id="dailyPreviewCount" class="count">0</span></p>
-                    <p><strong>Last Updated:</strong> <span id="dailyPreviewUpdated">-</span></p>
-                </div>
-                        </div>
-                </div>
+            </div>
                 
                     <div class="button-group">
                         <button class="btn btn-primary" onclick="triggerDailyRoundup()" id="btnDailyRoundup">
