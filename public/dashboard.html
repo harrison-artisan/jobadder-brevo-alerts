@@ -294,6 +294,31 @@
             color: white;
         }
         
+        /* Show Count Button */
+        .btn-show-count {
+            padding: 4px 12px;
+            font-size: 11px;
+            margin-left: 15px;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            min-width: auto;
+            white-space: nowrap;
+        }
+        
+        @media (max-width: 768px) {
+            .btn-show-count {
+                margin-left: 0;
+                margin-top: 8px;
+                display: block;
+                width: 100%;
+                padding: 8px 16px;
+                font-size: 12px;
+            }
+        }
+        
         select {
             width: 100%;
             padding: 15px;
@@ -610,7 +635,13 @@
             .mobile-status-toggle.expanded .mobile-status-details {
                 display: grid;
                 grid-template-columns: repeat(2, 1fr);
-                gap: 15px;
+                gap: 12px;
+            }
+            
+            @media (min-width: 400px) {
+                .mobile-status-toggle.expanded .mobile-status-details {
+                    grid-template-columns: repeat(3, 1fr);
+                }
             }
             
             .mobile-status-item {
@@ -1286,7 +1317,7 @@
                 <div id="dailyRecipientPreview" style="display: none;" class="recipient-preview">
                     <h4>📊 Data Selected</h4>
                     <p><strong>Name:</strong> <span id="dailyPreviewName">-</span></p>
-                    <p><strong>Contacts:</strong> <span id="dailyPreviewCount" class="count">0</span> <button id="btnShowDailyCount" class="btn" style="padding: 4px 12px; font-size: 11px; margin-left: 15px; display: none; background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; border: none; border-radius: 6px; cursor: pointer;" onclick="showDailyCount()">Show Count</button></p>
+                    <p><strong>Contacts:</strong> <span id="dailyPreviewCount" class="count">0</span> <button id="btnShowDailyCount" class="btn btn-show-count" style="display: none;" onclick="showDailyCount()">Show Count</button></p>
                     <p><strong>Last Updated:</strong> <span id="dailyPreviewUpdated">-</span></p>
                 </div>
                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -1335,7 +1366,7 @@
                 <div id="singleJobRecipientPreview" style="display: none;" class="recipient-preview">
                     <h4>📊 Data Selected</h4>
                     <p><strong>Name:</strong> <span id="singleJobPreviewName">-</span></p>
-                    <p><strong>Contacts:</strong> <span id="singleJobPreviewCount" class="count">0</span> <button id="btnShowSingleJobCount" class="btn" style="padding: 4px 12px; font-size: 11px; margin-left: 15px; display: none; background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; border: none; border-radius: 6px; cursor: pointer;" onclick="showSingleJobCount()">Show Count</button></p>
+                    <p><strong>Contacts:</strong> <span id="singleJobPreviewCount" class="count">0</span> <button id="btnShowSingleJobCount" class="btn btn-show-count" style="display: none;" onclick="showSingleJobCount()">Show Count</button></p>
                     <p><strong>Last Updated:</strong> <span id="singleJobPreviewUpdated">-</span></p>
                 </div>
                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -1422,7 +1453,7 @@
                 <div id="recipientPreview" style="display: none;" class="recipient-preview">
                     <h4>📊 Data Selected</h4>
                     <p><strong>Name:</strong> <span id="previewName">-</span></p>
-                    <p><strong>Contacts:</strong> <span id="previewCount" class="count">0</span> <button id="btnShowAlistCount" class="btn" style="padding: 4px 12px; font-size: 11px; margin-left: 15px; display: none; background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; border: none; border-radius: 6px; cursor: pointer;" onclick="showAlistCount()">Show Count</button></p>
+                    <p><strong>Contacts:</strong> <span id="previewCount" class="count">0</span> <button id="btnShowAlistCount" class="btn btn-show-count" style="display: none;" onclick="showAlistCount()">Show Count</button></p>
                     <p><strong>Last Updated:</strong> <span id="previewUpdated">-</span></p>
                 </div>
                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -1525,7 +1556,7 @@
                 <div id="xposeRecipientPreview" style="display: none;" class="recipient-preview">
                     <h4>📊 Data Selected</h4>
                     <p><strong>Name:</strong> <span id="xposePreviewName">-</span></p>
-                    <p><strong>Contacts:</strong> <span id="xposePreviewCount" class="count">0</span> <button id="btnShowXposeCount" class="btn" style="padding: 4px 12px; font-size: 11px; margin-left: 15px; display: none; background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; border: none; border-radius: 6px; cursor: pointer;" onclick="showXposeCount()">Show Count</button></p>
+                    <p><strong>Contacts:</strong> <span id="xposePreviewCount" class="count">0</span> <button id="btnShowXposeCount" class="btn btn-show-count" style="display: none;" onclick="showXposeCount()">Show Count</button></p>
                     <p><strong>Last Updated:</strong> <span id="xposePreviewUpdated">-</span></p>
                 </div>
                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -1588,7 +1619,7 @@
                 <div id="articleRecipientPreview" style="display: none;" class="recipient-preview">
                     <h4>📊 Data Selected</h4>
                     <p><strong>Name:</strong> <span id="articlePreviewName">-</span></p>
-                    <p><strong>Contacts:</strong> <span id="articlePreviewCount" class="count">0</span> <button id="btnShowArticleCount" class="btn" style="padding: 4px 12px; font-size: 11px; margin-left: 15px; display: none; background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; border: none; border-radius: 6px; cursor: pointer;" onclick="showArticleCount()">Show Count</button></p>
+                    <p><strong>Contacts:</strong> <span id="articlePreviewCount" class="count">0</span> <button id="btnShowArticleCount" class="btn btn-show-count" style="display: none;" onclick="showArticleCount()">Show Count</button></p>
                     <p><strong>Last Updated:</strong> <span id="articlePreviewUpdated">-</span></p>
                 </div>
                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
