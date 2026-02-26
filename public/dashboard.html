@@ -940,10 +940,10 @@
         
         /* Recipient Selector Styles */
         .recipient-selector {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 25px;
+            background: rgba(255, 255, 255, 0.92);
+            padding: 15px;
             border-radius: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 35px;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
         }
         
@@ -956,7 +956,7 @@
         .selector-row {
             display: flex;
             gap: 15px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             align-items: center;
         }
         
@@ -1040,8 +1040,11 @@
         }
         
         .recipient-locked {
-            background: #e8f5e9;
-            border-left: 4px solid #28a745;
+            background: rgba(40, 167, 69, 0.12);
+            border: 1px solid rgba(40, 167, 69, 0.25);
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-top: 12px;
         }
         
         .recipient-locked .lock-icon {
@@ -1212,6 +1215,9 @@
             <div class="control-panel">
         <!-- Job Alerts Tab -->
         <div id="job-alerts-content" class="tab-content active">
+            <!-- Message Area -->
+            <div class="message" id="jobAlertsMessage"></div>
+            
             <div class="status-grid">
                 <div class="status-card">
                     <h3>Daily Roundup</h3>
@@ -1364,6 +1370,9 @@
         
         <!-- A-List Tab -->
         <div id="alist-content" class="tab-content">
+            <!-- Message Area -->
+            <div class="message" id="alistMessage"></div>
+            
             <div class="status-grid">
                 <div class="status-card">
                     <h3>Current State</h3>
@@ -1466,6 +1475,9 @@
         
         <!-- Xpose Tab -->
         <div id="xpose-content" class="tab-content">
+            <!-- Message Area -->
+            <div class="message" id="xposeMessage"></div>
+            
             <div class="status-grid">
                 <div class="status-card">
                     <h3>Current State</h3>
@@ -1898,9 +1910,16 @@
                 const data = await response.json();
                 
                 if (response.ok) {
-                    showResult(JSON.stringify(data, null, 2), 'success');
+                    // Parse the message for cleaner display
+                    let message = data.message || 'Email sent successfully';
+                    if (message.includes('Sent') && message.includes('jobs') && message.includes('recipients')) {
+                        // Extract numbers from message like "Sent 2 jobs (2 new) to 1 recipients"
+                        message = 'Success - ' + message;
+                    }
+                    showResult(message, 'success');
                 } else {
-                    showResult('Error: ' + JSON.stringify(data, null, 2), 'error');
+                    const errorMsg = data.message || data.error || 'An error occurred';
+                    showResult(errorMsg, 'error');
                 }
             } catch (error) {
                 showResult('Error: ' + error.message, 'error');
@@ -2003,9 +2022,16 @@
                 const data = await response.json();
                 
                 if (response.ok) {
-                    showResult(JSON.stringify(data, null, 2), 'success');
+                    // Parse the message for cleaner display
+                    let message = data.message || 'Email sent successfully';
+                    if (message.includes('Sent') && message.includes('jobs') && message.includes('recipients')) {
+                        // Extract numbers from message like "Sent 2 jobs (2 new) to 1 recipients"
+                        message = 'Success - ' + message;
+                    }
+                    showResult(message, 'success');
                 } else {
-                    showResult('Error: ' + JSON.stringify(data, null, 2), 'error');
+                    const errorMsg = data.message || data.error || 'An error occurred';
+                    showResult(errorMsg, 'error');
                 }
             } catch (error) {
                 showResult('Error: ' + error.message, 'error');
@@ -2045,7 +2071,6 @@
         
         async function toggleDailyAlerts() {
             const btn = document.getElementById('btnToggleAlerts');
-            const originalText = btn.innerHTML;
             
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner"></span> Updating...';
@@ -2062,19 +2087,22 @@
                     await loadDailyAlertsStatus();
                 } else {
                     showToast('Error toggling daily alerts', 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'Toggle';
                 }
             } catch (error) {
                 showToast('Error: ' + error.message, 'error');
-            } finally {
                 btn.disabled = false;
-                btn.innerHTML = originalText;
+                btn.textContent = 'Toggle';
             }
         }
         
         function showResult(message, type) {
-            const resultBox = document.getElementById('resultBox');
-            resultBox.textContent = message;
-            resultBox.className = 'result-box show ' + type;
+            // Use the persistent message area in Job Alerts tab
+            const messageBox = document.getElementById('jobAlertsMessage');
+            messageBox.textContent = message;
+            messageBox.className = 'message show ' + type;
+            // Keep message visible until next action (don't auto-hide)
         }
         
         // ========== A-LIST FUNCTIONS ==========
@@ -2321,13 +2349,11 @@
         }
 
         function showMessage(text, type) {
-            const messageBox = document.getElementById('alistMessageBox');
+            // Use the persistent message area in A-List tab
+            const messageBox = document.getElementById('alistMessage');
             messageBox.textContent = text;
             messageBox.className = `message ${type} show`;
-            
-            setTimeout(() => {
-                messageBox.classList.remove('show');
-            }, 5000);
+            // Keep message visible until next action (don't auto-hide)
         }
 
         function updateAListLastAction(state) {
@@ -2487,9 +2513,13 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    showToast(`✅ Xpose scheduled for ${result.scheduledFor}`, 'success');
+                    const msg = `Xpose scheduled for ${result.scheduledFor}`;
+                    showToast(`✅ ${msg}`, 'success');
+                    showTabMessage('xpose', msg, 'success');
                 } else {
-                    showToast(`❌ Scheduling failed: ${result.message}`, 'error');
+                    const msg = `Scheduling failed: ${result.message}`;
+                    showToast(`❌ ${msg}`, 'error');
+                    showTabMessage('xpose', msg, 'error');
                 }
             } catch (error) {
                 showToast(`❌ Error: ${error.message}`, 'error');
@@ -2719,6 +2749,22 @@
             };
         }
 
+        // ========== PERSISTENT MESSAGE SYSTEM ==========
+        function showTabMessage(tab, message, type) {
+            const messageBoxes = {
+                'job-alerts': 'jobAlertsMessage',
+                'alist': 'alistMessage',
+                'xpose': 'xposeMessage'
+            };
+            
+            const messageBoxId = messageBoxes[tab];
+            if (messageBoxId) {
+                const messageBox = document.getElementById(messageBoxId);
+                messageBox.textContent = message;
+                messageBox.className = `message show ${type}`;
+            }
+        }
+        
         // ========== TOAST NOTIFICATION SYSTEM ==========
         function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
