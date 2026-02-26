@@ -1215,6 +1215,16 @@
                     <div class="status-label" id="brevoLabelMobile">Connected</div>
                 </div>
                 <div class="mobile-status-item">
+                    <h4>WordPress</h4>
+                    <div class="status-value success" id="wordpressStatusMobile">●</div>
+                    <div class="status-label" id="wordpressLabelMobile">Loading...</div>
+                </div>
+                <div class="mobile-status-item">
+                    <h4>OpenAI</h4>
+                    <div class="status-value success" id="openaiStatusMobile">●</div>
+                    <div class="status-label" id="openaiLabelMobile">Connected</div>
+                </div>
+                <div class="mobile-status-item">
                     <h4>Version</h4>
                     <div class="status-value" style="font-size: 16px; color: white;" id="versionStatusMobile">1.0.0</div>
                     <div class="status-label">System Version</div>
@@ -1739,6 +1749,8 @@
         async function checkOpenAIStatus() {
             const statusEl = document.getElementById('openaiStatus');
             const labelEl = document.getElementById('openaiStatusLabel');
+            const statusMobile = document.getElementById('openaiStatusMobile');
+            const labelMobile = document.getElementById('openaiLabelMobile');
             
             try {
                 const response = await fetch('/api/openai/status');
@@ -1748,15 +1760,30 @@
                     statusEl.textContent = '●';
                     statusEl.className = 'status-value success';
                     labelEl.textContent = 'Connected';
+                    if (statusMobile) {
+                        statusMobile.textContent = '●';
+                        statusMobile.className = 'status-value success';
+                        labelMobile.textContent = 'Connected';
+                    }
                 } else {
                     statusEl.textContent = '●';
                     statusEl.className = 'status-value error';
                     labelEl.textContent = 'Disconnected';
+                    if (statusMobile) {
+                        statusMobile.textContent = '●';
+                        statusMobile.className = 'status-value error';
+                        labelMobile.textContent = 'Disconnected';
+                    }
                 }
             } catch (error) {
                 statusEl.textContent = '●';
                 statusEl.className = 'status-value error';
                 labelEl.textContent = 'Check Failed';
+                if (statusMobile) {
+                    statusMobile.textContent = '●';
+                    statusMobile.className = 'status-value error';
+                    labelMobile.textContent = 'Check Failed';
+                }
             }
         }
         
@@ -1850,23 +1877,42 @@
                     const wpResponse = await fetch('/api/xpose/articles');
                     const wordpressStatus = document.getElementById('wordpressStatus');
                     const wordpressLabel = document.getElementById('wordpressLabel');
+                    const wordpressStatusMobile = document.getElementById('wordpressStatusMobile');
+                    const wordpressLabelMobile = document.getElementById('wordpressLabelMobile');
                     
                     if (wpResponse.ok) {
                         const articles = await wpResponse.json();
                         wordpressStatus.textContent = '●';
                         wordpressStatus.className = 'status-value success';
                         wordpressLabel.textContent = `${articles.length} articles`;
+                        if (wordpressStatusMobile) {
+                            wordpressStatusMobile.textContent = '●';
+                            wordpressStatusMobile.className = 'status-value success';
+                            wordpressLabelMobile.textContent = `${articles.length} articles`;
+                        }
                     } else {
                         wordpressStatus.textContent = '●';
                         wordpressStatus.className = 'status-value error';
                         wordpressLabel.textContent = 'API Error';
+                        if (wordpressStatusMobile) {
+                            wordpressStatusMobile.textContent = '●';
+                            wordpressStatusMobile.className = 'status-value error';
+                            wordpressLabelMobile.textContent = 'API Error';
+                        }
                     }
                 } catch (wpError) {
                     const wordpressStatus = document.getElementById('wordpressStatus');
                     const wordpressLabel = document.getElementById('wordpressLabel');
+                    const wordpressStatusMobile = document.getElementById('wordpressStatusMobile');
+                    const wordpressLabelMobile = document.getElementById('wordpressLabelMobile');
                     wordpressStatus.textContent = '●';
                     wordpressStatus.className = 'status-value error';
                     wordpressLabel.textContent = 'Offline';
+                    if (wordpressStatusMobile) {
+                        wordpressStatusMobile.textContent = '●';
+                        wordpressStatusMobile.className = 'status-value error';
+                        wordpressLabelMobile.textContent = 'Offline';
+                    }
                 }
                 
                 // Update version
