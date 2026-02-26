@@ -346,59 +346,7 @@ class XposeController {
                     <h2 style="color: #e74c3c;">Preview Unavailable</h2>
                     <p style="color: #666;">${error.message}</p>
                 </div>
-             `)
-        }
-    };
-    
-    /**
-     * Schedule Xpose send for next Thursday at 10:00 AM Melbourne time
-     */
-    scheduleForThursday = async (options = {}) => {
-        const cron = require('node-cron');
-        const moment = require('moment-timezone');
-        
-        try {
-            // Calculate next Thursday 10:00 AM Melbourne time
-            const now = moment().tz('Australia/Melbourne');
-            let nextThursday = now.clone();
-            
-            // Find next Thursday
-            while (nextThursday.day() !== 4) {
-                nextThursday.add(1, 'day');
-            }
-            
-            // If today is Thursday and it's past 10am, go to next Thursday
-            if (now.day() === 4 && now.hour() >= 10) {
-                nextThursday.add(7, 'days');
-            }
-            
-            // Set to 10:00 AM
-            nextThursday.hour(10).minute(0).second(0);
-            
-            const scheduledFor = nextThursday.format('dddd, MMMM D, YYYY [at] h:mm A');
-            
-            // Schedule cron job for Thursday 10am Melbourne time (0 10 * * 4)
-            // Note: This is a one-time schedule - in production you'd want to persist this
-            cron.schedule('0 10 * * 4', async () => {
-                console.log('📅 Executing scheduled Xpose send...');
-                await this.sendToAll({ req: { body: options }, res: { json: () => {}, status: () => ({ json: () => {} }) } });
-            }, {
-                timezone: 'Australia/Melbourne'
-            });
-            
-            console.log(`📅 Xpose scheduled for ${scheduledFor}`);
-            
-            return {
-                success: true,
-                scheduledFor,
-                message: 'Xpose scheduled successfully'
-            };
-        } catch (error) {
-            console.error('❌ Error scheduling Xpose:', error);
-            return {
-                success: false,
-                message: error.message
-            };
+            `);
         }
     };
 }
