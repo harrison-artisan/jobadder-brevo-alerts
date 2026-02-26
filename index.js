@@ -166,7 +166,27 @@ const brevoService = require('./services/brevoService');
 app.get('/api/brevo/segments', async (req, res) => {
   try {
     const segments = await brevoService.getSegments();
-    res.json({ segments });
+    
+    // Fetch contact count for each segment
+    const segmentsWithCounts = await Promise.all(
+      segments.map(async (segment) => {
+        try {
+          const contacts = await brevoService.getSegmentContacts(segment.id);
+          return {
+            ...segment,
+            uniqueSubscribers: contacts.length
+          };
+        } catch (error) {
+          console.error(`Error fetching contacts for segment ${segment.id}:`, error.message);
+          return {
+            ...segment,
+            uniqueSubscribers: 0
+          };
+        }
+      })
+    );
+    
+    res.json({ segments: segmentsWithCounts });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
