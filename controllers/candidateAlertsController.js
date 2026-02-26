@@ -49,13 +49,24 @@ class CandidateAlertsController {
         })
       );
       
-      // 5. Save state
+      // 5. Fetch latest WordPress articles
+      console.log('📰 Fetching latest WordPress articles...');
+      const articles = await wordpressService.getLatestArticles(3);
+      const articlesList = articles || [];
+      const articlesData = {
+        article1: articlesList[0] || null,
+        article2: articlesList[1] || null,
+        article3: articlesList[2] || null
+      };
+      
+      // 6. Save state
       const state = {
         state: 'GENERATED',
         generatedAt: new Date().toISOString(),
         testSentAt: null,
         sentAt: null,
         candidates: candidatesWithSummaries,
+        articles: articlesData,
         totalCandidatesInPool: allCandidates.length
       };
       
@@ -124,7 +135,10 @@ class CandidateAlertsController {
       await brevoService.sendBatchEmail(
         testRecipient,
         process.env.A_LIST_TEMPLATE_ID,
-        { candidates: state.candidates }
+        { 
+          candidates: state.candidates,
+          ...state.articles
+        }
       );
       
       // Update state
@@ -206,7 +220,10 @@ class CandidateAlertsController {
       await brevoService.sendBatchEmail(
         recipients,
         process.env.A_LIST_TEMPLATE_ID,
-        { candidates: state.candidates }
+        { 
+          candidates: state.candidates,
+          ...state.articles
+        }
       );
       
       // Update state to SENT
@@ -355,3 +372,4 @@ class CandidateAlertsController {
 }
 
 module.exports = new CandidateAlertsController();
+
