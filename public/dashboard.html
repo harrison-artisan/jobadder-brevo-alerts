@@ -1121,8 +1121,18 @@
             </div>
         </div>
         
-        <!-- Tab Navigation -->
-        <div class="tabs">
+        <!-- Main Category Tabs -->
+        <div class="tabs" id="mainTabs">
+            <button class="tab active" onclick="switchMainTab('email-marketing')">
+                Email Marketing
+            </button>
+            <button class="tab" onclick="switchMainTab('content-marketing')">
+                Content Marketing
+            </button>
+        </div>
+        
+        <!-- Email Type Tabs (shown when Email Marketing is active) -->
+        <div class="tabs" id="emailTabs">
             <button class="tab active" onclick="switchTab('job-alerts')">
                 Job Alerts
             </button>
@@ -1756,6 +1766,45 @@
         function toggleMobileStatus() {
             const toggle = document.getElementById('mobileStatusToggle');
             toggle.classList.toggle('expanded');
+        }
+        
+        // Switch between main category tabs
+        let emailContentBackup = null;
+        
+        function switchMainTab(mainTabName) {
+            const emailTabs = document.getElementById('emailTabs');
+            const mainContent = document.querySelector('.main-content');
+            const mainTabButtons = document.querySelectorAll('#mainTabs .tab');
+            
+            // Update active state
+            mainTabButtons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            if (mainTabName === 'email-marketing') {
+                // Show email type tabs and restore content
+                emailTabs.style.display = 'flex';
+                
+                if (emailContentBackup) {
+                    mainContent.innerHTML = emailContentBackup;
+                    emailContentBackup = null;
+                }
+            } else if (mainTabName === 'content-marketing') {
+                // Save current email content before hiding
+                emailContentBackup = mainContent.innerHTML;
+                
+                // Hide email tabs
+                emailTabs.style.display = 'none';
+                
+                // Show placeholder
+                mainContent.innerHTML = `
+                    <div style="padding: 60px 20px; text-align: center;">
+                        <h2 style="color: white; margin-bottom: 20px;">Content Marketing</h2>
+                        <p style="color: rgba(255, 255, 255, 0.7); font-size: 18px;">Coming soon...</p>
+                    </div>
+                `;
+            }
         }
         
         function switchTab(tabName) {
