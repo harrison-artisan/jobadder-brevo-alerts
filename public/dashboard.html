@@ -1286,7 +1286,7 @@
                 <div id="dailyRecipientPreview" style="display: none;" class="recipient-preview">
                     <h4>📊 Data Selected</h4>
                     <p><strong>Name:</strong> <span id="dailyPreviewName">-</span></p>
-                    <p><strong>Contacts:</strong> <span id="dailyPreviewCount" class="count">0</span></p>
+                    <p><strong>Contacts:</strong> <span id="dailyPreviewCount" class="count">0</span> <button id="btnShowDailyCount" class="btn" style="padding: 2px 8px; font-size: 11px; margin-left: 8px; display: none;" onclick="showDailyCount()">Show Count</button></p>
                     <p><strong>Last Updated:</strong> <span id="dailyPreviewUpdated">-</span></p>
                 </div>
                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -1335,7 +1335,7 @@
                 <div id="singleJobRecipientPreview" style="display: none;" class="recipient-preview">
                     <h4>📊 Data Selected</h4>
                     <p><strong>Name:</strong> <span id="singleJobPreviewName">-</span></p>
-                    <p><strong>Contacts:</strong> <span id="singleJobPreviewCount" class="count">0</span></p>
+                    <p><strong>Contacts:</strong> <span id="singleJobPreviewCount" class="count">0</span> <button id="btnShowSingleJobCount" class="btn" style="padding: 2px 8px; font-size: 11px; margin-left: 8px; display: none;" onclick="showSingleJobCount()">Show Count</button></p>
                     <p><strong>Last Updated:</strong> <span id="singleJobPreviewUpdated">-</span></p>
                 </div>
                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -1422,7 +1422,7 @@
                 <div id="recipientPreview" style="display: none;" class="recipient-preview">
                     <h4>📊 Data Selected</h4>
                     <p><strong>Name:</strong> <span id="previewName">-</span></p>
-                    <p><strong>Contacts:</strong> <span id="previewCount" class="count">0</span></p>
+                    <p><strong>Contacts:</strong> <span id="previewCount" class="count">0</span> <button id="btnShowAlistCount" class="btn" style="padding: 2px 8px; font-size: 11px; margin-left: 8px; display: none;" onclick="showAlistCount()">Show Count</button></p>
                     <p><strong>Last Updated:</strong> <span id="previewUpdated">-</span></p>
                 </div>
                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -1525,7 +1525,7 @@
                 <div id="xposeRecipientPreview" style="display: none;" class="recipient-preview">
                     <h4>📊 Data Selected</h4>
                     <p><strong>Name:</strong> <span id="xposePreviewName">-</span></p>
-                    <p><strong>Contacts:</strong> <span id="xposePreviewCount" class="count">0</span></p>
+                    <p><strong>Contacts:</strong> <span id="xposePreviewCount" class="count">0</span> <button id="btnShowXposeCount" class="btn" style="padding: 2px 8px; font-size: 11px; margin-left: 8px; display: none;" onclick="showXposeCount()">Show Count</button></p>
                     <p><strong>Last Updated:</strong> <span id="xposePreviewUpdated">-</span></p>
                 </div>
                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -1588,7 +1588,7 @@
                 <div id="articleRecipientPreview" style="display: none;" class="recipient-preview">
                     <h4>📊 Data Selected</h4>
                     <p><strong>Name:</strong> <span id="articlePreviewName">-</span></p>
-                    <p><strong>Contacts:</strong> <span id="articlePreviewCount" class="count">0</span></p>
+                    <p><strong>Contacts:</strong> <span id="articlePreviewCount" class="count">0</span> <button id="btnShowArticleCount" class="btn" style="padding: 2px 8px; font-size: 11px; margin-left: 8px; display: none;" onclick="showArticleCount()">Show Count</button></p>
                     <p><strong>Last Updated:</strong> <span id="articlePreviewUpdated">-</span></p>
                 </div>
                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -3087,10 +3087,35 @@
             const name = selectedOption.getAttribute('data-name');
             const count = selectedOption.getAttribute('data-count');
             const updated = selectedOption.getAttribute('data-updated');
+            const [type, id] = recipientSelector.value.split('-');
             
             document.getElementById(nameElementId).textContent = name;
             document.getElementById(countElementId).textContent = count;
             document.getElementById(updatedElementId).textContent = updated ? new Date(updated).toLocaleDateString() : '-';
+            
+            // Show the "Show Count" button for segments (dynamic), hide for lists (static)
+            const buttonIdMap = {
+                'dailyRecipientSelector': 'btnShowDailyCount',
+                'singleJobRecipientSelector': 'btnShowSingleJobCount',
+                'recipientSelector': 'btnShowAlistCount',
+                'xposeRecipientSelector': 'btnShowXposeCount',
+                'articleRecipientSelector': 'btnShowArticleCount'
+            };
+            
+            const buttonId = buttonIdMap[selectorElementId];
+            if (buttonId) {
+                const showCountBtn = document.getElementById(buttonId);
+                if (showCountBtn) {
+                    // Show button only for segments (type === 'segment')
+                    if (type === 'segment') {
+                        showCountBtn.style.display = 'inline-block';
+                        showCountBtn.textContent = 'Show Count';
+                        showCountBtn.disabled = false;
+                    } else {
+                        showCountBtn.style.display = 'none';
+                    }
+                }
+            }
             
             preview.style.display = 'block';
         }
@@ -3440,6 +3465,79 @@
             // A-List event listener
             document.getElementById('btnPreviewAlist')?.addEventListener('click', previewAlist);
         });
+        
+        // ===== SHOW COUNT FUNCTIONS =====
+        // Generic function to fetch and display count for a segment or list
+        async function fetchAndShowCount(selectorId, countElementId, buttonId) {
+            const selector = document.getElementById(selectorId);
+            const selectedOption = selector.options[selector.selectedIndex];
+            const countElement = document.getElementById(countElementId);
+            const button = document.getElementById(buttonId);
+            
+            if (!selector.value || selector.selectedIndex === 0) {
+                return;
+            }
+            
+            // Get the type and ID from the selected option value
+            const [type, id] = selector.value.split('-');
+            
+            // Show loading state
+            button.disabled = true;
+            button.textContent = 'Loading...';
+            countElement.textContent = '...';
+            
+            try {
+                // Call the appropriate API endpoint
+                const endpoint = type === 'segment' 
+                    ? `/api/brevo/segment/${id}/count`
+                    : `/api/brevo/list/${id}/count`;
+                    
+                const response = await fetch(endpoint);
+                const data = await response.json();
+                
+                if (response.ok && data.count !== undefined) {
+                    countElement.textContent = data.count;
+                    // Update the data attribute so it persists
+                    selectedOption.setAttribute('data-count', data.count);
+                    // Hide the button after successful fetch
+                    button.style.display = 'none';
+                } else {
+                    countElement.textContent = 'Error';
+                    button.textContent = 'Retry';
+                    button.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error fetching count:', error);
+                countElement.textContent = 'Error';
+                button.textContent = 'Retry';
+                button.disabled = false;
+            }
+        }
+        
+        // Daily Job Alerts
+        async function showDailyCount() {
+            await fetchAndShowCount('dailyRecipientSelector', 'dailyPreviewCount', 'btnShowDailyCount');
+        }
+        
+        // Single Job Alert
+        async function showSingleJobCount() {
+            await fetchAndShowCount('singleJobRecipientSelector', 'singleJobPreviewCount', 'btnShowSingleJobCount');
+        }
+        
+        // A-List
+        async function showAlistCount() {
+            await fetchAndShowCount('recipientSelector', 'previewCount', 'btnShowAlistCount');
+        }
+        
+        // Xpose Newsletter
+        async function showXposeCount() {
+            await fetchAndShowCount('xposeRecipientSelector', 'xposePreviewCount', 'btnShowXposeCount');
+        }
+        
+        // Single Article
+        async function showArticleCount() {
+            await fetchAndShowCount('articleRecipientSelector', 'articlePreviewCount', 'btnShowArticleCount');
+        }
     </script>
 </body>
 </html>
