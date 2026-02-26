@@ -2899,99 +2899,18 @@
         let currentIframe = null;
         
         function loadPreview(url) {
-            const previewPanel = document.getElementById('preview-panel');
+            // Simple approach: Open preview in new tab
+            console.log('Opening preview in new tab:', url);
+            const newWindow = window.open(url, '_blank');
             
-            // Cancel any existing preview
-            if (previewTimeout) {
-                clearTimeout(previewTimeout);
+            if (newWindow) {
+                showToast('✅ Preview opened in new tab', 'success');
+            } else {
+                showToast('❌ Please allow popups to view preview', 'error');
             }
-            if (currentIframe) {
-                currentIframe.remove();
-            }
             
-            previewPanel.innerHTML = `
-                <div class="preview-loading">
-                    <div class="spinner-large"></div>
-                    <p>Loading preview...</p>
-                    <button class="btn btn-secondary" onclick="cancelPreview()" style="margin-top: 20px;">Cancel</button>
-                </div>
-            `;
-            
-            const iframe = document.createElement('iframe');
-            iframe.className = 'preview-iframe';
-            iframe.style.width = '100%';
-            iframe.style.height = '100%';
-            iframe.style.border = 'none';
-            iframe.style.minWidth = '650px';
-            iframe.style.opacity = '0';
-            iframe.style.transition = 'opacity 0.3s ease';
-            currentIframe = iframe;
-            
-            // Create wrapper for click handling
-            const wrapper = document.createElement('div');
-            wrapper.style.position = 'relative';
-            wrapper.style.width = '100%';
-            wrapper.style.height = '100%';
-            wrapper.style.cursor = 'pointer';
-            wrapper.style.overflow = 'auto';
-            
-            // Add click handler to wrapper BEFORE appending
-            wrapper.addEventListener('click', () => openPreviewModal(url));
-            
-            wrapper.appendChild(iframe);
-            
-            // Set timeout for loading
-            previewTimeout = setTimeout(() => {
-                // Check if preview panel still has loading spinner
-                if (previewPanel.querySelector('.preview-loading')) {
-                    previewPanel.innerHTML = `
-                        <div class="preview-empty">
-                            <div>
-                                <p style="font-size: 48px;">⏱️</p>
-                                <p>Preview timed out</p>
-                                <p style="font-size: 14px; color: #999; margin-top: 10px;">The preview took too long to load</p>
-                            </div>
-                        </div>
-                    `;
-                    currentIframe = null;
-                }
-            }, 10000); // 10 second timeout
-            
-            iframe.onload = () => {
-                clearTimeout(previewTimeout);
-                
-                // Clear loading spinner
-                previewPanel.innerHTML = '';
-                
-                // Add wrapper with iframe
-                previewPanel.appendChild(wrapper);
-                
-                // Fade in iframe
-                setTimeout(() => {
-                    iframe.style.opacity = '1';
-                }, 50);
-            };
-            
-            iframe.onerror = (error) => {
-                clearTimeout(previewTimeout);
-                console.error('Preview iframe error:', error);
-                console.error('Preview URL:', url);
-                previewPanel.innerHTML = `
-                    <div class="preview-empty">
-                        <div>
-                            <p style="font-size: 48px;">❌</p>
-                            <p>Preview unavailable</p>
-                            <p style="font-size: 14px; color: #999; margin-top: 10px;">Failed to load preview</p>
-                            <p style="font-size: 12px; color: #666; margin-top: 5px;">Check console for details</p>
-                        </div>
-                    </div>
-                `;
-                showToast('Preview failed to load - check console', 'error');
-                currentIframe = null;
-            };
-            
-            // Set src to start loading
-            iframe.src = url;
+            // Old complex iframe code removed for simplicity
+            // No need for preview panel, timeout, or iframe management
         }
         
         function cancelPreview() {
