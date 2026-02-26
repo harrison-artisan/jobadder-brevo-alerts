@@ -138,48 +138,7 @@
             margin-top: 2px;
         }
         
-        /* Main Category Tabs */
-        .main-tabs {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            border-radius: 10px;
-            padding: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            display: flex;
-            gap: 10px;
-            width: 100%;
-            max-width: 1400px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        
-        .main-tab {
-            flex: 1;
-            padding: 18px 30px;
-            background: transparent;
-            border: none;
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-        
-        .main-tab:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: rgba(255, 255, 255, 0.9);
-        }
-        
-        .main-tab.active {
-            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
-        }
-        
-        /* Email Type Tabs */
+        /* Tab Navigation */
         .tabs {
             position: relative;
             z-index: 10;
@@ -1162,18 +1121,8 @@
             </div>
         </div>
         
-        <!-- Main Category Tabs -->
-        <div class="main-tabs">
-            <button class="main-tab active" onclick="switchMainTab('email-marketing')">
-                Email Marketing
-            </button>
-            <button class="main-tab" onclick="switchMainTab('content-marketing')">
-                Content Marketing
-            </button>
-        </div>
-        
-        <!-- Email Type Tabs (shown when Email Marketing is active) -->
-        <div class="tabs" id="email-tabs">
+        <!-- Tab Navigation -->
+        <div class="tabs">
             <button class="tab active" onclick="switchTab('job-alerts')">
                 Job Alerts
             </button>
@@ -1604,86 +1553,186 @@
             <!-- Message Area -->
             <div class="message" id="consultantMessage"></div>
             
-            <div class="status-grid">
-                <div class="status-card">
-                    <h3>Current State</h3>
-                    <div class="status-value" style="font-size: 16px;">
-                        <span class="status-badge EMPTY" id="consultantStateBadge">EMPTY</span>
+            <!-- Consultant Selector -->
+            <div class="actions-card">
+                <h2>Select Consultant</h2>
+                <div class="form-group">
+                    <label for="consultantSelector">Consultant</label>
+                    <select id="consultantSelector" onchange="loadConsultantData()">
+                        <option value="">-- Select Consultant --</option>
+                        <option value="debbie-younger">Debbie Younger</option>
+                        <option value="mathew-hehir">Mathew Hehir</option>
+                        <option value="sean-varian">Sean Varian</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Status Cards (hidden until consultant selected) -->
+            <div id="consultantStatusSection" style="display: none;">
+                <div class="status-grid">
+                    <div class="status-card">
+                        <h3>Current State</h3>
+                        <div class="status-value" style="font-size: 16px;">
+                            <span class="status-badge EMPTY" id="consultantStateBadge">EMPTY</span>
+                        </div>
+                        <div class="status-label" id="consultantStateTimestamp">No content uploaded</div>
                     </div>
-                    <div class="status-label" id="consultantStateTimestamp">No newsletter generated</div>
+                    
+                    <div class="status-card">
+                        <h3>Last Sent</h3>
+                        <div class="status-value" style="color: white;" id="consultantLastSent">-</div>
+                        <div class="status-label">No newsletters sent</div>
+                    </div>
+                    
+                    <div class="status-card">
+                        <h3>Recipients</h3>
+                        <div class="status-value" style="color: white;" id="consultantRecipientsCount">-</div>
+                        <div class="status-label" id="consultantSegmentName">No segment loaded</div>
+                    </div>
                 </div>
                 
-                <div class="status-card">
-                    <h3>Recipients</h3>
-                    <div class="status-value" style="color: white;" id="consultantRecipientsCount">-</div>
-                    <div class="status-label">Selected consultants</div>
-                </div>
-                
-                <div class="status-card">
-                    <h3>Last Sent</h3>
-                    <div class="status-value" style="color: white;" id="consultantLastSent">-</div>
-                    <div class="status-label">No newsletters sent</div>
-                </div>
-            </div>
-            
-            <div class="actions-card-light">
-                <h3>📧 Generate Consultant Newsletter</h3>
-                <p style="margin-bottom: 20px;">Create a personalized newsletter for consultants</p>
-                
-                <div class="form-group">
-                    <label for="consultantContent">Newsletter Content</label>
-                    <textarea id="consultantContent" rows="6" placeholder="Enter newsletter content or let AI generate it..."></textarea>
-                </div>
-                
-                <div class="btn-group">
-                    <button class="btn btn-secondary" onclick="generateConsultantNewsletter()" id="btnGenerateConsultant">
-                        Generate Newsletter
-                    </button>
-                    <button class="btn btn-secondary" onclick="previewConsultantNewsletter()" id="btnPreviewConsultant" disabled>
-                        Preview
-                    </button>
-                </div>
-            </div>
-            
-            <div class="actions-card-light">
-                <h3>📤 Send Consultant Newsletter</h3>
-                
-                <div class="form-group">
-                    <label for="consultantRecipientType">Recipient Type</label>
-                    <select id="consultantRecipientType" onchange="loadRecipientsGeneric('consultant')">
-                        <option value="">Select type...</option>
-                        <option value="list">List (Static)</option>
-                        <option value="segment">Segment (Dynamic)</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="consultantRecipientSelector">Select Recipients</label>
-                    <select id="consultantRecipientSelector" disabled onchange="previewRecipientsGeneric('consultant')">
-                        <option value="">Choose recipient type first...</option>
-                    </select>
-                </div>
-                
-                <div id="consultantRecipientPreview" class="recipient-preview" style="display: none;">
-                    <h4>📊 Data Selected</h4>
-                    <p><strong>Name:</strong> <span id="consultantPreviewName">-</span></p>
-                    <p><strong>Contacts:</strong> 
-                        <span id="consultantPreviewCount" class="count">0</span> 
-                        <button id="btnShowConsultantCount" class="btn btn-show-count" style="display: none;" onclick="showConsultantCount()">Show Count</button>
+                <!-- Upload Content Section -->
+                <div class="actions-card">
+                    <h2>Upload Newsletter Content</h2>
+                    <p style="margin-bottom: 25px; color: white; line-height: 1.6;">
+                        Upload a structured document (Excel, CSV) with headings and content
                     </p>
-                    <p><strong>Last Updated:</strong> <span id="consultantPreviewUpdated">-</span></p>
-                    <button class="btn btn-primary" onclick="confirmConsultantRecipients()" style="margin-top: 15px;">
-                        Confirm Recipients
-                    </button>
+                    
+                    <div class="form-group" style="margin-bottom: 25px;">
+                        <label for="consultantContentFile" style="color: white; font-weight: 500; margin-bottom: 12px; display: block;">
+                            Content Document
+                        </label>
+                        <input 
+                            type="file" 
+                            id="consultantContentFile" 
+                            accept=".xlsx,.xls,.csv" 
+                            onchange="handleContentUpload()" 
+                            style="
+                                width: 100%;
+                                padding: 15px;
+                                background: rgba(255, 255, 255, 0.1);
+                                border: 2px dashed rgba(255, 255, 255, 0.3);
+                                border-radius: 8px;
+                                color: white;
+                                cursor: pointer;
+                                transition: all 0.3s ease;
+                                font-size: 14px;
+                            "
+                        >
+                        <div style="margin-top: 15px; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 6px;">
+                            <p style="color: white; margin: 0 0 8px 0; font-weight: 500; font-size: 13px;">
+                                Supported Formats:
+                            </p>
+                            <p style="color: rgba(255, 255, 255, 0.8); margin: 0 0 12px 0; font-size: 13px;">
+                                Excel (.xlsx, .xls), CSV (.csv)
+                            </p>
+                            <p style="color: white; margin: 0 0 8px 0; font-weight: 500; font-size: 13px;">
+                                Expected Structure:
+                            </p>
+                            <p style="color: rgba(255, 255, 255, 0.8); margin: 0; font-size: 13px; line-height: 1.6;">
+                                Heading | Content | Type<br>
+                                <span style="color: rgba(255, 255, 255, 0.6); font-size: 12px;">
+                                    Types: text, url, instagram, image
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div id="uploadPreview" style="display: none; margin-top: 25px; padding: 20px; background: rgba(255, 255, 255, 0.08); border-radius: 8px;">
+                        <h4 style="margin-bottom: 15px; color: white;">Uploaded Content Preview</h4>
+                        <div id="uploadPreviewContent" style="color: white;"></div>
+                    </div>
+                    
+                    <div class="btn-group" style="margin-top: 25px;">
+                        <button class="btn btn-secondary" onclick="processUploadedContent()" id="btnProcessContent" disabled>
+                            Process & Format Content
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearUploadedContent()" id="btnClearContent" disabled>
+                            Clear Upload
+                        </button>
+                    </div>
                 </div>
                 
-                <div class="btn-group">
-                    <button class="btn btn-secondary" onclick="sendConsultantTest()" id="btnTestConsultant" disabled>
-                        Send Test
-                    </button>
-                    <button class="btn btn-primary" onclick="sendConsultantNewsletter()" id="btnSendConsultant" disabled>
-                        Send to All
-                    </button>
+                <!-- Generated Content Preview -->
+                <div id="generatedContentSection" class="actions-card" style="display: none;">
+                    <h2>Generated Newsletter Content</h2>
+                    <div id="generatedContentPreview" style="
+                        padding: 20px;
+                        background: rgba(255, 255, 255, 0.08);
+                        border-radius: 8px;
+                        max-height: 400px;
+                        overflow-y: auto;
+                        margin-bottom: 20px;
+                    "></div>
+                    
+                    <div class="btn-group">
+                        <button class="btn btn-secondary" onclick="regenerateContent()" id="btnRegenerate">
+                            Regenerate
+                        </button>
+                        <button class="btn btn-secondary" onclick="previewConsultantNewsletter()" id="btnPreviewConsultant">
+                            Preview in Browser
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Recipient Selector -->
+                <div class="actions-card">
+                    <h2>Consultant Newsletter</h2>
+                    
+                    <div class="recipient-selector">
+                        <h3>Select Recipients</h3>
+                        <div class="selector-row">
+                            <div class="selector-group">
+                                <label for="consultantRecipientType">Recipient Type</label>
+                                <select id="consultantRecipientType" onchange="loadConsultantRecipients()">
+                                    <option value="">-- Select Type --</option>
+                                    <option value="segment">Segment (Dynamic)</option>
+                                    <option value="list">List (Static)</option>
+                                </select>
+                            </div>
+                            <div class="selector-group">
+                                <label for="consultantRecipientSelector">Select Segment/List</label>
+                                <select id="consultantRecipientSelector" disabled onchange="previewConsultantRecipients()">
+                                    <option value="">-- Choose a segment or list --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="consultantRecipientPreview" class="recipient-preview" style="display: none;">
+                            <h4>Data Selected</h4>
+                            <p><strong>Name:</strong> <span id="consultantPreviewName">-</span></p>
+                            <p><strong>Contacts:</strong> <span id="consultantPreviewCount" class="count">0</span> <button id="btnShowConsultantCount" class="btn btn-show-count" style="display: none;" onclick="showConsultantCount()">Show Count</button></p>
+                            <p><strong>Last Updated:</strong> <span id="consultantPreviewUpdated">-</span></p>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                            <button id="btnConfirmConsultantRecipient" class="btn-confirm" onclick="confirmConsultantRecipients()" disabled>
+                                Confirm Selection
+                            </button>
+                            <button id="btnRemoveConsultantRecipient" class="btn" style="background: #e74c3c; display: none;" onclick="removeConsultantRecipient()">
+                                Remove
+                            </button>
+                        </div>
+                        <div id="consultantRecipientLocked" style="display: none;" class="recipient-locked">
+                            <p><span class="lock-icon">🔒</span><strong>Locked:</strong> <span id="consultantLockedRecipientName">-</span> (<span id="consultantLockedRecipientCount">0</span> contacts)</p>
+                        </div>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="btn btn-secondary" onclick="processUploadedContent()" id="btnGenerateConsultant" disabled>
+                            Generate Newsletter
+                        </button>
+                        <button class="btn btn-preview" onclick="previewConsultantNewsletter()" id="btnPreviewConsultant" disabled>
+                            Preview
+                        </button>
+                        <button class="btn btn-warning" onclick="sendConsultantTest()" id="btnTestConsultant" disabled>
+                            Send Test
+                        </button>
+                        <button class="btn btn-info" onclick="approveAndScheduleConsultant()" id="btnScheduleConsultant" disabled>
+                            Approve & Schedule
+                        </button>
+                        <button class="btn btn-success" onclick="sendConsultantNow()" id="btnSendConsultant" disabled>
+                            Send Now
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1707,49 +1756,6 @@
         function toggleMobileStatus() {
             const toggle = document.getElementById('mobileStatusToggle');
             toggle.classList.toggle('expanded');
-        }
-        
-        // Store original email content
-        let emailContentBackup = null;
-        
-        function switchMainTab(mainTabName) {
-            // Remove active class from all main tabs
-            document.querySelectorAll('.main-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Add active class to clicked main tab
-            event.target.classList.add('active');
-            
-            // Show/hide email tabs based on main tab
-            const emailTabs = document.getElementById('email-tabs');
-            const mainContent = document.querySelector('.main-content');
-            
-            if (mainTabName === 'email-marketing') {
-                // Restore email type tabs and content
-                emailTabs.style.display = 'flex';
-                
-                // If we have backup content, restore it
-                if (emailContentBackup) {
-                    mainContent.innerHTML = emailContentBackup;
-                    emailContentBackup = null;
-                } else {
-                    mainContent.style.display = 'block';
-                }
-            } else if (mainTabName === 'content-marketing') {
-                // Save current email content before hiding
-                emailContentBackup = mainContent.innerHTML;
-                
-                // Hide email tabs and show placeholder
-                emailTabs.style.display = 'none';
-                mainContent.innerHTML = `
-                    <div class="actions-card-light" style="text-align: center; padding: 60px 40px;">
-                        <h2 style="font-size: 32px; margin-bottom: 20px;">🚧 Content Marketing</h2>
-                        <p style="font-size: 18px; color: rgba(255, 255, 255, 0.7); margin-bottom: 30px;">This section is under construction</p>
-                        <p style="font-size: 14px; color: rgba(255, 255, 255, 0.5);">Coming soon: Blog management, social media scheduling, and more!</p>
-                    </div>
-                `;
-            }
         }
         
         function switchTab(tabName) {
@@ -3573,16 +3579,243 @@
         }
         
         // ========== CONSULTANT NEWSLETTER FUNCTIONS ==========
-        let consultantState = null;
+        let consultantState = {
+            selectedConsultant: null,
+            uploadedFile: null,
+            parsedContent: null,
+            generatedHTML: null,
+            segment: null
+        };
         
-        function generateConsultantNewsletter() {
-            showToast('🚧 Consultant newsletter generation coming soon!', 'info');
+        // Load consultant data when selected
+        function loadConsultantData() {
+            const selector = document.getElementById('consultantSelector');
+            const consultantId = selector.value;
+            
+            if (!consultantId) {
+                document.getElementById('consultantStatusSection').style.display = 'none';
+                return;
+            }
+            
+            consultantState.selectedConsultant = consultantId;
+            
+            // Show status section
+            document.getElementById('consultantStatusSection').style.display = 'block';
+            
+            // Load consultant segment (auto-fill based on consultant name)
+            const consultantName = selector.options[selector.selectedIndex].text;
+            loadConsultantSegment(consultantName);
+            
+            // Update status
+            document.getElementById('consultantStateBadge').textContent = 'READY';
+            document.getElementById('consultantStateBadge').className = 'status-badge READY';
+            document.getElementById('consultantStateTimestamp').textContent = `Ready to upload content for ${consultantName}`;
+            
+            showToast(`Loaded ${consultantName}'s newsletter`, 'success');
         }
         
+        // Auto-load consultant segment
+        async function loadConsultantSegment(consultantName) {
+            try {
+                // Auto-select segment type
+                document.getElementById('consultantRecipientType').value = 'segment';
+                await loadConsultantRecipients();
+                
+                // Try to find segment matching consultant name
+                const selector = document.getElementById('consultantRecipientSelector');
+                for (let i = 0; i < selector.options.length; i++) {
+                    if (selector.options[i].text.includes(consultantName)) {
+                        selector.value = selector.options[i].value;
+                        previewConsultantRecipients();
+                        break;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading consultant segment:', error);
+            }
+        }
+        
+        // Handle content file upload
+        function handleContentUpload() {
+            const fileInput = document.getElementById('consultantContentFile');
+            const file = fileInput.files[0];
+            
+            if (!file) return;
+            
+            consultantState.uploadedFile = file;
+            
+            // Show preview
+            document.getElementById('uploadPreview').style.display = 'block';
+            document.getElementById('uploadPreviewContent').innerHTML = `
+                <p><strong>File:</strong> ${file.name}</p>
+                <p><strong>Size:</strong> ${(file.size / 1024).toFixed(2)} KB</p>
+                <p><strong>Type:</strong> ${file.type}</p>
+                <p style="margin-top: 10px; color: rgba(255, 255, 255, 0.6);">
+                    Click "Process & Format Content" to parse this document
+                </p>
+            `;
+            
+            // Enable buttons
+            document.getElementById('btnProcessContent').disabled = false;
+            document.getElementById('btnClearContent').disabled = false;
+            document.getElementById('btnGenerateConsultant').disabled = false;
+            
+            showToast('File uploaded successfully', 'success');
+        }
+        
+        // Process uploaded content
+        async function processUploadedContent() {
+            if (!consultantState.uploadedFile) {
+                showToast('❌ No file uploaded', 'error');
+                return;
+            }
+            
+            const btn = document.getElementById('btnProcessContent');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Processing...';
+            
+            try {
+                // Create FormData
+                const formData = new FormData();
+                formData.append('file', consultantState.uploadedFile);
+                formData.append('consultant', consultantState.selectedConsultant);
+                
+                // Send to backend for processing
+                const response = await fetch('/api/consultant/process-content', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) throw new Error('Failed to process content');
+                
+                const data = await response.json();
+                consultantState.parsedContent = data.parsedContent;
+                consultantState.generatedHTML = data.generatedHTML;
+                
+                // Show generated content
+                document.getElementById('generatedContentSection').style.display = 'block';
+                document.getElementById('generatedContentPreview').innerHTML = data.previewHTML;
+                
+                // Update status
+                document.getElementById('consultantStateBadge').textContent = 'GENERATED';
+                document.getElementById('consultantStateBadge').className = 'status-badge GENERATED';
+                document.getElementById('consultantStateTimestamp').textContent = `Content generated at ${new Date().toLocaleString('en-AU')}`;
+                
+                // Enable preview and test buttons
+                document.getElementById('btnGenerateConsultant').disabled = true;
+                document.getElementById('btnPreviewConsultant').disabled = false;
+                document.getElementById('btnTestConsultant').disabled = false;
+                
+                showToast('Content processed and formatted successfully!', 'success');
+            } catch (error) {
+                console.error('Error processing content:', error);
+                showToast('Failed to process content: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Process & Format Content';
+            }
+        }
+        
+        // Clear uploaded content
+        function clearUploadedContent() {
+            consultantState.uploadedFile = null;
+            consultantState.parsedContent = null;
+            consultantState.generatedHTML = null;
+            
+            document.getElementById('consultantContentFile').value = '';
+            document.getElementById('uploadPreview').style.display = 'none';
+            document.getElementById('generatedContentSection').style.display = 'none';
+            
+            document.getElementById('btnProcessContent').disabled = true;
+            document.getElementById('btnClearContent').disabled = true;
+            document.getElementById('btnGenerateConsultant').disabled = true;
+            document.getElementById('btnPreviewConsultant').disabled = true;
+            document.getElementById('btnTestConsultant').disabled = true;
+            
+            showToast('Upload cleared', 'info');
+        }
+        
+        // Regenerate content
+        async function regenerateContent() {
+            if (!consultantState.uploadedFile) {
+                showToast('No content to regenerate', 'error');
+                return;
+            }
+            await processUploadedContent();
+        }
+        
+        // Preview consultant newsletter
         function previewConsultantNewsletter() {
-            showToast('🚧 Consultant newsletter preview coming soon!', 'info');
+            if (!consultantState.generatedHTML) {
+                showToast('No content generated yet', 'error');
+                return;
+            }
+            
+            const previewUrl = `/api/consultant/preview/${consultantState.selectedConsultant}`;
+            loadPreview(previewUrl);
         }
         
+        // Load consultant recipients
+        async function loadConsultantRecipients() {
+            const type = document.getElementById('consultantRecipientType').value;
+            const selector = document.getElementById('consultantRecipientSelector');
+            
+            if (!type) {
+                selector.disabled = true;
+                return;
+            }
+            
+            selector.disabled = false;
+            selector.innerHTML = '<option value="">Loading...</option>';
+            
+            try {
+                const endpoint = type === 'segment' ? '/api/brevo/segments' : '/api/brevo/lists';
+                const response = await fetch(endpoint);
+                const data = await response.json();
+                
+                selector.innerHTML = '<option value="">-- Select --</option>';
+                
+                const items = type === 'segment' ? data.segments : data.lists;
+                items.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = type + '-' + item.id;
+                    option.text = item.name + (type === 'segment' ? ' (Dynamic)' : ' (Static)');
+                    selector.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading recipients:', error);
+                selector.innerHTML = '<option value="">Error loading</option>';
+            }
+        }
+        
+        // Preview consultant recipients
+        function previewConsultantRecipients() {
+            const selector = document.getElementById('consultantRecipientSelector');
+            if (!selector.value) {
+                document.getElementById('consultantRecipientPreview').style.display = 'none';
+                return;
+            }
+            
+            const [type, id] = selector.value.split('-');
+            const selectedOption = selector.options[selector.selectedIndex];
+            
+            document.getElementById('consultantPreviewName').textContent = selectedOption.text;
+            document.getElementById('consultantPreviewCount').textContent = '0';
+            document.getElementById('consultantPreviewUpdated').textContent = new Date().toLocaleDateString('en-AU');
+            document.getElementById('consultantRecipientPreview').style.display = 'block';
+            
+            // Enable confirm button
+            document.getElementById('btnConfirmConsultantRecipient').disabled = false;
+            
+            // Show count button for segments
+            if (type === 'segment') {
+                document.getElementById('btnShowConsultantCount').style.display = 'inline-block';
+            } else {
+                document.getElementById('btnShowConsultantCount').style.display = 'none';
+            }
+        }
+        
+        // Confirm consultant recipients
         function confirmConsultantRecipients() {
             const recipientType = document.getElementById('consultantRecipientType').value;
             const recipientSelector = document.getElementById('consultantRecipientSelector');
@@ -3592,28 +3825,135 @@
                 return;
             }
             
-            // Extract just the ID from 'segment-123' or 'list-456' format
             const [recType, recId] = recipientSelector.value.split('-');
             
-            confirmedRecipients.consultant = {
+            consultantState.segment = {
                 type: recipientType,
                 id: recId,
                 name: recipientSelector.options[recipientSelector.selectedIndex].text
             };
             
             // Enable send buttons
-            document.getElementById('btnTestConsultant').disabled = false;
+            document.getElementById('btnConfirmConsultantRecipient').disabled = true;
+            document.getElementById('btnScheduleConsultant').disabled = false;
             document.getElementById('btnSendConsultant').disabled = false;
             
-            showToast('✅ Recipients confirmed for Consultant Newsletter', 'success');
+            showToast('Recipients confirmed', 'success');
         }
         
-        function sendConsultantTest() {
-            showToast('🚧 Consultant newsletter test sending coming soon!', 'info');
+        // Send test
+        async function sendConsultantTest() {
+            if (!consultantState.generatedHTML) {
+                showToast('No content generated', 'error');
+                return;
+            }
+            
+            const btn = document.getElementById('btnTestConsultant');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Sending...';
+            
+            try {
+                const response = await fetch('/api/consultant/send-test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        consultant: consultantState.selectedConsultant,
+                        content: consultantState.generatedHTML
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Failed to send test');
+                
+                showToast('Test email sent successfully!', 'success');
+            } catch (error) {
+                console.error('Error sending test:', error);
+                showToast('Failed to send test: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Send Test';
+            }
         }
         
-        function sendConsultantNewsletter() {
-            showToast('🚧 Consultant newsletter sending coming soon!', 'info');
+        // Approve and schedule
+        async function approveAndScheduleConsultant() {
+            if (!consultantState.generatedHTML || !consultantState.segment) {
+                showToast('Please generate content and confirm recipients first', 'error');
+                return;
+            }
+            
+            const btn = document.getElementById('btnScheduleConsultant');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Scheduling...';
+            
+            try {
+                const response = await fetch('/api/consultant/schedule', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        consultant: consultantState.selectedConsultant,
+                        content: consultantState.generatedHTML,
+                        recipientType: consultantState.segment.type,
+                        recipientId: consultantState.segment.id
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Failed to schedule');
+                
+                const data = await response.json();
+                showToast(`Newsletter scheduled for ${data.scheduledTime}`, 'success');
+            } catch (error) {
+                console.error('Error scheduling:', error);
+                showToast('Failed to schedule: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Approve & Schedule';
+            }
+        }
+        
+        // Send now
+        async function sendConsultantNow() {
+            if (!consultantState.generatedHTML || !consultantState.segment) {
+                showToast('Please generate content and confirm recipients first', 'error');
+                return;
+            }
+            
+            if (!confirm('Are you sure you want to send this newsletter now?')) {
+                return;
+            }
+            
+            const btn = document.getElementById('btnSendConsultant');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Sending...';
+            
+            try {
+                const response = await fetch('/api/consultant/send-now', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        consultant: consultantState.selectedConsultant,
+                        content: consultantState.generatedHTML,
+                        recipientType: consultantState.segment.type,
+                        recipientId: consultantState.segment.id
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Failed to send');
+                
+                const data = await response.json();
+                
+                // Update status
+                document.getElementById('consultantStateBadge').textContent = 'SENT';
+                document.getElementById('consultantStateBadge').className = 'status-badge SENT';
+                document.getElementById('consultantLastSent').textContent = new Date().toLocaleString('en-AU');
+                
+                showToast(`Newsletter sent to ${data.recipientCount} contacts!`, 'success');
+            } catch (error) {
+                console.error('Error sending:', error);
+                showToast('Failed to send: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Send Now';
+            }
         }
     </script>
 </body>
