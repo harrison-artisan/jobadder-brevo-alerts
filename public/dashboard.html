@@ -941,7 +941,7 @@
         /* Recipient Selector Styles */
         .recipient-selector {
             background: rgba(255, 255, 255, 0.92);
-            padding: 15px;
+            padding: 25px 30px;
             border-radius: 10px;
             margin-bottom: 35px;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
@@ -2085,6 +2085,8 @@
                 if (response.ok) {
                     showToast(`Daily alerts ${data.activated ? 'activated' : 'deactivated'} successfully`, 'success');
                     await loadDailyAlertsStatus();
+                    // Ensure button is re-enabled after status loads
+                    btn.disabled = false;
                 } else {
                     showToast('Error toggling daily alerts', 'error');
                     btn.disabled = false;
@@ -2261,6 +2263,15 @@
             const recipientName = confirmedRecipients.alist.name;
             const recipientCount = confirmedRecipients.alist.count;
             
+            // Show confirmation popup
+            showConfirmation('A-List Schedule', recipientName, recipientCount, async (confirmed) => {
+                if (!confirmed) return;
+                
+                await executeAListSchedule(recipientType, recipientId);
+            });
+        }
+        
+        async function executeAListSchedule(recipientType, recipientId) {
             const btn = document.getElementById('btnScheduleAList');
             btn.disabled = true;
             btn.innerHTML = 'Scheduling... <span class="spinner"></span>';
@@ -2499,6 +2510,15 @@
             const recipientName = confirmedRecipients.xpose.name;
             const recipientCount = confirmedRecipients.xpose.count;
             
+            // Show confirmation popup
+            showConfirmation('Xpose Schedule', recipientName, recipientCount, async (confirmed) => {
+                if (!confirmed) return;
+                
+                await executeXposeSchedule(recipientType, recipientId);
+            });
+        }
+        
+        async function executeXposeSchedule(recipientType, recipientId) {
             const btn = document.getElementById('btnScheduleXpose');
             btn.disabled = true;
             btn.innerHTML = 'Scheduling... <span class="spinner"></span>';
@@ -2575,9 +2595,11 @@
                 if (result.success) {
                     xposeState = { state: 'EMPTY' };
                     showToast(`✅ ${result.message}`, 'success');
+                    showTabMessage('xpose', result.message, 'success');
                     clearPreview();
                 } else {
                     showToast(`❌ ${result.message}`, 'error');
+                    showTabMessage('xpose', result.message, 'error');
                 }
             } catch (error) {
                 loadingToast.remove();
