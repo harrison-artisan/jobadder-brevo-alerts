@@ -177,19 +177,23 @@ app.get('/api/brevo/segment/:id/count', async (req, res) => {
   try {
     const axios = require('axios');
     
-    // Fetch segment details which includes contact count
-    const segmentResponse = await axios.get(
-      `https://api.brevo.com/v3/contacts/segments/${req.params.id}`,
+    // Get contacts in segment - the response includes a 'count' field
+    const response = await axios.get(
+      `https://api.brevo.com/v3/contacts`,
       {
         headers: {
           'api-key': process.env.BREVO_API_KEY,
           'Content-Type': 'application/json'
+        },
+        params: {
+          segmentId: req.params.id,
+          limit: 1  // We only need the count, not the actual contacts
         }
       }
     );
     
-    // The segment object has a 'uniqueSubscribers' field with the count
-    const count = segmentResponse.data.uniqueSubscribers || 0;
+    // The response has a 'count' field with the total number of contacts
+    const count = response.data.count || 0;
     console.log(`✅ Segment ${req.params.id} has ${count} contacts`);
     res.json({ count });
   } catch (error) {
@@ -203,19 +207,23 @@ app.get('/api/brevo/list/:id/count', async (req, res) => {
   try {
     const axios = require('axios');
     
-    // Fetch list details which includes contact count
-    const listResponse = await axios.get(
-      `https://api.brevo.com/v3/contacts/lists/${req.params.id}`,
+    // Get contacts in list - the response includes a 'count' field
+    const response = await axios.get(
+      `https://api.brevo.com/v3/contacts`,
       {
         headers: {
           'api-key': process.env.BREVO_API_KEY,
           'Content-Type': 'application/json'
+        },
+        params: {
+          listIds: [req.params.id],
+          limit: 1  // We only need the count, not the actual contacts
         }
       }
     );
     
-    // The list object has a 'uniqueSubscribers' or 'totalSubscribers' field with the count
-    const count = listResponse.data.uniqueSubscribers || listResponse.data.totalSubscribers || 0;
+    // The response has a 'count' field with the total number of contacts
+    const count = response.data.count || 0;
     console.log(`✅ List ${req.params.id} has ${count} contacts`);
     res.json({ count });
   } catch (error) {
