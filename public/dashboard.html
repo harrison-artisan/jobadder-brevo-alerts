@@ -1813,8 +1813,8 @@
                 content.classList.remove('active');
             });
             
-            // Remove active class from all tabs
-            document.querySelectorAll('.tab').forEach(tab => {
+            // Remove active class from email type tabs only (not main tabs)
+            document.querySelectorAll('#emailTabs .tab').forEach(tab => {
                 tab.classList.remove('active');
             });
             
