@@ -3045,7 +3045,7 @@
                     recipientSelector.innerHTML = '<option value="">-- Choose a ' + type + ' --</option>';
                     items.forEach(item => {
                         const option = document.createElement('option');
-                        option.value = item.id;
+                        option.value = type + '-' + item.id; // Format: 'segment-123' or 'list-456'
                         
                         const itemName = type === 'segment' ? item.segmentName : item.name;
                         option.setAttribute('data-name', itemName);
@@ -3198,9 +3198,12 @@
             const recipientSelector = document.getElementById('recipientSelector');
             const selectedOption = recipientSelector.options[recipientSelector.selectedIndex];
             
+            // Extract just the ID from 'segment-123' or 'list-456' format
+            const [recType, recId] = recipientSelector.value.split('-');
+            
             confirmedRecipients.alist = {
                 type: typeSelector.value,
-                id: recipientSelector.value,
+                id: recId,
                 name: selectedOption.getAttribute('data-name'),
                 count: selectedOption.getAttribute('data-count')
             };
@@ -3226,9 +3229,12 @@
             const recipientSelector = document.getElementById('dailyRecipientSelector');
             const selectedOption = recipientSelector.options[recipientSelector.selectedIndex];
             
+            // Extract just the ID from 'segment-123' or 'list-456' format
+            const [recType, recId] = recipientSelector.value.split('-');
+            
             confirmedRecipients.daily = {
                 type: typeSelector.value,
-                id: recipientSelector.value,
+                id: recId,
                 name: selectedOption.getAttribute('data-name'),
                 count: selectedOption.getAttribute('data-count')
             };
@@ -3252,9 +3258,12 @@
             const recipientSelector = document.getElementById('singleJobRecipientSelector');
             const selectedOption = recipientSelector.options[recipientSelector.selectedIndex];
             
+            // Extract just the ID from 'segment-123' or 'list-456' format
+            const [recType, recId] = recipientSelector.value.split('-');
+            
             confirmedRecipients.singleJob = {
                 type: typeSelector.value,
-                id: recipientSelector.value,
+                id: recId,
                 name: selectedOption.getAttribute('data-name'),
                 count: selectedOption.getAttribute('data-count')
             };
@@ -3278,9 +3287,12 @@
             const recipientSelector = document.getElementById('xposeRecipientSelector');
             const selectedOption = recipientSelector.options[recipientSelector.selectedIndex];
             
+            // Extract just the ID from 'segment-123' or 'list-456' format
+            const [recType, recId] = recipientSelector.value.split('-');
+            
             confirmedRecipients.xpose = {
                 type: typeSelector.value,
-                id: recipientSelector.value,
+                id: recId,
                 name: selectedOption.getAttribute('data-name'),
                 count: selectedOption.getAttribute('data-count')
             };
@@ -3370,9 +3382,12 @@
             const recipientSelector = document.getElementById('articleRecipientSelector');
             const selectedOption = recipientSelector.options[recipientSelector.selectedIndex];
             
+            // Extract just the ID from 'segment-123' or 'list-456' format
+            const [recType, recId] = recipientSelector.value.split('-');
+            
             confirmedRecipients.article = {
                 type: typeSelector.value,
-                id: recipientSelector.value,
+                id: recId,
                 name: selectedOption.getAttribute('data-name'),
                 count: selectedOption.getAttribute('data-count')
             };
@@ -3420,7 +3435,7 @@
                     recipientSelector.innerHTML = '<option value="">-- Choose a ' + type + ' --</option>';
                     items.forEach(item => {
                         const option = document.createElement('option');
-                        option.value = item.id;
+                        option.value = type + '-' + item.id; // Format: 'segment-123' or 'list-456'
                         
                         // Segments use 'segmentName', Lists use 'name'
                         const itemName = type === 'segment' ? item.segmentName : item.name;
