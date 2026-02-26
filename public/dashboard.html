@@ -1090,10 +1090,10 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <img src="https://artisan.com.au/wp-content/uploads/2026/02/artisan_A_RGB_Artisan-A-Reversed-1.png" alt="Artisan Logo" class="header-logo">
+            <img src="https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png" alt="Artisan Logo" class="header-logo">
             <div>
                 <h1>Artisan Dashboard [Harrison 2.0]</h1>
-                <p>Job Alerts, A-List and Xpose Management System</p>
+                <p>Job Alerts & A-List Management System</p>
             </div>
         </div>
         
@@ -3339,27 +3339,7 @@
             }
         }
         
-        // Preview selected segment/list
-        function previewRecipients() {
-            const recipientSelector = document.getElementById('recipientSelector');
-            const preview = document.getElementById('recipientPreview');
-            const selectedOption = recipientSelector.options[recipientSelector.selectedIndex];
-            
-            if (!recipientSelector.value || recipientSelector.selectedIndex === 0) {
-                preview.style.display = 'none';
-                return;
-            }
-            
-            const name = selectedOption.getAttribute('data-name');
-            const count = selectedOption.getAttribute('data-count');
-            const updated = selectedOption.getAttribute('data-updated');
-            
-            document.getElementById('previewName').textContent = name;
-            document.getElementById('previewCount').textContent = count;
-            document.getElementById('previewUpdated').textContent = updated ? new Date(updated).toLocaleDateString() : '-';
-            
-            preview.style.display = 'block';
-        }
+
 
         // Event listeners
         document.addEventListener('DOMContentLoaded', function() {
