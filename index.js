@@ -166,44 +166,58 @@ const brevoService = require('./services/brevoService');
 app.get('/api/brevo/segments', async (req, res) => {
   try {
     const segments = await brevoService.getSegments();
-    
-    // Fetch contact count for each segment from Brevo API directly
+    res.json({ segments });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get contact count for a specific segment (on-demand)
+app.get('/api/brevo/segment/:id/count', async (req, res) => {
+  try {
     const axios = require('axios');
-    const segmentsWithCounts = await Promise.all(
-      segments.map(async (segment) => {
-        try {
-          const response = await axios.get(
-            `https://api.brevo.com/v3/contacts/segments/${segment.id}/contacts`,
-            {
-              headers: {
-                'api-key': process.env.BREVO_API_KEY,
-                'Content-Type': 'application/json'
-              },
-              params: {
-                limit: 1 // We only need the count, not the actual contacts
-              }
-            }
-          );
-          
-          // Use the count from the API response
-          const count = response.data.count || 0;
-          
-          return {
-            ...segment,
-            uniqueSubscribers: count
-          };
-        } catch (error) {
-          console.error(`Error fetching count for segment ${segment.id}:`, error.message);
-          return {
-            ...segment,
-            uniqueSubscribers: segment.uniqueSubscribers || 0
-          };
+    const response = await axios.get(
+      `https://api.brevo.com/v3/contacts/segments/${req.params.id}/contacts`,
+      {
+        headers: {
+          'api-key': process.env.BREVO_API_KEY,
+          'Content-Type': 'application/json'
+        },
+        params: {
+          limit: 1 // We only need the count, not the actual contacts
         }
-      })
+      }
     );
     
-    res.json({ segments: segmentsWithCounts });
+    const count = response.data.count || 0;
+    res.json({ count });
   } catch (error) {
+    console.error(`Error fetching count for segment ${req.params.id}:`, error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get contact count for a specific list (on-demand)
+app.get('/api/brevo/list/:id/count', async (req, res) => {
+  try {
+    const axios = require('axios');
+    const response = await axios.get(
+      `https://api.brevo.com/v3/contacts/lists/${req.params.id}/contacts`,
+      {
+        headers: {
+          'api-key': process.env.BREVO_API_KEY,
+          'Content-Type': 'application/json'
+        },
+        params: {
+          limit: 1 // We only need the count, not the actual contacts
+        }
+      }
+    );
+    
+    const count = response.data.count || 0;
+    res.json({ count });
+  } catch (error) {
+    console.error(`Error fetching count for list ${req.params.id}:`, error.message);
     res.status(500).json({ error: error.message });
   }
 });
