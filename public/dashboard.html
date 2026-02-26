@@ -2028,13 +2028,13 @@
                     statusEl.textContent = '✅ Active';
                     statusEl.style.color = '#27ae60';
                     descEl.textContent = 'Sending roundup at 2pm when new jobs are posted';
-                    btnToggle.textContent = '⏸️ Deactivate';
+                    btnToggle.textContent = 'Deactivate';
                     btnToggle.className = 'btn btn-warning';
                 } else {
                     statusEl.textContent = '⏸️ Inactive';
                     statusEl.style.color = '#e74c3c';
                     descEl.textContent = 'Daily alerts are paused';
-                    btnToggle.textContent = '▶️ Activate';
+                    btnToggle.textContent = 'Activate';
                     btnToggle.className = 'btn btn-success';
                 }
             } catch (error) {
@@ -3209,7 +3209,11 @@
         function removeRecipient() {
             confirmedRecipients.alist = null;
             document.getElementById('recipientLocked').style.display = 'none';
-            document.getElementById('btnConfirmRecipient').style.display = 'block';
+            const confirmBtn = document.getElementById('btnConfirmRecipient');
+            confirmBtn.style.display = 'block';
+            confirmBtn.classList.remove('confirmed');
+            confirmBtn.textContent = 'Confirm Selection';
+            confirmBtn.disabled = false;
             document.getElementById('btnRemoveRecipient').style.display = 'none';
             document.getElementById('recipientType').disabled = false;
             document.getElementById('recipientSelector').disabled = false;
@@ -3218,7 +3222,11 @@
         function removeDailyRecipient() {
             confirmedRecipients.daily = null;
             document.getElementById('dailyRecipientLocked').style.display = 'none';
-            document.getElementById('btnConfirmDailyRecipient').style.display = 'block';
+            const confirmBtn = document.getElementById('btnConfirmDailyRecipient');
+            confirmBtn.style.display = 'block';
+            confirmBtn.classList.remove('confirmed');
+            confirmBtn.textContent = 'Confirm Selection';
+            confirmBtn.disabled = false;
             document.getElementById('btnRemoveDailyRecipient').style.display = 'none';
             document.getElementById('dailyRecipientType').disabled = false;
             document.getElementById('dailyRecipientSelector').disabled = false;
@@ -3227,7 +3235,11 @@
         function removeSingleJobRecipient() {
             confirmedRecipients.singleJob = null;
             document.getElementById('singleJobRecipientLocked').style.display = 'none';
-            document.getElementById('btnConfirmSingleJobRecipient').style.display = 'block';
+            const confirmBtn = document.getElementById('btnConfirmSingleJobRecipient');
+            confirmBtn.style.display = 'block';
+            confirmBtn.classList.remove('confirmed');
+            confirmBtn.textContent = 'Confirm Selection';
+            confirmBtn.disabled = false;
             document.getElementById('btnRemoveSingleJobRecipient').style.display = 'none';
             document.getElementById('singleJobRecipientType').disabled = false;
             document.getElementById('singleJobRecipientSelector').disabled = false;
@@ -3236,7 +3248,11 @@
         function removeXposeRecipient() {
             confirmedRecipients.xpose = null;
             document.getElementById('xposeRecipientLocked').style.display = 'none';
-            document.getElementById('btnConfirmXposeRecipient').style.display = 'block';
+            const confirmBtn = document.getElementById('btnConfirmXposeRecipient');
+            confirmBtn.style.display = 'block';
+            confirmBtn.classList.remove('confirmed');
+            confirmBtn.textContent = 'Confirm Selection';
+            confirmBtn.disabled = false;
             document.getElementById('btnRemoveXposeRecipient').style.display = 'none';
             document.getElementById('xposeRecipientType').disabled = false;
             document.getElementById('xposeRecipientSelector').disabled = false;
@@ -3245,7 +3261,11 @@
         function removeArticleRecipient() {
             confirmedRecipients.article = null;
             document.getElementById('articleRecipientLocked').style.display = 'none';
-            document.getElementById('btnConfirmArticleRecipient').style.display = 'block';
+            const confirmBtn = document.getElementById('btnConfirmArticleRecipient');
+            confirmBtn.style.display = 'block';
+            confirmBtn.classList.remove('confirmed');
+            confirmBtn.textContent = 'Confirm Selection';
+            confirmBtn.disabled = false;
             document.getElementById('btnRemoveArticleRecipient').style.display = 'none';
             document.getElementById('articleRecipientType').disabled = false;
             document.getElementById('articleRecipientSelector').disabled = false;
