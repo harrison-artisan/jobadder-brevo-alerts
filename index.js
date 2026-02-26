@@ -167,20 +167,36 @@ app.get('/api/brevo/segments', async (req, res) => {
   try {
     const segments = await brevoService.getSegments();
     
-    // Fetch contact count for each segment
+    // Fetch contact count for each segment from Brevo API directly
+    const axios = require('axios');
     const segmentsWithCounts = await Promise.all(
       segments.map(async (segment) => {
         try {
-          const contacts = await brevoService.getSegmentContacts(segment.id);
+          const response = await axios.get(
+            `https://api.brevo.com/v3/contacts/segments/${segment.id}/contacts`,
+            {
+              headers: {
+                'api-key': process.env.BREVO_API_KEY,
+                'Content-Type': 'application/json'
+              },
+              params: {
+                limit: 1 // We only need the count, not the actual contacts
+              }
+            }
+          );
+          
+          // Use the count from the API response
+          const count = response.data.count || 0;
+          
           return {
             ...segment,
-            uniqueSubscribers: contacts.length
+            uniqueSubscribers: count
           };
         } catch (error) {
-          console.error(`Error fetching contacts for segment ${segment.id}:`, error.message);
+          console.error(`Error fetching count for segment ${segment.id}:`, error.message);
           return {
             ...segment,
-            uniqueSubscribers: 0
+            uniqueSubscribers: segment.uniqueSubscribers || 0
           };
         }
       })
