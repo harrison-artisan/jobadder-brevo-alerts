@@ -176,24 +176,25 @@ app.get('/api/brevo/segments', async (req, res) => {
 app.get('/api/brevo/segment/:id/count', async (req, res) => {
   try {
     const axios = require('axios');
-    const response = await axios.get(
-      `https://api.brevo.com/v3/contacts/segments/${req.params.id}/contacts`,
+    
+    // Fetch segment details which includes contact count
+    const segmentResponse = await axios.get(
+      `https://api.brevo.com/v3/contacts/segments/${req.params.id}`,
       {
         headers: {
           'api-key': process.env.BREVO_API_KEY,
           'Content-Type': 'application/json'
-        },
-        params: {
-          limit: 1 // We only need the count, not the actual contacts
         }
       }
     );
     
-    const count = response.data.count || 0;
+    // The segment object has a 'uniqueSubscribers' field with the count
+    const count = segmentResponse.data.uniqueSubscribers || 0;
+    console.log(`✅ Segment ${req.params.id} has ${count} contacts`);
     res.json({ count });
   } catch (error) {
-    console.error(`Error fetching count for segment ${req.params.id}:`, error.message);
-    res.status(500).json({ error: error.message });
+    console.error(`❌ Error fetching count for segment ${req.params.id}:`, error.response?.data || error.message);
+    res.status(500).json({ error: error.response?.data?.message || error.message });
   }
 });
 
@@ -201,24 +202,25 @@ app.get('/api/brevo/segment/:id/count', async (req, res) => {
 app.get('/api/brevo/list/:id/count', async (req, res) => {
   try {
     const axios = require('axios');
-    const response = await axios.get(
-      `https://api.brevo.com/v3/contacts/lists/${req.params.id}/contacts`,
+    
+    // Fetch list details which includes contact count
+    const listResponse = await axios.get(
+      `https://api.brevo.com/v3/contacts/lists/${req.params.id}`,
       {
         headers: {
           'api-key': process.env.BREVO_API_KEY,
           'Content-Type': 'application/json'
-        },
-        params: {
-          limit: 1 // We only need the count, not the actual contacts
         }
       }
     );
     
-    const count = response.data.count || 0;
+    // The list object has a 'uniqueSubscribers' or 'totalSubscribers' field with the count
+    const count = listResponse.data.uniqueSubscribers || listResponse.data.totalSubscribers || 0;
+    console.log(`✅ List ${req.params.id} has ${count} contacts`);
     res.json({ count });
   } catch (error) {
-    console.error(`Error fetching count for list ${req.params.id}:`, error.message);
-    res.status(500).json({ error: error.message });
+    console.error(`❌ Error fetching count for list ${req.params.id}:`, error.response?.data || error.message);
+    res.status(500).json({ error: error.response?.data?.message || error.message });
   }
 });
 
