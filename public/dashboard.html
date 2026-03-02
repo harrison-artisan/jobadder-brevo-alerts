@@ -2624,7 +2624,7 @@ Choose Recent Poll
             }
         }
 
-        function cmOnJobDropdownChange(sel) {
+        async function cmOnJobDropdownChange(sel) {
             const idx = sel.value;
             if (idx === '' || !cmJobsCache) {
                 cmClearJobSelection();
@@ -2632,18 +2632,46 @@ Choose Recent Poll
             }
             const job = cmJobsCache[parseInt(idx, 10)];
             if (!job) return;
-            // Auto-fill fields
+
+            // Auto-fill metadata fields
             const titleEl = document.getElementById('cmJobTitle');
-            const urlEl = document.getElementById('cmJobUrl');
-            const descEl = document.getElementById('cmJobDescription');
+            const urlEl   = document.getElementById('cmJobUrl');
+            const descEl  = document.getElementById('cmJobDescription');
+            const copyEl  = document.getElementById('cmJobPostText');
+            const statusEl = document.getElementById('cmJobPostStatus');
             if (titleEl) titleEl.value = job.title || '';
-            if (urlEl) urlEl.value = job.jobUrl || '';
+            if (urlEl)   urlEl.value   = job.jobUrl || '';
             if (descEl) {
                 const parts = [job.location, job.workType].filter(Boolean);
-                descEl.value = parts.length ? parts.join(', ') + (job.salary ? ' — ' + job.salary : '') : (job.salary || '');
+                descEl.value = parts.length ? parts.join(', ') + (job.salary ? ' \u2014 ' + job.salary : '') : (job.salary || '');
             }
             // Trigger preview card update
             if (typeof cmPreviewJobCard === 'function') cmPreviewJobCard();
+
+            // Generate post copy with AI
+            if (copyEl) {
+                copyEl.value = '';
+                copyEl.placeholder = 'Generating post copy...';
+                if (statusEl) statusEl.textContent = 'Writing post copy...';
+                try {
+                    const res = await fetch('/api/linkedin/generate-job-post', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ job })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        copyEl.value = data.copy;
+                        if (statusEl) statusEl.textContent = '';
+                    } else {
+                        copyEl.placeholder = 'Could not generate copy. Write your own above.';
+                        if (statusEl) statusEl.textContent = 'AI error: ' + (data.message || 'Unknown error');
+                    }
+                } catch (err) {
+                    copyEl.placeholder = 'Could not generate copy. Write your own above.';
+                    if (statusEl) statusEl.textContent = 'Error: ' + err.message;
+                }
+            }
         }
 
         function cmClearJobSelection() {

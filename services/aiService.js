@@ -814,6 +814,55 @@ You may include 3 or 4 options if the topic genuinely needs them. Never use emoj
       throw new Error('AI returned invalid JSON for poll suggestion.');
     }
   }
+
+  /**
+   * Generate punchy LinkedIn job post copy from job details
+   */
+  async generateJobPost(job) {
+    const client = this.getClient();
+    if (!client) throw new Error('OpenAI API key not configured.');
+
+    const meta = [
+      job.location ? `Location: ${job.location}` : null,
+      job.workType ? `Work type: ${job.workType}` : null,
+      job.salary   ? `Salary: ${job.salary}`       : null,
+    ].filter(Boolean).join('\n');
+
+    const systemMsg = `You are a social media copywriter for Artisan, a specialist Australian recruitment agency placing creative, digital, and marketing professionals.
+
+You write LinkedIn job posts that are:
+- Short and punchy — 80 to 130 words maximum
+- Written in second person ("you", "your") to speak directly to the candidate
+- Highlight the most exciting parts of the role in 2-3 tight sentences
+- Include a clear call to action at the end (e.g. "Apply now" or "Reach out to the Artisan team")
+- End with the job URL on its own line so LinkedIn renders it as a link card
+- No emojis anywhere
+- No hashtags
+- Australian English spelling
+- No em-dashes
+- Do not include the job title as a heading — weave it naturally into the copy`;
+
+    const userMsg = `Write a LinkedIn job post for the following role:
+
+Job title: ${job.title}
+${meta}
+${job.description ? `\nRole overview:\n${job.description}` : ''}
+${job.jobUrl ? `\nJob URL: ${job.jobUrl}` : ''}
+
+Return ONLY the post copy as plain text. No JSON, no markdown, no extra commentary.`;
+
+    const response = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemMsg },
+        { role: 'user',   content: userMsg   }
+      ],
+      temperature: 0.75,
+      max_tokens: 300
+    });
+
+    return response.choices[0].message.content.trim();
+  }
 }
 
 module.exports = new AIService();
