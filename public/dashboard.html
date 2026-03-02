@@ -1797,13 +1797,150 @@
                 // Hide email tabs
                 emailTabs.style.display = 'none';
                 
-                // Show placeholder
+                // Inject the full Content Marketing UI
                 mainContent.innerHTML = `
-                    <div style="padding: 60px 20px; text-align: center;">
-                        <h2 style="color: white; margin-bottom: 20px;">Content Marketing</h2>
-                        <p style="color: rgba(255, 255, 255, 0.7); font-size: 18px;">Coming soon...</p>
+                <div id="contentMarketingApp" style="padding: 20px 0;">
+
+                    <!-- Message Banner -->
+                    <div id="cmMessage" style="display:none; padding: 14px 20px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; font-weight: 500;"></div>
+
+                    <!-- STEP 1: Generate -->
+                    <div class="actions-card" id="cmStep1">
+                        <h2 style="display:flex; align-items:center; gap:10px;">
+                            <span style="background:#3498db; color:white; border-radius:50%; width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0;">1</span>
+                            Generate Article &amp; Header Image
+                        </h2>
+                        <p style="color:rgba(255,255,255,0.7); margin-bottom:20px; font-size:14px; line-height:1.6;">
+                            Enter a topic or title idea. AI will write a full SEO-optimised article and generate a professional header image — no Canva required.
+                        </p>
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:14px;">Topic / Article Idea</label>
+                            <textarea id="cmTopic" rows="3" placeholder="e.g. How to attract top creative talent in Australia in 2025" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px; resize:vertical; box-sizing:border-box;"></textarea>
+                        </div>
+                        <div class="button-group">
+                            <button class="btn btn-info" id="btnCmGenerate" onclick="cmGenerate()">✨ Generate Article &amp; Image</button>
+                            <button class="btn" id="btnCmReset" onclick="cmReset()" style="background:#7f8c8d; display:none;">↺ Start Over</button>
+                        </div>
+                        <div id="cmGenerating" style="display:none; text-align:center; padding:30px 0;">
+                            <div style="font-size:24px; margin-bottom:10px;">⏳</div>
+                            <p style="color:rgba(255,255,255,0.8); font-size:14px;">Generating article and header image — this takes about 20–30 seconds...</p>
+                        </div>
                     </div>
+
+                    <!-- STEP 2: Review & Edit -->
+                    <div class="actions-card" id="cmStep2" style="display:none;">
+                        <h2 style="display:flex; align-items:center; gap:10px;">
+                            <span style="background:#27ae60; color:white; border-radius:50%; width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0;">2</span>
+                            Review &amp; Publish to WordPress
+                        </h2>
+
+                        <!-- Header Image Preview -->
+                        <div style="margin-bottom:24px;">
+                            <label style="display:block; color:white; font-weight:500; margin-bottom:10px; font-size:14px;">Header Image (AI Generated)</label>
+                            <img id="cmHeaderImage" src="" alt="Generated header image" style="width:100%; max-height:300px; object-fit:cover; border-radius:8px; border:1px solid rgba(255,255,255,0.15);">
+                        </div>
+
+                        <!-- Article Title -->
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:14px;">Article Title</label>
+                            <input type="text" id="cmTitle" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px; box-sizing:border-box;">
+                        </div>
+
+                        <!-- Article Excerpt -->
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:14px;">Excerpt / Meta Description</label>
+                            <textarea id="cmExcerpt" rows="2" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px; resize:vertical; box-sizing:border-box;"></textarea>
+                        </div>
+
+                        <!-- Article Body -->
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:14px;">Article Body (Markdown)</label>
+                            <textarea id="cmContent" rows="18" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:13px; font-family:monospace; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
+                        </div>
+
+                        <!-- Suggested Tags -->
+                        <div style="margin-bottom:16px;">
+                            <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:14px;">Suggested Tags</label>
+                            <input type="text" id="cmTags" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px; box-sizing:border-box;" placeholder="tag1, tag2, tag3">
+                        </div>
+
+                        <!-- Publish Options -->
+                        <div style="display:flex; gap:16px; margin-bottom:20px; flex-wrap:wrap;">
+                            <div style="flex:1; min-width:180px;">
+                                <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:14px;">Publish Status</label>
+                                <select id="cmStatus" style="width:100%; padding:12px 14px; background:rgba(30,40,60,0.9); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px;">
+                                    <option value="draft">Save as Draft</option>
+                                    <option value="publish">Publish Immediately</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="button-group" id="cmPublishButtons">
+                            <button class="btn btn-success" id="btnCmPublish" onclick="cmPublish()">🚀 Publish to WordPress</button>
+                        </div>
+                        <div id="cmPublishing" style="display:none; text-align:center; padding:20px 0;">
+                            <p style="color:rgba(255,255,255,0.8); font-size:14px;">⏳ Uploading image and creating post...</p>
+                        </div>
+                    </div>
+
+                    <!-- STEP 3: Social Media -->
+                    <div class="actions-card" id="cmStep3" style="display:none;">
+                        <h2 style="display:flex; align-items:center; gap:10px;">
+                            <span style="background:#9b59b6; color:white; border-radius:50%; width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0;">3</span>
+                            Social Media Posts
+                        </h2>
+
+                        <!-- Published post link -->
+                        <div id="cmPublishedLink" style="margin-bottom:20px; padding:14px; background:rgba(39,174,96,0.15); border:1px solid rgba(39,174,96,0.4); border-radius:8px;">
+                            <p style="color:white; margin:0; font-size:14px;">✅ <strong>Post published:</strong> <a id="cmPostUrl" href="#" target="_blank" style="color:#2ecc71;">View on WordPress →</a></p>
+                        </div>
+
+                        <p style="color:rgba(255,255,255,0.7); margin-bottom:20px; font-size:14px; line-height:1.6;">
+                            AI-generated social posts ready for LinkedIn, Facebook, and X/Twitter. Edit as needed before copying.
+                        </p>
+
+                        <div id="cmSocialGenerating" style="display:none; text-align:center; padding:20px 0;">
+                            <p style="color:rgba(255,255,255,0.8); font-size:14px;">⏳ Generating social posts...</p>
+                        </div>
+
+                        <!-- LinkedIn -->
+                        <div style="margin-bottom:20px;">
+                            <label style="display:flex; align-items:center; gap:8px; color:white; font-weight:600; margin-bottom:10px; font-size:14px;">
+                                <span style="background:#0077b5; padding:3px 8px; border-radius:4px; font-size:12px;">in</span> LinkedIn
+                            </label>
+                            <textarea id="cmLinkedin" rows="8" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
+                            <button onclick="cmCopyText('cmLinkedin')" style="margin-top:8px; padding:6px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; cursor:pointer; font-size:12px;">📋 Copy</button>
+                        </div>
+
+                        <!-- Facebook -->
+                        <div style="margin-bottom:20px;">
+                            <label style="display:flex; align-items:center; gap:8px; color:white; font-weight:600; margin-bottom:10px; font-size:14px;">
+                                <span style="background:#1877f2; padding:3px 8px; border-radius:4px; font-size:12px;">f</span> Facebook
+                            </label>
+                            <textarea id="cmFacebook" rows="5" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
+                            <button onclick="cmCopyText('cmFacebook')" style="margin-top:8px; padding:6px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; cursor:pointer; font-size:12px;">📋 Copy</button>
+                        </div>
+
+                        <!-- X / Twitter -->
+                        <div style="margin-bottom:24px;">
+                            <label style="display:flex; align-items:center; gap:8px; color:white; font-weight:600; margin-bottom:10px; font-size:14px;">
+                                <span style="background:#000; padding:3px 8px; border-radius:4px; font-size:12px;">𝕏</span> X / Twitter
+                            </label>
+                            <textarea id="cmTwitter" rows="3" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
+                            <button onclick="cmCopyText('cmTwitter')" style="margin-top:8px; padding:6px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; cursor:pointer; font-size:12px;">📋 Copy</button>
+                        </div>
+
+                        <div class="button-group">
+                            <button class="btn btn-info" onclick="cmRegenerateSocial()">🔄 Regenerate Social Posts</button>
+                            <button class="btn" onclick="cmReset()" style="background:#7f8c8d;">↺ Start New Article</button>
+                        </div>
+                    </div>
+
+                </div>
                 `;
+
+                // Load any existing state
+                cmLoadState();
             }
         }
         
@@ -1830,6 +1967,213 @@
             }
         }
         
+        // ============================================================
+        // Content Marketing Functions
+        // ============================================================
+
+        // Store generated data in memory while the tab is open
+        let cmState = { article: null, imageDataUrl: null, publishedPost: null };
+
+        function cmShowMessage(msg, type) {
+            const el = document.getElementById('cmMessage');
+            if (!el) return;
+            el.textContent = msg;
+            el.style.display = 'block';
+            if (type === 'success') {
+                el.style.background = 'rgba(39,174,96,0.2)';
+                el.style.border = '1px solid rgba(39,174,96,0.5)';
+                el.style.color = '#2ecc71';
+            } else if (type === 'error') {
+                el.style.background = 'rgba(231,76,60,0.2)';
+                el.style.border = '1px solid rgba(231,76,60,0.5)';
+                el.style.color = '#e74c3c';
+            } else {
+                el.style.background = 'rgba(52,152,219,0.2)';
+                el.style.border = '1px solid rgba(52,152,219,0.5)';
+                el.style.color = '#3498db';
+            }
+            setTimeout(() => { if (el) el.style.display = 'none'; }, 8000);
+        }
+
+        async function cmLoadState() {
+            try {
+                const resp = await fetch('/api/content/state');
+                const data = await resp.json();
+                if (data.state && data.state.article) {
+                    // Restore from server state (e.g. after page refresh)
+                    cmState.article = data.state.article;
+                    cmState.publishedPost = data.state.publishedPost;
+                    document.getElementById('cmTitle').value = data.state.article.title || '';
+                    document.getElementById('cmContent').value = data.state.article.content || '';
+                    document.getElementById('cmExcerpt').value = data.state.article.excerpt || '';
+                    document.getElementById('cmTags').value = (data.state.article.suggestedTags || []).join(', ');
+                    document.getElementById('cmStep2').style.display = 'block';
+                    document.getElementById('btnCmReset').style.display = 'inline-block';
+                    if (data.state.publishedPost) {
+                        document.getElementById('cmStep3').style.display = 'block';
+                        document.getElementById('cmPostUrl').href = data.state.publishedPost.link;
+                        document.getElementById('cmPostUrl').textContent = data.state.publishedPost.link;
+                    }
+                }
+            } catch (e) {
+                // No state — fresh start
+            }
+        }
+
+        async function cmGenerate() {
+            const topic = document.getElementById('cmTopic').value.trim();
+            if (!topic) {
+                cmShowMessage('Please enter a topic before generating.', 'error');
+                return;
+            }
+
+            document.getElementById('btnCmGenerate').disabled = true;
+            document.getElementById('cmGenerating').style.display = 'block';
+            document.getElementById('cmStep2').style.display = 'none';
+            document.getElementById('cmStep3').style.display = 'none';
+
+            try {
+                const resp = await fetch('/api/content/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic })
+                });
+                const data = await resp.json();
+
+                if (!data.success) throw new Error(data.message);
+
+                cmState.article = data.article;
+                cmState.imageDataUrl = data.imageDataUrl;
+
+                // Populate Step 2
+                document.getElementById('cmTitle').value = data.article.title || '';
+                document.getElementById('cmContent').value = data.article.content || '';
+                document.getElementById('cmExcerpt').value = data.article.excerpt || '';
+                document.getElementById('cmTags').value = (data.article.suggestedTags || []).join(', ');
+                document.getElementById('cmHeaderImage').src = data.imageDataUrl;
+                document.getElementById('cmStep2').style.display = 'block';
+                document.getElementById('btnCmReset').style.display = 'inline-block';
+
+                cmShowMessage('Article and header image generated successfully!', 'success');
+                document.getElementById('cmStep2').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } catch (err) {
+                cmShowMessage('Error: ' + err.message, 'error');
+            } finally {
+                document.getElementById('btnCmGenerate').disabled = false;
+                document.getElementById('cmGenerating').style.display = 'none';
+            }
+        }
+
+        async function cmPublish() {
+            const title = document.getElementById('cmTitle').value.trim();
+            const content = document.getElementById('cmContent').value.trim();
+            const excerpt = document.getElementById('cmExcerpt').value.trim();
+            const status = document.getElementById('cmStatus').value;
+
+            if (!title || !content) {
+                cmShowMessage('Title and content are required to publish.', 'error');
+                return;
+            }
+
+            document.getElementById('btnCmPublish').disabled = true;
+            document.getElementById('cmPublishing').style.display = 'block';
+
+            try {
+                const resp = await fetch('/api/content/publish', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, content, excerpt, status })
+                });
+                const data = await resp.json();
+
+                if (!data.success) throw new Error(data.message);
+
+                cmState.publishedPost = data.post;
+
+                // Show Step 3
+                document.getElementById('cmStep3').style.display = 'block';
+                document.getElementById('cmPostUrl').href = data.post.link;
+                document.getElementById('cmPostUrl').textContent = data.post.link;
+
+                cmShowMessage(
+                    data.post.status === 'publish' ? '🎉 Article published to WordPress!' : '✅ Article saved as draft in WordPress.',
+                    'success'
+                );
+
+                // Auto-generate social posts
+                await cmFetchSocialPosts(title, excerpt, data.post.link);
+
+                document.getElementById('cmStep3').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } catch (err) {
+                cmShowMessage('Error publishing: ' + err.message, 'error');
+            } finally {
+                document.getElementById('btnCmPublish').disabled = false;
+                document.getElementById('cmPublishing').style.display = 'none';
+            }
+        }
+
+        async function cmFetchSocialPosts(title, excerpt, url) {
+            document.getElementById('cmSocialGenerating').style.display = 'block';
+            document.getElementById('cmLinkedin').value = '';
+            document.getElementById('cmFacebook').value = '';
+            document.getElementById('cmTwitter').value = '';
+
+            try {
+                const resp = await fetch('/api/content/social-posts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        articleTitle: title || document.getElementById('cmTitle').value,
+                        excerpt: excerpt || document.getElementById('cmExcerpt').value,
+                        articleUrl: url || (cmState.publishedPost && cmState.publishedPost.link) || ''
+                    })
+                });
+                const data = await resp.json();
+                if (!data.success) throw new Error(data.message);
+
+                document.getElementById('cmLinkedin').value = data.posts.linkedin || '';
+                document.getElementById('cmFacebook').value = data.posts.facebook || '';
+                document.getElementById('cmTwitter').value = data.posts.twitter || '';
+            } catch (err) {
+                cmShowMessage('Could not generate social posts: ' + err.message, 'error');
+            } finally {
+                document.getElementById('cmSocialGenerating').style.display = 'none';
+            }
+        }
+
+        async function cmRegenerateSocial() {
+            const title = document.getElementById('cmTitle') ? document.getElementById('cmTitle').value : '';
+            const excerpt = document.getElementById('cmExcerpt') ? document.getElementById('cmExcerpt').value : '';
+            const url = cmState.publishedPost ? cmState.publishedPost.link : '';
+            await cmFetchSocialPosts(title, excerpt, url);
+        }
+
+        async function cmReset() {
+            try {
+                await fetch('/api/content/reset', { method: 'POST' });
+            } catch (e) {}
+            cmState = { article: null, imageDataUrl: null, publishedPost: null };
+            document.getElementById('cmTopic').value = '';
+            document.getElementById('cmStep2').style.display = 'none';
+            document.getElementById('cmStep3').style.display = 'none';
+            document.getElementById('btnCmReset').style.display = 'none';
+            document.getElementById('cmMessage').style.display = 'none';
+        }
+
+        function cmCopyText(elementId) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            navigator.clipboard.writeText(el.value).then(() => {
+                cmShowMessage('Copied to clipboard!', 'success');
+            }).catch(() => {
+                el.select();
+                document.execCommand('copy');
+                cmShowMessage('Copied to clipboard!', 'success');
+            });
+        }
+
+        // ============================================================
+
         async function checkBrevoStatus() {
             const brevoStatus = document.getElementById('brevoStatus');
             const brevoLabel = document.getElementById('brevoLabel');
