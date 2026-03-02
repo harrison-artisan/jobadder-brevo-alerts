@@ -28,8 +28,9 @@ const CLIENT_SECRET = (() => {
 const REDIRECT_URI = process.env.LINKEDIN_REDIRECT_URI ||
   'https://jobadder-brevo-alerts-production.up.railway.app/auth/linkedin/callback';
 
-// Scopes available on this app: r_basicprofile, w_member_social, r_organization_social, w_organization_social
-const SCOPES = ['r_basicprofile', 'w_member_social', 'r_organization_social'];
+// Scopes required: r_basicprofile, w_member_social, r_organization_social, w_organization_social
+// w_organization_social is required to post AS the Company Page and to read org poll data
+const SCOPES = ['r_basicprofile', 'w_member_social', 'r_organization_social', 'w_organization_social'];
 
 // Token expiry warning threshold: 7 days in ms
 const EXPIRY_WARNING_MS = 7 * 24 * 60 * 60 * 1000;

@@ -323,27 +323,24 @@ class CandidateAlertsController {
    */
   async scheduleForFriday(options = {}) {
     const cron = require('node-cron');
-    const moment = require('moment-timezone');
     
     try {
-      // Calculate next Friday 9:00 AM Melbourne time
-      const now = moment().tz('Australia/Melbourne');
-      let nextFriday = now.clone();
-      
-      // Find next Friday
-      while (nextFriday.day() !== 5) {
-        nextFriday.add(1, 'day');
-      }
-      
-      // If today is Friday and it's past 9am, go to next Friday
-      if (now.day() === 5 && now.hour() >= 9) {
-        nextFriday.add(7, 'days');
-      }
-      
-      // Set to 9:00 AM
-      nextFriday.hour(9).minute(0).second(0);
-      
-      const scheduledFor = nextFriday.format('dddd, MMMM D, YYYY [at] h:mm A');
+      // Calculate next Friday 9:00 AM Melbourne time using Intl
+      const nowUtc = new Date();
+      // Get current day-of-week in Melbourne
+      const melbDay = Number(new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Melbourne', weekday: 'short' }).format(nowUtc) === 'Fri' ? 5 : new Date(new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Melbourne', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hour12: false }).format(nowUtc)).getDay());
+      const melbParts = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Melbourne', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(nowUtc);
+      const mp = {}; melbParts.forEach(p => { mp[p.type] = p.value; });
+      const melbNow = new Date(`${mp.year}-${mp.month}-${mp.day}T${mp.hour}:${mp.minute}:00`);
+      const dayOfWeek = melbNow.getDay(); // 0=Sun, 5=Fri
+      let daysUntilFriday = (5 - dayOfWeek + 7) % 7;
+      // If today is Friday and already past 9am, go to next Friday
+      if (daysUntilFriday === 0 && melbNow.getHours() >= 9) daysUntilFriday = 7;
+      if (daysUntilFriday === 0) daysUntilFriday = 7; // safety: always schedule future
+      const nextFridayDate = new Date(melbNow);
+      nextFridayDate.setDate(nextFridayDate.getDate() + daysUntilFriday);
+      nextFridayDate.setHours(9, 0, 0, 0);
+      const scheduledFor = nextFridayDate.toLocaleDateString('en-AU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Australia/Melbourne' }) + ' at 9:00 AM';
       
       // Schedule cron job for Friday 9am Melbourne time (0 9 * * 5)
       // Note: This is a one-time schedule - in production you'd want to persist this
