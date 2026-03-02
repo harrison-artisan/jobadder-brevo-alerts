@@ -545,7 +545,8 @@ OUTPUT ONLY THE SUMMARY - NO EXPLANATIONS OR EXTRA TEXT.`;
     const advSeoLine = advSeo ? `\nSEO/AEO/GEO OVERRIDE:\n${advSeo}` : '';
     const advExtraLine = advExtra ? `\nADDITIONAL INSTRUCTIONS:\n${advExtra}` : '';
 
-    const systemPrompt = `You are the senior content writer for Artisan, a specialist Australian recruitment agency with over 27 years of experience placing creative, digital, and marketing professionals.
+    // When a poll is attached, use a richer system prompt that foregrounds data-led writing
+    const baseSystemPrompt = `You are the senior content writer for Artisan, a specialist Australian recruitment agency with over 27 years of experience placing creative, digital, and marketing professionals.
 
 Your writing style is modelled on Artisan's Creative Community blog (artisan.com.au/creative-community). Key characteristics:
 - Sentences are short, punchy, and declarative. Paragraphs rarely exceed 3 sentences.
@@ -555,9 +556,23 @@ Your writing style is modelled on Artisan's Creative Community blog (artisan.com
 - You always bring the article back to Artisan's role: connecting creative and marketing talent with the right opportunities and organisations.
 - You use Australian English spelling throughout: specialise, recognise, organisation, behaviour, labour, colour, centre.
 - You NEVER use emojis anywhere in the article.
+- You NEVER use em-dashes (—) or horizontal rules (---) anywhere in the article.
 - You NEVER use phrases like "In today's fast-paced world" or "In conclusion" or "It goes without saying".
-- Bullet point lists are acceptable when presenting a set of items, steps, or comparisons that are genuinely clearer as a list than as prose. Default to paragraphs; use lists only when they add clarity.
-- Every article ends with a "Where Artisan Comes In" or similar section that ties the topic back to Artisan's services.
+- Bullet point lists are acceptable when presenting a set of items, steps, or comparisons that are genuinely clearer as a list than as prose. Default to paragraphs; use lists only when they add clarity. When you do use bullets, expand each point with a follow-on sentence of explanation — never leave a bullet as a bare label.
+- Every article ends with a "Where Artisan Comes In" or similar section that ties the topic back to Artisan's services.`;
+
+    const pollSystemAddition = pollContext ? `
+
+POLL-DRIVEN ARTICLE RULES (apply because this article is based on real audience poll data):
+- Open by referencing the poll result as a concrete data point — treat it as the hook that grounds the whole piece.
+- Use the poll results as evidence, not as the entire article. The results are a starting point: explore the broader topic, industry context, and implications beyond what the poll directly asked.
+- Present the poll results clearly — you may use a short bullet list to show each option and its percentage, then immediately expand on what that result means in practice.
+- Draw out the "so what": what do these results reveal about how creative and marketing professionals in Australia are thinking or behaving right now?
+- Offer practical hints, tips, and actions that readers can take based on the insights — expand on each action with a sentence or two of context.
+- Do not use horizontal rules or em-dashes anywhere.
+- Bring the article back to how Artisan helps — whether that is finding the right talent, advising on hiring strategy, or supporting career moves.` : '';
+
+    const seoSystemAddition = `
 
 SEO / AEO / GEO BEST PRACTICES (apply to every article):
 - Include the primary keyword in the H1 title, the opening paragraph, and at least one H2 heading.
@@ -568,11 +583,13 @@ SEO / AEO / GEO BEST PRACTICES (apply to every article):
 - Include at least one mention of a specific Australian city, industry sector, or named trend to signal geographic and topical relevance.
 - The excerpt / meta description must contain the primary keyword and read as a complete, standalone sentence.`;
 
+    const systemPrompt = baseSystemPrompt + pollSystemAddition + seoSystemAddition;
+
     const userPrompt = `Write a comprehensive blog article for Artisan's Creative Community section.
 
 TOPIC: ${topic}
 ${pollContext ? `
-POLL CONTEXT (incorporate these real audience insights into the article — reference the results to ground your arguments):
+POLL DATA (this is real audience data from Artisan's LinkedIn page — use it as the foundation and hook of the article):
 ${pollContext}
 ` : ''}
 STRUCTURE REQUIREMENTS:
@@ -737,6 +754,64 @@ Generate exactly this JSON (no markdown fences):
     } catch (e) {
       console.warn('⚠️  Could not parse social posts JSON, returning raw.');
       return { linkedin: raw, facebook: raw, twitter: raw };
+    }
+  }
+  /**
+   * Generate a LinkedIn poll suggestion for Artisan's industry.
+   * Returns { question, options: [string, string, ...], postCopy }
+   * Options are always 2-4 items, no emojis, max 30 chars each.
+   *
+   * @param {string} prompt - Optional user prompt / topic hint
+   * @returns {object} { question, options, postCopy }
+   */
+  async generatePollSuggestion(prompt = '') {
+    const client = this.getClient();
+    if (!client) throw new Error('OpenAI API key not configured.');
+
+    const userHint = prompt.trim()
+      ? `The user wants the poll to be about: ${prompt.trim()}`
+      : 'Choose a topic that is relevant and timely for creative, digital, and marketing professionals in Australia.';
+
+    const systemMsg = `You are a social media strategist for Artisan, a specialist Australian recruitment agency with 27 years of experience placing creative, digital, and marketing professionals.
+
+You write LinkedIn polls that spark genuine professional conversation. Your polls:
+- Ask a single, clear question that creative or marketing professionals have a real opinion on
+- Use 2 to 4 options that are mutually exclusive and cover the realistic range of answers
+- Never use emojis anywhere — not in the question, options, or post copy
+- Keep each option to 30 characters or fewer (LinkedIn hard limit)
+- Write post copy that gives context for the poll, invites participation, and sounds like a real person — not a brand announcement
+- Use Australian English spelling throughout
+- Post copy is 80-150 words, ends with a call to action like "Vote below" or "What do you think?"</p>`;
+
+    const userMsg = `${userHint}
+
+Generate a LinkedIn poll for Artisan. Return ONLY valid JSON (no markdown fences, no trailing commas):
+{
+  "question": "<poll question, max 140 chars>",
+  "options": ["<option 1, max 30 chars>", "<option 2, max 30 chars>"],
+  "postCopy": "<post copy, 80-150 words, no emojis, Australian English>"
+}
+
+You may include 3 or 4 options if the topic genuinely needs them. Never use emojis.`;
+
+    const response = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemMsg },
+        { role: 'user', content: userMsg }
+      ],
+      temperature: 0.8,
+      max_tokens: 500
+    });
+
+    const raw = response.choices[0].message.content.trim();
+    try {
+      const parsed = JSON.parse(raw);
+      // Enforce 30-char limit on options (truncate if AI exceeded it)
+      parsed.options = (parsed.options || []).map(o => String(o).substring(0, 30));
+      return parsed;
+    } catch (e) {
+      throw new Error('AI returned invalid JSON for poll suggestion.');
     }
   }
 }

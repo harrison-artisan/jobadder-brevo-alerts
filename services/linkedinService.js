@@ -327,51 +327,95 @@ class LinkedInService {
   async getRecentPolls(limit = 5) {
     if (!this.isConnected()) throw new Error('LinkedIn is not connected.');
 
-    // Fetch recent posts from the org page (up to 50 to find enough polls)
+    const headers = {
+      Authorization: `Bearer ${tokenStore.accessToken}`,
+      'X-Restli-Protocol-Version': '2.0.0',
+      'LinkedIn-Version': '202502',
+    };
     const encodedUrn = encodeURIComponent(tokenStore.orgUrn);
-    const response = await axios.get(
-      `https://api.linkedin.com/v2/ugcPosts?q=authors&authors=List(${encodedUrn})&count=50&sortBy=LAST_MODIFIED`,
-      {
-        headers: {
-          Authorization: `Bearer ${tokenStore.accessToken}`,
-          'X-Restli-Protocol-Version': '2.0.0',
-          'LinkedIn-Version': '202502',
-        },
-      }
-    );
-
-    const elements = (response.data && response.data.elements) || [];
     const polls = [];
 
-    for (const post of elements) {
+    // ---- Strategy 1: REST Posts API (newer, returns content.poll directly) ----
+    try {
+      const restResp = await axios.get(
+        `https://api.linkedin.com/rest/posts?author=${encodedUrn}&q=author&count=100`,
+        { headers }
+      );
+      const restElements = (restResp.data && restResp.data.elements) || [];
+      for (const post of restElements) {
+        if (polls.length >= limit) break;
+        const pollData = post.content && post.content.poll;
+        if (!pollData) continue;
+        const options = (pollData.options || []).map(opt => ({
+          text: opt.text,
+          voteCount: opt.voteCount || 0,
+        }));
+        const totalVotes = options.reduce((sum, o) => sum + o.voteCount, 0);
+        polls.push({
+          id: post.id,
+          question: pollData.question || '',
+          options,
+          totalVotes,
+          postedAt: post.publishedAt || post.createdAt || null,
+          commentary: post.commentary || '',
+        });
+      }
+      if (polls.length > 0) return polls;
+    } catch (restErr) {
+      console.warn('[LinkedIn] REST posts API failed, falling back to ugcPosts:', restErr.message);
+    }
+
+    // ---- Strategy 2: ugcPosts API (older v2 format) ----
+    const ugcResp = await axios.get(
+      `https://api.linkedin.com/v2/ugcPosts?q=authors&authors=List(${encodedUrn})&count=100`,
+      { headers }
+    );
+    const ugcElements = (ugcResp.data && ugcResp.data.elements) || [];
+    for (const post of ugcElements) {
       if (polls.length >= limit) break;
 
-      // Check for poll content in the UGC post structure
+      // Shape A: specificContent.com.linkedin.ugc.ShareContent.media[].poll
       const shareContent = post.specificContent &&
         post.specificContent['com.linkedin.ugc.ShareContent'];
-      if (!shareContent) continue;
+      if (shareContent) {
+        const media = shareContent.media || [];
+        const pollMedia = media.find(m => m.poll);
+        if (pollMedia) {
+          const poll = pollMedia.poll;
+          const options = (poll.options || []).map(opt => ({
+            text: opt.text,
+            voteCount: opt.voteCount || 0,
+          }));
+          const totalVotes = options.reduce((sum, o) => sum + o.voteCount, 0);
+          polls.push({
+            id: post.id,
+            question: poll.question || '',
+            options,
+            totalVotes,
+            postedAt: post.created ? post.created.time : null,
+            commentary: shareContent.shareCommentary ? shareContent.shareCommentary.text : '',
+          });
+          continue;
+        }
+      }
 
-      const media = shareContent.media;
-      if (!media || !media.length) continue;
-
-      const pollMedia = media.find(m => m.poll);
-      if (!pollMedia) continue;
-
-      const poll = pollMedia.poll;
-      const options = (poll.options || []).map(opt => ({
-        text: opt.text,
-        voteCount: opt.voteCount || 0,
-      }));
-      const totalVotes = options.reduce((sum, o) => sum + o.voteCount, 0);
-
-      polls.push({
-        id: post.id,
-        question: poll.question || '',
-        options,
-        totalVotes,
-        postedAt: post.created ? post.created.time : null,
-        commentary: shareContent.shareCommentary ? shareContent.shareCommentary.text : '',
-      });
+      // Shape B: content.poll (some API versions return this on ugcPosts too)
+      const pollDirect = post.content && post.content.poll;
+      if (pollDirect) {
+        const options = (pollDirect.options || []).map(opt => ({
+          text: opt.text,
+          voteCount: opt.voteCount || 0,
+        }));
+        const totalVotes = options.reduce((sum, o) => sum + o.voteCount, 0);
+        polls.push({
+          id: post.id,
+          question: pollDirect.question || '',
+          options,
+          totalVotes,
+          postedAt: post.created ? post.created.time : null,
+          commentary: post.commentary || '',
+        });
+      }
     }
 
     return polls;

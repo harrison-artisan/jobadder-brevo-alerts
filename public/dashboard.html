@@ -1033,18 +1033,11 @@
         .EasyMDEContainer .editor-statusbar { color: #666; font-size: 11px; background: #f5f5f5; }
         .editor-preview { background: #ffffff; color: #1a1a1a; font-family: 'Source Sans Pro', sans-serif; }
 
-        /* Content Marketing tab — lighter placeholder text so it's readable on dark backgrounds */
-        #content-marketing-section input::placeholder,
-        #content-marketing-section textarea::placeholder,
-        #cmSettingsPanel input::placeholder,
-        #cmSettingsPanel textarea::placeholder,
-        #cmStep1 input::placeholder,
-        #cmStep1 textarea::placeholder,
-        #cmStep2 input::placeholder,
-        #cmStep2 textarea::placeholder,
-        #cmStep3 input::placeholder,
-        #cmStep3 textarea::placeholder {
-            color: rgba(255, 255, 255, 0.5);
+        /* Global — all inputs and textareas on dark backgrounds get a light placeholder */
+        input::placeholder,
+        textarea::placeholder,
+        select::placeholder {
+            color: rgba(255, 255, 255, 0.45);
             opacity: 1;
         }
     </style>
@@ -1247,7 +1240,7 @@
                     
                     <!-- Locked Segment Display -->
                     <div class="recipient-locked" style="display: block; margin-top: 20px;">
-                        <p><span class="lock-icon">🔒</span><strong>Recipients:</strong> JOB_ALERTS = Yes <span style="font-size: 12px; color: #7f8c8d;">(Default segment - will be updated)</span></p>
+                        <p><strong>Recipients:</strong> JOB_ALERTS = Yes <span style="font-size: 12px; color: #7f8c8d;">(Default segment - will be updated)</span></p>
                     </div>
                 </div>
                 
@@ -1275,7 +1268,7 @@
                         </div>
                     </div>
                 <div id="dailyRecipientPreview" style="display: none;" class="recipient-preview">
-                    <h4>📊 Data Selected</h4>
+                                    <h4>Data Selected</h4>
                     <p><strong>Name:</strong> <span id="dailyPreviewName">-</span></p>
                     <p><strong>Contacts:</strong> <span id="dailyPreviewCount" class="count">0</span> <button id="btnShowDailyCount" class="btn btn-show-count" style="display: none;" onclick="showDailyCount()">Show Count</button></p>
                     <p><strong>Last Updated:</strong> <span id="dailyPreviewUpdated">-</span></p>
@@ -1289,7 +1282,7 @@
                 </button>
                 </div>
                 <div id="dailyRecipientLocked" style="display: none;" class="recipient-locked">
-                    <p><span class="lock-icon">🔒</span><strong>Locked:</strong> <span id="lockedDailyRecipientName">-</span> (<span id="lockedDailyRecipientCount">0</span> contacts)</p>
+                    <p><strong>Locked:</strong> <span id="lockedDailyRecipientName">-</span> (<span id="lockedDailyRecipientCount">0</span> contacts)</p>
                 </div>
             </div>
                 
@@ -1338,7 +1331,7 @@
                 </button>
                 </div>
                 <div id="singleJobRecipientLocked" style="display: none;" class="recipient-locked">
-                    <p><span class="lock-icon">🔒</span><strong>Locked:</strong> <span id="lockedSingleJobRecipientName">-</span> (<span id="lockedSingleJobRecipientCount">0</span> contacts)</p>
+                    <p><strong>Locked:</strong> <span id="lockedSingleJobRecipientName">-</span> (<span id="lockedSingleJobRecipientCount">0</span> contacts)</p>
                 </div>
             </div>
                 
@@ -1425,7 +1418,7 @@
                 </button>
                 </div>
                 <div id="recipientLocked" style="display: none;" class="recipient-locked">
-                        <p><span class="lock-icon">🔒</span><strong>Locked:</strong> <span id="lockedRecipientName">-</span> (<span id="lockedRecipientCount">0</span> contacts)</p>
+                        <p><strong>Locked:</strong> <span id="lockedRecipientName">-</span> (<span id="lockedRecipientCount">0</span> contacts)</p>
                     </div>
                 </div>
                 
@@ -1528,7 +1521,7 @@
                 </button>
                 </div>
                 <div id="xposeRecipientLocked" style="display: none;" class="recipient-locked">
-                        <p><span class="lock-icon">🔒</span><strong>Locked:</strong> <span id="lockedXposeRecipientName">-</span> (<span id="lockedXposeRecipientCount">0</span> contacts)</p>
+                        <p><strong>Locked:</strong> <span id="lockedXposeRecipientName">-</span> (<span id="lockedXposeRecipientCount">0</span> contacts)</p>
                     </div>
                 </div>
                 
@@ -1591,7 +1584,7 @@
                 </button>
                 </div>
                 <div id="articleRecipientLocked" style="display: none;" class="recipient-locked">
-                        <p><span class="lock-icon">🔒</span><strong>Locked:</strong> <span id="lockedArticleRecipientName">-</span> (<span id="lockedArticleRecipientCount">0</span> contacts)</p>
+                        <p><strong>Locked:</strong> <span id="lockedArticleRecipientName">-</span> (<span id="lockedArticleRecipientCount">0</span> contacts)</p>
                     </div>
                 </div>
                 
@@ -1777,7 +1770,7 @@
                             </button>
                         </div>
                         <div id="consultantRecipientLocked" style="display: none;" class="recipient-locked">
-                            <p><span class="lock-icon">🔒</span><strong>Locked:</strong> <span id="consultantLockedRecipientName">-</span> (<span id="consultantLockedRecipientCount">0</span> contacts)</p>
+                            <p><strong>Locked:</strong> <span id="consultantLockedRecipientName">-</span> (<span id="consultantLockedRecipientCount">0</span> contacts)</p>
                         </div>
                     </div>
                     
@@ -1960,7 +1953,7 @@
                                     <label style="display:block; color:white; font-weight:500; font-size:14px; margin:0;">Article Topic</label>
                                     <button onclick="cmOpenPollPicker()" id="btnChoosePoll"
                                         style="display:flex; align-items:center; gap:6px; padding:5px 12px; background:rgba(0,119,181,0.2); border:1px solid rgba(0,119,181,0.5); border-radius:6px; color:#5dade2; cursor:pointer; font-size:12px; font-weight:600; transition:all 0.2s;">
-                                        <span style="font-size:14px;">&#128202;</span> Choose Recent Poll
+Choose Recent Poll
                                     </button>
                                 </div>
                                 <textarea id="cmTopic" rows="3" placeholder="e.g. How to attract top creative talent in Australia in 2025" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px; resize:vertical; box-sizing:border-box;"></textarea>
@@ -2287,19 +2280,19 @@
                                 <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:24px;">
                                     <button onclick="cmSetPostType('standard')" id="cmPostTypeStandard"
                                         style="padding:14px 10px; border-radius:10px; border:2px solid #0077b5; background:rgba(0,119,181,0.15); color:white; cursor:pointer; font-size:13px; font-weight:600; text-align:center; transition:all 0.2s;">
-                                        <div style="font-size:22px; margin-bottom:6px;">&#128247;</div>
+                                        <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:5px;">POST</div>
                                         <div>Standard Post</div>
                                         <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:3px;">Text + optional image</div>
                                     </button>
                                     <button onclick="cmSetPostType('job')" id="cmPostTypeJob"
                                         style="padding:14px 10px; border-radius:10px; border:2px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:white; cursor:pointer; font-size:13px; font-weight:600; text-align:center; transition:all 0.2s;">
-                                        <div style="font-size:22px; margin-bottom:6px;">&#128188;</div>
+                                        <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:5px;">JOB</div>
                                         <div>Job Listing</div>
                                         <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:3px;">Share a role with rich card</div>
                                     </button>
                                     <button onclick="cmSetPostType('poll')" id="cmPostTypePoll"
                                         style="padding:14px 10px; border-radius:10px; border:2px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:white; cursor:pointer; font-size:13px; font-weight:600; text-align:center; transition:all 0.2s;">
-                                        <div style="font-size:22px; margin-bottom:6px;">&#128202;</div>
+                                        <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:5px;">POLL</div>
                                         <div>Poll</div>
                                         <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:3px;">Ask your audience</div>
                                     </button>
@@ -2340,9 +2333,8 @@
                                             <img id="cmStandaloneImagePreview" style="max-height:160px; max-width:100%; border-radius:8px; object-fit:cover;" />
                                         </div>
                                         <div id="cmStandaloneImagePlaceholder">
-                                            <div style="font-size:28px; margin-bottom:6px; opacity:0.4;">&#128247;</div>
                                             <div style="color:rgba(255,255,255,0.5); font-size:13px;">Click or drag an image here</div>
-                                            <div style="color:rgba(255,255,255,0.3); font-size:11px; margin-top:4px;">JPG, PNG, GIF — max 5 MB</div>
+                                            <div style="color:rgba(255,255,255,0.3); font-size:11px; margin-top:4px;">JPG, PNG, GIF &mdash; max 5 MB</div>
                                         </div>
                                     </div>
                                     <input type="file" id="cmStandaloneImageInput" accept="image/*" style="display:none;" onchange="cmHandleStandaloneImageSelect(event)">
@@ -2399,7 +2391,29 @@
                             </div>
 
                             <!-- ===== POLL PANEL ===== -->
-                            <div id="cmPanelPoll" style="display:none; padding:0 28px 28px;">
+                            <div id="cmPanelPoll" style="padding:0 28px 28px; display:none;">
+
+                                <!-- AI Poll Generator -->
+                                <div style="margin-bottom:20px; padding:16px; background:rgba(52,152,219,0.08); border:1px solid rgba(52,152,219,0.2); border-radius:10px;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                                        <div>
+                                            <div style="color:white; font-size:13px; font-weight:700;">Generate Poll with AI</div>
+                                            <div style="color:rgba(255,255,255,0.45); font-size:11px; margin-top:2px;">AI will write the question, options and post copy</div>
+                                        </div>
+                                    </div>
+                                    <div style="display:flex; gap:8px; margin-bottom:10px;">
+                                        <input id="cmPollAiPrompt" type="text" placeholder="Optional: topic or angle (e.g. remote work, career pivots, AI tools)" style="flex:1; padding:9px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:7px; color:white; font-size:13px; box-sizing:border-box;">
+                                        <button onclick="cmGeneratePollWithAI()" id="btnCmGenPoll" style="padding:9px 18px; background:linear-gradient(135deg,#3498db,#2980b9); border:none; border-radius:7px; color:white; cursor:pointer; font-size:13px; font-weight:600; white-space:nowrap;">Generate</button>
+                                    </div>
+                                    <div id="cmPollAiLoading" style="display:none; padding:8px 0; color:rgba(255,255,255,0.5); font-size:13px; display:none;">
+                                        <div style="display:flex; align-items:center; gap:8px;">
+                                            <div style="width:14px; height:14px; border:2px solid rgba(255,255,255,0.2); border-top-color:#3498db; border-radius:50%; animation:spin 0.8s linear infinite;"></div>
+                                            Generating poll...
+                                        </div>
+                                    </div>
+                                    <div id="cmPollAiError" style="display:none; color:#e74c3c; font-size:12px; margin-top:6px;"></div>
+                                </div>
+
                                 <div style="margin-bottom:16px;">
                                     <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:8px;">Post Copy <span style="color:rgba(255,255,255,0.4); font-weight:400;">(context above the poll)</span></label>
                                     <textarea id="cmPollText" rows="4" placeholder="We want to hear from the creative community..." style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
@@ -3464,6 +3478,63 @@
                 if (addBtn) { addBtn.style.opacity = '0.4'; addBtn.disabled = true; }
             }
         }
+        async function cmGeneratePollWithAI() {
+            const promptInput = document.getElementById('cmPollAiPrompt');
+            const loadingEl = document.getElementById('cmPollAiLoading');
+            const errorEl = document.getElementById('cmPollAiError');
+            const genBtn = document.getElementById('btnCmGenPoll');
+            const prompt = promptInput ? promptInput.value.trim() : '';
+
+            if (loadingEl) { loadingEl.style.display = 'block'; }
+            if (errorEl) { errorEl.style.display = 'none'; errorEl.textContent = ''; }
+            if (genBtn) { genBtn.disabled = true; genBtn.textContent = 'Generating...'; }
+
+            try {
+                const res = await fetch('/api/linkedin/generate-poll', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt })
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.message || 'Generation failed.');
+                const s = data.suggestion;
+
+                // Fill in post copy
+                const textEl = document.getElementById('cmPollText');
+                if (textEl && s.postCopy) textEl.value = s.postCopy;
+
+                // Fill in question
+                const qEl = document.getElementById('cmPollQuestion');
+                if (qEl && s.question) qEl.value = s.question;
+
+                // Fill in options — reset container to 2 rows first
+                const container = document.getElementById('cmPollOptions');
+                if (container && s.options && s.options.length >= 2) {
+                    container.innerHTML = '';
+                    s.options.forEach(function(optText, i) {
+                        const div = document.createElement('div');
+                        div.className = 'poll-option-row';
+                        div.style.cssText = 'display:flex; gap:8px; align-items:center;';
+                        const remaining = 30 - optText.length;
+                        const removeBtn = i >= 2 ? '<button onclick="this.closest(\'.poll-option-row\').remove(); var addBtn=document.getElementById(\'cmAddPollOptionBtn\'); if(addBtn){addBtn.style.opacity=\'1\';addBtn.disabled=false;}" style="padding:4px 8px; background:rgba(231,76,60,0.15); border:1px solid rgba(231,76,60,0.3); border-radius:5px; color:#e74c3c; cursor:pointer; font-size:11px;">&#10005;</button>' : '';
+                        div.innerHTML = '<input type="text" maxlength="30" style="flex:1; padding:10px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; box-sizing:border-box;" value="' + optText.replace(/"/g, '&quot;') + '"><span style="color:rgba(255,255,255,0.3); font-size:11px; min-width:30px; text-align:right;">' + remaining + '</span>' + removeBtn;
+                        container.appendChild(div);
+                    });
+                    // Update Add Option button state
+                    const addBtn = document.getElementById('cmAddPollOptionBtn');
+                    if (addBtn) {
+                        if (s.options.length >= 4) { addBtn.style.opacity = '0.4'; addBtn.disabled = true; }
+                        else { addBtn.style.opacity = '1'; addBtn.disabled = false; }
+                    }
+                }
+            } catch (err) {
+                if (errorEl) { errorEl.style.display = 'block'; errorEl.textContent = 'Error: ' + err.message; }
+            } finally {
+                if (loadingEl) { loadingEl.style.display = 'none'; }
+                if (genBtn) { genBtn.disabled = false; genBtn.textContent = 'Generate'; }
+            }
+        }
+
         async function cmPostPoll() {
             const text = (document.getElementById('cmPollText') || {}).value || '';
             const question = (document.getElementById('cmPollQuestion') || {}).value || '';
@@ -4666,11 +4737,11 @@
             box.style.cssText = 'background: white; padding: 30px; border-radius: 12px; max-width: 500px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);';
             
             box.innerHTML = `
-                <h3 style="margin: 0 0 20px 0; color: #1b334d; font-size: 20px;">⚠️ Confirm Send</h3>
+                <h3 style="margin: 0 0 20px 0; color: #1b334d; font-size: 20px;">Confirm Send</h3>
                 <p style="margin: 0 0 25px 0; color: #333; line-height: 1.6;">${message}</p>
                 <div style="display: flex; gap: 15px; justify-content: flex-end;">
-                    <button id="cancelBtn" style="padding: 10px 20px; border: 2px solid #e74c3c; background: white; color: #e74c3c; border-radius: 6px; cursor: pointer; font-weight: 600;">❌ Cancel</button>
-                    <button id="confirmBtn" style="padding: 10px 20px; border: none; background: #27ae60; color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">✅ Confirm</button>
+                    <button id="cancelBtn" style="padding: 10px 20px; border: 2px solid #e74c3c; background: white; color: #e74c3c; border-radius: 6px; cursor: pointer; font-weight: 600;">Cancel</button>
+                    <button id="confirmBtn" style="padding: 10px 20px; border: none; background: #27ae60; color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">Confirm</button>
                 </div>
             `;
             
