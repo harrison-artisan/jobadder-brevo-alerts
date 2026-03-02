@@ -2227,27 +2227,172 @@
                             </div>
                         </div>
                         <!-- ---- Standalone Post Composer ---- -->
-                        <div class="actions-card" id="cmStandaloneComposer">
-                            <h2 style="margin-top:0; margin-bottom:6px;">Create a New Post</h2>
-                            <p style="color:rgba(255,255,255,0.6); font-size:13px; margin-bottom:20px; margin-top:0;">Write and post directly to LinkedIn — independent of any article.</p>
-                            <div style="margin-bottom:16px;">
-                                <label style="display:flex; align-items:center; gap:8px; color:white; font-weight:600; margin-bottom:10px; font-size:14px;">
-                                    <span style="background:#0077b5; padding:3px 10px; border-radius:4px; font-size:12px;">in</span> LinkedIn Post
-                                </label>
-                                <textarea id="cmStandaloneLinkedin" rows="7" placeholder="Write your LinkedIn post here..." style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
-                                <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; align-items:center;">
-                                    <button onclick="cmPostStandaloneLinkedIn()" style="padding:8px 20px; background:#0077b5; border:none; border-radius:6px; color:white; cursor:pointer; font-size:13px; font-weight:600;">Post to LinkedIn</button>
-                                    <button onclick="cmAIWriteStandalone()" style="padding:8px 16px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; cursor:pointer; font-size:13px;">Write with AI</button>
-                                    <button onclick="cmCopyText('cmStandaloneLinkedin')" style="padding:8px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:white; cursor:pointer; font-size:12px;">Copy</button>
-                                    <span id="cmStandaloneStatus" style="font-size:12px; color:rgba(255,255,255,0.6);"></span>
+                        <div class="actions-card" id="cmStandaloneComposer" style="padding:0; overflow:hidden;">
+                            <!-- Header -->
+                            <div style="padding:24px 28px 20px; border-bottom:1px solid rgba(255,255,255,0.08);">
+                                <div style="display:flex; align-items:center; gap:12px; margin-bottom:6px;">
+                                    <div style="background:#0077b5; border-radius:6px; padding:4px 12px; font-size:12px; font-weight:700; color:white; letter-spacing:0.5px;">in</div>
+                                    <h2 style="margin:0; font-size:18px; font-weight:700; color:white;">Create a LinkedIn Post</h2>
+                                </div>
+                                <p style="color:rgba(255,255,255,0.5); font-size:13px; margin:0;">Post directly to the Artisan Company Page — independent of any article.</p>
+                            </div>
+
+                            <!-- Post Type Selector -->
+                            <div style="padding:20px 28px 0;">
+                                <p style="color:rgba(255,255,255,0.6); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:1px; margin:0 0 12px;">Post Type</p>
+                                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:24px;">
+                                    <button onclick="cmSetPostType('standard')" id="cmPostTypeStandard"
+                                        style="padding:14px 10px; border-radius:10px; border:2px solid #0077b5; background:rgba(0,119,181,0.15); color:white; cursor:pointer; font-size:13px; font-weight:600; text-align:center; transition:all 0.2s;">
+                                        <div style="font-size:22px; margin-bottom:6px;">&#128247;</div>
+                                        <div>Standard Post</div>
+                                        <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:3px;">Text + optional image</div>
+                                    </button>
+                                    <button onclick="cmSetPostType('job')" id="cmPostTypeJob"
+                                        style="padding:14px 10px; border-radius:10px; border:2px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:white; cursor:pointer; font-size:13px; font-weight:600; text-align:center; transition:all 0.2s;">
+                                        <div style="font-size:22px; margin-bottom:6px;">&#128188;</div>
+                                        <div>Job Listing</div>
+                                        <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:3px;">Share a role with rich card</div>
+                                    </button>
+                                    <button onclick="cmSetPostType('poll')" id="cmPostTypePoll"
+                                        style="padding:14px 10px; border-radius:10px; border:2px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:white; cursor:pointer; font-size:13px; font-weight:600; text-align:center; transition:all 0.2s;">
+                                        <div style="font-size:22px; margin-bottom:6px;">&#128202;</div>
+                                        <div>Poll</div>
+                                        <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:3px;">Ask your audience</div>
+                                    </button>
                                 </div>
                             </div>
-                            <div id="cmStandaloneAIPanel" style="display:none; margin-top:16px; padding:16px; background:rgba(255,255,255,0.06); border-radius:8px; border:1px solid rgba(255,255,255,0.12);">
-                                <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:8px;">What should the post be about?</label>
-                                <input id="cmStandalonePrompt" type="text" placeholder="e.g. Tips for creative professionals navigating a career change" style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:13px; box-sizing:border-box; margin-bottom:10px;">
-                                <button onclick="cmGenerateStandalonePost()" style="padding:8px 18px; background:linear-gradient(135deg,#3498db,#2980b9); border:none; border-radius:6px; color:white; cursor:pointer; font-size:13px; font-weight:600;">Generate Post</button>
-                                <button onclick="document.getElementById('cmStandaloneAIPanel').style.display='none'" style="margin-left:8px; padding:8px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:white; cursor:pointer; font-size:12px;">Cancel</button>
-                                <div id="cmStandaloneAILoading" style="display:none; margin-top:10px; color:rgba(255,255,255,0.7); font-size:13px;">Generating...</div>
+
+                            <!-- ===== STANDARD POST PANEL ===== -->
+                            <div id="cmPanelStandard" style="padding:0 28px 28px;">
+                                <div style="margin-bottom:16px;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                        <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600;">Post Copy</label>
+                                        <button onclick="cmAIWriteStandalone()" style="padding:5px 12px; background:linear-gradient(135deg,#3498db,#2980b9); border:none; border-radius:5px; color:white; cursor:pointer; font-size:12px; font-weight:600;">Write with AI</button>
+                                    </div>
+                                    <textarea id="cmStandaloneLinkedin" rows="7" placeholder="Write your LinkedIn post here..." style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
+                                    <div style="text-align:right; font-size:11px; color:rgba(255,255,255,0.35); margin-top:4px;" id="cmStandaloneCharCount">0 characters</div>
+                                </div>
+
+                                <!-- AI Panel -->
+                                <div id="cmStandaloneAIPanel" style="display:none; margin-bottom:16px; padding:16px; background:rgba(255,255,255,0.06); border-radius:8px; border:1px solid rgba(255,255,255,0.12);">
+                                    <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:8px;">What should the post be about?</label>
+                                    <input id="cmStandalonePrompt" type="text" placeholder="e.g. Tips for creative professionals navigating a career change" style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:13px; box-sizing:border-box; margin-bottom:10px;">
+                                    <div style="display:flex; gap:8px;">
+                                        <button onclick="cmGenerateStandalonePost()" style="padding:8px 18px; background:linear-gradient(135deg,#3498db,#2980b9); border:none; border-radius:6px; color:white; cursor:pointer; font-size:13px; font-weight:600;">Generate</button>
+                                        <button onclick="document.getElementById('cmStandaloneAIPanel').style.display='none'" style="padding:8px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:white; cursor:pointer; font-size:12px;">Cancel</button>
+                                    </div>
+                                    <div id="cmStandaloneAILoading" style="display:none; margin-top:10px; color:rgba(255,255,255,0.6); font-size:13px;">Generating post...</div>
+                                </div>
+
+                                <!-- Image Upload -->
+                                <div style="margin-bottom:20px;">
+                                    <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:8px;">Attach Image <span style="font-weight:400; color:rgba(255,255,255,0.4);">(optional)</span></label>
+                                    <div id="cmStandaloneImageDrop" onclick="document.getElementById('cmStandaloneImageInput').click()"
+                                        style="border:2px dashed rgba(255,255,255,0.2); border-radius:10px; padding:20px; text-align:center; cursor:pointer; transition:all 0.2s; background:rgba(255,255,255,0.04);"
+                                        ondragover="event.preventDefault(); this.style.borderColor='#0077b5';"
+                                        ondragleave="this.style.borderColor='rgba(255,255,255,0.2)';"
+                                        ondrop="cmHandleStandaloneImageDrop(event)">
+                                        <div id="cmStandaloneImagePreviewWrap" style="display:none; margin-bottom:10px;">
+                                            <img id="cmStandaloneImagePreview" style="max-height:160px; max-width:100%; border-radius:8px; object-fit:cover;" />
+                                        </div>
+                                        <div id="cmStandaloneImagePlaceholder">
+                                            <div style="font-size:28px; margin-bottom:6px; opacity:0.4;">&#128247;</div>
+                                            <div style="color:rgba(255,255,255,0.5); font-size:13px;">Click or drag an image here</div>
+                                            <div style="color:rgba(255,255,255,0.3); font-size:11px; margin-top:4px;">JPG, PNG, GIF — max 5 MB</div>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="cmStandaloneImageInput" accept="image/*" style="display:none;" onchange="cmHandleStandaloneImageSelect(event)">
+                                    <div id="cmStandaloneImageClearWrap" style="display:none; margin-top:8px;">
+                                        <button onclick="cmClearStandaloneImage()" style="padding:4px 12px; background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.4); border-radius:5px; color:#e74c3c; cursor:pointer; font-size:12px;">Remove Image</button>
+                                    </div>
+                                </div>
+
+                                <!-- Actions -->
+                                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                                    <button onclick="cmPostStandaloneLinkedIn()" style="padding:10px 24px; background:#0077b5; border:none; border-radius:8px; color:white; cursor:pointer; font-size:14px; font-weight:700; letter-spacing:0.3px;">Post to LinkedIn</button>
+                                    <button onclick="cmCopyText('cmStandaloneLinkedin')" style="padding:10px 16px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; cursor:pointer; font-size:13px;">Copy Text</button>
+                                    <span id="cmStandaloneStatus" style="font-size:13px; color:rgba(255,255,255,0.6);"></span>
+                                </div>
+                            </div>
+
+                            <!-- ===== JOB LISTING PANEL ===== -->
+                            <div id="cmPanelJob" style="display:none; padding:0 28px 28px;">
+                                <div style="margin-bottom:16px;">
+                                    <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:8px;">Post Copy <span style="color:rgba(255,255,255,0.4); font-weight:400;">(introduce the role)</span></label>
+                                    <textarea id="cmJobPostText" rows="5" placeholder="We're looking for a talented Creative Director to join a leading agency in Melbourne..." style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
+                                </div>
+                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px;">
+                                    <div>
+                                        <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:6px;">Job Title</label>
+                                        <input id="cmJobTitle" type="text" placeholder="e.g. Senior Art Director" style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; box-sizing:border-box;">
+                                    </div>
+                                    <div>
+                                        <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:6px;">Job URL</label>
+                                        <input id="cmJobUrl" type="url" placeholder="https://artisan.com.au/job/..." style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; box-sizing:border-box;">
+                                    </div>
+                                </div>
+                                <div style="margin-bottom:20px;">
+                                    <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:6px;">Short Description <span style="color:rgba(255,255,255,0.4); font-weight:400;">(shown in the link card)</span></label>
+                                    <input id="cmJobDescription" type="text" placeholder="e.g. Full-time, Melbourne CBD — apply via Artisan" style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; box-sizing:border-box;">
+                                </div>
+                                <!-- Preview card -->
+                                <div id="cmJobPreviewCard" style="display:none; margin-bottom:20px; padding:14px 16px; background:rgba(255,255,255,0.06); border-radius:10px; border:1px solid rgba(255,255,255,0.12);">
+                                    <div style="font-size:11px; color:rgba(255,255,255,0.4); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.8px;">Link Preview</div>
+                                    <div style="display:flex; align-items:center; gap:12px;">
+                                        <div style="background:#0077b5; border-radius:6px; padding:8px 12px; font-size:14px; font-weight:800; color:white; flex-shrink:0;">A</div>
+                                        <div>
+                                            <div id="cmJobPreviewTitle" style="color:white; font-weight:600; font-size:14px;"></div>
+                                            <div id="cmJobPreviewDesc" style="color:rgba(255,255,255,0.5); font-size:12px; margin-top:2px;"></div>
+                                            <div style="color:rgba(255,255,255,0.3); font-size:11px; margin-top:2px;">artisan.com.au</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                                    <button onclick="cmPostJobListing()" style="padding:10px 24px; background:#0077b5; border:none; border-radius:8px; color:white; cursor:pointer; font-size:14px; font-weight:700;">Post Job to LinkedIn</button>
+                                    <button onclick="cmPreviewJobCard()" style="padding:10px 16px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; cursor:pointer; font-size:13px;">Preview Card</button>
+                                    <span id="cmJobPostStatus" style="font-size:13px; color:rgba(255,255,255,0.6);"></span>
+                                </div>
+                            </div>
+
+                            <!-- ===== POLL PANEL ===== -->
+                            <div id="cmPanelPoll" style="display:none; padding:0 28px 28px;">
+                                <div style="margin-bottom:16px;">
+                                    <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:8px;">Post Copy <span style="color:rgba(255,255,255,0.4); font-weight:400;">(context above the poll)</span></label>
+                                    <textarea id="cmPollText" rows="4" placeholder="We want to hear from the creative community..." style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
+                                </div>
+                                <div style="margin-bottom:16px;">
+                                    <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:6px;">Poll Question</label>
+                                    <input id="cmPollQuestion" type="text" placeholder="e.g. What's the biggest challenge you face as a creative professional?" style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; box-sizing:border-box;">
+                                </div>
+                                <div style="margin-bottom:16px;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                        <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600;">Poll Options <span style="color:rgba(255,255,255,0.4); font-weight:400;">(2–4 options)</span></label>
+                                        <button onclick="cmAddPollOption()" id="cmAddPollOptionBtn" style="padding:4px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:5px; color:white; cursor:pointer; font-size:12px;">+ Add Option</button>
+                                    </div>
+                                    <div id="cmPollOptions" style="display:flex; flex-direction:column; gap:8px;">
+                                        <div class="poll-option-row" style="display:flex; gap:8px; align-items:center;">
+                                            <input type="text" placeholder="Option 1" maxlength="30" style="flex:1; padding:10px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; box-sizing:border-box;">
+                                            <span style="color:rgba(255,255,255,0.3); font-size:11px; min-width:30px; text-align:right;">30</span>
+                                        </div>
+                                        <div class="poll-option-row" style="display:flex; gap:8px; align-items:center;">
+                                            <input type="text" placeholder="Option 2" maxlength="30" style="flex:1; padding:10px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; box-sizing:border-box;">
+                                            <span style="color:rgba(255,255,255,0.3); font-size:11px; min-width:30px; text-align:right;">30</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="margin-bottom:20px;">
+                                    <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:8px;">Poll Duration</label>
+                                    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px;">
+                                        <button onclick="cmSetPollDuration('ONE_DAY', this)" class="poll-duration-btn" style="padding:8px 6px; border-radius:7px; border:2px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.7); cursor:pointer; font-size:12px; font-weight:600;">1 Day</button>
+                                        <button onclick="cmSetPollDuration('THREE_DAYS', this)" class="poll-duration-btn" style="padding:8px 6px; border-radius:7px; border:2px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.7); cursor:pointer; font-size:12px; font-weight:600;">3 Days</button>
+                                        <button onclick="cmSetPollDuration('ONE_WEEK', this)" class="poll-duration-btn active-duration" style="padding:8px 6px; border-radius:7px; border:2px solid #0077b5; background:rgba(0,119,181,0.2); color:white; cursor:pointer; font-size:12px; font-weight:600;">1 Week</button>
+                                        <button onclick="cmSetPollDuration('TWO_WEEKS', this)" class="poll-duration-btn" style="padding:8px 6px; border-radius:7px; border:2px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.7); cursor:pointer; font-size:12px; font-weight:600;">2 Weeks</button>
+                                    </div>
+                                </div>
+                                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                                    <button onclick="cmPostPoll()" style="padding:10px 24px; background:#0077b5; border:none; border-radius:8px; color:white; cursor:pointer; font-size:14px; font-weight:700;">Post Poll to LinkedIn</button>
+                                    <span id="cmPollStatus" style="font-size:13px; color:rgba(255,255,255,0.6);"></span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -2976,7 +3121,26 @@
             await cmFetchSocialPosts(title, excerpt, url);
         }
 
-        // ---- Standalone Post Composer ----
+        // ---- Standalone Post Composer (Multi-Type) ----
+        let cmCurrentPostType = 'standard';
+        let cmPollDuration = 'ONE_WEEK';
+        let cmStandaloneImageData = null;
+
+        function cmSetPostType(type) {
+            cmCurrentPostType = type;
+            ['Standard','Job','Poll'].forEach(p => {
+                const panel = document.getElementById('cmPanel' + p);
+                const btn = document.getElementById('cmPostType' + p);
+                if (p.toLowerCase() === type) {
+                    if (panel) panel.style.display = 'block';
+                    if (btn) { btn.style.border = '2px solid #0077b5'; btn.style.background = 'rgba(0,119,181,0.15)'; }
+                } else {
+                    if (panel) panel.style.display = 'none';
+                    if (btn) { btn.style.border = '2px solid rgba(255,255,255,0.15)'; btn.style.background = 'rgba(255,255,255,0.05)'; }
+                }
+            });
+        }
+
         function cmAIWriteStandalone() {
             const panel = document.getElementById('cmStandaloneAIPanel');
             if (panel) panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
@@ -2998,6 +3162,8 @@
                 const data = await res.json();
                 if (data.success && data.posts) {
                     if (textEl) textEl.value = data.posts.linkedin || '';
+                    const cc = document.getElementById('cmStandaloneCharCount');
+                    if (cc && textEl) cc.textContent = textEl.value.length + ' characters';
                     const panel = document.getElementById('cmStandaloneAIPanel');
                     if (panel) panel.style.display = 'none';
                 } else {
@@ -3014,17 +3180,24 @@
             const textEl = document.getElementById('cmStandaloneLinkedin');
             const statusEl = document.getElementById('cmStandaloneStatus');
             const text = textEl ? textEl.value.trim() : '';
-            if (!text) { alert('Post text is empty.'); return; }
+            if (!text) { if (statusEl) statusEl.textContent = 'Please write a post first.'; return; }
             if (statusEl) { statusEl.textContent = 'Posting...'; statusEl.style.color = 'rgba(255,255,255,0.6)'; }
             try {
-                const res = await fetch('/api/linkedin/post', {
+                let endpoint = '/api/linkedin/post';
+                let body = { text };
+                if (cmStandaloneImageData) {
+                    endpoint = '/api/linkedin/post-image';
+                    body = { text, imageBase64: cmStandaloneImageData.base64, mimeType: cmStandaloneImageData.mimeType, imageTitle: cmStandaloneImageData.name };
+                }
+                const res = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text })
+                    body: JSON.stringify(body)
                 });
                 const data = await res.json();
                 if (data.success) {
                     if (statusEl) { statusEl.textContent = 'Posted successfully!'; statusEl.style.color = '#27ae60'; }
+                    setTimeout(() => { if (statusEl) { statusEl.textContent = ''; statusEl.style.color = 'rgba(255,255,255,0.6)'; } }, 5000);
                 } else {
                     if (statusEl) { statusEl.textContent = data.message || 'Post failed.'; statusEl.style.color = '#e74c3c'; }
                 }
@@ -3032,6 +3205,165 @@
                 if (statusEl) { statusEl.textContent = 'Error: ' + err.message; statusEl.style.color = '#e74c3c'; }
             }
         }
+
+        // Image upload helpers
+        function cmHandleStandaloneImageSelect(event) {
+            const file = event.target.files[0];
+            if (file) cmLoadStandaloneImage(file);
+        }
+        function cmHandleStandaloneImageDrop(event) {
+            event.preventDefault();
+            const drop = document.getElementById('cmStandaloneImageDrop');
+            if (drop) drop.style.borderColor = 'rgba(255,255,255,0.2)';
+            const file = event.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) cmLoadStandaloneImage(file);
+        }
+        function cmLoadStandaloneImage(file) {
+            if (file.size > 5 * 1024 * 1024) { alert('Image must be under 5 MB.'); return; }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                cmStandaloneImageData = { base64: e.target.result, mimeType: file.type, name: file.name };
+                const preview = document.getElementById('cmStandaloneImagePreview');
+                const previewWrap = document.getElementById('cmStandaloneImagePreviewWrap');
+                const placeholder = document.getElementById('cmStandaloneImagePlaceholder');
+                const clearWrap = document.getElementById('cmStandaloneImageClearWrap');
+                if (preview) preview.src = e.target.result;
+                if (previewWrap) previewWrap.style.display = 'block';
+                if (placeholder) placeholder.style.display = 'none';
+                if (clearWrap) clearWrap.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+        function cmClearStandaloneImage() {
+            cmStandaloneImageData = null;
+            const inp = document.getElementById('cmStandaloneImageInput');
+            if (inp) inp.value = '';
+            const previewWrap = document.getElementById('cmStandaloneImagePreviewWrap');
+            const placeholder = document.getElementById('cmStandaloneImagePlaceholder');
+            const clearWrap = document.getElementById('cmStandaloneImageClearWrap');
+            if (previewWrap) previewWrap.style.display = 'none';
+            if (placeholder) placeholder.style.display = 'block';
+            if (clearWrap) clearWrap.style.display = 'none';
+        }
+
+        // Job listing helpers
+        function cmPreviewJobCard() {
+            const title = (document.getElementById('cmJobTitle') || {}).value || '';
+            const desc = (document.getElementById('cmJobDescription') || {}).value || '';
+            const card = document.getElementById('cmJobPreviewCard');
+            if (title.trim() || desc.trim()) {
+                const t = document.getElementById('cmJobPreviewTitle');
+                const d = document.getElementById('cmJobPreviewDesc');
+                if (t) t.textContent = title.trim() || '(no title)';
+                if (d) d.textContent = desc.trim();
+                if (card) card.style.display = 'block';
+            } else {
+                if (card) card.style.display = 'none';
+            }
+        }
+        async function cmPostJobListing() {
+            const text = (document.getElementById('cmJobPostText') || {}).value || '';
+            const jobUrl = (document.getElementById('cmJobUrl') || {}).value || '';
+            const jobTitle = (document.getElementById('cmJobTitle') || {}).value || '';
+            const statusEl = document.getElementById('cmJobPostStatus');
+            if (!text.trim()) { if (statusEl) statusEl.textContent = 'Please write post copy.'; return; }
+            if (!jobUrl.trim()) { if (statusEl) statusEl.textContent = 'Please enter a job URL.'; return; }
+            if (statusEl) { statusEl.textContent = 'Posting...'; statusEl.style.color = 'rgba(255,255,255,0.6)'; }
+            try {
+                const res = await fetch('/api/linkedin/post', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text.trim(), jobUrl: jobUrl.trim(), jobTitle: jobTitle.trim() })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    if (statusEl) { statusEl.textContent = 'Job post published!'; statusEl.style.color = '#27ae60'; }
+                    setTimeout(() => { if (statusEl) { statusEl.textContent = ''; statusEl.style.color = 'rgba(255,255,255,0.6)'; } }, 5000);
+                } else {
+                    if (statusEl) { statusEl.textContent = data.message || 'Failed to post.'; statusEl.style.color = '#e74c3c'; }
+                }
+            } catch(e) {
+                if (statusEl) { statusEl.textContent = 'Network error.'; statusEl.style.color = '#e74c3c'; }
+            }
+        }
+
+        // Poll helpers
+        function cmSetPollDuration(val, btn) {
+            cmPollDuration = val;
+            document.querySelectorAll('.poll-duration-btn').forEach(b => {
+                b.style.border = '2px solid rgba(255,255,255,0.15)';
+                b.style.background = 'rgba(255,255,255,0.05)';
+                b.style.color = 'rgba(255,255,255,0.7)';
+            });
+            if (btn) { btn.style.border = '2px solid #0077b5'; btn.style.background = 'rgba(0,119,181,0.2)'; btn.style.color = 'white'; }
+        }
+        function cmAddPollOption() {
+            const container = document.getElementById('cmPollOptions');
+            if (!container) return;
+            const rows = container.querySelectorAll('.poll-option-row');
+            if (rows.length >= 4) return;
+            const n = rows.length + 1;
+            const div = document.createElement('div');
+            div.className = 'poll-option-row';
+            div.style.cssText = 'display:flex; gap:8px; align-items:center;';
+            div.innerHTML = '<input type="text" placeholder="Option ' + n + '" maxlength="30" style="flex:1; padding:10px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; box-sizing:border-box;"><span style="color:rgba(255,255,255,0.3); font-size:11px; min-width:30px; text-align:right;">30</span><button onclick="this.closest(\'.poll-option-row\').remove(); var addBtn=document.getElementById(\'cmAddPollOptionBtn\'); if(addBtn){addBtn.style.opacity=\'1\';addBtn.disabled=false;}" style="padding:4px 8px; background:rgba(231,76,60,0.15); border:1px solid rgba(231,76,60,0.3); border-radius:5px; color:#e74c3c; cursor:pointer; font-size:11px;">&#10005;</button>';
+            container.appendChild(div);
+            if (container.querySelectorAll('.poll-option-row').length >= 4) {
+                const addBtn = document.getElementById('cmAddPollOptionBtn');
+                if (addBtn) { addBtn.style.opacity = '0.4'; addBtn.disabled = true; }
+            }
+        }
+        async function cmPostPoll() {
+            const text = (document.getElementById('cmPollText') || {}).value || '';
+            const question = (document.getElementById('cmPollQuestion') || {}).value || '';
+            const statusEl = document.getElementById('cmPollStatus');
+            const optionInputs = document.querySelectorAll('#cmPollOptions .poll-option-row input');
+            const options = Array.from(optionInputs).map(i => i.value.trim()).filter(v => v.length > 0);
+            if (!text.trim()) { if (statusEl) statusEl.textContent = 'Please write post copy.'; return; }
+            if (!question.trim()) { if (statusEl) statusEl.textContent = 'Please enter a poll question.'; return; }
+            if (options.length < 2) { if (statusEl) statusEl.textContent = 'Please fill in at least 2 options.'; return; }
+            if (statusEl) { statusEl.textContent = 'Posting poll...'; statusEl.style.color = 'rgba(255,255,255,0.6)'; }
+            try {
+                const res = await fetch('/api/linkedin/post-poll', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text.trim(), question: question.trim(), options, duration: cmPollDuration })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    if (statusEl) { statusEl.textContent = 'Poll published to LinkedIn!'; statusEl.style.color = '#27ae60'; }
+                    setTimeout(() => { if (statusEl) { statusEl.textContent = ''; statusEl.style.color = 'rgba(255,255,255,0.6)'; } }, 5000);
+                } else {
+                    if (statusEl) { statusEl.textContent = data.message || 'Failed to post poll.'; statusEl.style.color = '#e74c3c'; }
+                }
+            } catch(e) {
+                if (statusEl) { statusEl.textContent = 'Network error.'; statusEl.style.color = '#e74c3c'; }
+            }
+        }
+
+        // Character counter & live preview wiring (runs after DOM ready)
+        document.addEventListener('DOMContentLoaded', function() {
+            const ta = document.getElementById('cmStandaloneLinkedin');
+            if (ta) {
+                ta.addEventListener('input', function() {
+                    const cc = document.getElementById('cmStandaloneCharCount');
+                    if (cc) cc.textContent = ta.value.length + ' characters';
+                });
+            }
+            const pollOpts = document.getElementById('cmPollOptions');
+            if (pollOpts) {
+                pollOpts.addEventListener('input', function(e) {
+                    if (e.target.tagName === 'INPUT') {
+                        const row = e.target.closest('.poll-option-row');
+                        if (row) { const span = row.querySelector('span'); if (span) span.textContent = 30 - e.target.value.length; }
+                    }
+                });
+            }
+            ['cmJobTitle','cmJobDescription'].forEach(function(id) {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('input', cmPreviewJobCard);
+            });
+        });
 
         // ---- Reset ----
 
