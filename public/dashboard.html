@@ -1029,6 +1029,21 @@
         .EasyMDEContainer .editor-toolbar i.separator { border-color: rgba(255,255,255,0.15); }
         .EasyMDEContainer .editor-statusbar { color: rgba(255,255,255,0.4); font-size: 11px; }
         .editor-preview { background: #ffffff; color: #1a1a1a; font-family: 'Source Sans Pro', sans-serif; }
+
+        /* Content Marketing tab — lighter placeholder text so it's readable on dark backgrounds */
+        #content-marketing-section input::placeholder,
+        #content-marketing-section textarea::placeholder,
+        #cmSettingsPanel input::placeholder,
+        #cmSettingsPanel textarea::placeholder,
+        #cmStep1 input::placeholder,
+        #cmStep1 textarea::placeholder,
+        #cmStep2 input::placeholder,
+        #cmStep2 textarea::placeholder,
+        #cmStep3 input::placeholder,
+        #cmStep3 textarea::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+            opacity: 1;
+        }
     </style>
     <!-- Source Sans Pro -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
