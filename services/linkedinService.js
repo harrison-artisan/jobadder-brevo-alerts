@@ -29,7 +29,7 @@ const REDIRECT_URI = process.env.LINKEDIN_REDIRECT_URI ||
   'https://jobadder-brevo-alerts-production.up.railway.app/auth/linkedin/callback';
 
 // Scopes available on this app: r_basicprofile, w_member_social, r_organization_social, w_organization_social
-const SCOPES = ['r_basicprofile', 'w_member_social'];
+const SCOPES = ['r_basicprofile', 'w_member_social', 'r_organization_social'];
 
 // Token expiry warning threshold: 7 days in ms
 const EXPIRY_WARNING_MS = 7 * 24 * 60 * 60 * 1000;
@@ -42,6 +42,8 @@ let tokenStore = {
   expiresAt: process.env.LINKEDIN_TOKEN_EXPIRES_AT ? parseInt(process.env.LINKEDIN_TOKEN_EXPIRES_AT) : null,
   personUrn: process.env.LINKEDIN_PERSON_URN || null,
   displayName: process.env.LINKEDIN_DISPLAY_NAME || null,
+  orgUrn: 'urn:li:organization:832171',
+  orgName: 'Artisan',
 };
 
 class LinkedInService {
@@ -90,17 +92,18 @@ class LinkedInService {
     const { access_token, expires_in } = response.data;
     const expiresAt = Date.now() + (expires_in * 1000);
 
-    // Fetch the user's profile to get their person URN and display name
+     // Fetch the user's profile to get their person URN and display name
     const profile = await this.fetchProfile(access_token);
-
+    // Always post as Artisan Company Page (org ID: 832171)
     tokenStore = {
       accessToken: access_token,
       expiresAt,
       personUrn: profile.personUrn,
       displayName: profile.displayName,
+      orgUrn: 'urn:li:organization:832171',
+      orgName: 'Artisan',
     };
-
-    console.log(`[LinkedIn] Token stored. Expires: ${new Date(expiresAt).toISOString()}. User: ${profile.displayName}`);
+    console.log(`[LinkedIn] Token stored. Expires: ${new Date(expiresAt).toISOString()}. User: ${profile.displayName}. Org: Artisan (832171)`);
     return tokenStore;
   }
 
@@ -121,15 +124,46 @@ class LinkedInService {
     return { personUrn, displayName };
   }
 
+  /**
+   * Fetch the first LinkedIn organisation page the user administers.
+   * Uses the r_organization_social scope.
+   * @param {string} accessToken
+   * @param {string} personUrn - e.g. urn:li:person:ABC123
+   * @returns {object} { orgUrn, orgName }
+   */
+  async fetchOrgPage(accessToken, personUrn) {
+    // Get all org admin roles for this person
+    const personId = personUrn.replace('urn:li:person:', '');
+    const response = await axios.get(
+      `https://api.linkedin.com/v2/organizationAcls?q=roleAssignee&role=ADMINISTRATOR&projection=(elements*(organization~(id,localizedName)))`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'X-Restli-Protocol-Version': '2.0.0',
+        },
+      }
+    );
+    const elements = (response.data && response.data.elements) || [];
+    if (elements.length === 0) {
+      throw new Error('No LinkedIn organisation pages found for this account.');
+    }
+    // Use the first org the user admins
+    const first = elements[0];
+    const orgId = first['organization~'] ? first['organization~'].id : null;
+    const orgName = first['organization~'] ? first['organization~'].localizedName : 'Company Page';
+    if (!orgId) throw new Error('Could not extract org ID from LinkedIn response.');
+    return { orgUrn: `urn:li:organization:${orgId}`, orgName };
+  }
+
   // ---- Token Status ----
 
   /**
    * Get the current token status.
-   * @returns {object} { connected, expiresAt, daysRemaining, status, displayName }
+   * @returns {object} { connected, expiresAt, daysRemaining, status, displayName, orgName }
    */
   getTokenStatus() {
     if (!tokenStore.accessToken || !tokenStore.expiresAt) {
-      return { connected: false, status: 'disconnected', displayName: null, expiresAt: null, daysRemaining: null };
+      return { connected: false, status: 'disconnected', displayName: null, orgName: null, expiresAt: null, daysRemaining: null };
     }
 
     const now = Date.now();
@@ -141,25 +175,26 @@ class LinkedInService {
         connected: false,
         status: 'expired',
         displayName: tokenStore.displayName,
+        orgName: tokenStore.orgName,
         expiresAt: tokenStore.expiresAt,
         daysRemaining: 0,
       };
     }
-
     if (msRemaining <= EXPIRY_WARNING_MS) {
       return {
         connected: true,
         status: 'expiring_soon',
         displayName: tokenStore.displayName,
+        orgName: tokenStore.orgName,
         expiresAt: tokenStore.expiresAt,
         daysRemaining,
       };
     }
-
     return {
       connected: true,
       status: 'active',
       displayName: tokenStore.displayName,
+      orgName: tokenStore.orgName,
       expiresAt: tokenStore.expiresAt,
       daysRemaining,
     };
@@ -178,7 +213,7 @@ class LinkedInService {
    * Disconnect — clear the token store.
    */
   disconnect() {
-    tokenStore = { accessToken: null, expiresAt: null, personUrn: null, displayName: null };
+    tokenStore = { accessToken: null, expiresAt: null, personUrn: null, displayName: null, orgUrn: 'urn:li:organization:832171', orgName: 'Artisan' };
   }
 
   // ---- Posting ----
@@ -193,8 +228,10 @@ class LinkedInService {
       throw new Error('LinkedIn is not connected. Please reconnect via the Social Media tab.');
     }
 
+    // Post as the Company Page if available, otherwise fall back to personal profile
+    const author = tokenStore.orgUrn || tokenStore.personUrn;
     const payload = {
-      author: tokenStore.personUrn,
+      author,
       lifecycleState: 'PUBLISHED',
       specificContent: {
         'com.linkedin.ugc.ShareContent': {
@@ -235,9 +272,9 @@ class LinkedInService {
     if (!this.isConnected()) {
       throw new Error('LinkedIn is not connected. Please reconnect via the Social Media tab.');
     }
-
+    const author = tokenStore.orgUrn || tokenStore.personUrn;
     const payload = {
-      author: tokenStore.personUrn,
+      author,
       lifecycleState: 'PUBLISHED',
       specificContent: {
         'com.linkedin.ugc.ShareContent': {
