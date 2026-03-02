@@ -504,6 +504,180 @@ OUTPUT ONLY THE SUMMARY - NO EXPLANATIONS OR EXTRA TEXT.`;
     
     return summaries;
   }
+
+  // ============================================================
+  // CONTENT MARKETING: Article & Image Generation
+  // ============================================================
+
+  /**
+   * Generate a full blog article from a topic/prompt.
+   * Returns { title, content, excerpt, seoDescription, suggestedTags }
+   */
+  async generateArticle(topic) {
+    const client = this.getClient();
+    if (!client) {
+      throw new Error('OpenAI API key not configured. Cannot generate article.');
+    }
+
+    console.log(`\n📝 Generating article for topic: "${topic}"`);
+
+    const systemPrompt = `You are an expert content writer for Artisan, a premium Australian recruitment agency specialising in creative, marketing, and technology roles. 
+You write authoritative, engaging, SEO-optimised blog articles that provide genuine value to hiring managers, HR professionals, and job seekers in Australia.
+Your writing style is professional yet approachable, uses Australian English spelling (e.g. specialise, recognise, organisation), and always includes practical, actionable insights.
+Structure every article with clear headings and subheadings using markdown (## and ###).`;
+
+    const userPrompt = `Write a comprehensive blog article about the following topic for Artisan's website:
+
+TOPIC: ${topic}
+
+Requirements:
+- Length: 700–1000 words
+- Use Australian English spelling throughout
+- Include a compelling H1 title (no markdown # prefix — just the plain title text on the first line)
+- Use ## for main section headings and ### for subheadings
+- Include a short introductory paragraph that hooks the reader
+- Provide 3–5 substantive sections with practical insights
+- End with a clear, actionable conclusion
+- Tone: professional, authoritative, and helpful
+- Do NOT include any author byline or date
+
+After the article body, on a new line output exactly this JSON block (no markdown fences):
+{
+  "excerpt": "<2-sentence summary of the article, max 160 chars>",
+  "seoDescription": "<SEO meta description, max 155 chars>",
+  "suggestedTags": ["tag1", "tag2", "tag3"]
+}`;
+
+    const response = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
+      temperature: 0.7,
+      max_tokens: 2000
+    });
+
+    const raw = response.choices[0].message.content.trim();
+
+    // Split article body from the trailing JSON block
+    const jsonMatch = raw.match(/\{[\s\S]*"excerpt"[\s\S]*\}\s*$/);
+    let articleBody = raw;
+    let meta = { excerpt: '', seoDescription: '', suggestedTags: [] };
+
+    if (jsonMatch) {
+      articleBody = raw.slice(0, raw.lastIndexOf(jsonMatch[0])).trim();
+      try {
+        meta = JSON.parse(jsonMatch[0]);
+      } catch (e) {
+        console.warn('⚠️  Could not parse article meta JSON:', e.message);
+      }
+    }
+
+    // Extract the first line as the title
+    const lines = articleBody.split('\n').filter(l => l.trim());
+    const title = lines[0].replace(/^#+\s*/, '').trim();
+    const content = lines.slice(1).join('\n').trim();
+
+    console.log(`✅ Article generated: "${title}" (${content.length} chars)`);
+
+    return {
+      title,
+      content,
+      excerpt: meta.excerpt || '',
+      seoDescription: meta.seoDescription || '',
+      suggestedTags: meta.suggestedTags || []
+    };
+  }
+
+  /**
+   * Generate a header image for a blog article using DALL-E 3.
+   * Downloads the image and returns the local file path.
+   */
+  async generateHeaderImage(articleTitle) {
+    const client = this.getClient();
+    if (!client) {
+      throw new Error('OpenAI API key not configured. Cannot generate image.');
+    }
+
+    const axios = require('axios');
+    const fs = require('fs');
+    const path = require('path');
+    const os = require('os');
+
+    console.log(`\n🎨 Generating header image for: "${articleTitle}"`);
+
+    const imagePrompt = `A professional, modern, high-quality blog header image for an Australian recruitment agency article titled: "${articleTitle}". 
+The image should be clean, corporate, and visually striking. Use a colour palette of deep navy blue, white, and subtle gold accents. 
+Abstract or conceptual style — no text, no people's faces. Suitable for a premium professional services brand. 16:9 landscape format.`;
+
+    const response = await client.images.generate({
+      model: 'dall-e-3',
+      prompt: imagePrompt,
+      n: 1,
+      size: '1792x1024',
+      quality: 'standard',
+      response_format: 'url'
+    });
+
+    const imageUrl = response.data[0].url;
+    console.log(`  🔗 Image URL received, downloading...`);
+
+    // Download the image to a temp file
+    const tmpDir = os.tmpdir();
+    const safeTitle = articleTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase().slice(0, 40);
+    const localPath = path.join(tmpDir, `header_${safeTitle}_${Date.now()}.png`);
+
+    const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+    fs.writeFileSync(localPath, imageResponse.data);
+
+    console.log(`  ✅ Header image saved to: ${localPath}`);
+    return localPath;
+  }
+
+  /**
+   * Generate social media post copy for LinkedIn and Facebook/X
+   * from an article title, excerpt, and URL.
+   */
+  async generateSocialPosts(articleTitle, excerpt, articleUrl) {
+    const client = this.getClient();
+    if (!client) {
+      throw new Error('OpenAI API key not configured. Cannot generate social posts.');
+    }
+
+    console.log(`\n📱 Generating social posts for: "${articleTitle}"`);
+
+    const prompt = `You are a social media manager for Artisan, a premium Australian recruitment agency. 
+Create social media posts to promote the following blog article. Use Australian English spelling.
+
+ARTICLE TITLE: ${articleTitle}
+ARTICLE EXCERPT: ${excerpt}
+ARTICLE URL: ${articleUrl}
+
+Generate exactly this JSON (no markdown fences):
+{
+  "linkedin": "<LinkedIn post — professional tone, 150-250 words, include 3-5 relevant hashtags at the end>",
+  "facebook": "<Facebook post — warm and engaging tone, 80-120 words, include 2-3 hashtags>",
+  "twitter": "<X/Twitter post — punchy, max 250 chars including URL and 2 hashtags>"
+}`;
+
+    const response = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.75,
+      max_tokens: 800
+    });
+
+    const raw = response.choices[0].message.content.trim();
+    try {
+      const posts = JSON.parse(raw);
+      console.log('✅ Social posts generated.');
+      return posts;
+    } catch (e) {
+      console.warn('⚠️  Could not parse social posts JSON, returning raw.');
+      return { linkedin: raw, facebook: raw, twitter: raw };
+    }
+  }
 }
 
 module.exports = new AIService();

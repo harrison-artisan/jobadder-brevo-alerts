@@ -4,6 +4,7 @@ const cron = require('node-cron');
 const jobAlertsController = require('./controllers/jobAlertsController');
 const candidateAlertsController = require('./controllers/candidateAlertsController');
 const xposeController = require('./controllers/xposeController');
+const contentMarketingController = require('./controllers/contentMarketingController');
 const jobadderService = require('./services/jobadderService');
 const jobTrackingService = require('./services/jobTrackingService');
 
@@ -477,6 +478,35 @@ cron.schedule('0 14 * * *', async () => {
   }
 }, {
   timezone: "Australia/Sydney" // Adjust to your timezone
+});
+
+// ============================================================
+// Content Marketing Routes
+// ============================================================
+
+// GET  /api/content/state          - Get current content generation state
+app.get('/api/content/state', async (req, res) => {
+  await contentMarketingController.getState(req, res);
+});
+
+// POST /api/content/generate       - Generate article + header image via AI
+app.post('/api/content/generate', async (req, res) => {
+  await contentMarketingController.generateContent(req, res);
+});
+
+// POST /api/content/publish        - Publish generated content to WordPress
+app.post('/api/content/publish', async (req, res) => {
+  await contentMarketingController.publishToWordPress(req, res);
+});
+
+// POST /api/content/social-posts   - Generate social media post copy
+app.post('/api/content/social-posts', async (req, res) => {
+  await contentMarketingController.generateSocialPosts(req, res);
+});
+
+// POST /api/content/reset          - Reset content state
+app.post('/api/content/reset', async (req, res) => {
+  await contentMarketingController.resetState(req, res);
 });
 
 // Start server

@@ -136,6 +136,183 @@ class WordpressService {
             featuredImage,
         };
     }
+
+    // ============================================================
+    // CONTENT MARKETING: Create Posts & Upload Media
+    // ============================================================
+
+    /**
+     * Build the Basic Auth header from env vars.
+     * Requires WORDPRESS_USERNAME and WORDPRESS_APPLICATION_PASSWORD.
+     */
+    getAuthHeader() {
+        const user = process.env.WORDPRESS_USERNAME;
+        const pass = process.env.WORDPRESS_APPLICATION_PASSWORD;
+        if (!user || !pass) {
+            throw new Error('WORDPRESS_USERNAME or WORDPRESS_APPLICATION_PASSWORD environment variable is not set.');
+        }
+        const token = Buffer.from(`${user}:${pass}`).toString('base64');
+        return `Basic ${token}`;
+    }
+
+    /**
+     * Upload an image file to the WordPress Media Library.
+     * @param {string} filePath - Absolute path to the local image file.
+     * @param {string} fileName - Desired file name (e.g. "header-image.png").
+     * @returns {Promise<{id: number, url: string}>} The media ID and source URL.
+     */
+    async uploadMedia(filePath, fileName) {
+        const fs = require('fs');
+        const path = require('path');
+        const FormData = require('form-data');
+
+        console.log(`\n📤 Uploading media to WordPress: ${fileName}`);
+
+        const form = new FormData();
+        form.append('file', fs.createReadStream(filePath), {
+            filename: fileName || path.basename(filePath),
+            contentType: 'image/png'
+        });
+
+        try {
+            const response = await axios.post(
+                `${WORDPRESS_API_URL}/media`,
+                form,
+                {
+                    headers: {
+                        ...form.getHeaders(),
+                        'Authorization': this.getAuthHeader(),
+                        'Content-Disposition': `attachment; filename="${fileName || path.basename(filePath)}"`
+                    }
+                }
+            );
+
+            console.log(`✅ Media uploaded. ID: ${response.data.id}, URL: ${response.data.source_url}`);
+            return {
+                id: response.data.id,
+                url: response.data.source_url
+            };
+        } catch (error) {
+            console.error('❌ Error uploading media to WordPress:', error.response?.data || error.message);
+            throw error;
+        }
+    }
+
+    /**
+     * Create a new WordPress post.
+     * @param {Object} postData
+     * @param {string} postData.title - Post title.
+     * @param {string} postData.content - Post body (HTML or markdown).
+     * @param {string} [postData.excerpt] - Short excerpt.
+     * @param {number} [postData.featuredMediaId] - ID of the featured image media.
+     * @param {string} [postData.status] - 'publish' | 'draft' (default: 'draft').
+     * @param {number[]} [postData.categories] - Array of category IDs.
+     * @param {number[]} [postData.tags] - Array of tag IDs.
+     * @returns {Promise<{id: number, link: string, status: string}>}
+     */
+    async createPost({ title, content, excerpt, featuredMediaId, status = 'draft', categories = [], tags = [] }) {
+        console.log(`\n📝 Creating WordPress post: "${title}" [status: ${status}]`);
+
+        // Convert markdown-style content to basic HTML paragraphs
+        const htmlContent = this.markdownToHtml(content);
+
+        const payload = {
+            title,
+            content: htmlContent,
+            excerpt: excerpt || '',
+            status,
+            categories: categories.length ? categories : undefined,
+            tags: tags.length ? tags : undefined,
+        };
+
+        if (featuredMediaId) {
+            payload.featured_media = featuredMediaId;
+        }
+
+        try {
+            const response = await axios.post(
+                `${WORDPRESS_API_URL}/posts`,
+                payload,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': this.getAuthHeader()
+                    }
+                }
+            );
+
+            console.log(`✅ WordPress post created. ID: ${response.data.id}, Link: ${response.data.link}`);
+            return {
+                id: response.data.id,
+                link: response.data.link,
+                status: response.data.status
+            };
+        } catch (error) {
+            console.error('❌ Error creating WordPress post:', error.response?.data || error.message);
+            throw error;
+        }
+    }
+
+    /**
+     * Resolve or create WordPress tags by name.
+     * Returns an array of tag IDs.
+     */
+    async resolveTagIds(tagNames) {
+        if (!tagNames || tagNames.length === 0) return [];
+
+        const ids = [];
+        for (const name of tagNames) {
+            try {
+                // Search for existing tag
+                const searchResp = await axios.get(`${WORDPRESS_API_URL}/tags`, {
+                    params: { search: name, per_page: 1 },
+                    headers: { 'Authorization': this.getAuthHeader() }
+                });
+
+                if (searchResp.data.length > 0) {
+                    ids.push(searchResp.data[0].id);
+                } else {
+                    // Create new tag
+                    const createResp = await axios.post(
+                        `${WORDPRESS_API_URL}/tags`,
+                        { name },
+                        { headers: { 'Content-Type': 'application/json', 'Authorization': this.getAuthHeader() } }
+                    );
+                    ids.push(createResp.data.id);
+                }
+            } catch (e) {
+                console.warn(`⚠️  Could not resolve tag "${name}": ${e.message}`);
+            }
+        }
+        return ids;
+    }
+
+    /**
+     * Minimal markdown-to-HTML converter for article body.
+     * Handles headings, bold, italic, and paragraphs.
+     */
+    markdownToHtml(markdown) {
+        if (!markdown) return '';
+        let html = markdown
+            // Headings
+            .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+            .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+            .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+            // Bold & italic
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.+?)\*/g, '<em>$1</em>')
+            // Line breaks to paragraphs
+            .split(/\n{2,}/)
+            .map(para => {
+                const trimmed = para.trim();
+                if (!trimmed) return '';
+                if (trimmed.startsWith('<h') || trimmed.startsWith('<ul') || trimmed.startsWith('<ol')) return trimmed;
+                return `<p>${trimmed.replace(/\n/g, '<br>')}</p>`;
+            })
+            .filter(Boolean)
+            .join('\n');
+        return html;
+    }
 }
 
 module.exports = new WordpressService();
