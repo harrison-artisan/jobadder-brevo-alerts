@@ -523,6 +523,10 @@ OUTPUT ONLY THE SUMMARY - NO EXPLANATIONS OR EXTRA TEXT.`;
     const keywords = (settings.keywords || '').trim();
     const tone = (settings.tone || '').trim();
     const voice = (settings.voice || '').trim();
+    const advStyle = (settings.advStyle || '').trim();
+    const advStructure = (settings.advStructure || '').trim();
+    const advSeo = (settings.advSeo || '').trim();
+    const advExtra = (settings.advExtra || '').trim();
 
     console.log(`Generating article for topic: "${topic}"`);
 
@@ -536,6 +540,10 @@ OUTPUT ONLY THE SUMMARY - NO EXPLANATIONS OR EXTRA TEXT.`;
     const voiceLine = voice
       ? `- Voice / perspective: ${voice}`
       : '- Voice: written from the perspective of Artisan, speaking directly to the reader';
+    const advStyleLine = advStyle ? `\nWRITING STYLE OVERRIDE:\n${advStyle}` : '';
+    const advStructureLine = advStructure ? `\nSTRUCTURE OVERRIDE:\n${advStructure}` : '';
+    const advSeoLine = advSeo ? `\nSEO/AEO/GEO OVERRIDE:\n${advSeo}` : '';
+    const advExtraLine = advExtra ? `\nADDITIONAL INSTRUCTIONS:\n${advExtra}` : '';
 
     const systemPrompt = `You are the senior content writer for Artisan, a specialist Australian recruitment agency with over 27 years of experience placing creative, digital, and marketing professionals.
 
@@ -548,7 +556,17 @@ Your writing style is modelled on Artisan's Creative Community blog (artisan.com
 - You use Australian English spelling throughout: specialise, recognise, organisation, behaviour, labour, colour, centre.
 - You NEVER use emojis anywhere in the article.
 - You NEVER use phrases like "In today's fast-paced world" or "In conclusion" or "It goes without saying".
-- Every article ends with a "Where Artisan Comes In" or similar section that ties the topic back to Artisan's services.`;
+- Bullet point lists are acceptable when presenting a set of items, steps, or comparisons that are genuinely clearer as a list than as prose. Default to paragraphs; use lists only when they add clarity.
+- Every article ends with a "Where Artisan Comes In" or similar section that ties the topic back to Artisan's services.
+
+SEO / AEO / GEO BEST PRACTICES (apply to every article):
+- Include the primary keyword in the H1 title, the opening paragraph, and at least one H2 heading.
+- Use semantic variations and LSI keywords naturally throughout — do not keyword-stuff.
+- Write one clear answer to the most likely search question in the first 100 words (this satisfies AEO / featured snippet optimisation).
+- Structure content so AI search engines (Perplexity, ChatGPT, Google SGE) can extract a direct answer: lead each section with the key point, then expand.
+- For GEO (Generative Engine Optimisation): write in a factual, authoritative tone with specific claims, named entities, and concrete examples — vague generalisations are penalised by AI summarisers.
+- Include at least one mention of a specific Australian city, industry sector, or named trend to signal geographic and topical relevance.
+- The excerpt / meta description must contain the primary keyword and read as a complete, standalone sentence.`;
 
     const userPrompt = `Write a comprehensive blog article for Artisan's Creative Community section.
 
@@ -569,10 +587,17 @@ STYLE REQUIREMENTS:
 - No exclamation marks
 - No filler phrases ("In today's world", "It's no secret", "It goes without saying", "In conclusion")
 - No passive voice where active voice is possible
-- No bullet point lists — write in full paragraphs only
+- Default to full paragraphs; use bullet point lists only when presenting items, steps, or comparisons that are genuinely clearer as a list
+
+SEO / AEO / GEO REQUIREMENTS:
+- Primary keyword must appear in the H1, the opening paragraph, and at least one H2
+- Answer the most likely search question directly within the first 100 words
+- Each section should lead with the key point (inverted pyramid structure)
+- Include specific Australian context: city, sector, or named trend
+- Avoid vague generalisations — use concrete, citable claims
 ${toneLine}
 ${voiceLine}
-${keywordsLine ? keywordsLine + '\n' : ''}- Always relate the content back to Artisan and the Australian creative/marketing/digital recruitment industry
+${keywordsLine ? keywordsLine + '\n' : ''}- Always relate the content back to Artisan and the Australian creative/marketing/digital recruitment industry${advStyleLine}${advStructureLine}${advSeoLine}${advExtraLine}
 
 After the article body, on a new line output exactly this JSON block (no markdown fences, no trailing comma):
 {
