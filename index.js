@@ -594,6 +594,38 @@ app.post('/api/linkedin/post', async (req, res) => {
   }
 });
 
+// POST /api/linkedin/post-image - Post with image to LinkedIn
+app.post('/api/linkedin/post-image', async (req, res) => {
+  const { text, imageBase64, mimeType, imageTitle } = req.body;
+  if (!text) return res.status(400).json({ success: false, message: 'Post text is required.' });
+  if (!imageBase64) return res.status(400).json({ success: false, message: 'Image data is required.' });
+  try {
+    const base64Data = imageBase64.replace(/^data:[^;]+;base64,/, '');
+    const imageBuffer = Buffer.from(base64Data, 'base64');
+    const mime = mimeType || 'image/jpeg';
+    const result = await linkedinService.postWithImage(text, imageBuffer, mime, imageTitle || '');
+    res.json({ success: true, postId: result.id, message: 'Image post published to LinkedIn.' });
+  } catch (err) {
+    console.error('[LinkedIn] Image post error:', err.response ? JSON.stringify(err.response.data) : err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/linkedin/post-poll - Post a poll to LinkedIn
+app.post('/api/linkedin/post-poll', async (req, res) => {
+  const { text, question, options, duration } = req.body;
+  if (!text) return res.status(400).json({ success: false, message: 'Post text is required.' });
+  if (!question) return res.status(400).json({ success: false, message: 'Poll question is required.' });
+  if (!options || options.length < 2) return res.status(400).json({ success: false, message: 'At least 2 poll options are required.' });
+  try {
+    const result = await linkedinService.postPoll(text, question, options, duration || 'ONE_WEEK');
+    res.json({ success: true, postId: result.id, message: 'Poll published to LinkedIn.' });
+  } catch (err) {
+    console.error('[LinkedIn] Poll error:', err.response ? JSON.stringify(err.response.data) : err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   const isAuthorized = jobadderService.isAuthorized();

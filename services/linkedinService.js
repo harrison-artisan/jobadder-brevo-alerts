@@ -307,9 +307,160 @@ class LinkedInService {
       }
     );
 
-    console.log(`[LinkedIn] Article post published. ID: ${response.data.id}`);
+     console.log(`[LinkedIn] Article post published. ID: ${response.data.id}`);
+    return response.data;
+  }
+
+  // ---- Image Upload ----
+
+  /**
+   * Register an image upload with LinkedIn Assets API.
+   * @returns {object} { uploadUrl, asset }
+   */
+  async registerImageUpload() {
+    if (!this.isConnected()) throw new Error('LinkedIn is not connected.');
+    const payload = {
+      registerUploadRequest: {
+        recipes: ['urn:li:digitalmediaRecipe:feedshare-image'],
+        owner: tokenStore.orgUrn,
+        serviceRelationships: [{
+          relationshipType: 'OWNER',
+          identifier: 'urn:li:userGeneratedContent',
+        }],
+      },
+    };
+    const response = await axios.post(
+      'https://api.linkedin.com/v2/assets?action=registerUpload',
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${tokenStore.accessToken}`,
+          'Content-Type': 'application/json',
+          'X-Restli-Protocol-Version': '2.0.0',
+        },
+      }
+    );
+    const { uploadMechanism, asset } = response.data.value;
+    const uploadUrl = uploadMechanism['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest'].uploadUrl;
+    return { uploadUrl, asset };
+  }
+
+  /**
+   * Upload image binary to LinkedIn.
+   * @param {string} uploadUrl - URL from registerImageUpload
+   * @param {Buffer} imageBuffer - Raw image buffer
+   * @param {string} mimeType - e.g. 'image/jpeg'
+   */
+  async uploadImageBinary(uploadUrl, imageBuffer, mimeType) {
+    await axios.put(uploadUrl, imageBuffer, {
+      headers: {
+        Authorization: `Bearer ${tokenStore.accessToken}`,
+        'Content-Type': mimeType,
+      },
+    });
+  }
+
+  /**
+   * Post a text update with an attached image to the Artisan Company Page.
+   * @param {string} text - Post body text
+   * @param {Buffer} imageBuffer - Raw image buffer
+   * @param {string} mimeType - e.g. 'image/jpeg'
+   * @param {string} imageTitle - Alt text / title for the image
+   * @returns {object} LinkedIn API response
+   */
+  async postWithImage(text, imageBuffer, mimeType, imageTitle = '') {
+    if (!this.isConnected()) throw new Error('LinkedIn is not connected.');
+    // Step 1: Register upload
+    const { uploadUrl, asset } = await this.registerImageUpload();
+    // Step 2: Upload binary
+    await this.uploadImageBinary(uploadUrl, imageBuffer, mimeType);
+    // Step 3: Create post referencing asset
+    const payload = {
+      author: tokenStore.orgUrn,
+      lifecycleState: 'PUBLISHED',
+      specificContent: {
+        'com.linkedin.ugc.ShareContent': {
+          shareCommentary: { text },
+          shareMediaCategory: 'IMAGE',
+          media: [{
+            status: 'READY',
+            description: { text: imageTitle },
+            media: asset,
+            title: { text: imageTitle },
+          }],
+        },
+      },
+      visibility: {
+        'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC',
+      },
+    };
+    const response = await axios.post(
+      'https://api.linkedin.com/v2/ugcPosts',
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${tokenStore.accessToken}`,
+          'Content-Type': 'application/json',
+          'X-Restli-Protocol-Version': '2.0.0',
+        },
+      }
+    );
+    console.log(`[LinkedIn] Image post published. ID: ${response.data.id}`);
+    return response.data;
+  }
+
+  // ---- Poll ----
+
+  /**
+   * Post a LinkedIn Poll to the Artisan Company Page.
+   * @param {string} text - Post body / question context
+   * @param {string} question - The poll question
+   * @param {string[]} options - Array of 2–4 option strings
+   * @param {string} duration - 'ONE_DAY' | 'THREE_DAYS' | 'ONE_WEEK' | 'TWO_WEEKS'
+   * @returns {object} LinkedIn API response
+   */
+  async postPoll(text, question, options, duration = 'ONE_WEEK') {
+    if (!this.isConnected()) throw new Error('LinkedIn is not connected.');
+    if (!options || options.length < 2 || options.length > 4) {
+      throw new Error('Polls require between 2 and 4 options.');
+    }
+    const pollOptions = options.map(opt => ({ text: opt }));
+    const payload = {
+      author: tokenStore.orgUrn,
+      lifecycleState: 'PUBLISHED',
+      specificContent: {
+        'com.linkedin.ugc.ShareContent': {
+          shareCommentary: { text },
+          shareMediaCategory: 'POLL',
+          media: [{
+            status: 'READY',
+            poll: {
+              question,
+              options: pollOptions,
+              settings: {
+                duration,
+              },
+            },
+          }],
+        },
+      },
+      visibility: {
+        'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC',
+      },
+    };
+    const response = await axios.post(
+      'https://api.linkedin.com/v2/ugcPosts',
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${tokenStore.accessToken}`,
+          'Content-Type': 'application/json',
+          'X-Restli-Protocol-Version': '2.0.0',
+        },
+      }
+    );
+    console.log(`[LinkedIn] Poll published. ID: ${response.data.id}`);
     return response.data;
   }
 }
-
 module.exports = new LinkedInService();
