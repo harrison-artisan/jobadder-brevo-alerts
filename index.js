@@ -95,6 +95,52 @@ app.get('/api/jobs', async (req, res) => {
   }
 });
 
+// GET /api/jobs/for-post - Return rich job data for the LinkedIn Job Listing post card
+app.get('/api/jobs/for-post', async (req, res) => {
+  try {
+    if (!jobadderService.isAuthorized()) {
+      return res.status(401).json({ success: false, message: 'JobAdder is not connected.' });
+    }
+    const jobs = await jobadderService.getLiveJobs();
+    // Build a richer object for each job
+    const jobList = jobs.map(job => {
+      const d = job.jobDetails || {};
+      // Job URL: prefer the ad's apply URL, fall back to a constructed URL
+      const jobUrl = job.applyUrl || job.url ||
+        (job.adId ? `https://app.jobadder.com/jobs/${job.adId}` : null);
+      // Location
+      const location = d.location
+        ? (d.location.name || d.location.city || d.location.state || '')
+        : (job.location || '');
+      // Work type
+      const workType = d.workType
+        ? (d.workType.name || d.workType)
+        : (job.workType || '');
+      // Salary
+      const salary = d.salary
+        ? [d.salary.rateLow, d.salary.rateHigh].filter(Boolean).join(' - ') + (d.salary.ratePer ? ' per ' + d.salary.ratePer : '')
+        : '';
+      // Short description — strip HTML tags
+      const rawDesc = d.description || job.description || '';
+      const description = rawDesc.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 300);
+      return {
+        adId: job.adId,
+        title: d.title || job.title || '',
+        reference: job.reference || '',
+        location,
+        workType,
+        salary,
+        description,
+        jobUrl,
+      };
+    });
+    res.json({ success: true, jobs: jobList });
+  } catch (err) {
+    console.error('[Jobs] for-post error:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // Manual trigger endpoints (for testing)
 app.post('/trigger/daily-roundup', async (req, res) => {
   try {
