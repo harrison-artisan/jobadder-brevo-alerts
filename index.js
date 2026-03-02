@@ -524,6 +524,7 @@ app.post('/api/content/reset', async (req, res) => {
 // LinkedIn OAuth + Posting Routes
 // ============================================================
 const linkedinService = require('./services/linkedinService');
+const aiService = require('./services/aiService');
 const crypto = require('crypto');
 
 // In-memory CSRF state store (keyed by state string, value = timestamp)
@@ -590,6 +591,18 @@ app.post('/api/linkedin/post', async (req, res) => {
     res.json({ success: true, postId: result.id, message: 'Posted to LinkedIn successfully.' });
   } catch (err) {
     console.error('[LinkedIn] Post error:', err.response ? JSON.stringify(err.response.data) : err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/linkedin/generate-poll - AI-generate a poll suggestion
+app.post('/api/linkedin/generate-poll', async (req, res) => {
+  try {
+    const { prompt } = req.body;
+    const suggestion = await aiService.generatePollSuggestion(prompt || '');
+    res.json({ success: true, suggestion });
+  } catch (err) {
+    console.error('[AI] Generate poll error:', err.message);
     res.status(500).json({ success: false, message: err.message });
   }
 });
