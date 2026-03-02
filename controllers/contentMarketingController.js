@@ -5,67 +5,114 @@ const fs = require('fs');
 
 /**
  * Content Marketing Controller
- * Handles the full pipeline:
- *   1. Generate article (OpenAI)
- *   2. Generate header image (DALL-E 3)
- *   3. Publish to WordPress (upload media + create post)
- *   4. Generate social media posts (OpenAI)
+ *
+ * 3-Step Pipeline:
+ *   STEP 1 — Generate Article:  POST /api/content/generate-article
+ *   STEP 2 — Generate Image:    POST /api/content/generate-image
+ *   STEP 3 — Publish to WP:     POST /api/content/publish
+ *
+ * Supporting:
+ *   GET  /api/content/state              - Load saved state (article + image preview)
+ *   GET  /api/content/wp-categories      - Fetch WordPress categories for the selector
+ *   POST /api/content/social-posts       - Generate social copy after publishing
+ *   POST /api/content/reset              - Clear all state
  */
 
+const STATE_FILE = path.join(__dirname, '..', '.content-state.json');
+
+function readState() {
+    if (!fs.existsSync(STATE_FILE)) return {};
+    try { return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')); } catch (e) { return {}; }
+}
+
+function writeState(data) {
+    fs.writeFileSync(STATE_FILE, JSON.stringify(data, null, 2));
+}
+
 // ============================================================
-// Step 1 + 2: Generate article AND header image together
+// STEP 1: Generate Article copy only
 // ============================================================
-async function generateContent(req, res) {
+async function generateArticle(req, res) {
     const { topic } = req.body;
 
     if (!topic || !topic.trim()) {
         return res.status(400).json({ success: false, message: 'A topic is required.' });
     }
 
-    console.log('\n======== 📰 CONTENT MARKETING: GENERATE ========');
+    console.log('\n======== 📰 STEP 1: GENERATE ARTICLE ========');
     console.log(`Topic: "${topic}"`);
 
     try {
-        // Run article and image generation in parallel for speed
-        const [article, imagePath] = await Promise.all([
-            aiService.generateArticle(topic.trim()),
-            aiService.generateHeaderImage(topic.trim())
-        ]);
+        const article = await aiService.generateArticle(topic.trim());
 
-        // Read the image as base64 so the dashboard can preview it
-        const imageBuffer = fs.readFileSync(imagePath);
-        const imageBase64 = imageBuffer.toString('base64');
-        const imageDataUrl = `data:image/png;base64,${imageBase64}`;
-
-        // Store the local image path in a temp state file so we can use it at publish time
-        const stateDir = path.join(__dirname, '..');
-        const stateFile = path.join(stateDir, '.content-state.json');
+        // Save to state — image will be added in step 2
         const state = {
-            topic,
+            topic: topic.trim(),
             article,
-            imagePath,
-            imageDataUrl,
+            imagePath: null,
+            imageDataUrl: null,
             generatedAt: new Date().toISOString(),
             publishedPost: null,
             socialPosts: null
         };
-        fs.writeFileSync(stateFile, JSON.stringify(state, null, 2));
+        writeState(state);
 
-        console.log('✅ Content generation complete.');
+        console.log('✅ Article generation complete.');
         res.json({
             success: true,
-            message: 'Article and header image generated successfully.',
-            article,
-            imageDataUrl
+            message: 'Article generated successfully.',
+            article
         });
     } catch (error) {
-        console.error('❌ Error generating content:', error.message);
+        console.error('❌ Error generating article:', error.message);
         res.status(500).json({ success: false, message: error.message });
     }
 }
 
 // ============================================================
-// Step 3: Publish to WordPress
+// STEP 2: Generate Header Image from the article title/topic
+// ============================================================
+async function generateImage(req, res) {
+    // Allow a custom prompt override, otherwise use the saved article title
+    const { imagePrompt } = req.body;
+
+    console.log('\n======== 🎨 STEP 2: GENERATE IMAGE ========');
+
+    try {
+        const state = readState();
+
+        // Use the provided prompt, or fall back to the saved article title, then the topic
+        const promptToUse = (imagePrompt && imagePrompt.trim())
+            ? imagePrompt.trim()
+            : (state.article?.title || state.topic || 'professional recruitment agency blog header');
+
+        console.log(`Image prompt: "${promptToUse}"`);
+
+        const imagePath = await aiService.generateHeaderImage(promptToUse);
+
+        // Read image as base64 for the dashboard preview
+        const imageBuffer = fs.readFileSync(imagePath);
+        const imageDataUrl = `data:image/png;base64,${imageBuffer.toString('base64')}`;
+
+        // Update state with image info
+        state.imagePath = imagePath;
+        state.imageDataUrl = imageDataUrl;
+        writeState(state);
+
+        console.log('✅ Image generation complete.');
+        res.json({
+            success: true,
+            message: 'Header image generated successfully.',
+            imageDataUrl
+        });
+    } catch (error) {
+        console.error('❌ Error generating image:', error.message);
+        res.status(500).json({ success: false, message: error.message });
+    }
+}
+
+// ============================================================
+// STEP 3: Publish to WordPress (after user has reviewed)
 // ============================================================
 async function publishToWordPress(req, res) {
     const { title, content, excerpt, status, categoryId } = req.body;
@@ -74,18 +121,11 @@ async function publishToWordPress(req, res) {
         return res.status(400).json({ success: false, message: 'Title and content are required.' });
     }
 
-    console.log('\n======== 🚀 CONTENT MARKETING: PUBLISH ========');
+    console.log('\n======== 🚀 STEP 3: PUBLISH TO WORDPRESS ========');
 
     try {
-        // Load the saved state to get the local image path
-        const stateFile = path.join(__dirname, '..', '.content-state.json');
-        let imagePath = null;
-        let state = {};
-
-        if (fs.existsSync(stateFile)) {
-            state = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
-            imagePath = state.imagePath;
-        }
+        const state = readState();
+        const imagePath = state.imagePath;
 
         // 1. Upload the header image to WordPress Media Library
         let featuredMediaId = null;
@@ -95,14 +135,14 @@ async function publishToWordPress(req, res) {
             const media = await wordpressService.uploadMedia(imagePath, fileName);
             featuredMediaId = media.id;
         } else {
-            console.warn('⚠️  No header image found in state — publishing without featured image.');
+            console.warn('⚠️  No header image in state — publishing without featured image.');
         }
 
-        // 2. Resolve tag IDs from suggested tags
+        // 2. Resolve tag IDs from suggested tags saved in state
         const suggestedTags = state.article?.suggestedTags || [];
         const tagIds = await wordpressService.resolveTagIds(suggestedTags);
 
-        // 3. Build category array
+        // 3. Build category array from user selection
         const categories = categoryId ? [parseInt(categoryId)] : [];
 
         // 4. Create the WordPress post
@@ -116,9 +156,9 @@ async function publishToWordPress(req, res) {
             tags: tagIds
         });
 
-        // 5. Update state with published post info
+        // 5. Persist published post info in state
         state.publishedPost = post;
-        fs.writeFileSync(stateFile, JSON.stringify(state, null, 2));
+        writeState(state);
 
         console.log(`✅ Published to WordPress: ${post.link}`);
         res.json({
@@ -133,7 +173,21 @@ async function publishToWordPress(req, res) {
 }
 
 // ============================================================
-// Step 4: Generate social media posts
+// Fetch WordPress Categories for the category selector
+// ============================================================
+async function getWordPressCategories(req, res) {
+    console.log('\n📂 Fetching WordPress categories...');
+    try {
+        const categories = await wordpressService.getCategories();
+        res.json({ success: true, categories });
+    } catch (error) {
+        console.error('❌ Error fetching categories:', error.message);
+        res.status(500).json({ success: false, message: error.message });
+    }
+}
+
+// ============================================================
+// Generate social media posts (after publishing)
 // ============================================================
 async function generateSocialPosts(req, res) {
     const { articleTitle, excerpt, articleUrl } = req.body;
@@ -142,18 +196,14 @@ async function generateSocialPosts(req, res) {
         return res.status(400).json({ success: false, message: 'articleTitle and articleUrl are required.' });
     }
 
-    console.log('\n======== 📱 CONTENT MARKETING: SOCIAL POSTS ========');
+    console.log('\n======== 📱 SOCIAL POSTS ========');
 
     try {
         const posts = await aiService.generateSocialPosts(articleTitle, excerpt || '', articleUrl);
 
-        // Save social posts to state
-        const stateFile = path.join(__dirname, '..', '.content-state.json');
-        if (fs.existsSync(stateFile)) {
-            const state = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
-            state.socialPosts = posts;
-            fs.writeFileSync(stateFile, JSON.stringify(state, null, 2));
-        }
+        const state = readState();
+        state.socialPosts = posts;
+        writeState(state);
 
         res.json({ success: true, posts });
     } catch (error) {
@@ -163,32 +213,27 @@ async function generateSocialPosts(req, res) {
 }
 
 // ============================================================
-// Get current content state
+// Get current state (article + image preview for page reload)
 // ============================================================
 async function getState(req, res) {
     try {
-        const stateFile = path.join(__dirname, '..', '.content-state.json');
-        if (!fs.existsSync(stateFile)) {
+        const state = readState();
+        if (!state.article) {
             return res.json({ success: true, state: null });
         }
-        const state = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
-        // Don't send the large base64 image in state checks — only the metadata
-        const { imageDataUrl, imagePath, ...safeState } = state;
-        res.json({ success: true, state: safeState });
+        // Return full state including imageDataUrl for preview restoration
+        res.json({ success: true, state });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
 }
 
 // ============================================================
-// Reset state
+// Reset all state
 // ============================================================
 async function resetState(req, res) {
     try {
-        const stateFile = path.join(__dirname, '..', '.content-state.json');
-        if (fs.existsSync(stateFile)) {
-            fs.unlinkSync(stateFile);
-        }
+        if (fs.existsSync(STATE_FILE)) fs.unlinkSync(STATE_FILE);
         res.json({ success: true, message: 'Content state reset.' });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -196,8 +241,10 @@ async function resetState(req, res) {
 }
 
 module.exports = {
-    generateContent,
+    generateArticle,
+    generateImage,
     publishToWordPress,
+    getWordPressCategories,
     generateSocialPosts,
     getState,
     resetState
