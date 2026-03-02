@@ -594,6 +594,17 @@ app.post('/api/linkedin/post', async (req, res) => {
   }
 });
 
+// GET /api/linkedin/recent-polls - Fetch recent polls from Artisan Company Page
+app.get('/api/linkedin/recent-polls', async (req, res) => {
+  try {
+    const polls = await linkedinService.getRecentPolls(5);
+    res.json({ success: true, polls });
+  } catch (err) {
+    console.error('[LinkedIn] Recent polls error:', err.response ? JSON.stringify(err.response.data) : err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // POST /api/linkedin/post-image - Post with image to LinkedIn
 app.post('/api/linkedin/post-image', async (req, res) => {
   const { text, imageBase64, mimeType, imageTitle } = req.body;
