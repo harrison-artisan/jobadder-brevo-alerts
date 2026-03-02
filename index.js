@@ -531,13 +531,18 @@ const linkedinStateStore = {};
 
 // GET /auth/linkedin - Start OAuth flow (redirect to LinkedIn)
 app.get('/auth/linkedin', (req, res) => {
-  const state = crypto.randomBytes(16).toString('hex');
-  linkedinStateStore[state] = Date.now();
-  // Clean up states older than 10 minutes
-  const cutoff = Date.now() - 10 * 60 * 1000;
-  Object.keys(linkedinStateStore).forEach(k => { if (linkedinStateStore[k] < cutoff) delete linkedinStateStore[k]; });
-  const authUrl = linkedinService.getAuthUrl(state);
-  res.redirect(authUrl);
+  try {
+    const state = crypto.randomBytes(16).toString('hex');
+    linkedinStateStore[state] = Date.now();
+    // Clean up states older than 10 minutes
+    const cutoff = Date.now() - 10 * 60 * 1000;
+    Object.keys(linkedinStateStore).forEach(k => { if (linkedinStateStore[k] < cutoff) delete linkedinStateStore[k]; });
+    const authUrl = linkedinService.getAuthUrl(state);
+    res.redirect(authUrl);
+  } catch (err) {
+    console.error('[LinkedIn] Auth URL error:', err.message);
+    res.redirect('/dashboard?linkedin=error&msg=' + encodeURIComponent(err.message));
+  }
 });
 
 // GET /auth/linkedin/callback - LinkedIn redirects here after user approves

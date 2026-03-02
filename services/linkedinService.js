@@ -44,6 +44,9 @@ class LinkedInService {
    * @returns {string} Authorization URL
    */
   getAuthUrl(state) {
+    if (!CLIENT_ID || !CLIENT_SECRET) {
+      throw new Error('LinkedIn credentials are not configured. Please set LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET environment variables in Railway.');
+    }
     const params = new URLSearchParams({
       response_type: 'code',
       client_id: CLIENT_ID,
