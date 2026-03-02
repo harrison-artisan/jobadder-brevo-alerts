@@ -1000,34 +1000,37 @@
         
         /* Mobile responsive - preview panel removed */
 
-        /* EasyMDE rich text editor overrides for CM tab */
+        /* EasyMDE rich text editor overrides for CM tab — white background */
         .EasyMDEContainer { border-radius: 8px; overflow: hidden; }
         .EasyMDEContainer .CodeMirror {
             font-family: 'Source Sans Pro', 'Segoe UI', sans-serif;
-            font-size: 14px;
-            line-height: 1.7;
-            background: #1e2d3d;
-            color: #e8edf2;
-            border: 1px solid rgba(255,255,255,0.15);
+            font-size: 15px;
+            line-height: 1.8;
+            background: #ffffff !important;
+            color: #1a1a1a !important;
+            border: 1px solid #ddd;
             border-radius: 0 0 8px 8px;
             min-height: 360px;
         }
+        .EasyMDEContainer .CodeMirror-scroll { background: #ffffff !important; }
+        .EasyMDEContainer .CodeMirror-cursor { border-left-color: #1a1a1a !important; }
+        .EasyMDEContainer .CodeMirror-selected { background: #b3d4fc !important; }
         .EasyMDEContainer .editor-toolbar {
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.15);
+            background: #f5f5f5 !important;
+            border: 1px solid #ddd;
             border-bottom: none;
             border-radius: 8px 8px 0 0;
         }
         .EasyMDEContainer .editor-toolbar button {
-            color: rgba(255,255,255,0.75) !important;
+            color: #333 !important;
         }
         .EasyMDEContainer .editor-toolbar button:hover,
         .EasyMDEContainer .editor-toolbar button.active {
-            background: rgba(52,152,219,0.3) !important;
-            border-color: rgba(52,152,219,0.5) !important;
+            background: #e0e0e0 !important;
+            border-color: #bbb !important;
         }
-        .EasyMDEContainer .editor-toolbar i.separator { border-color: rgba(255,255,255,0.15); }
-        .EasyMDEContainer .editor-statusbar { color: rgba(255,255,255,0.4); font-size: 11px; }
+        .EasyMDEContainer .editor-toolbar i.separator { border-color: #ddd; }
+        .EasyMDEContainer .editor-statusbar { color: #666; font-size: 11px; background: #f5f5f5; }
         .editor-preview { background: #ffffff; color: #1a1a1a; font-family: 'Source Sans Pro', sans-serif; }
 
         /* Content Marketing tab — lighter placeholder text so it's readable on dark backgrounds */
@@ -1854,13 +1857,11 @@
                 <div id="contentMarketingApp" style="padding: 20px 0;">
 
                     <!-- ===== CM Sub-Tab Bar ===== -->
-                    <div id="cmSubTabs" style="display:flex; gap:0; margin-bottom:28px; border-bottom:2px solid rgba(255,255,255,0.12);">
-                        <button id="cmSubTabArticle" onclick="cmSwitchSubTab('article')"
-                            style="padding:10px 24px; background:transparent; border:none; border-bottom:3px solid #3498db; color:white; font-size:14px; font-weight:600; cursor:pointer; margin-bottom:-2px; transition:all 0.2s;">
+                    <div class="tabs" id="cmSubTabs" style="margin-bottom:28px;">
+                        <button id="cmSubTabArticle" class="tab active" onclick="cmSwitchSubTab('article')">
                             Article Generation
                         </button>
-                        <button id="cmSubTabSocial" onclick="cmSwitchSubTab('social')"
-                            style="padding:10px 24px; background:transparent; border:none; border-bottom:3px solid transparent; color:rgba(255,255,255,0.5); font-size:14px; font-weight:600; cursor:pointer; margin-bottom:-2px; transition:all 0.2s;">
+                        <button id="cmSubTabSocial" class="tab" onclick="cmSwitchSubTab('social')">
                             Social Media Posting
                         </button>
                     </div>
@@ -2046,7 +2047,7 @@
                             <!-- Image Preview fixed 1000x666 aspect ratio -->
                             <div id="cmImagePreviewWrap" style="display:none; margin-top:16px; margin-bottom:20px;">
                                 <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:13px;">Header Image Preview (1000 x 666 px)</label>
-                                <div style="width:100%; max-width:1000px; aspect-ratio:1000/666; overflow:hidden; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:#111;">
+                                <div style="width:100%; max-width:500px; aspect-ratio:1000/666; overflow:hidden; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:#111;">
                                     <img id="cmHeaderImage" src="" alt="Header image" style="width:100%; height:100%; object-fit:cover; display:block;">
                                 </div>
                             </div>
@@ -2401,12 +2402,12 @@
         }
 
         function cmToggleAdvanced() {
-            const body = document.getElementById('cmAdvancedBody');
-            const icon = document.getElementById('cmAdvancedToggleIcon');
+            const body = document.getElementById('cmAdvBody');
+            const icon = document.getElementById('cmAdvToggleIcon');
             if (!body) return;
             const isOpen = body.style.display !== 'none';
             body.style.display = isOpen ? 'none' : 'block';
-            if (icon) icon.textContent = isOpen ? '+' : '−';
+            if (icon) icon.textContent = isOpen ? '+' : '-';
         }
 
         // ---- SEO Keyword Library ----
@@ -2709,16 +2710,15 @@
             const tabArticle = document.getElementById('cmSubTabArticle');
             const tabSocial = document.getElementById('cmSubTabSocial');
             if (!articlePanel || !socialPanel) return;
+            // Toggle active class like Email Marketing tabs
+            if (tabArticle) tabArticle.classList.toggle('active', tab === 'article');
+            if (tabSocial) tabSocial.classList.toggle('active', tab === 'social');
             if (tab === 'article') {
                 articlePanel.style.display = 'block';
                 socialPanel.style.display = 'none';
-                if (tabArticle) { tabArticle.style.borderBottomColor = '#3498db'; tabArticle.style.color = 'white'; }
-                if (tabSocial) { tabSocial.style.borderBottomColor = 'transparent'; tabSocial.style.color = 'rgba(255,255,255,0.5)'; }
             } else {
                 articlePanel.style.display = 'none';
                 socialPanel.style.display = 'block';
-                if (tabSocial) { tabSocial.style.borderBottomColor = '#3498db'; tabSocial.style.color = 'white'; }
-                if (tabArticle) { tabArticle.style.borderBottomColor = 'transparent'; tabArticle.style.color = 'rgba(255,255,255,0.5)'; }
                 const hasPost = cmState.publishedPost && cmState.publishedPost.link;
                 const noArticleEl = document.getElementById('cmSocialNoArticle');
                 const socialContentEl = document.getElementById('cmSocialContent');
