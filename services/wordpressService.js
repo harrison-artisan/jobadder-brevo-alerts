@@ -205,13 +205,14 @@ class WordpressService {
      * @param {string} postData.content - Post body (HTML or markdown).
      * @param {string} [postData.excerpt] - Short excerpt.
      * @param {number} [postData.featuredMediaId] - ID of the featured image media.
-     * @param {string} [postData.status] - 'publish' | 'draft' (default: 'draft').
+     * @param {string} [postData.status] - 'publish' | 'draft' | 'future' (default: 'draft').
      * @param {number[]} [postData.categories] - Array of category IDs.
      * @param {number[]} [postData.tags] - Array of tag IDs.
+     * @param {string} [postData.scheduledDate] - ISO 8601 datetime in Melbourne time, e.g. '2025-06-01T09:00:00+10:00'. Required when status is 'future'.
      * @returns {Promise<{id: number, link: string, status: string}>}
      */
-    async createPost({ title, content, excerpt, featuredMediaId, status = 'draft', categories = [], tags = [] }) {
-        console.log(`\n📝 Creating WordPress post: "${title}" [status: ${status}]`);
+    async createPost({ title, content, excerpt, featuredMediaId, status = 'draft', categories = [], tags = [], scheduledDate = null }) {
+        console.log(`\n📝 Creating WordPress post: "${title}" [status: ${status}${scheduledDate ? ', scheduled: ' + scheduledDate : ''}]`);
 
         // Convert markdown-style content to basic HTML paragraphs
         const htmlContent = this.markdownToHtml(content);
@@ -227,6 +228,11 @@ class WordpressService {
 
         if (featuredMediaId) {
             payload.featured_media = featuredMediaId;
+        }
+
+        // WordPress requires date when status is 'future'
+        if (scheduledDate && status === 'future') {
+            payload.date = scheduledDate;
         }
 
         try {

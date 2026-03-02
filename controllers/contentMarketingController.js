@@ -140,18 +140,19 @@ async function generateImage(req, res) {
 // STEP 3: Publish to WordPress (after user has reviewed)
 // ============================================================
 async function publishToWordPress(req, res) {
-    const { title, content, excerpt, status, categoryId } = req.body;
-
+    const { title, content, excerpt, status, categoryId, scheduledDate } = req.body;
     if (!title || !content) {
         return res.status(400).json({ success: false, message: 'Title and content are required.' });
     }
-
-    console.log('\n======== 🚀 STEP 3: PUBLISH TO WORDPRESS ========');
-
+    // Validate: if scheduling, a date must be provided
+    if (status === 'future' && !scheduledDate) {
+        return res.status(400).json({ success: false, message: 'A scheduled date/time is required when scheduling a post.' });
+    }
+    console.log('\n======== STEP 3: PUBLISH TO WORDPRESS ========');
+    if (scheduledDate) console.log(`Scheduled for: ${scheduledDate}`);
     try {
         const state = readState();
         const imagePath = state.imagePath;
-
         // 1. Upload the header image to WordPress Media Library
         let featuredMediaId = null;
         if (imagePath && fs.existsSync(imagePath)) {
@@ -160,16 +161,13 @@ async function publishToWordPress(req, res) {
             const media = await wordpressService.uploadMedia(imagePath, fileName);
             featuredMediaId = media.id;
         } else {
-            console.warn('⚠️  No header image in state — publishing without featured image.');
+            console.warn('No header image in state — publishing without featured image.');
         }
-
         // 2. Resolve tag IDs from suggested tags saved in state
         const suggestedTags = state.article?.suggestedTags || [];
         const tagIds = await wordpressService.resolveTagIds(suggestedTags);
-
         // 3. Build category array from user selection
         const categories = categoryId ? [parseInt(categoryId)] : [];
-
         // 4. Create the WordPress post
         const post = await wordpressService.createPost({
             title,
@@ -178,7 +176,8 @@ async function publishToWordPress(req, res) {
             featuredMediaId,
             status: status || 'draft',
             categories,
-            tags: tagIds
+            tags: tagIds,
+            scheduledDate: scheduledDate || null
         });
 
         // 5. Persist published post info in state

@@ -1853,311 +1853,362 @@
                 mainContent.innerHTML = `
                 <div id="contentMarketingApp" style="padding: 20px 0;">
 
-                    <!-- Progress Steps Indicator -->
-                    <div style="display:flex; align-items:center; margin-bottom:28px; gap:0;">
-                        <div id="cmProgressStep1" style="display:flex; align-items:center; gap:8px; padding:8px 16px; border-radius:8px; background:rgba(52,152,219,0.25); border:1px solid rgba(52,152,219,0.5);">
-                            <span style="background:#3498db; color:white; border-radius:50%; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0;">1</span>
-                            <span style="color:white; font-size:13px; font-weight:500;">Generate Article</span>
-                        </div>
-                        <div style="flex:1; height:2px; background:rgba(255,255,255,0.15);"></div>
-                        <div id="cmProgressStep2" style="display:flex; align-items:center; gap:8px; padding:8px 16px; border-radius:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);">
-                            <span style="background:rgba(255,255,255,0.2); color:white; border-radius:50%; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0;">2</span>
-                            <span style="color:rgba(255,255,255,0.5); font-size:13px; font-weight:500;">Generate Image</span>
-                        </div>
-                        <div style="flex:1; height:2px; background:rgba(255,255,255,0.15);"></div>
-                        <div id="cmProgressStep3" style="display:flex; align-items:center; gap:8px; padding:8px 16px; border-radius:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);">
-                            <span style="background:rgba(255,255,255,0.2); color:white; border-radius:50%; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0;">3</span>
-                            <span style="color:rgba(255,255,255,0.5); font-size:13px; font-weight:500;">Finalise &amp; Post</span>
-                        </div>
+                    <!-- ===== CM Sub-Tab Bar ===== -->
+                    <div id="cmSubTabs" style="display:flex; gap:0; margin-bottom:28px; border-bottom:2px solid rgba(255,255,255,0.12);">
+                        <button id="cmSubTabArticle" onclick="cmSwitchSubTab('article')"
+                            style="padding:10px 24px; background:transparent; border:none; border-bottom:3px solid #3498db; color:white; font-size:14px; font-weight:600; cursor:pointer; margin-bottom:-2px; transition:all 0.2s;">
+                            Article Generation
+                        </button>
+                        <button id="cmSubTabSocial" onclick="cmSwitchSubTab('social')"
+                            style="padding:10px 24px; background:transparent; border:none; border-bottom:3px solid transparent; color:rgba(255,255,255,0.5); font-size:14px; font-weight:600; cursor:pointer; margin-bottom:-2px; transition:all 0.2s;">
+                            Social Media Posting
+                        </button>
                     </div>
 
-                    <!-- Message Banner -->
-                    <div id="cmMessage" style="display:none; padding: 14px 20px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; font-weight: 500;"></div>
+                    <!-- ===== ARTICLE GENERATION PANEL ===== -->
+                    <div id="cmPanelArticle">
 
-                    <!-- ===== PROMPT SETTINGS PANEL (collapsible) ===== -->
-                    <div class="actions-card" id="cmSettingsPanel" style="margin-bottom:16px;">
-                        <div style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;" onclick="cmToggleSettings()">
-                            <h3 style="margin:0; font-size:15px; color:white; font-weight:600;">Prompt Settings</h3>
-                            <span id="cmSettingsToggleIcon" style="color:rgba(255,255,255,0.6); font-size:18px; line-height:1;">+</span>
+                        <!-- Progress Steps Indicator -->
+                        <div style="display:flex; align-items:center; margin-bottom:28px; gap:0;">
+                            <div id="cmProgressStep1" style="display:flex; align-items:center; gap:8px; padding:8px 16px; border-radius:8px; background:rgba(52,152,219,0.25); border:1px solid rgba(52,152,219,0.5);">
+                                <span style="background:#3498db; color:white; border-radius:50%; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0;">1</span>
+                                <span style="color:white; font-size:13px; font-weight:500;">Generate Article</span>
+                            </div>
+                            <div style="flex:1; height:2px; background:rgba(255,255,255,0.1); margin:0 8px;"></div>
+                            <div id="cmProgressStep2" style="display:flex; align-items:center; gap:8px; padding:8px 16px; border-radius:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);">
+                                <span style="background:rgba(255,255,255,0.2); color:rgba(255,255,255,0.5); border-radius:50%; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0;">2</span>
+                                <span style="color:rgba(255,255,255,0.5); font-size:13px; font-weight:500;">Header Image</span>
+                            </div>
+                            <div style="flex:1; height:2px; background:rgba(255,255,255,0.1); margin:0 8px;"></div>
+                            <div id="cmProgressStep3" style="display:flex; align-items:center; gap:8px; padding:8px 16px; border-radius:8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);">
+                                <span style="background:rgba(255,255,255,0.2); color:rgba(255,255,255,0.5); border-radius:50%; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0;">3</span>
+                                <span style="color:rgba(255,255,255,0.5); font-size:13px; font-weight:500;">Finalise &amp; Post</span>
+                            </div>
                         </div>
-                        <div id="cmSettingsBody" style="display:none; margin-top:18px;">
-                            <p style="color:rgba(255,255,255,0.6); font-size:13px; margin:0 0 16px 0; line-height:1.6;">These settings are injected into every article generation. Leave blank to use Artisan defaults.</p>
 
-                            <!-- Basic Settings Row -->
-                            <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:16px;">
-                                <div style="flex:2; min-width:220px;">
-                                    <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Target Keywords <span style="color:rgba(255,255,255,0.4); font-weight:400;">(comma separated)</span></label>
-                                    <input type="text" id="cmSettingsKeywords" placeholder="e.g. creative recruitment, marketing jobs, Sydney" style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:13px; box-sizing:border-box;">
-                                    <p style="color:rgba(255,255,255,0.4); font-size:12px; margin:4px 0 0 0;">AI will weave these in naturally. Click a suggested keyword below to add it.</p>
-                                </div>
-                                <div style="flex:1; min-width:180px;">
-                                    <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Tone</label>
-                                    <input type="text" id="cmSettingsTone" placeholder="confident, direct, empathetic" style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:13px; box-sizing:border-box;">
-                                </div>
-                                <div style="flex:1; min-width:180px;">
-                                    <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Voice / Perspective</label>
-                                    <input type="text" id="cmSettingsVoice" placeholder="Artisan speaking to hiring managers" style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:13px; box-sizing:border-box;">
-                                </div>
+                        <!-- Message banner -->
+                        <div id="cmMessage" style="display:none; padding:12px 16px; border-radius:8px; margin-bottom:16px; font-size:14px;"></div>
+
+                        <!-- ===== STEP 1: Topic + Prompt Settings ===== -->
+                        <div class="actions-card" id="cmStep1">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                                <h2 style="margin:0;">Step 1 - Generate Article</h2>
+                                <button onclick="cmReset()" id="btnCmReset" style="display:none; padding:7px 14px; background:rgba(127,140,141,0.3); border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:rgba(255,255,255,0.7); font-size:12px; cursor:pointer;">Start Over</button>
                             </div>
 
-                            <!-- SEO Keyword Library -->
-                            <div style="margin-bottom:18px;">
-                                <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:13px;">SEO Keyword Library <span style="color:rgba(255,255,255,0.4); font-weight:400;">— click to add to Target Keywords</span></label>
-                                <div id="cmKeywordLibrary" style="display:flex; flex-wrap:wrap; gap:6px;">
+                            <!-- Prompt Settings Panel -->
+                            <div id="cmSettingsPanel" style="margin-bottom:20px; border:1px solid rgba(255,255,255,0.12); border-radius:10px; overflow:hidden;">
+                                <div onclick="cmToggleSettings()" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:rgba(255,255,255,0.06); cursor:pointer;">
+                                    <span style="color:white; font-weight:600; font-size:14px;">Prompt Settings</span>
+                                    <span id="cmSettingsToggleIcon" style="color:rgba(255,255,255,0.5); font-size:18px; line-height:1;">-</span>
                                 </div>
-                            </div>
-
-                            <!-- Advanced Settings (collapsible) -->
-                            <div style="border-top:1px solid rgba(255,255,255,0.1); padding-top:14px;">
-                                <div style="display:flex; align-items:center; justify-content:space-between; cursor:pointer; margin-bottom:4px;" onclick="cmToggleAdvanced()">
-                                    <span style="color:rgba(255,255,255,0.7); font-size:13px; font-weight:600;">Advanced Settings</span>
-                                    <span id="cmAdvancedToggleIcon" style="color:rgba(255,255,255,0.5); font-size:16px; line-height:1;">+</span>
-                                </div>
-                                <p style="color:rgba(255,255,255,0.4); font-size:12px; margin:0 0 10px 0;">Override the Artisan defaults for tone, structure, and SEO behaviour.</p>
-                                <div id="cmAdvancedBody" style="display:none; margin-top:14px;">
+                                <div id="cmSettingsBody" style="padding:16px; background:rgba(255,255,255,0.03);">
+                                    <p style="color:rgba(255,255,255,0.45); font-size:12px; margin:0 0 14px;">These settings are injected into every article generation. Leave blank to use Artisan defaults.</p>
+                                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:14px;">
+                                        <div>
+                                            <label style="display:block; color:rgba(255,255,255,0.7); font-size:12px; margin-bottom:5px;">Target Keywords</label>
+                                            <input type="text" id="cmSettingsKeywords" placeholder="e.g. creative recruitment, marketing jobs, Sydney" style="width:100%; padding:9px 11px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:7px; color:white; font-size:12px; box-sizing:border-box;">
+                                        </div>
+                                        <div>
+                                            <label style="display:block; color:rgba(255,255,255,0.7); font-size:12px; margin-bottom:5px;">Tone</label>
+                                            <input type="text" id="cmSettingsTone" placeholder="confident, direct, empathetic" style="width:100%; padding:9px 11px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:7px; color:white; font-size:12px; box-sizing:border-box;">
+                                        </div>
+                                        <div>
+                                            <label style="display:block; color:rgba(255,255,255,0.7); font-size:12px; margin-bottom:5px;">Voice / Perspective</label>
+                                            <input type="text" id="cmSettingsVoice" placeholder="Artisan speaking to hiring managers" style="width:100%; padding:9px 11px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:7px; color:white; font-size:12px; box-sizing:border-box;">
+                                        </div>
+                                    </div>
+                                    <!-- SEO Keyword Library -->
                                     <div style="margin-bottom:14px;">
-                                        <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Writing Style Override</label>
-                                        <textarea id="cmAdvStyle" rows="3" placeholder="Default: Short, punchy, declarative sentences. Paragraphs rarely exceed 3 sentences. Open with a bold statement that names a real tension." style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:12px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
+                                        <label style="display:block; color:rgba(255,255,255,0.7); font-size:12px; margin-bottom:7px;">SEO Keyword Library <span style="color:rgba(255,255,255,0.35); font-weight:400;">(click to add)</span></label>
+                                        <div id="cmKeywordLibrary" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
                                     </div>
-                                    <div style="margin-bottom:14px;">
-                                        <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Structure Override</label>
-                                        <textarea id="cmAdvStructure" rows="3" placeholder="Default: H1 title, 4-6 H2 sections as observations/statements, H3 sparingly, 750-1000 words, final section titled 'Where Artisan Comes In'." style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:12px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
-                                    </div>
-                                    <div style="margin-bottom:14px;">
-                                        <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">SEO / AEO / GEO Override</label>
-                                        <textarea id="cmAdvSeo" rows="3" placeholder="Default: Primary keyword in H1, opening para, and one H2. Answer the search question in first 100 words. Inverted pyramid structure. Include specific Australian context." style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:12px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
-                                    </div>
-                                    <div>
-                                        <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Additional Instructions</label>
-                                        <textarea id="cmAdvExtra" rows="2" placeholder="Any other specific instructions for this article..." style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:12px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
+                                    <!-- Advanced Settings -->
+                                    <div style="border-top:1px solid rgba(255,255,255,0.1); padding-top:12px;">
+                                        <div onclick="cmToggleAdvanced()" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer; margin-bottom:10px;">
+                                            <span style="color:rgba(255,255,255,0.6); font-size:12px; font-weight:600;">Advanced Settings (override defaults)</span>
+                                            <span id="cmAdvToggleIcon" style="color:rgba(255,255,255,0.4); font-size:14px;">+</span>
+                                        </div>
+                                        <div id="cmAdvBody" style="display:none;">
+                                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                                                <div>
+                                                    <label style="display:block; color:rgba(255,255,255,0.6); font-size:11px; margin-bottom:5px;">Writing Style</label>
+                                                    <textarea id="cmAdvStyle" rows="3" placeholder="Default: Short, punchy, declarative sentences. Paragraphs rarely exceed 3 sentences. Open with a bold statement that names a real tension." style="width:100%; padding:9px 11px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:7px; color:white; font-size:11px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
+                                                </div>
+                                                <div>
+                                                    <label style="display:block; color:rgba(255,255,255,0.6); font-size:11px; margin-bottom:5px;">Article Structure</label>
+                                                    <textarea id="cmAdvStructure" rows="3" placeholder="Default: H1 title, 4-6 H2 sections as observations/statements, H3 sparingly, 750-1000 words, final section titled Where Artisan Comes In." style="width:100%; padding:9px 11px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:7px; color:white; font-size:11px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
+                                                </div>
+                                                <div>
+                                                    <label style="display:block; color:rgba(255,255,255,0.6); font-size:11px; margin-bottom:5px;">SEO / AEO / GEO Instructions</label>
+                                                    <textarea id="cmAdvSeo" rows="3" placeholder="Default: Primary keyword in H1, opening para, and one H2. Answer the search question in first 100 words. Inverted pyramid structure. Include specific Australian context." style="width:100%; padding:9px 11px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:7px; color:white; font-size:11px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
+                                                </div>
+                                                <div>
+                                                    <label style="display:block; color:rgba(255,255,255,0.6); font-size:11px; margin-bottom:5px;">Additional Instructions</label>
+                                                    <textarea id="cmAdvExtra" rows="3" placeholder="Any other specific instructions for this article..." style="width:100%; padding:9px 11px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:7px; color:white; font-size:11px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
 
-                    <!-- ===== STEP 1: Generate Article ===== -->
-                    <div class="actions-card" id="cmStep1">
-                        <h2 style="margin-top:0; margin-bottom:6px;">Step 1 — Generate Article</h2>
-                        <p style="color:rgba(255,255,255,0.65); margin-bottom:20px; font-size:14px; line-height:1.6;">
-                            Enter your topic or article idea. AI will write a full SEO-optimised article in Artisan's voice, ready for you to review.
-                        </p>
-                        <div style="margin-bottom:16px;">
-                            <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:14px;">Topic / Article Idea</label>
-                            <textarea id="cmTopic" rows="3" placeholder="e.g. How to attract top creative talent in Australia in 2025" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px; resize:vertical; box-sizing:border-box;"></textarea>
-                        </div>
-                        <div class="button-group">
-                            <button class="btn btn-info" id="btnCmGenArticle" onclick="cmStep1Generate()">Generate Article</button>
-                            <button class="btn" id="btnCmReset" onclick="cmReset()" style="background:#7f8c8d; display:none;">Start Over</button>
-                        </div>
-                        <div id="cmStep1Loading" style="display:none; padding:20px 0;">
-                            <div style="display:flex; align-items:center; gap:12px;">
-                                <div style="width:18px; height:18px; border:3px solid rgba(255,255,255,0.2); border-top-color:#3498db; border-radius:50%; animation:spin 0.8s linear infinite; flex-shrink:0;"></div>
-                                <span style="color:rgba(255,255,255,0.8); font-size:14px;">Writing your article — usually takes 20–30 seconds...</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ===== STEP 2: Review Article + Image ===== -->
-                    <div class="actions-card" id="cmStep2" style="display:none;">
-                        <h2 style="margin-top:0; margin-bottom:6px;">Step 2 — Review &amp; Edit Article</h2>
-                        <p style="color:rgba(255,255,255,0.65); margin-bottom:20px; font-size:14px; line-height:1.6;">
-                            Review and edit the article below. The preview on the right shows how it will read. When you are happy with the copy, move to the header image.
-                        </p>
-
-                        <!-- Two-column layout: edit left, preview right -->
-                        <div style="display:flex; gap:24px; flex-wrap:wrap; margin-bottom:20px;">
-
-                            <!-- LEFT: Edit fields -->
-                            <div style="flex:1; min-width:280px;">
-                                <div style="margin-bottom:14px;">
-                                    <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Article Title</label>
-                                    <input type="text" id="cmTitle" oninput="cmUpdatePreview()" style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px; box-sizing:border-box;">
-                                </div>
-                                <div style="margin-bottom:14px;">
-                                    <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Excerpt / Meta Description</label>
-                                    <textarea id="cmExcerpt" rows="2" oninput="cmUpdatePreview()" style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box;"></textarea>
-                                </div>
-                                <div>
-                                    <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Article Body <span style="color:rgba(255,255,255,0.4); font-weight:400;">— use the toolbar to format, embed images or videos</span></label>
-                                    <textarea id="cmContent"></textarea>
-                                </div>
-                            </div>
-
-                            <!-- RIGHT: Live white preview -->
-                            <div style="flex:1; min-width:280px;">
-                                <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Article Preview</label>
-                                <div id="cmArticlePreview" style="background:#ffffff; border-radius:8px; padding:32px 28px; min-height:520px; overflow-y:auto; font-family:'Source Sans Pro', 'Segoe UI', sans-serif; color:#1a1a1a; font-size:15px; line-height:1.8; box-shadow:0 2px 12px rgba(0,0,0,0.25);">
-                                    <p style="color:#aaa; font-style:italic;">Your article preview will appear here as you type.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Divider -->
-                        <hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:24px 0;">
-
-                        <!-- Header Image section -->
-                        <h3 style="color:white; margin-top:0; margin-bottom:6px; font-size:16px;">Header Image</h3>
-                        <p style="color:rgba(255,255,255,0.65); margin-bottom:16px; font-size:14px;">Generate an AI image with DALL-E 3, or upload your own.</p>
-
-                        <!-- Toggle: Generate vs Upload -->
-                        <div style="display:flex; gap:0; margin-bottom:18px; border:1px solid rgba(255,255,255,0.2); border-radius:8px; overflow:hidden; width:fit-content;">
-                            <button id="btnImgModeGenerate" onclick="cmSetImageMode('generate')" style="padding:9px 20px; font-size:13px; font-weight:600; border:none; cursor:pointer; background:#3498db; color:white;">Generate with AI</button>
-                            <button id="btnImgModeUpload" onclick="cmSetImageMode('upload')" style="padding:9px 20px; font-size:13px; font-weight:600; border:none; cursor:pointer; background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.7);">Upload Image</button>
-                        </div>
-
-                        <!-- Generate panel -->
-                        <div id="cmImageGeneratePanel">
-                            <div style="margin-bottom:14px;">
-                                <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Image Prompt <span style="color:rgba(255,255,255,0.4); font-weight:400;">(leave blank to use article title)</span></label>
-                                <input type="text" id="cmImagePrompt" placeholder="e.g. Abstract concept of creative talent and opportunity, navy and gold palette" style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:13px; box-sizing:border-box;">
+                            <!-- Topic Input -->
+                            <div style="margin-bottom:16px;">
+                                <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:14px;">Article Topic</label>
+                                <textarea id="cmTopic" rows="3" placeholder="e.g. How to attract top creative talent in Australia in 2025" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px; resize:vertical; box-sizing:border-box;"></textarea>
                             </div>
                             <div class="button-group">
-                                <button class="btn btn-info" id="btnCmGenImage" onclick="cmStep2GenerateImage()">Generate Header Image</button>
-                                <button class="btn" id="btnCmRegenImage" onclick="cmStep2GenerateImage()" style="background:#7f8c8d; display:none;">Regenerate Image</button>
+                                <button class="btn btn-info" id="btnCmGenArticle" onclick="cmStep1Generate()">Generate Article</button>
                             </div>
-                            <div id="cmStep2Loading" style="display:none; padding:16px 0;">
+                            <div id="cmStep1Loading" style="display:none; padding:20px 0;">
                                 <div style="display:flex; align-items:center; gap:12px;">
-                                    <div style="width:18px; height:18px; border:3px solid rgba(255,255,255,0.2); border-top-color:#e67e22; border-radius:50%; animation:spin 0.8s linear infinite; flex-shrink:0;"></div>
-                                    <span style="color:rgba(255,255,255,0.8); font-size:14px;">Generating with DALL-E 3 — usually 10–15 seconds...</span>
+                                    <div style="width:20px; height:20px; border:3px solid rgba(255,255,255,0.2); border-top-color:#3498db; border-radius:50%; animation:spin 0.8s linear infinite; flex-shrink:0;"></div>
+                                    <span style="color:rgba(255,255,255,0.8); font-size:14px;">Writing your article - usually takes 20-30 seconds...</span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Upload panel -->
-                        <div id="cmImageUploadPanel" style="display:none;">
-                            <div style="margin-bottom:14px;">
-                                <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Select Image File <span style="color:rgba(255,255,255,0.4); font-weight:400;">(JPG, PNG, GIF — max 5 MB)</span></label>
-                                <input type="file" id="cmImageUploadInput" accept="image/jpeg,image/png,image/gif" onchange="cmHandleImageUpload(event)" style="color:white; font-size:13px;">
+                        <!-- ===== STEP 2: Review Article + Image ===== -->
+                        <div class="actions-card" id="cmStep2" style="display:none;">
+                            <h2 style="margin-top:0; margin-bottom:6px;">Step 2 - Review &amp; Edit Article</h2>
+                            <p style="color:rgba(255,255,255,0.65); margin-bottom:20px; font-size:14px; line-height:1.6;">
+                                Review and edit the article below. The preview on the right shows how it will read. When you are happy with the copy, move to the header image.
+                            </p>
+
+                            <!-- Two-column layout: edit left, preview right -->
+                            <div style="display:flex; gap:24px; flex-wrap:wrap; margin-bottom:20px;">
+
+                                <!-- LEFT: Edit fields -->
+                                <div style="flex:1; min-width:280px;">
+                                    <div style="margin-bottom:14px;">
+                                        <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Article Title</label>
+                                        <input type="text" id="cmTitle" oninput="cmUpdatePreview()" style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px; box-sizing:border-box;">
+                                    </div>
+                                    <div style="margin-bottom:14px;">
+                                        <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Excerpt / Meta Description</label>
+                                        <textarea id="cmExcerpt" rows="2" oninput="cmUpdatePreview()" style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box;"></textarea>
+                                    </div>
+                                    <div>
+                                        <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Article Body - use the toolbar to format, embed images or videos</label>
+                                        <textarea id="cmContent"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- RIGHT: Live white preview -->
+                                <div style="flex:1; min-width:280px;">
+                                    <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Article Preview</label>
+                                    <div id="cmArticlePreview" style="background:#ffffff; border-radius:8px; padding:32px 28px; min-height:520px; overflow-y:auto; font-family:'Source Sans Pro', 'Segoe UI', sans-serif; color:#1a1a1a; font-size:15px; line-height:1.8; box-shadow:0 2px 12px rgba(0,0,0,0.25);">
+                                        <p style="color:#aaa; font-style:italic;">Your article preview will appear here as you type.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Divider -->
+                            <hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:24px 0;">
+
+                            <!-- Header Image section -->
+                            <h3 style="color:white; margin-top:0; margin-bottom:6px; font-size:16px;">Header Image</h3>
+                            <p style="color:rgba(255,255,255,0.65); margin-bottom:16px; font-size:14px;">Generate an AI image with DALL-E 3, or upload your own.</p>
+
+                            <!-- Toggle: Generate vs Upload -->
+                            <div style="display:flex; gap:0; margin-bottom:18px; border:1px solid rgba(255,255,255,0.2); border-radius:8px; overflow:hidden; width:fit-content;">
+                                <button id="btnImgModeGenerate" onclick="cmSetImageMode('generate')" style="padding:9px 20px; font-size:13px; font-weight:600; border:none; cursor:pointer; background:#3498db; color:white;">Generate with AI</button>
+                                <button id="btnImgModeUpload" onclick="cmSetImageMode('upload')" style="padding:9px 20px; font-size:13px; font-weight:600; border:none; cursor:pointer; background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.7);">Upload Image</button>
+                            </div>
+
+                            <!-- Generate panel -->
+                            <div id="cmImageGeneratePanel">
+                                <div style="margin-bottom:14px;">
+                                    <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Image Prompt (leave blank to use article title)</label>
+                                    <input type="text" id="cmImagePrompt" placeholder="e.g. Abstract concept of creative talent and opportunity, navy and gold palette" style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:13px; box-sizing:border-box;">
+                                </div>
+                                <div class="button-group">
+                                    <button class="btn btn-info" id="btnCmGenImage" onclick="cmStep2GenerateImage()">Generate Header Image</button>
+                                    <button class="btn" id="btnCmRegenImage" onclick="cmStep2GenerateImage()" style="background:#7f8c8d; display:none;">Regenerate Image</button>
+                                </div>
+                                <div id="cmStep2Loading" style="display:none; padding:16px 0;">
+                                    <div style="display:flex; align-items:center; gap:12px;">
+                                        <div style="width:18px; height:18px; border:3px solid rgba(255,255,255,0.2); border-top-color:#e67e22; border-radius:50%; animation:spin 0.8s linear infinite; flex-shrink:0;"></div>
+                                        <span style="color:rgba(255,255,255,0.8); font-size:14px;">Generating with DALL-E 3 - usually 10-15 seconds...</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Upload panel -->
+                            <div id="cmImageUploadPanel" style="display:none;">
+                                <div style="margin-bottom:14px;">
+                                    <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Select Image File (JPG, PNG, GIF - max 5 MB)</label>
+                                    <input type="file" id="cmImageUploadInput" accept="image/jpeg,image/png,image/gif" onchange="cmHandleImageUpload(event)" style="color:white; font-size:13px;">
+                                </div>
+                            </div>
+
+                            <!-- Image Preview fixed 1000x666 aspect ratio -->
+                            <div id="cmImagePreviewWrap" style="display:none; margin-top:16px; margin-bottom:20px;">
+                                <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:13px;">Header Image Preview (1000 x 666 px)</label>
+                                <div style="width:100%; max-width:1000px; aspect-ratio:1000/666; overflow:hidden; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:#111;">
+                                    <img id="cmHeaderImage" src="" alt="Header image" style="width:100%; height:100%; object-fit:cover; display:block;">
+                                </div>
+                            </div>
+
+                            <!-- Continue button shown after image is ready -->
+                            <div id="cmStep2Continue" style="display:none; margin-top:20px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1);">
+                                <button class="btn btn-success" onclick="cmShowStep3()">Continue to Finalise &amp; Post</button>
                             </div>
                         </div>
 
-                        <!-- Image Preview (shared) -->
-                        <div id="cmImagePreviewWrap" style="display:none; margin-top:16px; margin-bottom:20px;">
-                            <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:13px;">Header Image Preview</label>
-                            <img id="cmHeaderImage" src="" alt="Header image" style="width:100%; max-height:320px; object-fit:cover; border-radius:8px; border:1px solid rgba(255,255,255,0.15);">
+                        <!-- ===== STEP 3: Finalise & Post to WordPress ===== -->
+                        <div class="actions-card" id="cmStep3" style="display:none;">
+                            <h2 style="margin-top:0; margin-bottom:6px;">Step 3 - Finalise &amp; Post to WordPress</h2>
+                            <p style="color:rgba(255,255,255,0.65); margin-bottom:20px; font-size:14px; line-height:1.6;">
+                                Review the final article and image, select a category, set the publish status, then post to WordPress.
+                            </p>
+
+                            <!-- Final preview: image + title side by side -->
+                            <div style="display:flex; gap:20px; margin-bottom:20px; flex-wrap:wrap;">
+                                <div style="flex:1; min-width:220px;">
+                                    <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:13px;">Header Image</label>
+                                    <div style="width:100%; aspect-ratio:1000/666; overflow:hidden; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:#111;">
+                                        <img id="cmFinalImage" src="" alt="Header image" style="width:100%; height:100%; object-fit:cover; display:block;">
+                                    </div>
+                                </div>
+                                <div style="flex:2; min-width:260px;">
+                                    <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:13px;">Title</label>
+                                    <p id="cmFinalTitle" style="color:white; font-size:16px; font-weight:600; margin:0 0 12px 0;"></p>
+                                    <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Excerpt</label>
+                                    <p id="cmFinalExcerpt" style="color:rgba(255,255,255,0.7); font-size:13px; margin:0; line-height:1.5;"></p>
+                                </div>
+                            </div>
+
+                            <!-- Tags -->
+                            <div style="margin-bottom:16px;">
+                                <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:14px;">Tags (comma separated)</label>
+                                <input type="text" id="cmTags" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px; box-sizing:border-box;" placeholder="tag1, tag2, tag3">
+                            </div>
+
+                            <!-- Category + Status row -->
+                            <div style="display:flex; gap:16px; margin-bottom:16px; flex-wrap:wrap;">
+                                <div style="flex:1; min-width:200px;">
+                                    <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:14px;">WordPress Category</label>
+                                    <select id="cmCategory" style="width:100%; padding:12px 14px; background:rgba(30,40,60,0.95); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px;">
+                                        <option value="">Loading categories...</option>
+                                    </select>
+                                </div>
+                                <div style="flex:1; min-width:200px;">
+                                    <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:14px;">Publish Status</label>
+                                    <select id="cmStatus" onchange="cmToggleSchedule()" style="width:100%; padding:12px 14px; background:rgba(30,40,60,0.95); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px;">
+                                        <option value="draft">Save as Draft</option>
+                                        <option value="publish">Publish Immediately</option>
+                                        <option value="future">Schedule</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Schedule date/time picker Melbourne time shown only when status=future -->
+                            <div id="cmScheduleRow" style="display:none; margin-bottom:20px; padding:14px 16px; background:rgba(52,152,219,0.1); border:1px solid rgba(52,152,219,0.3); border-radius:8px;">
+                                <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:14px;">Schedule Date &amp; Time (Melbourne / AEDT)</label>
+                                <input type="datetime-local" id="cmScheduleDate" style="padding:10px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px; min-width:260px; color-scheme:dark;">
+                                <p style="color:rgba(255,255,255,0.45); font-size:12px; margin:8px 0 0;">Times are in Melbourne local time (AEDT/AEST). WordPress will publish at the scheduled time.</p>
+                            </div>
+
+                            <div class="button-group">
+                                <button class="btn btn-success" id="btnCmPublish" onclick="cmPublish()">Post to WordPress</button>
+                                <button class="btn" onclick="cmShowStep2()" style="background:rgba(255,255,255,0.1);">Back to Edit</button>
+                            </div>
+                            <div id="cmStep3Loading" style="display:none; padding:20px 0;">
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <div style="width:18px; height:18px; border:3px solid rgba(255,255,255,0.2); border-top-color:#27ae60; border-radius:50%; animation:spin 0.8s linear infinite; flex-shrink:0;"></div>
+                                    <span style="color:rgba(255,255,255,0.8); font-size:14px;">Uploading image and creating post in WordPress...</span>
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Continue button (shown after image is ready) -->
-                        <div id="cmStep2Continue" style="display:none; margin-top:20px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1);">
-                            <button class="btn btn-success" onclick="cmShowStep3()">Continue to Finalise &amp; Post</button>
+                        <!-- ===== STEP 4: Post-publish confirmation ===== -->
+                        <div class="actions-card" id="cmStep4" style="display:none;">
+                            <h2 style="margin-top:0; margin-bottom:16px;">Posted to WordPress</h2>
+                            <div style="margin-bottom:24px; padding:16px 18px; background:rgba(39,174,96,0.15); border:1px solid rgba(39,174,96,0.4); border-radius:8px;">
+                                <p style="color:white; margin:0 0 6px 0; font-size:15px; font-weight:600;" id="cmPublishConfirmMsg">Your article has been posted successfully.</p>
+                                <p style="color:rgba(255,255,255,0.7); margin:0; font-size:14px;"><a id="cmPostUrl" href="#" target="_blank" style="color:#2ecc71;">View article on WordPress</a></p>
+                            </div>
+                            <p style="color:rgba(255,255,255,0.65); margin-bottom:20px; font-size:14px; line-height:1.6;">
+                                Ready to share this article on social media? Head to the Social Media Posting tab to generate and manage your posts.
+                            </p>
+                            <div class="button-group">
+                                <button class="btn btn-info" onclick="cmSwitchSubTab('social')">Post on Social Media</button>
+                                <button class="btn" onclick="cmReset()" style="background:#7f8c8d;">Start New Article</button>
+                            </div>
                         </div>
+
                     </div>
 
-                    <!-- ===== STEP 3: Finalise & Post to WordPress ===== -->
-                    <div class="actions-card" id="cmStep3" style="display:none;">
-                        <h2 style="margin-top:0; margin-bottom:6px;">Step 3 — Finalise &amp; Post to WordPress</h2>
-                        <p style="color:rgba(255,255,255,0.65); margin-bottom:20px; font-size:14px; line-height:1.6;">
-                            Review the final article and image below, select a category, set the publish status, then post to WordPress.
-                        </p>
+                    <!-- ===== SOCIAL MEDIA POSTING PANEL ===== -->
+                    <div id="cmPanelSocial" style="display:none;">
+                        <div class="actions-card">
+                            <h2 style="margin-top:0; margin-bottom:6px;">Social Media Posting</h2>
+                            <p style="color:rgba(255,255,255,0.65); margin-bottom:20px; font-size:14px; line-height:1.6;">
+                                AI-generated social posts for LinkedIn, Facebook, and X/Twitter based on your published article. Edit as needed, then copy.
+                            </p>
 
-                        <!-- Final preview: image + title side by side on wide screens -->
-                        <div style="display:flex; gap:20px; margin-bottom:20px; flex-wrap:wrap;">
-                            <div style="flex:1; min-width:220px;">
-                                <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:13px;">Header Image</label>
-                                <img id="cmFinalImage" src="" alt="Header image" style="width:100%; border-radius:8px; border:1px solid rgba(255,255,255,0.15); object-fit:cover; max-height:200px;">
+                            <!-- Published article link shown when available -->
+                            <div id="cmSocialArticleRef" style="display:none; margin-bottom:20px; padding:12px 16px; background:rgba(52,152,219,0.1); border:1px solid rgba(52,152,219,0.3); border-radius:8px;">
+                                <p style="color:white; margin:0; font-size:13px;">Article: <a id="cmSocialPostUrl" href="#" target="_blank" style="color:#3498db;"></a></p>
                             </div>
-                            <div style="flex:2; min-width:260px;">
-                                <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:13px;">Title</label>
-                                <p id="cmFinalTitle" style="color:white; font-size:16px; font-weight:600; margin:0 0 12px 0;"></p>
-                                <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Excerpt</label>
-                                <p id="cmFinalExcerpt" style="color:rgba(255,255,255,0.7); font-size:13px; margin:0; line-height:1.5;"></p>
+
+                            <!-- No article yet message -->
+                            <div id="cmSocialNoArticle" style="padding:24px; text-align:center; background:rgba(255,255,255,0.04); border-radius:8px; margin-bottom:20px;">
+                                <p style="color:rgba(255,255,255,0.5); margin:0 0 14px; font-size:14px;">No published article found. Generate and post an article first, then come back here to create social posts.</p>
+                                <button class="btn btn-info" onclick="cmSwitchSubTab('article')">Go to Article Generation</button>
                             </div>
-                        </div>
 
-                        <!-- Suggested Tags -->
-                        <div style="margin-bottom:16px;">
-                            <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:14px;">Tags <span style="font-weight:400; color:rgba(255,255,255,0.5);">(comma separated)</span></label>
-                            <input type="text" id="cmTags" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px; box-sizing:border-box;" placeholder="tag1, tag2, tag3">
-                        </div>
+                            <!-- Social post generation shown when article is published -->
+                            <div id="cmSocialContent" style="display:none;">
+                                <div id="cmSocialLoading" style="display:none; padding:16px 0; margin-bottom:16px;">
+                                    <div style="display:flex; align-items:center; gap:12px;">
+                                        <div style="width:18px; height:18px; border:3px solid rgba(255,255,255,0.2); border-top-color:#9b59b6; border-radius:50%; animation:spin 0.8s linear infinite; flex-shrink:0;"></div>
+                                        <span style="color:rgba(255,255,255,0.8); font-size:14px;">Generating social posts...</span>
+                                    </div>
+                                </div>
 
-                        <!-- Category + Status row -->
-                        <div style="display:flex; gap:16px; margin-bottom:24px; flex-wrap:wrap;">
-                            <div style="flex:1; min-width:200px;">
-                                <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:14px;">WordPress Category</label>
-                                <select id="cmCategory" style="width:100%; padding:12px 14px; background:rgba(30,40,60,0.95); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px;">
-                                    <option value="">Loading categories...</option>
-                                </select>
+                                <!-- LinkedIn -->
+                                <div style="margin-bottom:20px;">
+                                    <label style="display:flex; align-items:center; gap:8px; color:white; font-weight:600; margin-bottom:10px; font-size:14px;">
+                                        <span style="background:#0077b5; padding:3px 10px; border-radius:4px; font-size:12px;">in</span> LinkedIn
+                                    </label>
+                                    <textarea id="cmLinkedin" rows="8" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
+                                    <button onclick="cmCopyText('cmLinkedin')" style="margin-top:8px; padding:6px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; cursor:pointer; font-size:12px;">Copy</button>
+                                </div>
+
+                                <!-- Facebook -->
+                                <div style="margin-bottom:20px;">
+                                    <label style="display:flex; align-items:center; gap:8px; color:white; font-weight:600; margin-bottom:10px; font-size:14px;">
+                                        <span style="background:#1877f2; padding:3px 10px; border-radius:4px; font-size:12px;">f</span> Facebook
+                                    </label>
+                                    <textarea id="cmFacebook" rows="5" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
+                                    <button onclick="cmCopyText('cmFacebook')" style="margin-top:8px; padding:6px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; cursor:pointer; font-size:12px;">Copy</button>
+                                </div>
+
+                                <!-- X / Twitter -->
+                                <div style="margin-bottom:24px;">
+                                    <label style="display:flex; align-items:center; gap:8px; color:white; font-weight:600; margin-bottom:10px; font-size:14px;">
+                                        <span style="background:#000; padding:3px 10px; border-radius:4px; font-size:12px;">X</span> X / Twitter
+                                    </label>
+                                    <textarea id="cmTwitter" rows="3" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
+                                    <button onclick="cmCopyText('cmTwitter')" style="margin-top:8px; padding:6px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; cursor:pointer; font-size:12px;">Copy</button>
+                                </div>
+
+                                <div class="button-group">
+                                    <button class="btn btn-info" onclick="cmRegenerateSocial()">Regenerate Social Posts</button>
+                                    <button class="btn" onclick="cmSwitchSubTab('article')" style="background:#7f8c8d;">Back to Article</button>
+                                </div>
                             </div>
-                            <div style="flex:1; min-width:200px;">
-                                <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:14px;">Publish Status</label>
-                                <select id="cmStatus" style="width:100%; padding:12px 14px; background:rgba(30,40,60,0.95); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px;">
-                                    <option value="draft">Save as Draft</option>
-                                    <option value="publish">Publish Immediately</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="button-group">
-                            <button class="btn btn-success" id="btnCmPublish" onclick="cmPublish()">Post to WordPress</button>
-                            <button class="btn" onclick="cmShowStep2()" style="background:rgba(255,255,255,0.1);">Back to Edit</button>
-                        </div>
-                        <div id="cmStep3Loading" style="display:none; padding:20px 0;">
-                            <div style="display:flex; align-items:center; gap:12px;">
-                                <div style="width:18px; height:18px; border:3px solid rgba(255,255,255,0.2); border-top-color:#27ae60; border-radius:50%; animation:spin 0.8s linear infinite; flex-shrink:0;"></div>
-                                <span style="color:rgba(255,255,255,0.8); font-size:14px;">Uploading image and creating post in WordPress...</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ===== STEP 4: Social Media (post-publish) ===== -->
-                    <div class="actions-card" id="cmStep4" style="display:none;">
-                        <h2 style="margin-top:0; margin-bottom:6px;">Social Media Posts</h2>
-
-                        <!-- Published link -->
-                        <div style="margin-bottom:20px; padding:14px 16px; background:rgba(39,174,96,0.15); border:1px solid rgba(39,174,96,0.4); border-radius:8px;">
-                            <p style="color:white; margin:0; font-size:14px;"><strong>Posted to WordPress:</strong> <a id="cmPostUrl" href="#" target="_blank" style="color:#2ecc71;">View article</a></p>
-                        </div>
-
-                        <p style="color:rgba(255,255,255,0.65); margin-bottom:20px; font-size:14px; line-height:1.6;">
-                            AI-generated social posts for LinkedIn, Facebook, and X/Twitter. Edit as needed, then copy.
-                        </p>
-
-                        <div id="cmSocialLoading" style="display:none; padding:16px 0;">
-                            <div style="display:flex; align-items:center; gap:12px;">
-                                <div style="width:18px; height:18px; border:3px solid rgba(255,255,255,0.2); border-top-color:#9b59b6; border-radius:50%; animation:spin 0.8s linear infinite; flex-shrink:0;"></div>
-                                <span style="color:rgba(255,255,255,0.8); font-size:14px;">Generating social posts...</span>
-                            </div>
-                        </div>
-
-                        <!-- LinkedIn -->
-                        <div style="margin-bottom:20px;">
-                            <label style="display:flex; align-items:center; gap:8px; color:white; font-weight:600; margin-bottom:10px; font-size:14px;">
-                                <span style="background:#0077b5; padding:3px 10px; border-radius:4px; font-size:12px;">in</span> LinkedIn
-                            </label>
-                            <textarea id="cmLinkedin" rows="8" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
-                            <button onclick="cmCopyText('cmLinkedin')" style="margin-top:8px; padding:6px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; cursor:pointer; font-size:12px;">Copy</button>
-                        </div>
-
-                        <!-- Facebook -->
-                        <div style="margin-bottom:20px;">
-                            <label style="display:flex; align-items:center; gap:8px; color:white; font-weight:600; margin-bottom:10px; font-size:14px;">
-                                <span style="background:#1877f2; padding:3px 10px; border-radius:4px; font-size:12px;">f</span> Facebook
-                            </label>
-                            <textarea id="cmFacebook" rows="5" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
-                            <button onclick="cmCopyText('cmFacebook')" style="margin-top:8px; padding:6px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; cursor:pointer; font-size:12px;">Copy</button>
-                        </div>
-
-                        <!-- X / Twitter -->
-                        <div style="margin-bottom:24px;">
-                            <label style="display:flex; align-items:center; gap:8px; color:white; font-weight:600; margin-bottom:10px; font-size:14px;">
-                                <span style="background:#000; padding:3px 10px; border-radius:4px; font-size:12px;">X</span> X / Twitter
-                            </label>
-                            <textarea id="cmTwitter" rows="3" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
-                            <button onclick="cmCopyText('cmTwitter')" style="margin-top:8px; padding:6px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; cursor:pointer; font-size:12px;">Copy</button>
-                        </div>
-
-                        <div class="button-group">
-                            <button class="btn btn-info" onclick="cmRegenerateSocial()">Regenerate Social Posts</button>
-                            <button class="btn" onclick="cmReset()" style="background:#7f8c8d;">Start New Article</button>
                         </div>
                     </div>
 
                 </div>
                 `;
-
                 // Load any existing state
                 cmLoadState();
+
             }
         }
         
@@ -2651,40 +2702,98 @@
 
         // ---- STEP 3: Publish ----
 
+        // ---- Sub-Tab Switcher ----
+        function cmSwitchSubTab(tab) {
+            const articlePanel = document.getElementById('cmPanelArticle');
+            const socialPanel = document.getElementById('cmPanelSocial');
+            const tabArticle = document.getElementById('cmSubTabArticle');
+            const tabSocial = document.getElementById('cmSubTabSocial');
+            if (!articlePanel || !socialPanel) return;
+            if (tab === 'article') {
+                articlePanel.style.display = 'block';
+                socialPanel.style.display = 'none';
+                if (tabArticle) { tabArticle.style.borderBottomColor = '#3498db'; tabArticle.style.color = 'white'; }
+                if (tabSocial) { tabSocial.style.borderBottomColor = 'transparent'; tabSocial.style.color = 'rgba(255,255,255,0.5)'; }
+            } else {
+                articlePanel.style.display = 'none';
+                socialPanel.style.display = 'block';
+                if (tabSocial) { tabSocial.style.borderBottomColor = '#3498db'; tabSocial.style.color = 'white'; }
+                if (tabArticle) { tabArticle.style.borderBottomColor = 'transparent'; tabArticle.style.color = 'rgba(255,255,255,0.5)'; }
+                const hasPost = cmState.publishedPost && cmState.publishedPost.link;
+                const noArticleEl = document.getElementById('cmSocialNoArticle');
+                const socialContentEl = document.getElementById('cmSocialContent');
+                const socialRefEl = document.getElementById('cmSocialArticleRef');
+                const socialUrlEl = document.getElementById('cmSocialPostUrl');
+                if (hasPost) {
+                    if (noArticleEl) noArticleEl.style.display = 'none';
+                    if (socialContentEl) socialContentEl.style.display = 'block';
+                    if (socialRefEl) socialRefEl.style.display = 'block';
+                    if (socialUrlEl) { socialUrlEl.href = cmState.publishedPost.link; socialUrlEl.textContent = cmState.publishedPost.link; }
+                    const linkedinEl = document.getElementById('cmLinkedin');
+                    if (linkedinEl && !linkedinEl.value) {
+                        cmFetchSocialPosts(
+                            cmState.article ? cmState.article.title : '',
+                            cmState.article ? cmState.article.excerpt : '',
+                            cmState.publishedPost.link
+                        );
+                    }
+                } else {
+                    if (noArticleEl) noArticleEl.style.display = 'block';
+                    if (socialContentEl) socialContentEl.style.display = 'none';
+                    if (socialRefEl) socialRefEl.style.display = 'none';
+                }
+            }
+        }
+        // ---- Schedule Toggle ----
+        function cmToggleSchedule() {
+            const status = document.getElementById('cmStatus');
+            const scheduleRow = document.getElementById('cmScheduleRow');
+            const publishBtn = document.getElementById('btnCmPublish');
+            if (!status || !scheduleRow) return;
+            if (status.value === 'future') {
+                scheduleRow.style.display = 'block';
+                if (publishBtn) publishBtn.textContent = 'Schedule Post';
+            } else {
+                scheduleRow.style.display = 'none';
+                if (publishBtn) publishBtn.textContent = status.value === 'draft' ? 'Save as Draft' : 'Post to WordPress';
+            }
+        }
         async function cmPublish() {
             const title = document.getElementById('cmTitle').value.trim();
             const content = cmEditor ? cmEditor.value().trim() : (document.getElementById('cmContent') || {value:''}).value.trim();
             const excerpt = document.getElementById('cmExcerpt').value.trim();
             const status = document.getElementById('cmStatus').value;
             const categoryId = document.getElementById('cmCategory').value;
-
             if (!title || !content) { cmShowMessage('Title and content are required.', 'error'); return; }
-
+            let scheduledDate = null;
+            if (status === 'future') {
+                const schedEl = document.getElementById('cmScheduleDate');
+                if (!schedEl || !schedEl.value) { cmShowMessage('Please select a date and time to schedule the post.', 'error'); return; }
+                const melbDate = new Date(schedEl.value + ':00+11:00');
+                scheduledDate = melbDate.toISOString().replace(/\.\d{3}Z$/, '');
+            }
             document.getElementById('btnCmPublish').disabled = true;
             document.getElementById('cmStep3Loading').style.display = 'block';
-
             try {
                 const resp = await fetch('/api/content/publish', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title, content, excerpt, status, categoryId })
+                    body: JSON.stringify({ title, content, excerpt, status, categoryId, scheduledDate })
                 });
                 const data = await resp.json();
                 if (!data.success) throw new Error(data.message);
-
                 cmState.publishedPost = data.post;
-
+                ['cmStep1','cmStep2','cmStep3'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.display = 'none';
+                });
                 document.getElementById('cmStep4').style.display = 'block';
                 document.getElementById('cmPostUrl').href = data.post.link;
                 document.getElementById('cmPostUrl').textContent = data.post.link;
-
-                cmShowMessage(
-                    data.post.status === 'publish' ? 'Article published to WordPress.' : 'Article saved as draft in WordPress.',
-                    'success'
-                );
-
-                // Auto-generate social posts
-                await cmFetchSocialPosts(title, excerpt, data.post.link);
+                let confirmMsg = 'Your article has been posted successfully.';
+                if (data.post.status === 'draft') confirmMsg = 'Your article has been saved as a draft in WordPress.';
+                if (data.post.status === 'future') confirmMsg = 'Your article has been scheduled in WordPress.';
+                document.getElementById('cmPublishConfirmMsg').textContent = confirmMsg;
                 document.getElementById('cmStep4').scrollIntoView({ behavior: 'smooth', block: 'start' });
             } catch (err) {
                 cmShowMessage('Error publishing: ' + err.message, 'error');
@@ -2693,7 +2802,6 @@
                 document.getElementById('cmStep3Loading').style.display = 'none';
             }
         }
-
         // ---- Social Posts ----
 
         async function cmFetchSocialPosts(title, excerpt, url) {
@@ -2740,19 +2848,28 @@
             cmState = { article: null, imageDataUrl: null, publishedPost: null };
             const topicEl = document.getElementById('cmTopic');
             if (topicEl) topicEl.value = '';
-            // Clear the rich text editor
             if (cmEditor) { cmEditor.value(''); }
             ['cmStep2','cmStep3','cmStep4'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = 'none';
             });
+            const step1El = document.getElementById('cmStep1');
+            if (step1El) step1El.style.display = 'block';
             const resetBtn = document.getElementById('btnCmReset');
             if (resetBtn) resetBtn.style.display = 'none';
             const msgEl = document.getElementById('cmMessage');
             if (msgEl) msgEl.style.display = 'none';
+            ['cmLinkedin','cmFacebook','cmTwitter'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            const socialContentEl = document.getElementById('cmSocialContent');
+            const noArticleEl = document.getElementById('cmSocialNoArticle');
+            if (socialContentEl) socialContentEl.style.display = 'none';
+            if (noArticleEl) noArticleEl.style.display = 'block';
+            cmSwitchSubTab('article');
             cmSetProgress(1);
         }
-
         // ---- Copy to clipboard ----
 
         function cmCopyText(elementId) {
