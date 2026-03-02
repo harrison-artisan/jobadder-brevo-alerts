@@ -313,6 +313,28 @@ class WordpressService {
             .join('\n');
         return html;
     }
+
+    /**
+     * Fetch all WordPress categories.
+     * Returns an array of { id, name, slug, count } objects.
+     */
+    async getCategories() {
+        try {
+            const response = await axios.get(`${WORDPRESS_API_URL}/categories`, {
+                params: { per_page: 100, hide_empty: false },
+                headers: { 'Authorization': this.getAuthHeader() }
+            });
+            return response.data.map(cat => ({
+                id: cat.id,
+                name: cat.name,
+                slug: cat.slug,
+                count: cat.count
+            }));
+        } catch (error) {
+            console.error('❌ Error fetching WordPress categories:', error.response?.data || error.message);
+            throw error;
+        }
+    }
 }
 
 module.exports = new WordpressService();

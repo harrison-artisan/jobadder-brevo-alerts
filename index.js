@@ -484,27 +484,37 @@ cron.schedule('0 14 * * *', async () => {
 // Content Marketing Routes
 // ============================================================
 
-// GET  /api/content/state          - Get current content generation state
+// GET  /api/content/state                - Restore saved state (article + image)
 app.get('/api/content/state', async (req, res) => {
   await contentMarketingController.getState(req, res);
 });
 
-// POST /api/content/generate       - Generate article + header image via AI
-app.post('/api/content/generate', async (req, res) => {
-  await contentMarketingController.generateContent(req, res);
+// GET  /api/content/wp-categories         - Fetch WordPress categories
+app.get('/api/content/wp-categories', async (req, res) => {
+  await contentMarketingController.getWordPressCategories(req, res);
 });
 
-// POST /api/content/publish        - Publish generated content to WordPress
+// POST /api/content/generate-article      - STEP 1: Generate article copy
+app.post('/api/content/generate-article', async (req, res) => {
+  await contentMarketingController.generateArticle(req, res);
+});
+
+// POST /api/content/generate-image        - STEP 2: Generate header image
+app.post('/api/content/generate-image', async (req, res) => {
+  await contentMarketingController.generateImage(req, res);
+});
+
+// POST /api/content/publish               - STEP 3: Publish to WordPress
 app.post('/api/content/publish', async (req, res) => {
   await contentMarketingController.publishToWordPress(req, res);
 });
 
-// POST /api/content/social-posts   - Generate social media post copy
+// POST /api/content/social-posts          - Generate social media post copy
 app.post('/api/content/social-posts', async (req, res) => {
   await contentMarketingController.generateSocialPosts(req, res);
 });
 
-// POST /api/content/reset          - Reset content state
+// POST /api/content/reset                 - Reset content state
 app.post('/api/content/reset', async (req, res) => {
   await contentMarketingController.resetState(req, res);
 });
