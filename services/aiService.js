@@ -514,7 +514,7 @@ OUTPUT ONLY THE SUMMARY - NO EXPLANATIONS OR EXTRA TEXT.`;
    * Accepts optional settings: { keywords, tone, voice }
    * Returns { title, content, excerpt, seoDescription, suggestedTags }
    */
-  async generateArticle(topic, settings = {}) {
+  async generateArticle(topic, settings = {}, pollContext = null) {
     const client = this.getClient();
     if (!client) {
       throw new Error('OpenAI API key not configured. Cannot generate article.');
@@ -571,7 +571,10 @@ SEO / AEO / GEO BEST PRACTICES (apply to every article):
     const userPrompt = `Write a comprehensive blog article for Artisan's Creative Community section.
 
 TOPIC: ${topic}
-
+${pollContext ? `
+POLL CONTEXT (incorporate these real audience insights into the article — reference the results to ground your arguments):
+${pollContext}
+` : ''}
 STRUCTURE REQUIREMENTS:
 - H1 title: compelling, specific, and direct (output as plain text on the first line — no # prefix)
 - H2 headings (##): 4 to 6 main sections — write these as observations or statements, not generic labels

@@ -1956,11 +1956,55 @@
 
                             <!-- Topic Input -->
                             <div style="margin-bottom:16px;">
-                                <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:14px;">Article Topic</label>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                    <label style="display:block; color:white; font-weight:500; font-size:14px; margin:0;">Article Topic</label>
+                                    <button onclick="cmOpenPollPicker()" id="btnChoosePoll"
+                                        style="display:flex; align-items:center; gap:6px; padding:5px 12px; background:rgba(0,119,181,0.2); border:1px solid rgba(0,119,181,0.5); border-radius:6px; color:#5dade2; cursor:pointer; font-size:12px; font-weight:600; transition:all 0.2s;">
+                                        <span style="font-size:14px;">&#128202;</span> Choose Recent Poll
+                                    </button>
+                                </div>
                                 <textarea id="cmTopic" rows="3" placeholder="e.g. How to attract top creative talent in Australia in 2025" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px; resize:vertical; box-sizing:border-box;"></textarea>
+                                <!-- Poll context badge (shown when a poll is selected) -->
+                                <div id="cmPollBadge" style="display:none; margin-top:8px; padding:10px 14px; background:rgba(0,119,181,0.12); border:1px solid rgba(0,119,181,0.3); border-radius:8px; display:none;">
+                                    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                                        <div>
+                                            <div style="font-size:11px; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:4px;">Poll context attached</div>
+                                            <div id="cmPollBadgeQuestion" style="color:white; font-size:13px; font-weight:600;"></div>
+                                            <div id="cmPollBadgeResults" style="color:rgba(255,255,255,0.6); font-size:12px; margin-top:3px;"></div>
+                                        </div>
+                                        <button onclick="cmClearPollContext()" style="padding:3px 8px; background:rgba(231,76,60,0.15); border:1px solid rgba(231,76,60,0.3); border-radius:5px; color:#e74c3c; cursor:pointer; font-size:11px; flex-shrink:0;">Remove</button>
+                                    </div>
+                                </div>
                             </div>
                             <div class="button-group">
                                 <button class="btn btn-info" id="btnCmGenArticle" onclick="cmStep1Generate()">Generate Article</button>
+                            </div>
+
+                            <!-- ===== Poll Picker Modal ===== -->
+                            <div id="cmPollPickerModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; display:none; align-items:center; justify-content:center;">
+                                <div style="background:#1a2332; border:1px solid rgba(255,255,255,0.12); border-radius:14px; width:560px; max-width:95vw; max-height:80vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+                                    <!-- Modal Header -->
+                                    <div style="padding:20px 24px 16px; border-bottom:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center;">
+                                        <div>
+                                            <div style="display:flex; align-items:center; gap:10px;">
+                                                <div style="background:#0077b5; border-radius:5px; padding:3px 10px; font-size:12px; font-weight:700; color:white;">in</div>
+                                                <h3 style="margin:0; font-size:16px; color:white; font-weight:700;">Choose a Recent Poll</h3>
+                                            </div>
+                                            <p style="margin:4px 0 0; color:rgba(255,255,255,0.5); font-size:12px;">Select a poll to use its results as article context</p>
+                                        </div>
+                                        <button onclick="cmClosePollPicker()" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:white; cursor:pointer; font-size:18px; padding:4px 10px; line-height:1;">&#10005;</button>
+                                    </div>
+                                    <!-- Modal Body -->
+                                    <div style="padding:16px 24px; overflow-y:auto; flex:1;">
+                                        <div id="cmPollPickerLoading" style="text-align:center; padding:30px 0; color:rgba(255,255,255,0.5); font-size:14px;">
+                                            <div style="width:24px; height:24px; border:3px solid rgba(255,255,255,0.15); border-top-color:#0077b5; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 12px;"></div>
+                                            Fetching polls from LinkedIn...
+                                        </div>
+                                        <div id="cmPollPickerError" style="display:none; padding:16px; background:rgba(231,76,60,0.1); border:1px solid rgba(231,76,60,0.3); border-radius:8px; color:#e74c3c; font-size:13px;"></div>
+                                        <div id="cmPollPickerList" style="display:none; display:flex; flex-direction:column; gap:10px;"></div>
+                                        <div id="cmPollPickerEmpty" style="display:none; text-align:center; padding:30px 0; color:rgba(255,255,255,0.4); font-size:14px;">No polls found on the Artisan LinkedIn Page.</div>
+                                    </div>
+                                </div>
                             </div>
                             <div id="cmStep1Loading" style="display:none; padding:20px 0;">
                                 <div style="display:flex; align-items:center; gap:12px;">
@@ -2432,6 +2476,103 @@
         // ============================================================
 
         let cmState = { article: null, imageDataUrl: null, publishedPost: null };
+        let cmPollContext = null; // { question, options, totalVotes, commentary }
+
+        // ---- Poll Picker ----
+        async function cmOpenPollPicker() {
+            const modal = document.getElementById('cmPollPickerModal');
+            const loading = document.getElementById('cmPollPickerLoading');
+            const errorEl = document.getElementById('cmPollPickerError');
+            const listEl = document.getElementById('cmPollPickerList');
+            const emptyEl = document.getElementById('cmPollPickerEmpty');
+            if (!modal) return;
+            // Show modal
+            modal.style.display = 'flex';
+            loading.style.display = 'block';
+            errorEl.style.display = 'none';
+            listEl.style.display = 'none';
+            emptyEl.style.display = 'none';
+            listEl.innerHTML = '';
+            try {
+                const res = await fetch('/api/linkedin/recent-polls');
+                const data = await res.json();
+                loading.style.display = 'none';
+                if (!data.success) throw new Error(data.message || 'Failed to load polls.');
+                if (!data.polls || data.polls.length === 0) {
+                    emptyEl.style.display = 'block';
+                    return;
+                }
+                listEl.style.display = 'flex';
+                data.polls.forEach(poll => {
+                    const card = document.createElement('div');
+                    card.style.cssText = 'padding:14px 16px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:10px; cursor:pointer; transition:all 0.15s;';
+                    card.onmouseenter = () => { card.style.background = 'rgba(0,119,181,0.15)'; card.style.borderColor = 'rgba(0,119,181,0.4)'; };
+                    card.onmouseleave = () => { card.style.background = 'rgba(255,255,255,0.05)'; card.style.borderColor = 'rgba(255,255,255,0.1)'; };
+                    const totalVotes = poll.totalVotes || 0;
+                    const optionBars = poll.options.map(opt => {
+                        const pct = totalVotes > 0 ? Math.round((opt.voteCount / totalVotes) * 100) : 0;
+                        return `<div style="margin-bottom:6px;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
+                                <span style="color:rgba(255,255,255,0.8); font-size:12px;">${opt.text}</span>
+                                <span style="color:rgba(255,255,255,0.5); font-size:12px;">${pct}% (${opt.voteCount})</span>
+                            </div>
+                            <div style="height:5px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden;">
+                                <div style="height:100%; width:${pct}%; background:#0077b5; border-radius:3px;"></div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                    const dateStr = poll.postedAt ? new Date(poll.postedAt).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' }) : '';
+                    card.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+                            <div style="font-size:14px; font-weight:600; color:white; flex:1; padding-right:12px;">${poll.question}</div>
+                            <div style="font-size:11px; color:rgba(255,255,255,0.35); flex-shrink:0;">${dateStr}</div>
+                        </div>
+                        ${optionBars}
+                        <div style="margin-top:8px; font-size:11px; color:rgba(255,255,255,0.35);">${totalVotes} vote${totalVotes !== 1 ? 's' : ''} total</div>
+                    `;
+                    card.onclick = () => cmSelectPoll(poll);
+                    listEl.appendChild(card);
+                });
+            } catch (err) {
+                loading.style.display = 'none';
+                errorEl.style.display = 'block';
+                errorEl.textContent = 'Could not load polls: ' + err.message;
+            }
+        }
+
+        function cmClosePollPicker() {
+            const modal = document.getElementById('cmPollPickerModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function cmSelectPoll(poll) {
+            cmPollContext = poll;
+            cmClosePollPicker();
+            // Show badge
+            const badge = document.getElementById('cmPollBadge');
+            const qEl = document.getElementById('cmPollBadgeQuestion');
+            const rEl = document.getElementById('cmPollBadgeResults');
+            if (badge) badge.style.display = 'block';
+            if (qEl) qEl.textContent = poll.question;
+            if (rEl) {
+                const top = poll.options.slice().sort((a,b) => b.voteCount - a.voteCount)[0];
+                const total = poll.totalVotes || 0;
+                const pct = total > 0 ? Math.round((top.voteCount / total) * 100) : 0;
+                rEl.textContent = `Top answer: "${top.text}" — ${pct}% of ${total} votes`;
+            }
+        }
+
+        function cmClearPollContext() {
+            cmPollContext = null;
+            const badge = document.getElementById('cmPollBadge');
+            if (badge) badge.style.display = 'none';
+        }
+
+        // Close modal on backdrop click
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('cmPollPickerModal');
+            if (modal && e.target === modal) cmClosePollPicker();
+        });
         let cmEditor = null; // EasyMDE instance
 
         // ---- EasyMDE Rich Text Editor ----
@@ -2789,10 +2930,20 @@
             document.getElementById('cmStep4').style.display = 'none';
 
             try {
+                // Build poll context string if a poll has been selected
+                let pollContextStr = null;
+                if (cmPollContext) {
+                    const lines = cmPollContext.options.map(o => {
+                        const pct = cmPollContext.totalVotes > 0 ? Math.round((o.voteCount / cmPollContext.totalVotes) * 100) : 0;
+                        return `  - ${o.text}: ${pct}% (${o.voteCount} votes)`;
+                    }).join('\n');
+                    pollContextStr = `LinkedIn Poll Results (use as article context):\nQuestion: ${cmPollContext.question}\nResults (${cmPollContext.totalVotes} total votes):\n${lines}`;
+                }
+
                 const resp = await fetch('/api/content/generate-article', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ topic, settings })
+                    body: JSON.stringify({ topic, settings, pollContext: pollContextStr })
                 });
                 const data = await resp.json();
                 if (!data.success) throw new Error(data.message);

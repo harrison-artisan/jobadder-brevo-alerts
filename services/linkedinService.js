@@ -311,6 +311,72 @@ class LinkedInService {
     return response.data;
   }
 
+  // ---- Fetch Recent Polls ----
+
+  /**
+   * Fetch the most recent polls posted by the Artisan Company Page.
+   * Uses the Posts API (v2) with q=authors to list org posts, then filters
+   * for those that contain poll content and returns the last `limit` polls.
+   *
+   * Each returned poll object has:
+   *   { id, question, options: [{ text, voteCount }], totalVotes, postedAt, commentary }
+   *
+   * @param {number} limit - Max number of polls to return (default 5)
+   * @returns {Array} Array of poll summary objects
+   */
+  async getRecentPolls(limit = 5) {
+    if (!this.isConnected()) throw new Error('LinkedIn is not connected.');
+
+    // Fetch recent posts from the org page (up to 50 to find enough polls)
+    const encodedUrn = encodeURIComponent(tokenStore.orgUrn);
+    const response = await axios.get(
+      `https://api.linkedin.com/v2/ugcPosts?q=authors&authors=List(${encodedUrn})&count=50&sortBy=LAST_MODIFIED`,
+      {
+        headers: {
+          Authorization: `Bearer ${tokenStore.accessToken}`,
+          'X-Restli-Protocol-Version': '2.0.0',
+          'LinkedIn-Version': '202502',
+        },
+      }
+    );
+
+    const elements = (response.data && response.data.elements) || [];
+    const polls = [];
+
+    for (const post of elements) {
+      if (polls.length >= limit) break;
+
+      // Check for poll content in the UGC post structure
+      const shareContent = post.specificContent &&
+        post.specificContent['com.linkedin.ugc.ShareContent'];
+      if (!shareContent) continue;
+
+      const media = shareContent.media;
+      if (!media || !media.length) continue;
+
+      const pollMedia = media.find(m => m.poll);
+      if (!pollMedia) continue;
+
+      const poll = pollMedia.poll;
+      const options = (poll.options || []).map(opt => ({
+        text: opt.text,
+        voteCount: opt.voteCount || 0,
+      }));
+      const totalVotes = options.reduce((sum, o) => sum + o.voteCount, 0);
+
+      polls.push({
+        id: post.id,
+        question: poll.question || '',
+        options,
+        totalVotes,
+        postedAt: post.created ? post.created.time : null,
+        commentary: shareContent.shareCommentary ? shareContent.shareCommentary.text : '',
+      });
+    }
+
+    return polls;
+  }
+
   // ---- Image Upload ----
 
   /**

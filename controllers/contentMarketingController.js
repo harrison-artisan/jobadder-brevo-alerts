@@ -33,7 +33,7 @@ function writeState(data) {
 // STEP 1: Generate Article copy only
 // ============================================================
 async function generateArticle(req, res) {
-    const { topic, settings } = req.body;
+    const { topic, settings, pollContext } = req.body;
 
     if (!topic || !topic.trim()) {
         return res.status(400).json({ success: false, message: 'A topic is required.' });
@@ -42,9 +42,10 @@ async function generateArticle(req, res) {
     console.log('\n======== STEP 1: GENERATE ARTICLE ========');
     console.log(`Topic: "${topic}"`);
     if (settings) console.log('Settings:', JSON.stringify(settings));
+    if (pollContext) console.log('Poll context attached:', pollContext.substring(0, 120) + '...');
 
     try {
-        const article = await aiService.generateArticle(topic.trim(), settings || {});
+        const article = await aiService.generateArticle(topic.trim(), settings || {}, pollContext || null);
 
         // Save to state — image will be added in step 2
         const state = {
