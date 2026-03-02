@@ -571,6 +571,55 @@ app.get('/api/linkedin/status', (req, res) => {
   res.json(linkedinService.getTokenStatus());
 });
 
+// GET /api/linkedin/debug-token - Introspect the live token and return scopes + org access
+app.get('/api/linkedin/debug-token', async (req, res) => {
+  try {
+    const axios = require('axios');
+    const status = linkedinService.getTokenStatus();
+    if (!status.connected) {
+      return res.json({ connected: false, status: status.status, message: 'No active token. Please reconnect LinkedIn.' });
+    }
+    // Call LinkedIn token introspection endpoint
+    const tokenStore = linkedinService._getTokenStore ? linkedinService._getTokenStore() : null;
+    // Access token is not directly exposed — call /v2/me to verify it works
+    const accessToken = process.env.LINKEDIN_ACCESS_TOKEN ||
+      (linkedinService._tokenStore && linkedinService._tokenStore.accessToken) || null;
+    const results = { status, accessToken: accessToken ? accessToken.substring(0, 12) + '...' : 'not accessible from route' };
+    // Try calling /v2/me
+    try {
+      const meResp = await axios.get('https://api.linkedin.com/v2/me', {
+        headers: { Authorization: `Bearer ${accessToken}`, 'X-Restli-Protocol-Version': '2.0.0' }
+      });
+      results.meCall = { ok: true, id: meResp.data.id };
+    } catch (e) {
+      results.meCall = { ok: false, status: e.response && e.response.status, message: e.message };
+    }
+    // Try calling /v2/organizationAcls to check org write access
+    try {
+      const orgResp = await axios.get(
+        'https://api.linkedin.com/v2/organizationAcls?q=roleAssignee&role=ADMINISTRATOR&projection=(elements*(organization~(id,localizedName)))',
+        { headers: { Authorization: `Bearer ${accessToken}`, 'X-Restli-Protocol-Version': '2.0.0' } }
+      );
+      results.orgAclCall = { ok: true, count: (orgResp.data.elements || []).length, orgs: (orgResp.data.elements || []).map(e => e['organization~'] && e['organization~'].localizedName) };
+    } catch (e) {
+      results.orgAclCall = { ok: false, status: e.response && e.response.status, message: e.message };
+    }
+    // Try fetching recent posts to check r_organization_social
+    try {
+      const postsResp = await axios.get(
+        'https://api.linkedin.com/rest/posts?author=urn%3Ali%3Aorganization%3A832171&q=author&count=3',
+        { headers: { Authorization: `Bearer ${accessToken}`, 'X-Restli-Protocol-Version': '2.0.0', 'LinkedIn-Version': '202502' } }
+      );
+      results.orgPostsCall = { ok: true, count: (postsResp.data.elements || []).length };
+    } catch (e) {
+      results.orgPostsCall = { ok: false, status: e.response && e.response.status, message: e.message };
+    }
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST /api/linkedin/disconnect - Clear the stored token
 app.post('/api/linkedin/disconnect', (req, res) => {
   linkedinService.disconnect();
