@@ -520,6 +520,75 @@ app.post('/api/content/reset', async (req, res) => {
   await contentMarketingController.resetState(req, res);
 });
 
+// ============================================================
+// LinkedIn OAuth + Posting Routes
+// ============================================================
+const linkedinService = require('./services/linkedinService');
+const crypto = require('crypto');
+
+// In-memory CSRF state store (keyed by state string, value = timestamp)
+const linkedinStateStore = {};
+
+// GET /auth/linkedin - Start OAuth flow (redirect to LinkedIn)
+app.get('/auth/linkedin', (req, res) => {
+  const state = crypto.randomBytes(16).toString('hex');
+  linkedinStateStore[state] = Date.now();
+  // Clean up states older than 10 minutes
+  const cutoff = Date.now() - 10 * 60 * 1000;
+  Object.keys(linkedinStateStore).forEach(k => { if (linkedinStateStore[k] < cutoff) delete linkedinStateStore[k]; });
+  const authUrl = linkedinService.getAuthUrl(state);
+  res.redirect(authUrl);
+});
+
+// GET /auth/linkedin/callback - LinkedIn redirects here after user approves
+app.get('/auth/linkedin/callback', async (req, res) => {
+  const { code, state, error, error_description } = req.query;
+  if (error) {
+    console.error('[LinkedIn] OAuth error:', error, error_description);
+    return res.redirect('/dashboard?linkedin=error&msg=' + encodeURIComponent(error_description || error));
+  }
+  if (!state || !linkedinStateStore[state]) {
+    return res.redirect('/dashboard?linkedin=error&msg=Invalid+state+parameter');
+  }
+  delete linkedinStateStore[state];
+  try {
+    await linkedinService.exchangeCodeForToken(code);
+    res.redirect('/dashboard?linkedin=connected');
+  } catch (err) {
+    console.error('[LinkedIn] Token exchange error:', err.message);
+    res.redirect('/dashboard?linkedin=error&msg=' + encodeURIComponent(err.message));
+  }
+});
+
+// GET /api/linkedin/status - Get current token status
+app.get('/api/linkedin/status', (req, res) => {
+  res.json(linkedinService.getTokenStatus());
+});
+
+// POST /api/linkedin/disconnect - Clear the stored token
+app.post('/api/linkedin/disconnect', (req, res) => {
+  linkedinService.disconnect();
+  res.json({ success: true, message: 'LinkedIn disconnected.' });
+});
+
+// POST /api/linkedin/post - Post to LinkedIn
+app.post('/api/linkedin/post', async (req, res) => {
+  const { text, articleUrl, title, description } = req.body;
+  if (!text) return res.status(400).json({ success: false, message: 'Post text is required.' });
+  try {
+    let result;
+    if (articleUrl) {
+      result = await linkedinService.postArticleToLinkedIn(text, articleUrl, title || '', description || '');
+    } else {
+      result = await linkedinService.postToLinkedIn(text);
+    }
+    res.json({ success: true, postId: result.id, message: 'Posted to LinkedIn successfully.' });
+  } catch (err) {
+    console.error('[LinkedIn] Post error:', err.response ? JSON.stringify(err.response.data) : err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   const isAuthorized = jobadderService.isAuthorized();

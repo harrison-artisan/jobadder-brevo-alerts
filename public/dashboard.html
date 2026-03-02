@@ -2144,23 +2144,44 @@
 
                     <!-- ===== SOCIAL MEDIA POSTING PANEL ===== -->
                     <div id="cmPanelSocial" style="display:none;">
+
+                        <!-- ---- LinkedIn Connection Card ---- -->
+                        <div class="actions-card" style="margin-bottom:24px;">
+                            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+                                <div style="display:flex; align-items:center; gap:14px;">
+                                    <div style="background:#0077b5; width:42px; height:42px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:700; color:white; flex-shrink:0;">in</div>
+                                    <div>
+                                        <div style="color:white; font-weight:600; font-size:15px; margin-bottom:2px;">LinkedIn</div>
+                                        <div id="liStatusText" style="font-size:13px; color:rgba(255,255,255,0.6);">Checking connection...</div>
+                                    </div>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                                    <span id="liStatusBadge" style="padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; display:none;"></span>
+                                    <a id="liConnectBtn" href="/auth/linkedin" style="display:none; padding:8px 18px; background:#0077b5; color:white; border-radius:6px; font-size:13px; font-weight:600; text-decoration:none;">Connect LinkedIn</a>
+                                    <a id="liReconnectBtn" href="/auth/linkedin" style="display:none; padding:8px 18px; background:#e67e22; color:white; border-radius:6px; font-size:13px; font-weight:600; text-decoration:none;">Reconnect</a>
+                                    <button id="liDisconnectBtn" onclick="cmLinkedInDisconnect()" style="display:none; padding:8px 18px; background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.4); color:#e74c3c; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer;">Disconnect</button>
+                                </div>
+                            </div>
+                            <div id="liExpiryWarning" style="display:none; margin-top:14px; padding:10px 14px; background:rgba(230,126,34,0.15); border:1px solid rgba(230,126,34,0.35); border-radius:8px;">
+                                <p id="liExpiryMsg" style="margin:0; color:#e67e22; font-size:13px;"></p>
+                            </div>
+                        </div>
+
+                        <!-- ---- Social Posts Card ---- -->
                         <div class="actions-card">
                             <h2 style="margin-top:0; margin-bottom:6px;">Social Media Posting</h2>
                             <p style="color:rgba(255,255,255,0.65); margin-bottom:20px; font-size:14px; line-height:1.6;">
-                                AI-generated social posts for LinkedIn, Facebook, and X/Twitter based on your published article. Edit as needed, then copy.
+                                AI-generated social posts based on your published article. Edit as needed, then post directly or copy.
                             </p>
-
                             <!-- Published article link shown when available -->
                             <div id="cmSocialArticleRef" style="display:none; margin-bottom:20px; padding:12px 16px; background:rgba(52,152,219,0.1); border:1px solid rgba(52,152,219,0.3); border-radius:8px;">
                                 <p style="color:white; margin:0; font-size:13px;">Article: <a id="cmSocialPostUrl" href="#" target="_blank" style="color:#3498db;"></a></p>
                             </div>
-
                             <!-- No article yet message -->
                             <div id="cmSocialNoArticle" style="padding:24px; text-align:center; background:rgba(255,255,255,0.04); border-radius:8px; margin-bottom:20px;">
                                 <p style="color:rgba(255,255,255,0.5); margin:0 0 14px; font-size:14px;">No published article found. Generate and post an article first, then come back here to create social posts.</p>
                                 <button class="btn btn-info" onclick="cmSwitchSubTab('article')">Go to Article Generation</button>
                             </div>
-
                             <!-- Social post generation shown when article is published -->
                             <div id="cmSocialContent" style="display:none;">
                                 <div id="cmSocialLoading" style="display:none; padding:16px 0; margin-bottom:16px;">
@@ -2169,16 +2190,18 @@
                                         <span style="color:rgba(255,255,255,0.8); font-size:14px;">Generating social posts...</span>
                                     </div>
                                 </div>
-
                                 <!-- LinkedIn -->
                                 <div style="margin-bottom:20px;">
                                     <label style="display:flex; align-items:center; gap:8px; color:white; font-weight:600; margin-bottom:10px; font-size:14px;">
                                         <span style="background:#0077b5; padding:3px 10px; border-radius:4px; font-size:12px;">in</span> LinkedIn
                                     </label>
                                     <textarea id="cmLinkedin" rows="8" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
-                                    <button onclick="cmCopyText('cmLinkedin')" style="margin-top:8px; padding:6px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; cursor:pointer; font-size:12px;">Copy</button>
+                                    <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; align-items:center;">
+                                        <button onclick="cmCopyText('cmLinkedin')" style="padding:6px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; cursor:pointer; font-size:12px;">Copy</button>
+                                        <button id="liPostBtn" onclick="cmPostToLinkedIn()" style="padding:6px 18px; background:#0077b5; border:none; border-radius:6px; color:white; cursor:pointer; font-size:12px; font-weight:600;">Post to LinkedIn</button>
+                                        <span id="liPostStatus" style="font-size:12px; color:rgba(255,255,255,0.6);"></span>
+                                    </div>
                                 </div>
-
                                 <!-- Facebook -->
                                 <div style="margin-bottom:20px;">
                                     <label style="display:flex; align-items:center; gap:8px; color:white; font-weight:600; margin-bottom:10px; font-size:14px;">
@@ -2742,6 +2765,93 @@
                     if (socialContentEl) socialContentEl.style.display = 'none';
                     if (socialRefEl) socialRefEl.style.display = 'none';
                 }
+                // Always check LinkedIn status when social tab opens
+                cmLinkedInCheckStatus();
+            }
+        }
+        // ---- LinkedIn Connection ----
+        async function cmLinkedInCheckStatus() {
+            const badge = document.getElementById('liStatusBadge');
+            const statusText = document.getElementById('liStatusText');
+            const connectBtn = document.getElementById('liConnectBtn');
+            const reconnectBtn = document.getElementById('liReconnectBtn');
+            const disconnectBtn = document.getElementById('liDisconnectBtn');
+            const expiryWarning = document.getElementById('liExpiryWarning');
+            const expiryMsg = document.getElementById('liExpiryMsg');
+            const postBtn = document.getElementById('liPostBtn');
+            if (!badge) return;
+            try {
+                const res = await fetch('/api/linkedin/status');
+                const data = await res.json();
+                // Reset all
+                [connectBtn, reconnectBtn, disconnectBtn, badge, expiryWarning].forEach(el => { if (el) el.style.display = 'none'; });
+                if (data.status === 'active') {
+                    badge.textContent = 'Connected';
+                    badge.style.cssText = 'padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; background:rgba(39,174,96,0.2); border:1px solid rgba(39,174,96,0.4); color:#27ae60; display:inline-block;';
+                    statusText.textContent = `Connected as ${data.displayName} — ${data.daysRemaining} days remaining`;
+                    if (disconnectBtn) disconnectBtn.style.display = 'inline-block';
+                    if (postBtn) postBtn.disabled = false;
+                } else if (data.status === 'expiring_soon') {
+                    badge.textContent = 'Expiring Soon';
+                    badge.style.cssText = 'padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; background:rgba(230,126,34,0.2); border:1px solid rgba(230,126,34,0.4); color:#e67e22; display:inline-block;';
+                    statusText.textContent = `Connected as ${data.displayName}`;
+                    if (reconnectBtn) reconnectBtn.style.display = 'inline-block';
+                    if (disconnectBtn) disconnectBtn.style.display = 'inline-block';
+                    if (expiryWarning) expiryWarning.style.display = 'block';
+                    if (expiryMsg) expiryMsg.textContent = `Your LinkedIn token expires in ${data.daysRemaining} day${data.daysRemaining !== 1 ? 's' : ''}. Reconnect now to avoid interruption.`;
+                    if (postBtn) postBtn.disabled = false;
+                } else if (data.status === 'expired') {
+                    badge.textContent = 'Token Expired';
+                    badge.style.cssText = 'padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.4); color:#e74c3c; display:inline-block;';
+                    statusText.textContent = 'Token expired — please reconnect to continue posting.';
+                    if (reconnectBtn) reconnectBtn.style.display = 'inline-block';
+                    if (postBtn) postBtn.disabled = true;
+                } else {
+                    badge.textContent = 'Not Connected';
+                    badge.style.cssText = 'padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.5); display:inline-block;';
+                    statusText.textContent = 'Connect your LinkedIn account to post directly from here.';
+                    if (connectBtn) connectBtn.style.display = 'inline-block';
+                    if (postBtn) postBtn.disabled = true;
+                }
+            } catch (e) {
+                if (statusText) statusText.textContent = 'Could not check LinkedIn status.';
+            }
+        }
+        async function cmLinkedInDisconnect() {
+            if (!confirm('Disconnect LinkedIn? You will need to reconnect to post.')) return;
+            await fetch('/api/linkedin/disconnect', { method: 'POST' });
+            cmLinkedInCheckStatus();
+        }
+        async function cmPostToLinkedIn() {
+            const text = (document.getElementById('cmLinkedin') || {}).value;
+            if (!text || !text.trim()) { alert('LinkedIn post text is empty.'); return; }
+            const postBtn = document.getElementById('liPostBtn');
+            const statusEl = document.getElementById('liPostStatus');
+            if (postBtn) { postBtn.disabled = true; postBtn.textContent = 'Posting...'; }
+            if (statusEl) statusEl.textContent = '';
+            try {
+                const body = { text: text.trim() };
+                if (cmState.publishedPost && cmState.publishedPost.link) {
+                    body.articleUrl = cmState.publishedPost.link;
+                    body.title = cmState.article ? cmState.article.title : '';
+                    body.description = cmState.article ? cmState.article.excerpt : '';
+                }
+                const res = await fetch('/api/linkedin/post', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    if (statusEl) { statusEl.textContent = 'Posted successfully!'; statusEl.style.color = '#27ae60'; }
+                    if (postBtn) { postBtn.textContent = 'Posted'; postBtn.style.background = '#27ae60'; }
+                } else {
+                    if (statusEl) { statusEl.textContent = data.message || 'Post failed.'; statusEl.style.color = '#e74c3c'; }
+                    if (postBtn) { postBtn.disabled = false; postBtn.textContent = 'Post to LinkedIn'; postBtn.style.background = '#0077b5'; }
+                }
+            } catch (e) {
+                if (statusEl) { statusEl.textContent = 'Network error.'; statusEl.style.color = '#e74c3c'; }
+                if (postBtn) { postBtn.disabled = false; postBtn.textContent = 'Post to LinkedIn'; postBtn.style.background = '#0077b5'; }
             }
         }
         // ---- Schedule Toggle ----
