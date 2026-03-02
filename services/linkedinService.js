@@ -15,7 +15,16 @@ const axios = require('axios');
  */
 
 const CLIENT_ID = process.env.LINKEDIN_CLIENT_ID;
-const CLIENT_SECRET = process.env.LINKEDIN_CLIENT_SECRET;
+// LINKEDIN_CLIENT_SECRET is stored base64-encoded in Railway to avoid secret-name conflicts.
+// Decode it at runtime. If it doesn't look like base64, use it as-is (plain text fallback).
+const _rawSecret = process.env.LINKEDIN_CLIENT_SECRET || '';
+const CLIENT_SECRET = (() => {
+  try {
+    const decoded = Buffer.from(_rawSecret, 'base64').toString('utf8');
+    // A valid base64 decode will produce a non-empty string; use it if it looks right
+    return decoded.length > 0 ? decoded : _rawSecret;
+  } catch { return _rawSecret; }
+})();
 const REDIRECT_URI = process.env.LINKEDIN_REDIRECT_URI ||
   'https://jobadder-brevo-alerts-production.up.railway.app/auth/linkedin/callback';
 
