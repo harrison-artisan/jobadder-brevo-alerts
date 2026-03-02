@@ -702,6 +702,19 @@ app.post('/api/linkedin/generate-poll', async (req, res) => {
   }
 });
 
+// POST /api/linkedin/generate-job-post - AI-generate punchy LinkedIn job post copy
+app.post('/api/linkedin/generate-job-post', async (req, res) => {
+  try {
+    const { job } = req.body;
+    if (!job || !job.title) return res.status(400).json({ success: false, message: 'Job details are required.' });
+    const copy = await aiService.generateJobPost(job);
+    res.json({ success: true, copy });
+  } catch (err) {
+    console.error('[AI] Generate job post error:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // GET /api/linkedin/recent-polls - Fetch recent polls from Artisan Company Page
 app.get('/api/linkedin/recent-polls', async (req, res) => {
   try {
