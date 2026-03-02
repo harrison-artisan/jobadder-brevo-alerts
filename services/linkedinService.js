@@ -217,57 +217,67 @@ class LinkedInService {
     tokenStore = { accessToken: null, expiresAt: null, personUrn: null, displayName: null, orgUrn: 'urn:li:organization:832171', orgName: 'Artisan' };
   }
 
-  // ---- Posting ----
+  // ---- Posting (REST /rest/posts API — replaces deprecated ugcPosts v2) ----
 
   /**
-   * Post a text update to the authenticated user's LinkedIn feed.
+   * Shared headers for all REST posts API calls.
+   */
+  _postHeaders() {
+    return {
+      Authorization: `Bearer ${tokenStore.accessToken}`,
+      'Content-Type': 'application/json',
+      'X-Restli-Protocol-Version': '2.0.0',
+      'LinkedIn-Version': '202502',
+    };
+  }
+
+  /**
+   * Shared distribution block for organic posts.
+   */
+  _distribution() {
+    return {
+      feedDistribution: 'MAIN_FEED',
+      targetEntities: [],
+      thirdPartyDistributionChannels: [],
+    };
+  }
+
+  /**
+   * Post a text-only update to the Artisan Company Page.
    * @param {string} text - The post body text
-   * @returns {object} LinkedIn API response
+   * @returns {object} { id } from response header x-restli-id
    */
   async postToLinkedIn(text) {
     if (!this.isConnected()) {
       throw new Error('LinkedIn is not connected. Please reconnect via the Social Media tab.');
     }
-
-    // Post as the Company Page if available, otherwise fall back to personal profile
     const author = tokenStore.orgUrn || tokenStore.personUrn;
     const payload = {
       author,
+      commentary: text,
+      visibility: 'PUBLIC',
+      distribution: this._distribution(),
       lifecycleState: 'PUBLISHED',
-      specificContent: {
-        'com.linkedin.ugc.ShareContent': {
-          shareCommentary: { text },
-          shareMediaCategory: 'NONE',
-        },
-      },
-      visibility: {
-        'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC',
-      },
+      isReshareDisabledByAuthor: false,
     };
-
     const response = await axios.post(
-      'https://api.linkedin.com/v2/ugcPosts',
+      'https://api.linkedin.com/rest/posts',
       payload,
-      {
-        headers: {
-          Authorization: `Bearer ${tokenStore.accessToken}`,
-          'Content-Type': 'application/json',
-          'X-Restli-Protocol-Version': '2.0.0',
-        },
-      }
+      { headers: this._postHeaders() }
     );
-
-    console.log(`[LinkedIn] Post published. ID: ${response.data.id}`);
-    return response.data;
+    const postId = response.headers['x-restli-id'] || response.data.id || null;
+    console.log(`[LinkedIn] Post published. ID: ${postId}`);
+    return { id: postId };
   }
 
   /**
-   * Post a text update with an article link to LinkedIn.
+   * Post a text update with an article link to the Artisan Company Page.
+   * Uses the REST Posts API article content type.
    * @param {string} text - The post body text
    * @param {string} articleUrl - URL to share
    * @param {string} title - Article title
    * @param {string} description - Article excerpt/description
-   * @returns {object} LinkedIn API response
+   * @returns {object} { id }
    */
   async postArticleToLinkedIn(text, articleUrl, title, description) {
     if (!this.isConnected()) {
@@ -276,40 +286,27 @@ class LinkedInService {
     const author = tokenStore.orgUrn || tokenStore.personUrn;
     const payload = {
       author,
+      commentary: text,
+      visibility: 'PUBLIC',
+      distribution: this._distribution(),
+      content: {
+        article: {
+          source: articleUrl,
+          title: title || '',
+          description: description || '',
+        },
+      },
       lifecycleState: 'PUBLISHED',
-      specificContent: {
-        'com.linkedin.ugc.ShareContent': {
-          shareCommentary: { text },
-          shareMediaCategory: 'ARTICLE',
-          media: [
-            {
-              status: 'READY',
-              description: { text: description || '' },
-              originalUrl: articleUrl,
-              title: { text: title || '' },
-            },
-          ],
-        },
-      },
-      visibility: {
-        'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC',
-      },
+      isReshareDisabledByAuthor: false,
     };
-
     const response = await axios.post(
-      'https://api.linkedin.com/v2/ugcPosts',
+      'https://api.linkedin.com/rest/posts',
       payload,
-      {
-        headers: {
-          Authorization: `Bearer ${tokenStore.accessToken}`,
-          'Content-Type': 'application/json',
-          'X-Restli-Protocol-Version': '2.0.0',
-        },
-      }
+      { headers: this._postHeaders() }
     );
-
-     console.log(`[LinkedIn] Article post published. ID: ${response.data.id}`);
-    return response.data;
+    const postId = response.headers['x-restli-id'] || response.data.id || null;
+    console.log(`[LinkedIn] Article post published. ID: ${postId}`);
+    return { id: postId };
   }
 
   // ---- Fetch Recent Polls ----
@@ -422,45 +419,29 @@ class LinkedInService {
     return polls;
   }
 
-  // ---- Image Upload ----
+  // ---- Image Upload (REST Images API — replaces deprecated Assets API) ----
 
   /**
-   * Register an image upload with LinkedIn Assets API.
-   * @returns {object} { uploadUrl, asset }
+   * Initialize an image upload using the REST Images API.
+   * Returns { uploadUrl, imageUrn } for use in postWithImage.
+   * @returns {object} { uploadUrl, imageUrn }
    */
-  async registerImageUpload() {
+  async initializeImageUpload() {
     if (!this.isConnected()) throw new Error('LinkedIn is not connected.');
-    const payload = {
-      registerUploadRequest: {
-        recipes: ['urn:li:digitalmediaRecipe:feedshare-image'],
-        owner: tokenStore.orgUrn,
-        serviceRelationships: [{
-          relationshipType: 'OWNER',
-          identifier: 'urn:li:userGeneratedContent',
-        }],
-      },
-    };
     const response = await axios.post(
-      'https://api.linkedin.com/v2/assets?action=registerUpload',
-      payload,
-      {
-        headers: {
-          Authorization: `Bearer ${tokenStore.accessToken}`,
-          'Content-Type': 'application/json',
-          'X-Restli-Protocol-Version': '2.0.0',
-        },
-      }
+      'https://api.linkedin.com/rest/images?action=initializeUpload',
+      { initializeUploadRequest: { owner: tokenStore.orgUrn } },
+      { headers: this._postHeaders() }
     );
-    const { uploadMechanism, asset } = response.data.value;
-    const uploadUrl = uploadMechanism['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest'].uploadUrl;
-    return { uploadUrl, asset };
+    const { uploadUrl, image: imageUrn } = response.data.value;
+    return { uploadUrl, imageUrn };
   }
 
   /**
-   * Upload image binary to LinkedIn.
-   * @param {string} uploadUrl - URL from registerImageUpload
-   * @param {Buffer} imageBuffer - Raw image buffer
-   * @param {string} mimeType - e.g. 'image/jpeg'
+   * Upload image binary to LinkedIn using the URL from initializeImageUpload.
+   * @param {string} uploadUrl
+   * @param {Buffer} imageBuffer
+   * @param {string} mimeType
    */
   async uploadImageBinary(uploadUrl, imageBuffer, mimeType) {
     await axios.put(uploadUrl, imageBuffer, {
@@ -473,105 +454,94 @@ class LinkedInService {
 
   /**
    * Post a text update with an attached image to the Artisan Company Page.
+   * Uses the REST Images API + REST Posts API (replaces ugcPosts + Assets API).
    * @param {string} text - Post body text
    * @param {Buffer} imageBuffer - Raw image buffer
    * @param {string} mimeType - e.g. 'image/jpeg'
    * @param {string} imageTitle - Alt text / title for the image
-   * @returns {object} LinkedIn API response
+   * @returns {object} { id }
    */
   async postWithImage(text, imageBuffer, mimeType, imageTitle = '') {
     if (!this.isConnected()) throw new Error('LinkedIn is not connected.');
-    // Step 1: Register upload
-    const { uploadUrl, asset } = await this.registerImageUpload();
+    // Step 1: Initialize upload (REST Images API)
+    const { uploadUrl, imageUrn } = await this.initializeImageUpload();
     // Step 2: Upload binary
     await this.uploadImageBinary(uploadUrl, imageBuffer, mimeType);
-    // Step 3: Create post referencing asset
+    // Step 3: Create post referencing image URN (REST Posts API)
     const payload = {
       author: tokenStore.orgUrn,
-      lifecycleState: 'PUBLISHED',
-      specificContent: {
-        'com.linkedin.ugc.ShareContent': {
-          shareCommentary: { text },
-          shareMediaCategory: 'IMAGE',
-          media: [{
-            status: 'READY',
-            description: { text: imageTitle },
-            media: asset,
-            title: { text: imageTitle },
-          }],
+      commentary: text,
+      visibility: 'PUBLIC',
+      distribution: this._distribution(),
+      content: {
+        media: {
+          title: imageTitle || '',
+          id: imageUrn,
         },
       },
-      visibility: {
-        'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC',
-      },
+      lifecycleState: 'PUBLISHED',
+      isReshareDisabledByAuthor: false,
     };
     const response = await axios.post(
-      'https://api.linkedin.com/v2/ugcPosts',
+      'https://api.linkedin.com/rest/posts',
       payload,
-      {
-        headers: {
-          Authorization: `Bearer ${tokenStore.accessToken}`,
-          'Content-Type': 'application/json',
-          'X-Restli-Protocol-Version': '2.0.0',
-        },
-      }
+      { headers: this._postHeaders() }
     );
-    console.log(`[LinkedIn] Image post published. ID: ${response.data.id}`);
-    return response.data;
+    const postId = response.headers['x-restli-id'] || response.data.id || null;
+    console.log(`[LinkedIn] Image post published. ID: ${postId}`);
+    return { id: postId };
   }
 
-  // ---- Poll ----
+  // ---- Poll (REST Posts API) ----
 
   /**
    * Post a LinkedIn Poll to the Artisan Company Page.
+   * Uses the REST Posts API poll content type.
+   * Duration values: ONE_DAY | THREE_DAYS | SEVEN_DAYS | FOURTEEN_DAYS
    * @param {string} text - Post body / question context
    * @param {string} question - The poll question
    * @param {string[]} options - Array of 2–4 option strings
-   * @param {string} duration - 'ONE_DAY' | 'THREE_DAYS' | 'ONE_WEEK' | 'TWO_WEEKS'
-   * @returns {object} LinkedIn API response
+   * @param {string} duration - 'ONE_DAY' | 'THREE_DAYS' | 'SEVEN_DAYS' | 'FOURTEEN_DAYS'
+   * @returns {object} { id }
    */
-  async postPoll(text, question, options, duration = 'ONE_WEEK') {
+  async postPoll(text, question, options, duration = 'SEVEN_DAYS') {
     if (!this.isConnected()) throw new Error('LinkedIn is not connected.');
     if (!options || options.length < 2 || options.length > 4) {
       throw new Error('Polls require between 2 and 4 options.');
     }
-    const pollOptions = options.map(opt => ({ text: opt }));
+    // Map legacy duration strings to new API values
+    const durationMap = {
+      ONE_DAY: 'ONE_DAY',
+      THREE_DAYS: 'THREE_DAYS',
+      ONE_WEEK: 'SEVEN_DAYS',
+      TWO_WEEKS: 'FOURTEEN_DAYS',
+      SEVEN_DAYS: 'SEVEN_DAYS',
+      FOURTEEN_DAYS: 'FOURTEEN_DAYS',
+    };
+    const resolvedDuration = durationMap[duration] || 'SEVEN_DAYS';
     const payload = {
       author: tokenStore.orgUrn,
-      lifecycleState: 'PUBLISHED',
-      specificContent: {
-        'com.linkedin.ugc.ShareContent': {
-          shareCommentary: { text },
-          shareMediaCategory: 'POLL',
-          media: [{
-            status: 'READY',
-            poll: {
-              question,
-              options: pollOptions,
-              settings: {
-                duration,
-              },
-            },
-          }],
+      commentary: text,
+      visibility: 'PUBLIC',
+      distribution: this._distribution(),
+      content: {
+        poll: {
+          question,
+          options: options.map(opt => ({ text: opt })),
+          settings: { duration: resolvedDuration },
         },
       },
-      visibility: {
-        'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC',
-      },
+      lifecycleState: 'PUBLISHED',
+      isReshareDisabledByAuthor: false,
     };
     const response = await axios.post(
-      'https://api.linkedin.com/v2/ugcPosts',
+      'https://api.linkedin.com/rest/posts',
       payload,
-      {
-        headers: {
-          Authorization: `Bearer ${tokenStore.accessToken}`,
-          'Content-Type': 'application/json',
-          'X-Restli-Protocol-Version': '2.0.0',
-        },
-      }
+      { headers: this._postHeaders() }
     );
-    console.log(`[LinkedIn] Poll published. ID: ${response.data.id}`);
-    return response.data;
+    const postId = response.headers['x-restli-id'] || response.data.id || null;
+    console.log(`[LinkedIn] Poll published. ID: ${postId}`);
+    return { id: postId };
   }
 }
 module.exports = new LinkedInService();
