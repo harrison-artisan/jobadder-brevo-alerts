@@ -227,7 +227,7 @@ class LinkedInService {
       Authorization: `Bearer ${tokenStore.accessToken}`,
       'Content-Type': 'application/json',
       'X-Restli-Protocol-Version': '2.0.0',
-      'LinkedIn-Version': '202502',
+      'LinkedIn-Version': '202601',
     };
   }
 
@@ -328,7 +328,7 @@ class LinkedInService {
     const headers = {
       Authorization: `Bearer ${tokenStore.accessToken}`,
       'X-Restli-Protocol-Version': '2.0.0',
-      'LinkedIn-Version': '202502',
+      'LinkedIn-Version': '202601',
     };
     const encodedUrn = encodeURIComponent(tokenStore.orgUrn);
     const polls = [];
