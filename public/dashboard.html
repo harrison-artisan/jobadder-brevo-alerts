@@ -1974,6 +1974,37 @@ Choose Recent Poll
                             </div>
 
                             <!-- ===== Poll Picker Modal ===== -->
+                            <!-- ===== JOB PICKER MODAL ===== -->
+                            <div id="cmJobPickerModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center;">
+                                <div style="background:#1a2332; border:1px solid rgba(255,255,255,0.12); border-radius:14px; width:600px; max-width:95vw; max-height:82vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+                                    <!-- Modal Header -->
+                                    <div style="padding:20px 24px 16px; border-bottom:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center;">
+                                        <div>
+                                            <div style="display:flex; align-items:center; gap:10px;">
+                                                <div style="background:#e67e22; border-radius:5px; padding:3px 10px; font-size:12px; font-weight:700; color:white;">JA</div>
+                                                <h3 style="margin:0; font-size:16px; color:white; font-weight:700;">Choose a Live Job</h3>
+                                            </div>
+                                            <p style="margin:4px 0 0; color:rgba(255,255,255,0.5); font-size:12px;">Select a job from JobAdder to auto-fill the post card</p>
+                                        </div>
+                                        <button onclick="cmCloseJobPicker()" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:white; cursor:pointer; font-size:18px; padding:4px 10px; line-height:1;">&#10005;</button>
+                                    </div>
+                                    <!-- Search -->
+                                    <div style="padding:12px 24px; border-bottom:1px solid rgba(255,255,255,0.06);">
+                                        <input id="cmJobPickerSearch" type="text" placeholder="Filter by job title..." oninput="cmFilterJobs(this.value)" style="width:100%; padding:9px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:7px; color:white; font-size:13px; box-sizing:border-box;">
+                                    </div>
+                                    <!-- Modal Body -->
+                                    <div style="padding:16px 24px; overflow-y:auto; flex:1;">
+                                        <div id="cmJobPickerLoading" style="text-align:center; padding:30px 0; color:rgba(255,255,255,0.5); font-size:14px;">
+                                            <div style="width:24px; height:24px; border:3px solid rgba(255,255,255,0.15); border-top-color:#e67e22; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 12px;"></div>
+                                            Fetching live jobs from JobAdder...
+                                        </div>
+                                        <div id="cmJobPickerError" style="display:none; padding:16px; background:rgba(231,76,60,0.1); border:1px solid rgba(231,76,60,0.3); border-radius:8px; color:#e74c3c; font-size:13px;"></div>
+                                        <div id="cmJobPickerList" style="display:none; display:flex; flex-direction:column; gap:8px;"></div>
+                                        <div id="cmJobPickerEmpty" style="display:none; text-align:center; padding:30px 0; color:rgba(255,255,255,0.4); font-size:14px;">No live jobs found in JobAdder.</div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div id="cmPollPickerModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; display:none; align-items:center; justify-content:center;">
                                 <div style="background:#1a2332; border:1px solid rgba(255,255,255,0.12); border-radius:14px; width:560px; max-width:95vw; max-height:80vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
                                     <!-- Modal Header -->
@@ -2353,6 +2384,29 @@ Choose Recent Poll
 
                             <!-- ===== JOB LISTING PANEL ===== -->
                             <div id="cmPanelJob" style="display:none; padding:0 28px 28px;">
+
+                                <!-- JobAdder Job Picker -->
+                                <div style="margin-bottom:20px; padding:14px 16px; background:rgba(52,152,219,0.08); border:1px solid rgba(52,152,219,0.2); border-radius:10px;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <div>
+                                            <div style="color:white; font-size:13px; font-weight:700;">Pull from JobAdder</div>
+                                            <div style="color:rgba(255,255,255,0.45); font-size:11px; margin-top:2px;">Select a live job to auto-fill the fields below</div>
+                                        </div>
+                                        <button onclick="cmOpenJobPicker()" id="btnCmChooseJob" style="padding:8px 16px; background:linear-gradient(135deg,#3498db,#2980b9); border:none; border-radius:7px; color:white; cursor:pointer; font-size:13px; font-weight:600; white-space:nowrap;">Choose Job</button>
+                                    </div>
+                                    <div id="cmJobPickerStatus" style="display:none; margin-top:10px; font-size:12px; color:rgba(255,255,255,0.5);"></div>
+                                    <!-- Selected job badge -->
+                                    <div id="cmJobSelectedBadge" style="display:none; margin-top:12px; padding:10px 12px; background:rgba(52,152,219,0.15); border:1px solid rgba(52,152,219,0.3); border-radius:8px;">
+                                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                            <div>
+                                                <div id="cmJobSelectedTitle" style="color:white; font-size:13px; font-weight:700;"></div>
+                                                <div id="cmJobSelectedMeta" style="color:rgba(255,255,255,0.5); font-size:11px; margin-top:3px;"></div>
+                                            </div>
+                                            <button onclick="cmClearJobSelection()" style="background:none; border:none; color:rgba(255,255,255,0.4); cursor:pointer; font-size:18px; line-height:1; padding:0 0 0 8px;">&times;</button>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div style="margin-bottom:16px;">
                                     <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:8px;">Post Copy <span style="color:rgba(255,255,255,0.4); font-weight:400;">(introduce the role)</span></label>
                                     <textarea id="cmJobPostText" rows="5" placeholder="We're looking for a talented Creative Director to join a leading agency in Melbourne..." style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
@@ -2572,7 +2626,12 @@ Choose Recent Poll
                 const top = poll.options.slice().sort((a,b) => b.voteCount - a.voteCount)[0];
                 const total = poll.totalVotes || 0;
                 const pct = total > 0 ? Math.round((top.voteCount / total) * 100) : 0;
-                rEl.textContent = `Top answer: "${top.text}" — ${pct}% of ${total} votes`;
+                rEl.textContent = `Top answer: "${top.text}" \u2014 ${pct}% of ${total} votes`;
+            }
+            // Auto-populate the Article Topic field with a clean poll-article prompt
+            const topicEl = document.getElementById('cmTopic');
+            if (topicEl) {
+                topicEl.value = `Write an article exploring the themes raised by this LinkedIn poll: "${poll.question}". Use the poll results as a starting point, then expand well beyond the data. Include practical tips and insights, explore different perspectives, and bring it back to how Artisan supports creative professionals and businesses. Use headings to structure the piece, and use bullet points where they add clarity for results or actions. Expand on every bullet point. Write in a conversational but authoritative tone. No em-dashes or horizontal rules between sections.`;
             }
         }
 
@@ -2582,7 +2641,126 @@ Choose Recent Poll
             if (badge) badge.style.display = 'none';
         }
 
-        // Close modal on backdrop click
+        // ---- Job Picker ----
+        let cmJobsCache = null;
+
+        async function cmOpenJobPicker() {
+            const modal = document.getElementById('cmJobPickerModal');
+            const loading = document.getElementById('cmJobPickerLoading');
+            const errorEl = document.getElementById('cmJobPickerError');
+            const listEl = document.getElementById('cmJobPickerList');
+            const emptyEl = document.getElementById('cmJobPickerEmpty');
+            const searchEl = document.getElementById('cmJobPickerSearch');
+            if (!modal) return;
+            modal.style.display = 'flex';
+            loading.style.display = 'block';
+            errorEl.style.display = 'none';
+            listEl.style.display = 'none';
+            emptyEl.style.display = 'none';
+            listEl.innerHTML = '';
+            if (searchEl) searchEl.value = '';
+            try {
+                const res = await fetch('/api/jobs/for-post');
+                const data = await res.json();
+                loading.style.display = 'none';
+                if (!data.success) throw new Error(data.message || 'Failed to load jobs.');
+                if (!data.jobs || data.jobs.length === 0) {
+                    emptyEl.style.display = 'block';
+                    return;
+                }
+                cmJobsCache = data.jobs;
+                cmRenderJobList(data.jobs);
+            } catch (err) {
+                loading.style.display = 'none';
+                errorEl.style.display = 'block';
+                errorEl.textContent = 'Could not load jobs: ' + err.message;
+            }
+        }
+
+        function cmRenderJobList(jobs) {
+            const listEl = document.getElementById('cmJobPickerList');
+            const emptyEl = document.getElementById('cmJobPickerEmpty');
+            if (!listEl) return;
+            listEl.innerHTML = '';
+            if (!jobs || jobs.length === 0) {
+                listEl.style.display = 'none';
+                if (emptyEl) emptyEl.style.display = 'block';
+                return;
+            }
+            if (emptyEl) emptyEl.style.display = 'none';
+            listEl.style.display = 'flex';
+            jobs.forEach(job => {
+                const card = document.createElement('div');
+                card.style.cssText = 'padding:12px 14px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:9px; cursor:pointer; transition:all 0.15s;';
+                card.onmouseenter = () => { card.style.background = 'rgba(230,126,34,0.12)'; card.style.borderColor = 'rgba(230,126,34,0.35)'; };
+                card.onmouseleave = () => { card.style.background = 'rgba(255,255,255,0.05)'; card.style.borderColor = 'rgba(255,255,255,0.1)'; };
+                const meta = [job.location, job.workType, job.salary].filter(Boolean).join(' &middot; ');
+                card.innerHTML = `
+                    <div style="font-size:14px; font-weight:600; color:white; margin-bottom:4px;">${job.title}</div>
+                    ${meta ? `<div style="font-size:12px; color:rgba(255,255,255,0.45); margin-bottom:4px;">${meta}</div>` : ''}
+                    ${job.description ? `<div style="font-size:12px; color:rgba(255,255,255,0.35); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${job.description}</div>` : ''}
+                `;
+                card.onclick = () => cmSelectJob(job);
+                listEl.appendChild(card);
+            });
+        }
+
+        function cmFilterJobs(query) {
+            if (!cmJobsCache) return;
+            const q = query.toLowerCase();
+            const filtered = q ? cmJobsCache.filter(j => j.title.toLowerCase().includes(q)) : cmJobsCache;
+            cmRenderJobList(filtered);
+        }
+
+        function cmCloseJobPicker() {
+            const modal = document.getElementById('cmJobPickerModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function cmSelectJob(job) {
+            cmCloseJobPicker();
+            // Auto-fill the job fields
+            const titleEl = document.getElementById('cmJobTitle');
+            const urlEl = document.getElementById('cmJobUrl');
+            const descEl = document.getElementById('cmJobDescription');
+            if (titleEl) titleEl.value = job.title || '';
+            if (urlEl) urlEl.value = job.jobUrl || '';
+            if (descEl) {
+                const parts = [job.location, job.workType].filter(Boolean);
+                descEl.value = parts.length ? parts.join(', ') + (job.salary ? ' — ' + job.salary : '') : (job.salary || '');
+            }
+            // Show selected badge
+            const badge = document.getElementById('cmJobSelectedBadge');
+            const titleBadge = document.getElementById('cmJobSelectedTitle');
+            const metaBadge = document.getElementById('cmJobSelectedMeta');
+            if (badge) badge.style.display = 'block';
+            if (titleBadge) titleBadge.textContent = job.title;
+            if (metaBadge) {
+                const parts = [job.location, job.workType, job.salary].filter(Boolean);
+                metaBadge.textContent = parts.join(' · ');
+            }
+            // Trigger preview card update
+            if (typeof cmPreviewJobCard === 'function') cmPreviewJobCard();
+        }
+
+        function cmClearJobSelection() {
+            const badge = document.getElementById('cmJobSelectedBadge');
+            if (badge) badge.style.display = 'none';
+            ['cmJobTitle','cmJobUrl','cmJobDescription'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            const previewCard = document.getElementById('cmJobPreviewCard');
+            if (previewCard) previewCard.style.display = 'none';
+        }
+
+        // Close job picker modal on backdrop click
+        document.addEventListener('click', function(e) {
+            const jobModal = document.getElementById('cmJobPickerModal');
+            if (jobModal && e.target === jobModal) cmCloseJobPicker();
+        });
+
+        // Close poll picker modal on backdrop click
         document.addEventListener('click', function(e) {
             const modal = document.getElementById('cmPollPickerModal');
             if (modal && e.target === modal) cmClosePollPicker();
