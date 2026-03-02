@@ -33,21 +33,23 @@ function writeState(data) {
 // STEP 1: Generate Article copy only
 // ============================================================
 async function generateArticle(req, res) {
-    const { topic } = req.body;
+    const { topic, settings } = req.body;
 
     if (!topic || !topic.trim()) {
         return res.status(400).json({ success: false, message: 'A topic is required.' });
     }
 
-    console.log('\n======== 📰 STEP 1: GENERATE ARTICLE ========');
+    console.log('\n======== STEP 1: GENERATE ARTICLE ========');
     console.log(`Topic: "${topic}"`);
+    if (settings) console.log('Settings:', JSON.stringify(settings));
 
     try {
-        const article = await aiService.generateArticle(topic.trim());
+        const article = await aiService.generateArticle(topic.trim(), settings || {});
 
         // Save to state — image will be added in step 2
         const state = {
             topic: topic.trim(),
+            settings: settings || {},
             article,
             imagePath: null,
             imageDataUrl: null,
@@ -57,36 +59,60 @@ async function generateArticle(req, res) {
         };
         writeState(state);
 
-        console.log('✅ Article generation complete.');
+        console.log('Article generation complete.');
         res.json({
             success: true,
             message: 'Article generated successfully.',
             article
         });
     } catch (error) {
-        console.error('❌ Error generating article:', error.message);
+        console.error('Error generating article:', error.message);
         res.status(500).json({ success: false, message: error.message });
     }
 }
 
 // ============================================================
-// STEP 2: Generate Header Image from the article title/topic
+// STEP 2: Generate Header Image OR accept an uploaded image
 // ============================================================
 async function generateImage(req, res) {
-    // Allow a custom prompt override, otherwise use the saved article title
-    const { imagePrompt } = req.body;
+    const { imagePrompt, uploadedImageDataUrl, uploadedImageMimeType } = req.body;
 
-    console.log('\n======== 🎨 STEP 2: GENERATE IMAGE ========');
+    console.log('\n======== STEP 2: IMAGE ========');
 
     try {
         const state = readState();
 
-        // Use the provided prompt, or fall back to the saved article title, then the topic
+        // --- Path A: User uploaded their own image ---
+        if (uploadedImageDataUrl) {
+            console.log('Using uploaded image.');
+
+            // Save the uploaded image to a temp file so WordPress upload works the same way
+            const os = require('os');
+            const mimeType = uploadedImageMimeType || 'image/jpeg';
+            const ext = mimeType.includes('png') ? 'png' : mimeType.includes('gif') ? 'gif' : 'jpg';
+            const tmpPath = path.join(os.tmpdir(), `uploaded_header_${Date.now()}.${ext}`);
+
+            // Strip the data URL prefix and write raw bytes
+            const base64Data = uploadedImageDataUrl.replace(/^data:[^;]+;base64,/, '');
+            fs.writeFileSync(tmpPath, Buffer.from(base64Data, 'base64'));
+
+            state.imagePath = tmpPath;
+            state.imageDataUrl = uploadedImageDataUrl;
+            writeState(state);
+
+            return res.json({
+                success: true,
+                message: 'Image uploaded successfully.',
+                imageDataUrl: uploadedImageDataUrl
+            });
+        }
+
+        // --- Path B: Generate with DALL-E 3 ---
         const promptToUse = (imagePrompt && imagePrompt.trim())
             ? imagePrompt.trim()
             : (state.article?.title || state.topic || 'professional recruitment agency blog header');
 
-        console.log(`Image prompt: "${promptToUse}"`);
+        console.log(`Generating image with DALL-E 3. Prompt: "${promptToUse}"`);
 
         const imagePath = await aiService.generateHeaderImage(promptToUse);
 
@@ -94,19 +120,18 @@ async function generateImage(req, res) {
         const imageBuffer = fs.readFileSync(imagePath);
         const imageDataUrl = `data:image/png;base64,${imageBuffer.toString('base64')}`;
 
-        // Update state with image info
         state.imagePath = imagePath;
         state.imageDataUrl = imageDataUrl;
         writeState(state);
 
-        console.log('✅ Image generation complete.');
+        console.log('Image generation complete.');
         res.json({
             success: true,
             message: 'Header image generated successfully.',
             imageDataUrl
         });
     } catch (error) {
-        console.error('❌ Error generating image:', error.message);
+        console.error('Error with image step:', error.message);
         res.status(500).json({ success: false, message: error.message });
     }
 }

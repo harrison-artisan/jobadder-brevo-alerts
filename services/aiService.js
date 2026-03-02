@@ -511,51 +511,84 @@ OUTPUT ONLY THE SUMMARY - NO EXPLANATIONS OR EXTRA TEXT.`;
 
   /**
    * Generate a full blog article from a topic/prompt.
+   * Accepts optional settings: { keywords, tone, voice }
    * Returns { title, content, excerpt, seoDescription, suggestedTags }
    */
-  async generateArticle(topic) {
+  async generateArticle(topic, settings = {}) {
     const client = this.getClient();
     if (!client) {
       throw new Error('OpenAI API key not configured. Cannot generate article.');
     }
 
-    console.log(`\n📝 Generating article for topic: "${topic}"`);
+    const keywords = (settings.keywords || '').trim();
+    const tone = (settings.tone || '').trim();
+    const voice = (settings.voice || '').trim();
 
-    const systemPrompt = `You are an expert content writer for Artisan, a premium Australian recruitment agency specialising in creative, marketing, and technology roles. 
-You write authoritative, engaging, SEO-optimised blog articles that provide genuine value to hiring managers, HR professionals, and job seekers in Australia.
-Your writing style is professional yet approachable, uses Australian English spelling (e.g. specialise, recognise, organisation), and always includes practical, actionable insights.
-Structure every article with clear headings and subheadings using markdown (## and ###).`;
+    console.log(`Generating article for topic: "${topic}"`);
 
-    const userPrompt = `Write a comprehensive blog article about the following topic for Artisan's website:
+    // Build optional injections
+    const keywordsLine = keywords
+      ? `- Naturally incorporate these keywords throughout the article: ${keywords}`
+      : '';
+    const toneLine = tone
+      ? `- Tone: ${tone}`
+      : '- Tone: confident, direct, and human — never corporate-speak or jargon-heavy';
+    const voiceLine = voice
+      ? `- Voice / perspective: ${voice}`
+      : '- Voice: written from the perspective of Artisan, speaking directly to the reader';
+
+    const systemPrompt = `You are the senior content writer for Artisan, a specialist Australian recruitment agency with over 27 years of experience placing creative, digital, and marketing professionals.
+
+Your writing style is modelled on Artisan's Creative Community blog (artisan.com.au/creative-community). Key characteristics:
+- Sentences are short, punchy, and declarative. Paragraphs rarely exceed 3 sentences.
+- You open articles with a bold, direct statement that challenges conventional thinking or names a real tension in the industry.
+- You use subheadings that are statements or observations, not generic labels (e.g. "Why Risk Taking Feels Harder Right Now" not "Challenges").
+- You write in plain, confident Australian English — no buzzwords, no filler phrases, no exclamation marks, no emojis.
+- You always bring the article back to Artisan's role: connecting creative and marketing talent with the right opportunities and organisations.
+- You use Australian English spelling throughout: specialise, recognise, organisation, behaviour, labour, colour, centre.
+- You NEVER use emojis anywhere in the article.
+- You NEVER use phrases like "In today's fast-paced world" or "In conclusion" or "It goes without saying".
+- Every article ends with a "Where Artisan Comes In" or similar section that ties the topic back to Artisan's services.`;
+
+    const userPrompt = `Write a comprehensive blog article for Artisan's Creative Community section.
 
 TOPIC: ${topic}
 
-Requirements:
-- Length: 700–1000 words
-- Use Australian English spelling throughout
-- Include a compelling H1 title (no markdown # prefix — just the plain title text on the first line)
-- Use ## for main section headings and ### for subheadings
-- Include a short introductory paragraph that hooks the reader
-- Provide 3–5 substantive sections with practical insights
-- End with a clear, actionable conclusion
-- Tone: professional, authoritative, and helpful
-- Do NOT include any author byline or date
+STRUCTURE REQUIREMENTS:
+- H1 title: compelling, specific, and direct (output as plain text on the first line — no # prefix)
+- H2 headings (##): 4 to 6 main sections — write these as observations or statements, not generic labels
+- H3 subheadings (###): use sparingly, only when a section genuinely needs a sub-division
+- Opening paragraph: 2–3 sentences that immediately name the tension or challenge — no preamble
+- Each section: 2–4 short paragraphs, each 1–3 sentences. Short sentences. Direct language.
+- Final section: titled "Where Artisan Comes In" — tie the topic back to how Artisan helps creatives or employers
+- Length: 750–1000 words total
 
-After the article body, on a new line output exactly this JSON block (no markdown fences):
+STYLE REQUIREMENTS:
+- Use Australian English spelling throughout
+- No emojis anywhere
+- No exclamation marks
+- No filler phrases ("In today's world", "It's no secret", "It goes without saying", "In conclusion")
+- No passive voice where active voice is possible
+- No bullet point lists — write in full paragraphs only
+${toneLine}
+${voiceLine}
+${keywordsLine ? keywordsLine + '\n' : ''}- Always relate the content back to Artisan and the Australian creative/marketing/digital recruitment industry
+
+After the article body, on a new line output exactly this JSON block (no markdown fences, no trailing comma):
 {
   "excerpt": "<2-sentence summary of the article, max 160 chars>",
   "seoDescription": "<SEO meta description, max 155 chars>",
-  "suggestedTags": ["tag1", "tag2", "tag3"]
+  "suggestedTags": ["tag1", "tag2", "tag3", "tag4", "tag5"]
 }`;
 
     const response = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      temperature: 0.7,
-      max_tokens: 2000
+      temperature: 0.65,
+      max_tokens: 2500
     });
 
     const raw = response.choices[0].message.content.trim();
@@ -570,16 +603,16 @@ After the article body, on a new line output exactly this JSON block (no markdow
       try {
         meta = JSON.parse(jsonMatch[0]);
       } catch (e) {
-        console.warn('⚠️  Could not parse article meta JSON:', e.message);
+        console.warn('Could not parse article meta JSON:', e.message);
       }
     }
 
-    // Extract the first line as the title
+    // Extract the first line as the title (strip any accidental # prefix)
     const lines = articleBody.split('\n').filter(l => l.trim());
     const title = lines[0].replace(/^#+\s*/, '').trim();
     const content = lines.slice(1).join('\n').trim();
 
-    console.log(`✅ Article generated: "${title}" (${content.length} chars)`);
+    console.log(`Article generated: "${title}" (${content.length} chars)`);
 
     return {
       title,
