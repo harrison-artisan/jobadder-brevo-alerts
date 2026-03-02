@@ -8,7 +8,7 @@ const axios = require('axios');
  * token storage (in-memory + env fallback), and posting to LinkedIn.
  *
  * Scopes required on the LinkedIn Developer App:
- *   openid, profile, w_member_social
+ *   r_basicprofile, w_member_social
  *
  * Redirect URI registered on LinkedIn Developer App:
  *   https://jobadder-brevo-alerts-production.up.railway.app/auth/linkedin/callback
@@ -28,7 +28,8 @@ const CLIENT_SECRET = (() => {
 const REDIRECT_URI = process.env.LINKEDIN_REDIRECT_URI ||
   'https://jobadder-brevo-alerts-production.up.railway.app/auth/linkedin/callback';
 
-const SCOPES = ['openid', 'profile', 'w_member_social'];
+// Scopes available on this app: r_basicprofile, w_member_social, r_organization_social, w_organization_social
+const SCOPES = ['r_basicprofile', 'w_member_social'];
 
 // Token expiry warning threshold: 7 days in ms
 const EXPIRY_WARNING_MS = 7 * 24 * 60 * 60 * 1000;
@@ -108,15 +109,15 @@ class LinkedInService {
    * @param {string} accessToken
    * @returns {object} { personUrn, displayName }
    */
-  async fetchProfile(accessToken) {
-    const response = await axios.get('https://api.linkedin.com/v2/userinfo', {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-
+   async fetchProfile(accessToken) {
+    // Use v2/me with r_basicprofile (does not require openid scope)
+    const response = await axios.get(
+      'https://api.linkedin.com/v2/me?projection=(id,localizedFirstName,localizedLastName)',
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
     const data = response.data;
-    const personUrn = `urn:li:person:${data.sub}`;
-    const displayName = data.name || `${data.given_name || ''} ${data.family_name || ''}`.trim();
-
+    const personUrn = `urn:li:person:${data.id}`;
+    const displayName = `${data.localizedFirstName || ''} ${data.localizedLastName || ''}`.trim() || 'LinkedIn User';
     return { personUrn, displayName };
   }
 
