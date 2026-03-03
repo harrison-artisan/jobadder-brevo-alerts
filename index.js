@@ -835,6 +835,16 @@ app.get('/api/consultant/list', (req, res) => {
   consultantController.getConsultantList(req, res);
 });
 
+// GET  /api/consultant/profile/:id - Return full profile for a consultant
+app.get('/api/consultant/profile/:id', (req, res) => {
+  consultantController.getProfile(req, res);
+});
+
+// POST /api/consultant/profile/:id - Save updated profile to consultants.json
+app.post('/api/consultant/profile/:id', (req, res) => {
+  consultantController.saveProfile(req, res);
+});
+
 // GET  /api/consultant/state    - Return current consultant newsletter state
 app.get('/api/consultant/state', (req, res) => {
   consultantController.getState(req, res);

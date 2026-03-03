@@ -2,13 +2,15 @@
  * Consultant Newsletter Controller
  *
  * Workflow:
- *   1. Consultant uses Gemini Gem to generate structured JSON
- *   2. POST /api/consultant/parse  — validates JSON, merges with consultant config, saves state
- *   3. GET  /api/consultant/state  — returns current state for dashboard
- *   4. GET  /api/preview/consultant — renders HTML preview
- *   5. POST /api/consultant/send-test — sends test email to TEST_EMAIL
- *   6. POST /api/consultant/send — sends to selected segment/list
- *   7. POST /api/consultant/reset — clears state
+ *   1. GET  /api/consultant/list        — returns consultant list for dropdown
+ *   2. GET  /api/consultant/profile/:id — returns full profile for a consultant
+ *   3. POST /api/consultant/profile/:id — saves updated profile to consultants.json
+ *   4. POST /api/consultant/parse       — validates Gemini JSON, merges with config, saves state
+ *   5. GET  /api/consultant/state       — returns current state for dashboard
+ *   6. GET  /api/preview/consultant     — renders HTML preview
+ *   7. POST /api/consultant/send-test   — sends test email to TEST_EMAIL
+ *   8. POST /api/consultant/send        — sends to selected segment/list
+ *   9. POST /api/consultant/reset       — clears state
  */
 
 const fs = require('fs');
@@ -39,6 +41,10 @@ function loadConsultants() {
     }
 }
 
+function saveConsultants(data) {
+    fs.writeFileSync(CONSULTANTS_FILE, JSON.stringify(data, null, 2));
+}
+
 // ============================================================
 // GET /api/consultant/state
 // ============================================================
@@ -61,10 +67,65 @@ function getConsultantList(req, res) {
         const list = Object.values(consultants).map(c => ({
             id: c.id,
             name: c.name,
-            title: c.title
+            newsletter_name: c.newsletter_name || c.name,
+            title: c.title,
+            photo_url: c.photo_url,
+            media_type_default: c.media_type_default || 'none'
         }));
         res.json({ success: true, consultants: list });
     } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+}
+
+// ============================================================
+// GET /api/consultant/profile/:id
+// Returns full profile for a consultant
+// ============================================================
+function getProfile(req, res) {
+    try {
+        const consultants = loadConsultants();
+        const consultant = consultants[req.params.id];
+        if (!consultant) {
+            return res.status(404).json({ success: false, message: `Consultant "${req.params.id}" not found.` });
+        }
+        res.json({ success: true, profile: consultant });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+}
+
+// ============================================================
+// POST /api/consultant/profile/:id
+// Saves updated profile fields to consultants.json
+// ============================================================
+function saveProfile(req, res) {
+    try {
+        const consultants = loadConsultants();
+        const id = req.params.id;
+
+        if (!consultants[id]) {
+            return res.status(404).json({ success: false, message: `Consultant "${id}" not found.` });
+        }
+
+        // Allowed fields that can be updated via dashboard
+        const allowedFields = [
+            'newsletter_name', 'name', 'title', 'email', 'phone',
+            'photo_url', 'linkedin', 'calendar_link', 'media_type_default'
+        ];
+
+        const updates = req.body;
+        allowedFields.forEach(field => {
+            if (updates[field] !== undefined && updates[field] !== null) {
+                consultants[id][field] = updates[field];
+            }
+        });
+
+        saveConsultants(consultants);
+        console.log(`✅ Profile saved for ${consultants[id].name}`);
+        res.json({ success: true, message: `Profile saved for ${consultants[id].name}.`, consultant: consultants[id] });
+    } catch (error) {
+        console.error('❌ Error saving profile:', error.message);
         res.status(500).json({ success: false, message: error.message });
     }
 }
@@ -76,7 +137,7 @@ function getConsultantList(req, res) {
 function parseJSON(req, res) {
     console.log('\n======== CONSULTANT: PARSE JSON ========');
 
-    const { jsonText } = req.body;
+    const { jsonText, mediaType, mediaUrl, mediaCaption } = req.body;
     if (!jsonText || !jsonText.trim()) {
         return res.status(400).json({ success: false, message: 'No JSON provided.' });
     }
@@ -101,11 +162,7 @@ function parseJSON(req, res) {
     if (!parsed.life_update || !parsed.life_update.body) errors.push('Missing life_update.body');
 
     if (errors.length > 0) {
-        return res.status(400).json({
-            success: false,
-            message: 'JSON is missing required fields.',
-            errors
-        });
+        return res.status(400).json({ success: false, message: 'JSON is missing required fields.', errors });
     }
 
     // Load consultant config
@@ -127,11 +184,15 @@ function parseJSON(req, res) {
     // Validate events array
     const events = Array.isArray(parsed.events) ? parsed.events : [];
     if (events.length > 3) {
-        return res.status(400).json({
-            success: false,
-            message: 'Maximum 3 events allowed.'
-        });
+        return res.status(400).json({ success: false, message: 'Maximum 3 events allowed.' });
     }
+
+    // Resolve media — dashboard override takes priority over Gemini JSON
+    const resolvedMedia = {
+        type: mediaType || (parsed.media && parsed.media.type) || consultantConfig.media_type_default || 'none',
+        url: mediaUrl || (parsed.media && parsed.media.url) || '',
+        caption: mediaCaption || (parsed.media && parsed.media.caption) || ''
+    };
 
     // Build the merged state object
     const state = {
@@ -142,10 +203,9 @@ function parseJSON(req, res) {
             industry_insight: parsed.industry_insight,
             life_update: parsed.life_update,
             events: events,
-            media_url: parsed.media_url || null
+            media: resolvedMedia
         },
-        // Flat params for Brevo template
-        templateParams: buildTemplateParams(consultantConfig, parsed)
+        templateParams: buildTemplateParams(consultantConfig, parsed, resolvedMedia)
     };
 
     writeState(state);
@@ -155,6 +215,8 @@ function parseJSON(req, res) {
         success: true,
         message: `Newsletter content parsed for ${consultantConfig.name}.`,
         consultant: consultantConfig.name,
+        newsletter_name: consultantConfig.newsletter_name,
+        media: resolvedMedia,
         state
     });
 }
@@ -162,17 +224,16 @@ function parseJSON(req, res) {
 // ============================================================
 // Build flat template params for Brevo
 // ============================================================
-function buildTemplateParams(consultant, parsed) {
-    // Articles — optional, fall back to empty strings
+function buildTemplateParams(consultant, parsed, media) {
     const a1 = parsed.article1 || {};
     const a2 = parsed.article2 || {};
     const a3 = parsed.article3 || {};
-
-    // Job ad — optional
     const job = parsed.job || {};
+    const m = media || {};
 
     return {
-        // Consultant profile (from config)
+        // Newsletter identity
+        newsletter_name: consultant.newsletter_name || consultant.name,
         consultant_name: consultant.name,
         consultant_title: consultant.title,
         consultant_email: consultant.email,
@@ -191,7 +252,11 @@ function buildTemplateParams(consultant, parsed) {
         // Life update
         life_update_heading: parsed.life_update.heading,
         life_update_body: parsed.life_update.body,
-        media_url: parsed.media_url || null,
+
+        // Personal media
+        media_type: m.type || 'none',
+        media_url: m.url || '',
+        media_caption: m.caption || '',
 
         // Featured job ad
         job_title: job.title || '',
@@ -215,7 +280,7 @@ function buildTemplateParams(consultant, parsed) {
         // Events
         events: Array.isArray(parsed.events) ? parsed.events : [],
 
-        // Brevo system vars
+        // Brevo system vars (overridden in preview)
         update_profile: '{{ update_profile }}',
         unsubscribe: '{{ unsubscribe }}'
     };
@@ -223,13 +288,12 @@ function buildTemplateParams(consultant, parsed) {
 
 // ============================================================
 // GET /api/preview/consultant
-// Renders the HTML preview for the dashboard iframe
 // ============================================================
 async function previewConsultant(req, res) {
     try {
         const state = readState();
         if (state.state === 'EMPTY' || !state.templateParams) {
-            return res.send('<div style="padding:40px;text-align:center;font-family:sans-serif;color:#888"><h2>No content yet</h2><p>Parse a Gemini JSON first.</p></div>');
+            return res.send('<div style="padding:40px;text-align:center;font-family:sans-serif;color:#888"><h2>No content yet</h2><p>Select a consultant, paste the Gemini JSON, and click Parse.</p></div>');
         }
 
         const emailPreviewService = require('../services/emailPreviewService');
@@ -246,15 +310,9 @@ async function previewConsultant(req, res) {
 // ============================================================
 async function renderConsultantTemplate(params, emailPreviewService) {
     const templateHtml = fs.readFileSync(TEMPLATE_FILE, 'utf8');
-
-    // Build data object matching the template variable paths
-    // The template uses {{ params.xxx }} syntax for Brevo, but the preview
-    // service uses {{ xxx }} — so we pass all params at the top level.
     const data = { ...params };
-    // Override Brevo system vars with preview-friendly values
     data.update_profile = 'https://artisan.com.au/email-preferences';
     data.unsubscribe = 'https://artisan.com.au/unsubscribe';
-
     return emailPreviewService.replaceTemplateVariables(templateHtml, data);
 }
 
@@ -274,29 +332,25 @@ async function sendTest(req, res) {
         return res.status(400).json({ success: false, message: 'TEST_EMAIL environment variable is not set.' });
     }
 
-    // Template ID comes from config/consultants.json (committed to repo, read at runtime)
     const templateId = state.consultant && state.consultant.brevo_template_id
-        ? state.consultant.brevo_template_id
-        : null;
+        ? state.consultant.brevo_template_id : null;
 
     try {
         if (templateId) {
-            // Send via consultant's dedicated Brevo template
-            console.log(`📧 Sending test via Brevo template #${templateId} for ${state.consultant ? state.consultant.name : 'consultant'}`);
+            console.log(`📧 Sending test via Brevo template #${templateId} for ${state.consultant.name}`);
             await brevoService.sendBatchEmail(
                 [{ email: testEmail, name: 'Test User' }],
                 parseInt(templateId),
                 state.templateParams
             );
         } else {
-            // Fallback: render inline HTML and send directly
-            console.log('ℹ️  No template ID configured — sending inline HTML test email.');
+            console.log('ℹ️  No template ID — sending inline HTML test email.');
             const emailPreviewService = require('../services/emailPreviewService');
             const htmlContent = await renderConsultantTemplate(state.templateParams, emailPreviewService);
-            const consultantName = state.consultant ? state.consultant.name : 'Consultant';
+            const newsletterName = state.consultant ? (state.consultant.newsletter_name || state.consultant.name) : 'Consultant';
             await brevoService.sendEmailWithHtml({
                 to: { email: testEmail, name: 'Test User' },
-                subject: `[TEST] ${consultantName} Newsletter — Artisan`,
+                subject: `[TEST] ${newsletterName} — Artisan`,
                 htmlContent
             });
         }
@@ -321,10 +375,8 @@ async function sendToAll(req, res) {
         return res.status(400).json({ success: false, message: 'Please parse the Gemini JSON first.' });
     }
 
-    // Template ID comes from config/consultants.json (committed to repo, read at runtime)
     const templateId = state.consultant && state.consultant.brevo_template_id
-        ? state.consultant.brevo_template_id
-        : null;
+        ? state.consultant.brevo_template_id : null;
 
     try {
         const { recipientType, recipientId } = req.body;
@@ -337,7 +389,7 @@ async function sendToAll(req, res) {
             } else if (recipientType === 'list') {
                 recipients = await brevoService.getListContacts(recipientId);
             } else {
-                return res.status(400).json({ success: false, message: 'Invalid recipient type. Must be "segment" or "list".' });
+                return res.status(400).json({ success: false, message: 'Invalid recipient type.' });
             }
         } else {
             return res.status(400).json({ success: false, message: 'Please select a recipient segment or list.' });
@@ -351,20 +403,18 @@ async function sendToAll(req, res) {
         const finalRecipients = testMode ? [{ email: process.env.TEST_EMAIL }] : recipients;
 
         if (templateId) {
-            // Preferred: send via Brevo template (per-consultant)
-            console.log(`📧 Sending via Brevo template #${templateId} for ${state.consultant ? state.consultant.name : 'consultant'}`);
+            console.log(`📧 Sending via Brevo template #${templateId} for ${state.consultant.name}`);
             await brevoService.sendBatchEmail(
                 finalRecipients,
                 parseInt(templateId),
                 state.templateParams
             );
         } else {
-            // Fallback: render inline HTML and send to each recipient individually
-            console.log('ℹ️  No template ID configured — sending inline HTML to all recipients.');
+            console.log('ℹ️  No template ID — sending inline HTML to all recipients.');
             const emailPreviewService = require('../services/emailPreviewService');
             const htmlContent = await renderConsultantTemplate(state.templateParams, emailPreviewService);
-            const consultantName = state.consultant ? state.consultant.name : 'Consultant';
-            const subject = `${consultantName} Newsletter — Artisan`;
+            const newsletterName = state.consultant ? (state.consultant.newsletter_name || state.consultant.name) : 'Consultant';
+            const subject = `${newsletterName} — Artisan`;
             for (const recipient of finalRecipients) {
                 await brevoService.sendEmailWithHtml({
                     to: { email: recipient.email, name: recipient.name || recipient.email },
@@ -378,7 +428,6 @@ async function sendToAll(req, res) {
         console.log(`✅ Consultant newsletter sent to ${finalRecipients.length} recipients.`);
         res.json({ success: true, message: `Newsletter sent to ${finalRecipients.length} recipients.` });
 
-        // Reset after short delay
         setTimeout(() => writeState({ state: 'EMPTY' }), 2000);
 
     } catch (error) {
@@ -402,6 +451,8 @@ function resetState(req, res) {
 module.exports = {
     getState,
     getConsultantList,
+    getProfile,
+    saveProfile,
     parseJSON,
     previewConsultant,
     sendTest,

@@ -1703,10 +1703,10 @@
                 </div>
             </div>
 
-            <!-- Consultant Selector -->
+            <!-- Consultant Selector + Profile Card -->
             <div class="actions-card">
                 <h2>Select Consultant</h2>
-                <div class="selector-row" style="margin-bottom: 0;">
+                <div class="selector-row" style="margin-bottom: 20px;">
                     <div class="selector-group" style="max-width: 360px;">
                         <label for="consultantSelector">Consultant</label>
                         <select id="consultantSelector" onchange="onConsultantSelected()">
@@ -1716,10 +1716,82 @@
                             <option value="sean-varian">Sean Varian</option>
                         </select>
                     </div>
-                    <div id="consultantSelectedInfo" style="display:none; padding: 10px 16px; background: rgba(255,255,255,0.07); border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); color: white; font-size: 13px; line-height: 1.7;">
-                        <strong id="consultantSelectedName" style="font-size:15px;"></strong><br>
-                        <span id="consultantSelectedTitle" style="color:rgba(255,255,255,0.6);"></span><br>
-                        <span id="consultantSelectedEmail" style="color:rgba(255,255,255,0.5); font-size:12px;"></span>
+                </div>
+
+                <!-- Profile Card (shown after selecting a consultant) -->
+                <div id="consultantProfileCard" style="display:none;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+                        <h3 style="margin:0; font-size:15px; color:white;">Consultant Profile <span style="font-size:12px; color:rgba(255,255,255,0.45); font-weight:400;">(saved permanently — edit once, used every issue)</span></h3>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn btn-secondary" style="padding:6px 14px; font-size:12px;" onclick="toggleProfileEdit()">Edit Profile</button>
+                            <button class="btn btn-success" style="padding:6px 14px; font-size:12px; display:none;" id="btnSaveProfile" onclick="saveConsultantProfile()">Save Profile</button>
+                        </div>
+                    </div>
+
+                    <!-- Read-only view -->
+                    <div id="profileViewMode" style="display:grid; grid-template-columns:80px 1fr; gap:16px; align-items:start;">
+                        <div style="text-align:center;">
+                            <img id="profilePhotoPreview" src="" alt="Photo" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.2);display:block;margin:0 auto 8px auto;">
+                            <a id="profileLinkedinLink" href="#" target="_blank" style="font-size:10px; color:#0077b5; font-weight:700; text-decoration:none;">LINKEDIN ↗</a>
+                        </div>
+                        <div style="color:white; font-size:13px; line-height:1.8;">
+                            <div style="font-size:18px; font-weight:900; margin-bottom:2px;" id="profileViewName">-</div>
+                            <div style="color:rgba(255,255,255,0.6); margin-bottom:4px;" id="profileViewTitle">-</div>
+                            <div style="color:rgba(255,255,255,0.5); font-size:12px;" id="profileViewEmail">-</div>
+                            <div style="color:rgba(255,255,255,0.5); font-size:12px;" id="profileViewPhone">-</div>
+                            <div style="margin-top:8px; display:flex; gap:16px; flex-wrap:wrap;">
+                                <span style="font-size:11px; color:rgba(255,255,255,0.4);">Newsletter: <strong style="color:rgba(255,255,255,0.75);" id="profileViewNewsletterName">-</strong></span>
+                                <span style="font-size:11px; color:rgba(255,255,255,0.4);">Media default: <strong style="color:rgba(255,255,255,0.75);" id="profileViewMediaType">-</strong></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Edit mode (hidden by default) -->
+                    <div id="profileEditMode" style="display:none; margin-top:16px;">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                            <div class="form-group">
+                                <label>Newsletter Name</label>
+                                <input type="text" id="profileEditNewsletterName" placeholder="e.g. Mat's Market Insights" style="width:100%;padding:9px 12px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;box-sizing:border-box;">
+                            </div>
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="profileEditName" placeholder="e.g. Mathew Hehir" style="width:100%;padding:9px 12px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;box-sizing:border-box;">
+                            </div>
+                            <div class="form-group">
+                                <label>Job Title</label>
+                                <input type="text" id="profileEditTitle" placeholder="e.g. Senior Recruitment Consultant" style="width:100%;padding:9px 12px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;box-sizing:border-box;">
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="profileEditEmail" placeholder="e.g. mathew@artisan.com.au" style="width:100%;padding:9px 12px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;box-sizing:border-box;">
+                            </div>
+                            <div class="form-group">
+                                <label>Phone</label>
+                                <input type="text" id="profileEditPhone" placeholder="e.g. +61 7 3333 1833" style="width:100%;padding:9px 12px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;box-sizing:border-box;">
+                            </div>
+                            <div class="form-group">
+                                <label>Photo URL</label>
+                                <input type="url" id="profileEditPhoto" placeholder="https://...headshot.jpg" style="width:100%;padding:9px 12px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;box-sizing:border-box;">
+                            </div>
+                            <div class="form-group">
+                                <label>LinkedIn URL</label>
+                                <input type="url" id="profileEditLinkedin" placeholder="https://linkedin.com/in/..." style="width:100%;padding:9px 12px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;box-sizing:border-box;">
+                            </div>
+                            <div class="form-group">
+                                <label>Calendar / Booking Link</label>
+                                <input type="url" id="profileEditCalendar" placeholder="https://calendly.com/..." style="width:100%;padding:9px 12px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;box-sizing:border-box;">
+                            </div>
+                            <div class="form-group" style="grid-column:1/-1;">
+                                <label>Default Media Type <span style="font-size:11px;color:rgba(255,255,255,0.4);font-weight:400;">(their usual personal media preference)</span></label>
+                                <select id="profileEditMediaType" style="width:100%;padding:9px 12px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;">
+                                    <option value="none">None</option>
+                                    <option value="image">Image (photo upload / URL)</option>
+                                    <option value="instagram">Instagram Post</option>
+                                    <option value="youtube">YouTube Video</option>
+                                    <option value="link">Link / URL Card</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -5876,27 +5948,14 @@ Choose Recent Poll
         let consultantParsed = false; // true once JSON has been successfully parsed
         let consultantSegment = null; // { type, id, name } once confirmed
         let selectedConsultantId = null; // currently selected consultant ID
+        let currentProfile = null; // loaded profile from config
+        let profileEditOpen = false;
 
-        // Consultant data — mirrors config/consultants.json
-        const CONSULTANTS = {
-            'debbie-younger': {
-                name: 'Debbie Younger',
-                title: 'Senior Recruitment Consultant',
-                email: 'debbie@artisan.com.au',
-                segmentKeyword: 'Debbie'
-            },
-            'mathew-hehir': {
-                name: 'Mathew Hehir',
-                title: 'Senior Recruitment Consultant',
-                email: 'mathew@artisan.com.au',
-                segmentKeyword: 'Mathew'
-            },
-            'sean-varian': {
-                name: 'Sean Varian',
-                title: 'Senior Recruitment Consultant',
-                email: 'sean@artisan.com.au',
-                segmentKeyword: 'Sean'
-            }
+        // Segment keyword map — used for auto-selecting the right Brevo segment
+        const SEGMENT_KEYWORDS = {
+            'debbie-younger': 'Debbie',
+            'mathew-hehir': 'Mathew',
+            'sean-varian': 'Sean'
         };
 
         // Called when consultant dropdown changes
@@ -5904,34 +5963,21 @@ Choose Recent Poll
             const id = document.getElementById('consultantSelector').value;
             selectedConsultantId = id || null;
 
-            const infoBox = document.getElementById('consultantSelectedInfo');
-
             if (!id) {
-                infoBox.style.display = 'none';
+                document.getElementById('consultantProfileCard').style.display = 'none';
                 return;
             }
 
-            const c = CONSULTANTS[id];
-            if (!c) return;
-
-            // Show consultant info
-            document.getElementById('consultantSelectedName').textContent = c.name;
-            document.getElementById('consultantSelectedTitle').textContent = c.title;
-            document.getElementById('consultantSelectedEmail').textContent = c.email;
-            infoBox.style.display = 'block';
-
-            // Update status card
-            document.getElementById('consultantNameDisplay').textContent = c.name;
-            document.getElementById('consultantTitleDisplay').textContent = c.title;
+            // Load profile from backend (reads config/consultants.json)
+            await loadConsultantProfile(id);
 
             // Auto-load segments and pre-select the one matching this consultant
             const typeSelect = document.getElementById('consultantRecipientType');
             typeSelect.value = 'segment';
             await loadConsultantRecipients();
 
-            // Try to auto-select the matching segment by keyword
             const selector = document.getElementById('consultantRecipientSelector');
-            const keyword = c.segmentKeyword.toLowerCase();
+            const keyword = (SEGMENT_KEYWORDS[id] || id).toLowerCase();
             let matched = false;
             for (let i = 0; i < selector.options.length; i++) {
                 if (selector.options[i].text.toLowerCase().includes(keyword)) {
@@ -5940,12 +5986,121 @@ Choose Recent Poll
                     break;
                 }
             }
-
             if (matched) {
                 previewConsultantRecipients();
-                showToast(c.name + ' selected — recipient segment pre-filled.', 'success');
+                showToast((currentProfile ? currentProfile.name : id) + ' selected — recipient segment pre-filled.', 'success');
             } else {
-                showToast(c.name + ' selected. Please choose a recipient segment.', 'info');
+                showToast((currentProfile ? currentProfile.name : id) + ' selected. Please choose a recipient segment.', 'info');
+            }
+        }
+
+        // Load consultant profile from backend and populate the profile card
+        async function loadConsultantProfile(id) {
+            try {
+                const res = await fetch('/api/consultant/profile/' + id);
+                const data = await res.json();
+                if (!data.success) throw new Error(data.message);
+
+                currentProfile = data.profile;
+                renderProfileCard(currentProfile);
+
+                // Update status cards
+                document.getElementById('consultantNameDisplay').textContent = currentProfile.name || id;
+                document.getElementById('consultantTitleDisplay').textContent = currentProfile.title || '';
+
+                document.getElementById('consultantProfileCard').style.display = 'block';
+            } catch (e) {
+                showToast('Could not load profile: ' + e.message, 'error');
+            }
+        }
+
+        // Render the read-only profile view
+        function renderProfileCard(p) {
+            const photo = p.photo_url || '';
+            const img = document.getElementById('profilePhotoPreview');
+            img.src = photo;
+            img.style.display = photo ? 'block' : 'none';
+
+            document.getElementById('profileLinkedinLink').href = p.linkedin || '#';
+            document.getElementById('profileViewName').textContent = p.name || '-';
+            document.getElementById('profileViewTitle').textContent = p.title || '-';
+            document.getElementById('profileViewEmail').textContent = p.email || '-';
+            document.getElementById('profileViewPhone').textContent = p.phone || '-';
+            document.getElementById('profileViewNewsletterName').textContent = p.newsletter_name || '-';
+            document.getElementById('profileViewMediaType').textContent = p.media_type_default || 'none';
+        }
+
+        // Toggle between view and edit mode
+        function toggleProfileEdit() {
+            profileEditOpen = !profileEditOpen;
+            document.getElementById('profileViewMode').style.display = profileEditOpen ? 'none' : 'grid';
+            document.getElementById('profileEditMode').style.display = profileEditOpen ? 'block' : 'none';
+            document.getElementById('btnSaveProfile').style.display = profileEditOpen ? 'inline-block' : 'none';
+            document.querySelector('[onclick="toggleProfileEdit()"]').textContent = profileEditOpen ? 'Cancel' : 'Edit Profile';
+
+            if (profileEditOpen && currentProfile) {
+                // Populate edit fields
+                document.getElementById('profileEditNewsletterName').value = currentProfile.newsletter_name || '';
+                document.getElementById('profileEditName').value = currentProfile.name || '';
+                document.getElementById('profileEditTitle').value = currentProfile.title || '';
+                document.getElementById('profileEditEmail').value = currentProfile.email || '';
+                document.getElementById('profileEditPhone').value = currentProfile.phone || '';
+                document.getElementById('profileEditPhoto').value = currentProfile.photo_url || '';
+                document.getElementById('profileEditLinkedin').value = currentProfile.linkedin || '';
+                document.getElementById('profileEditCalendar').value = currentProfile.calendar_link || '';
+                document.getElementById('profileEditMediaType').value = currentProfile.media_type_default || 'none';
+            }
+        }
+
+        // Save profile back to consultants.json via backend
+        async function saveConsultantProfile() {
+            if (!selectedConsultantId) return;
+
+            const btn = document.getElementById('btnSaveProfile');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+
+            const updated = {
+                newsletter_name: document.getElementById('profileEditNewsletterName').value.trim(),
+                name: document.getElementById('profileEditName').value.trim(),
+                title: document.getElementById('profileEditTitle').value.trim(),
+                email: document.getElementById('profileEditEmail').value.trim(),
+                phone: document.getElementById('profileEditPhone').value.trim(),
+                photo_url: document.getElementById('profileEditPhoto').value.trim(),
+                linkedin: document.getElementById('profileEditLinkedin').value.trim(),
+                calendar_link: document.getElementById('profileEditCalendar').value.trim(),
+                media_type_default: document.getElementById('profileEditMediaType').value
+            };
+
+            try {
+                const res = await fetch('/api/consultant/profile/' + selectedConsultantId, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updated)
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.message);
+
+                currentProfile = { ...currentProfile, ...updated };
+                renderProfileCard(currentProfile);
+
+                // Close edit mode
+                profileEditOpen = false;
+                document.getElementById('profileViewMode').style.display = 'grid';
+                document.getElementById('profileEditMode').style.display = 'none';
+                document.getElementById('btnSaveProfile').style.display = 'none';
+                document.querySelector('[onclick="toggleProfileEdit()"]').textContent = 'Edit Profile';
+
+                // Update status cards
+                document.getElementById('consultantNameDisplay').textContent = updated.name || selectedConsultantId;
+                document.getElementById('consultantTitleDisplay').textContent = updated.title || '';
+
+                showToast('Profile saved for ' + updated.name + '!', 'success');
+            } catch (e) {
+                showToast('Save failed: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Save Profile';
             }
         }
 
