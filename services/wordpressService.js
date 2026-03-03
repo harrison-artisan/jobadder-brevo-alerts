@@ -145,7 +145,9 @@ class WordpressService {
     formatArticleDataLong(post) {
         const featuredImage = post._embedded?.["wp:featuredmedia"]?.[0]?.source_url || null;
         const title = decodeHtmlEntities(post.title.rendered);
-        const excerpt = decodeHtmlEntities(post.excerpt.rendered);
+        // Use full article content (stripped of HTML tags) so WordPress excerpt truncation doesn't limit us
+        const rawContent = post.content?.rendered || post.excerpt?.rendered || '';
+        const excerpt = decodeHtmlEntities(rawContent);
         const maxLength = 2500;
         const truncatedExcerpt = excerpt.length > maxLength
             ? excerpt.substring(0, maxLength).replace(/\s+\S*$/, '') + '...'
