@@ -213,7 +213,7 @@
                       {{ job.job_title }}
                     </h3>
                     <p style="margin: 0 0 12px 0; font-size: 12px; color: #1b334d; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
-                      {{ job.location }} &nbsp;|&nbsp; {{ job.job_type if job.job_type and job.job_type != 'Not specified' else 'Permanent' }}
+                      {{ job.location }}{% if job.job_type %} &nbsp;|&nbsp; {{ job.job_type }}{% endif %}
                     </p>
                     <p style="margin: 0 0 16px 0; font-size: 13px; line-height: 1.6; color: #666666; font-weight: 400;">
                       {{ job.job_description }}
