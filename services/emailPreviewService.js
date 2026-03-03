@@ -140,7 +140,13 @@ class EmailPreviewService {
             ifIterations++;
         }
 
-        // Step 3: Replace all {{ variable.path }} with actual values
+        // Step 3a: Handle {{ variable.path or "default" }} Nunjucks default value syntax
+        result = result.replace(/\{\{\s*([\w.]+)\s+or\s+['"]([^'"]*)['"]\s*\}\}/g, (match, varPath, defaultVal) => {
+            const value = this.getNestedProperty(data, varPath, '');
+            return value || defaultVal;
+        });
+
+        // Step 3b: Replace all {{ variable.path }} with actual values
         result = result.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (match, varPath) => {
             const value = this.getNestedProperty(data, varPath, '');
             
