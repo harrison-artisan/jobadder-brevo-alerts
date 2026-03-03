@@ -113,6 +113,18 @@ class EmailPreviewService {
                             const arr = this.getNestedProperty(data, lengthMatch[1], null);
                             return Array.isArray(arr) && arr.length > parseInt(lengthMatch[2], 10);
                         }
+                        // Handle: string equality e.g. item.type == 'youtube' or item.type == "youtube"
+                        const strEqMatch = trimmed.match(/^([\w.]+)\s*==\s*['"]([^'"]+)['"]$/);
+                        if (strEqMatch) {
+                            const val = this.getNestedProperty(data, strEqMatch[1], null);
+                            return val === strEqMatch[2];
+                        }
+                        // Handle: string inequality e.g. item.type != 'youtube'
+                        const strNeqMatch = trimmed.match(/^([\w.]+)\s*!=\s*['"]([^'"]+)['"]$/);
+                        if (strNeqMatch) {
+                            const val = this.getNestedProperty(data, strNeqMatch[1], null);
+                            return val !== strNeqMatch[2];
+                        }
                         // Handle: general truthy property path (e.g. params.job.has_job)
                         if (/^[\w.]+$/.test(trimmed)) {
                             const val = this.getNestedProperty(data, trimmed, false);
