@@ -12,14 +12,10 @@ class EmailPreviewService {
      * Load a Brevo template from file
      */
     async loadTemplate(templateName) {
-        if (this.templates[templateName]) {
-            return this.templates[templateName];
-        }
-
+        // Always read fresh from disk — no caching, so template updates deploy immediately
         const templatePath = path.join(__dirname, '..', 'templates', `${templateName}.html`);
         try {
             const html = await fs.readFile(templatePath, 'utf8');
-            this.templates[templateName] = html;
             return html;
         } catch (error) {
             console.error(`Failed to load template ${templateName}:`, error);
@@ -225,11 +221,12 @@ class EmailPreviewService {
                 EMAIL: 'preview@artisan.com.au'
             },
             params: {
-                job_title: job.title,
-                location: job.location,
-                job_type: job.workType || job.type,
-                job_description: job.summary || job.description || '',
-                apply_url: job.link || job.url || '#'
+                // formatJobForEmail returns: job_title, location, job_type, job_description, apply_url, reference
+                job_title: job.job_title || job.title || '',
+                location: job.location || '',
+                job_type: job.job_type || job.workType || job.type || '',
+                job_description: job.job_description || job.summary || job.description || '',
+                apply_url: job.apply_url || job.link || job.url || '#'
             },
             unsubscribe: 'https://artisan.com.au/unsubscribe'
         };
