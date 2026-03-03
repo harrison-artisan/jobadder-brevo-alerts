@@ -4325,12 +4325,12 @@ Choose Recent Poll
                 if (!schedBox) {
                     schedBox = document.createElement('div');
                     schedBox.id = 'alistScheduledBox';
-                    schedBox.style.cssText = 'margin-top:14px; padding:14px 16px; background:rgba(39,174,96,0.15); border:1px solid rgba(39,174,96,0.4); border-radius:8px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;';
+                    schedBox.style.cssText = 'margin-top:14px; padding:16px 20px; background:#1a7a3e; border:none; border-radius:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;';
                     // Insert after the schedule row
                     const schedRow = document.getElementById('alistScheduleRow');
                     if (schedRow && schedRow.parentNode) schedRow.parentNode.insertBefore(schedBox, schedRow.nextSibling);
                 }
-                schedBox.innerHTML = `<span style="color:rgba(255,255,255,0.9); font-size:14px;">📅 <strong>Scheduled:</strong> ${state.scheduledFor}</span><button class="btn" onclick="cancelAListSchedule()" style="background:#e74c3c; font-size:13px; padding:6px 14px;">Cancel Schedule</button>`;
+                schedBox.innerHTML = `<div style="display:flex; align-items:center; gap:12px;"><span style="font-size:24px;">📅</span><div><div style="color:#fff; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; opacity:0.8; margin-bottom:2px;">A-List Scheduled</div><div style="color:#fff; font-size:15px; font-weight:700;">${state.scheduledFor}</div></div></div><button onclick="cancelAListSchedule()" style="background:#e74c3c; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">Cancel Schedule</button>`;
                 schedBox.style.display = 'flex';
             } else if (schedBox) {
                 schedBox.style.display = 'none';
@@ -4655,11 +4655,11 @@ Choose Recent Poll
                 if (!xposeSchedBox) {
                     xposeSchedBox = document.createElement('div');
                     xposeSchedBox.id = 'xposeScheduledBox';
-                    xposeSchedBox.style.cssText = 'margin-top:14px; padding:14px 16px; background:rgba(39,174,96,0.15); border:1px solid rgba(39,174,96,0.4); border-radius:8px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;';
+                    xposeSchedBox.style.cssText = 'margin-top:14px; padding:16px 20px; background:#1a7a3e; border:none; border-radius:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;';
                     const schedRow = document.getElementById('xposeScheduleRow');
                     if (schedRow && schedRow.parentNode) schedRow.parentNode.insertBefore(xposeSchedBox, schedRow.nextSibling);
                 }
-                xposeSchedBox.innerHTML = `<span style="color:rgba(255,255,255,0.9); font-size:14px;">📅 <strong>Scheduled:</strong> ${xposeState.scheduledFor}</span><button class="btn" onclick="cancelXposeSchedule()" style="background:#e74c3c; font-size:13px; padding:6px 14px;">Cancel Schedule</button>`;
+                xposeSchedBox.innerHTML = `<div style="display:flex; align-items:center; gap:12px;"><span style="font-size:24px;">📅</span><div><div style="color:#fff; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; opacity:0.8; margin-bottom:2px;">Xpose Newsletter Scheduled</div><div style="color:#fff; font-size:15px; font-weight:700;">${xposeState.scheduledFor}</div></div></div><button onclick="cancelXposeSchedule()" style="background:#e74c3c; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">Cancel Schedule</button>`;
                 xposeSchedBox.style.display = 'flex';
             } else if (xposeSchedBox) {
                 xposeSchedBox.style.display = 'none';
@@ -5095,11 +5095,11 @@ Choose Recent Poll
                     if (!schedBox) {
                         schedBox = document.createElement('div');
                         schedBox.id = 'articleScheduledBox';
-                        schedBox.style.cssText = 'margin-top:14px; padding:14px 16px; background:rgba(39,174,96,0.15); border:1px solid rgba(39,174,96,0.4); border-radius:8px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;';
+                        schedBox.style.cssText = 'margin-top:14px; padding:16px 20px; background:#1a7a3e; border:none; border-radius:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;';
                         const schedRow = document.getElementById('articleScheduleRow');
                         if (schedRow && schedRow.parentNode) schedRow.parentNode.insertBefore(schedBox, schedRow.nextSibling);
                     }
-                    schedBox.innerHTML = `<span style="color:rgba(255,255,255,0.9); font-size:14px;">📅 <strong>Scheduled:</strong> ${state.scheduledFor}</span><button class="btn" onclick="cancelArticleScheduleServer()" style="background:#e74c3c; font-size:13px; padding:6px 14px;">Cancel Schedule</button>`;
+                    schedBox.innerHTML = `<div style="display:flex; align-items:center; gap:12px;"><span style="font-size:24px;">📅</span><div><div style="color:#fff; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; opacity:0.8; margin-bottom:2px;">Article Email Scheduled</div><div style="color:#fff; font-size:15px; font-weight:700;">${state.scheduledFor}</div></div></div><button onclick="cancelArticleScheduleServer()" style="background:#e74c3c; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">Cancel Schedule</button>`;
                     schedBox.style.display = 'flex';
                 } else if (schedBox) {
                     schedBox.style.display = 'none';
