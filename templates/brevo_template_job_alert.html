@@ -156,7 +156,7 @@
                       {{ job.job_title }}
                     </h3>
                     <p style="margin: 0 0 16px 0; font-size: 13px; color: #666666; font-weight: 600;">
-                      &#128205; {{ job.location }} &nbsp;&nbsp;|&nbsp;&nbsp; &#128188; {{ job.job_type }}
+                      {{ job.location }}{% if job.job_type and job.job_type != 'Not specified' %} &nbsp;|&nbsp; {{ job.job_type }}{% endif %}
                     </p>
                     {% if job.bullet_points and job.bullet_points.length > 0 %}
                     <ul style="margin: 0 0 16px 0; padding-left: 20px; font-size: 13px; line-height: 1.6; color: #555555;">
@@ -242,7 +242,7 @@
               <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" style="margin-top: 24px;">
                 <tr>
                   <td>
-                    <a href="https://www.artisan.com.au/creative-community?utm_source=brevo&utm_campaign=DAILY JOB ALERTS&utm_medium=email" style="display: inline-block; background-color: #ffffff; color: #1b334d; border: 2px solid #1b334d; padding: 12px 28px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 12px; letter-spacing: 0.5px; box-shadow: 0 3px 12px rgba(27,51,77,0.15);">
+                    <a href="https://artisan.com.au/creative-community/?utm_source=brevo&utm_campaign=DAILY JOB ALERTS&utm_medium=email" style="display: inline-block; background-color: #ffffff; color: #1b334d; border: 2px solid #1b334d; padding: 12px 28px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 12px; letter-spacing: 0.5px; box-shadow: 0 3px 12px rgba(27,51,77,0.15);">
                       VISIT THE CREATIVE COMMUNITY &#8594;
                     </a>
                   </td>
@@ -318,7 +318,7 @@
                             <table cellpadding="0" cellspacing="0" border="0" role="presentation">
                               <tr>
                                 <td align="center" width="80" style="width: 80px; background-color: #0077b5; border-radius: 8px; padding: 10px 0; box-shadow: 0 2px 8px rgba(0,119,181,0.3);">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" style="display:block;margin:0 auto;"><rect width="24" height="24" rx="4" fill="#ffffff"/><path d="M6.94 5a1.56 1.56 0 1 1-3.12 0 1.56 1.56 0 0 1 3.12 0zM4 8.48h2.88V19H4V8.48zm4.32 0H11v1.44h.04c.38-.72 1.3-1.48 2.68-1.48 2.86 0 3.39 1.88 3.39 4.33V19h-2.88v-5.7c0-1.36-.02-3.1-1.89-3.1-1.89 0-2.18 1.48-2.18 3v5.8H8.32V8.48z" fill="#0077b5"/></svg>
+                                  <img src="https://upload.wikimedia.org/wikipedia/commons/c/ca/LinkedIn_logo_initials.png" alt="LinkedIn" width="20" height="20" style="display: block; border: 0; margin: 0 auto;">
                                   <p style="margin: 5px 0 0 0; font-size: 9px; color: #ffffff; font-weight: 700; letter-spacing: 0.5px; text-align: center;">LINKEDIN</p>
                                 </td>
                               </tr>
@@ -401,7 +401,7 @@
                         </td>
                         <td style="padding: 0 4px; font-size: 12px; color: #cccccc;">|</td>
                         <td style="padding: 0 10px;">
-                          <a href="https://artisan.com.au/creative-community?utm_source=brevo&utm_campaign=DAILY JOB ALERTS&utm_medium=email" style="font-size: 12px; color: #bd203d; text-decoration: none; font-weight: 700; letter-spacing: 0.5px;">CREATIVE COMMUNITY</a>
+                          <a href="https://artisan.com.au/creative-community/?utm_source=brevo&utm_campaign=DAILY JOB ALERTS&utm_medium=email" style="font-size: 12px; color: #bd203d; text-decoration: none; font-weight: 700; letter-spacing: 0.5px;">CREATIVE COMMUNITY</a>
                         </td>
                       </tr>
                     </table>
