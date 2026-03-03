@@ -542,13 +542,11 @@ class XposeController {
             // Register cron job and store reference for cancellation
             this._scheduledTask = cron.schedule(cronExpr, async () => {
                 console.log('📅 Executing scheduled Xpose send...');
+                // Set state to TESTED so sendToAll passes its state check
+                await this.saveState({ state: 'TESTED' });
                 const fakeReq = { body: { recipientType: options.recipientType, recipientId: options.recipientId } };
                 const fakeRes = { json: () => {}, status: () => ({ json: () => {} }) };
                 await this.sendToAll(fakeReq, fakeRes);
-                // Clear scheduled state after send
-                if (this.state.state === 'SCHEDULED') {
-                    await this.saveState({ state: 'SENT', sentAt: new Date().toISOString(), scheduledAt: null, scheduledFor: null, scheduledOptions: null });
-                }
                 if (this._scheduledTask) { this._scheduledTask.stop(); this._scheduledTask = null; }
             }, { timezone: 'UTC' });
 
@@ -609,12 +607,11 @@ class XposeController {
             const options = this.state.scheduledOptions || {};
             this._scheduledTask = cron.schedule(cronExpr, async () => {
                 console.log('📅 Executing restored Xpose scheduled send...');
+                // Set state to TESTED so sendToAll passes its state check
+                await this.saveState({ state: 'TESTED' });
                 const fakeReq = { body: { recipientType: options.recipientType, recipientId: options.recipientId } };
                 const fakeRes = { json: () => {}, status: () => ({ json: () => {} }) };
                 await this.sendToAll(fakeReq, fakeRes);
-                if (this.state.state === 'SCHEDULED') {
-                    await this.saveState({ state: 'SENT', sentAt: new Date().toISOString(), scheduledAt: null, scheduledFor: null, scheduledOptions: null });
-                }
                 if (this._scheduledTask) { this._scheduledTask.stop(); this._scheduledTask = null; }
             }, { timezone: 'UTC' });
             console.log(`📅 Xpose schedule restored for ${this.state.scheduledFor}`);
