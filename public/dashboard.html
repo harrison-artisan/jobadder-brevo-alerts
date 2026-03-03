@@ -1851,7 +1851,7 @@
                     <div id="consultantJsonError" style="display:none; margin-top: 8px; padding: 10px 14px; background: rgba(231,76,60,0.15); border: 1px solid rgba(231,76,60,0.4); border-radius: 6px; color: #ff8a80; font-size: 13px;"></div>
                 </div>
 
-                <div class="btn-group">
+                <div class="btn-group" style="display: flex; gap: 12px; margin-top: 12px;">
                     <button class="btn btn-secondary" onclick="parseConsultantJSON()" id="btnParseConsultant">
                         Parse &amp; Preview
                     </button>
@@ -1902,17 +1902,42 @@
                     </div>
                 </div>
 
-                <div class="button-group">
+                <div class="button-group" style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px;">
                     <button class="btn btn-preview" onclick="previewConsultantNewsletter()" id="btnPreviewConsultant" disabled>
                         Preview
                     </button>
                     <button class="btn btn-warning" onclick="sendConsultantTest()" id="btnTestConsultant" disabled>
                         Send Test
                     </button>
+                    <button class="btn" style="background: rgba(52,152,219,0.35); color: white; border: 1px solid rgba(52,152,219,0.5);" onclick="openConsultantSchedule()" id="btnScheduleConsultant" disabled>
+                        Approve &amp; Schedule
+                    </button>
                     <button class="btn btn-success" onclick="sendConsultantNow()" id="btnSendConsultant" disabled>
                         Send Now
                     </button>
                 </div>
+
+                <!-- Schedule date/time picker row -->
+                <div id="consultantScheduleRow" style="display: none; margin-top: 16px; padding: 16px; background: rgba(52,152,219,0.1); border: 1px solid rgba(52,152,219,0.3); border-radius: 12px;">
+                    <h4 style="margin: 0 0 12px; color: rgba(255,255,255,0.9); font-size: 14px;">Schedule Consultant Newsletter</h4>
+                    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                        <div>
+                            <label style="display: block; font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 4px;">Send Date &amp; Time (Melbourne)</label>
+                            <input type="datetime-local" id="consultantScheduleDate" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: white; padding: 8px 12px; font-size: 14px;" />
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: flex-end; padding-bottom: 2px;">
+                            <button id="btnConfirmConsultantSchedule" class="btn" style="background: rgba(39,174,96,0.4); color: white; border: 1px solid rgba(39,174,96,0.5);" onclick="confirmConsultantSchedule()">
+                                Confirm Schedule
+                            </button>
+                            <button class="btn" style="background: rgba(231,76,60,0.3); color: white;" onclick="closeConsultantScheduleRow()">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scheduled info box (shown when state is SCHEDULED) -->
+                <div id="consultantScheduledBox" style="display: none;"></div>
             </div>
         </div>
         </div>
@@ -5520,7 +5545,8 @@ Choose Recent Poll
                 'singleJobRecipientSelector': 'btnShowSingleJobCount',
                 'recipientSelector': 'btnShowAlistCount',
                 'xposeRecipientSelector': 'btnShowXposeCount',
-                'articleRecipientSelector': 'btnShowArticleCount'
+                'articleRecipientSelector': 'btnShowArticleCount',
+                'consultantRecipientSelector': 'btnShowConsultantCount'
             };
             
             const buttonId = buttonIdMap[selectorElementId];
@@ -6204,6 +6230,11 @@ Choose Recent Poll
                 // Enable action buttons
                 document.getElementById('btnPreviewConsultant').disabled = false;
                 document.getElementById('btnTestConsultant').disabled = false;
+                // Enable schedule/send if recipient already confirmed
+                if (consultantSegment) {
+                    document.getElementById('btnSendConsultant').disabled = false;
+                    document.getElementById('btnScheduleConsultant').disabled = false;
+                }
 
                 // Load preview
                 loadPreview('/api/preview/consultant');
@@ -6239,19 +6270,19 @@ Choose Recent Poll
                 document.getElementById('consultantNameDisplay').textContent = '-';
                 document.getElementById('consultantTitleDisplay').textContent = '-';
 
-                document.getElementById('btnPreviewConsultant').disabled = true;
+                   document.getElementById('btnPreviewConsultant').disabled = true;
                 document.getElementById('btnTestConsultant').disabled = true;
                 document.getElementById('btnSendConsultant').disabled = true;
-
+                document.getElementById('btnScheduleConsultant').disabled = true;
                 // Clear recipient lock
                 consultantSegment = null;
                 document.getElementById('consultantRecipientLocked').style.display = 'none';
                 document.getElementById('btnConfirmConsultantRecipient').disabled = false;
                 document.getElementById('btnRemoveConsultantRecipient').style.display = 'none';
-
+                // Clear scheduled box
+                updateConsultantScheduledBox(null);
                 // Clear preview
                 loadPreview(null);
-
                 showToast('Consultant state reset.', 'info');
             } catch (e) {
                 showToast('Reset failed: ' + e.message, 'error');
@@ -6267,63 +6298,16 @@ Choose Recent Poll
             loadPreview('/api/preview/consultant');
         }
 
-        // Load consultant recipients (segments/lists)
+        // Load consultant recipients — delegates to generic loader (handles segmentName correctly)
         async function loadConsultantRecipients() {
-            const type = document.getElementById('consultantRecipientType').value;
-            const selector = document.getElementById('consultantRecipientSelector');
-
-            if (!type) {
-                selector.disabled = true;
-                return;
-            }
-
-            selector.disabled = false;
-            selector.innerHTML = '<option value="">Loading...</option>';
-
-            try {
-                const endpoint = type === 'segment' ? '/api/brevo/segments' : '/api/brevo/lists';
-                const response = await fetch(endpoint);
-                const data = await response.json();
-
-                selector.innerHTML = '<option value="">-- Select --</option>';
-
-                const items = type === 'segment' ? data.segments : data.lists;
-                items.forEach(item => {
-                    const option = document.createElement('option');
-                    option.value = type + '-' + item.id;
-                    option.text = item.name + (type === 'segment' ? ' (Dynamic)' : ' (Static)');
-                    selector.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Error loading recipients:', error);
-                selector.innerHTML = '<option value="">Error loading</option>';
-            }
+            await loadRecipientsGeneric('consultantRecipientType', 'consultantRecipientSelector', 'consultantRecipientPreview');
         }
 
-        // Preview consultant recipients
+        // Preview consultant recipients — delegates to generic function
         function previewConsultantRecipients() {
+            previewRecipientsGeneric('consultantRecipientSelector', 'consultantRecipientPreview', 'consultantPreviewName', 'consultantPreviewCount', 'consultantPreviewUpdated');
             const selector = document.getElementById('consultantRecipientSelector');
-            if (!selector.value) {
-                document.getElementById('consultantRecipientPreview').style.display = 'none';
-                return;
-            }
-
-            const parts = selector.value.split('-');
-            const type = parts[0];
-            const selectedOption = selector.options[selector.selectedIndex];
-
-            document.getElementById('consultantPreviewName').textContent = selectedOption.text;
-            document.getElementById('consultantPreviewCount').textContent = '0';
-            document.getElementById('consultantPreviewUpdated').textContent = new Date().toLocaleDateString('en-AU');
-            document.getElementById('consultantRecipientPreview').style.display = 'block';
-
-            document.getElementById('btnConfirmConsultantRecipient').disabled = false;
-
-            if (type === 'segment') {
-                document.getElementById('btnShowConsultantCount').style.display = 'inline-block';
-            } else {
-                document.getElementById('btnShowConsultantCount').style.display = 'none';
-            }
+            document.getElementById('btnConfirmConsultantRecipient').disabled = !selector.value || selector.selectedIndex === 0;
         }
 
         // Confirm consultant recipients
@@ -6354,9 +6338,10 @@ Choose Recent Poll
             document.getElementById('btnConfirmConsultantRecipient').disabled = true;
             document.getElementById('btnRemoveConsultantRecipient').style.display = 'inline-block';
 
-            // Enable send if content is also ready
+            // Enable send/schedule if content is also ready
             if (consultantParsed) {
                 document.getElementById('btnSendConsultant').disabled = false;
+                document.getElementById('btnScheduleConsultant').disabled = false;
             }
 
             showToast('Recipients confirmed: ' + consultantSegment.name, 'success');
@@ -6369,6 +6354,7 @@ Choose Recent Poll
             document.getElementById('btnConfirmConsultantRecipient').disabled = false;
             document.getElementById('btnRemoveConsultantRecipient').style.display = 'none';
             document.getElementById('btnSendConsultant').disabled = true;
+            document.getElementById('btnScheduleConsultant').disabled = true;
             showToast('Recipients removed', 'info');
         }
 
@@ -6406,6 +6392,116 @@ Choose Recent Poll
                 btn.innerHTML = 'Send Test';
             }
         }
+
+        // ===== CONSULTANT SCHEDULE FUNCTIONS =====
+        function openConsultantSchedule() {
+            if (!consultantParsed) {
+                showToast('Parse the Gemini JSON first.', 'error');
+                return;
+            }
+            if (!consultantSegment) {
+                showToast('Please confirm recipients first.', 'error');
+                return;
+            }
+            const row = document.getElementById('consultantScheduleRow');
+            if (row) {
+                row.style.display = 'block';
+                // Default to next Monday 9am Melbourne time
+                const now = new Date();
+                const day = now.getDay();
+                const daysUntilMonday = (1 - day + 7) % 7 || 7;
+                const nextMonday = new Date(now);
+                nextMonday.setDate(now.getDate() + daysUntilMonday);
+                nextMonday.setHours(9, 0, 0, 0);
+                const pad = n => String(n).padStart(2, '0');
+                const defaultVal = `${nextMonday.getFullYear()}-${pad(nextMonday.getMonth()+1)}-${pad(nextMonday.getDate())}T09:00`;
+                document.getElementById('consultantScheduleDate').value = defaultVal;
+            }
+        }
+
+        function closeConsultantScheduleRow() {
+            const row = document.getElementById('consultantScheduleRow');
+            if (row) row.style.display = 'none';
+        }
+
+        async function confirmConsultantSchedule() {
+            if (!consultantSegment) {
+                showToast('Please confirm recipients first.', 'error');
+                return;
+            }
+            const schedEl = document.getElementById('consultantScheduleDate');
+            if (!schedEl || !schedEl.value) {
+                showToast('Please select a date and time.', 'error');
+                return;
+            }
+            const melbDate = new Date(schedEl.value);
+            const scheduledAt = melbDate.toISOString();
+            const recipientName = consultantSegment.name;
+
+            showScheduleConfirmation('Consultant Newsletter', recipientName, '?', scheduledAt, async (confirmed) => {
+                if (!confirmed) return;
+                await executeConsultantSchedule(consultantSegment.type, consultantSegment.id, scheduledAt);
+            });
+        }
+
+        async function executeConsultantSchedule(recipientType, recipientId, scheduledAt) {
+            const btn = document.getElementById('btnConfirmConsultantSchedule');
+            if (btn) { btn.disabled = true; btn.innerHTML = 'Scheduling... <span class="spinner"></span>'; }
+            try {
+                const response = await fetch('/api/consultant/schedule', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ recipientType, recipientId, scheduledAt })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('Consultant newsletter scheduled for ' + result.scheduledFor, 'success');
+                    document.getElementById('consultantScheduleRow').style.display = 'none';
+                    // Update state badge
+                    document.getElementById('consultantStateBadge').textContent = 'SCHEDULED';
+                    document.getElementById('consultantStateBadge').className = 'status-badge SCHEDULED';
+                    document.getElementById('consultantStateTimestamp').textContent = 'Scheduled: ' + result.scheduledFor;
+                    // Show scheduled info box
+                    updateConsultantScheduledBox(result.scheduledFor);
+                } else {
+                    showToast('Scheduling failed: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+            }
+            if (btn) { btn.disabled = false; btn.innerHTML = 'Confirm Schedule'; }
+        }
+
+        function updateConsultantScheduledBox(scheduledFor) {
+            const box = document.getElementById('consultantScheduledBox');
+            if (!box) return;
+            if (scheduledFor) {
+                box.style.cssText = 'margin-top:14px; padding:14px 16px; background:rgba(39,174,96,0.15); border:1px solid rgba(39,174,96,0.4); border-radius:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;';
+                box.innerHTML = `<span style="color:rgba(255,255,255,0.9); font-size:14px;">&#128197; <strong>Scheduled:</strong> ${scheduledFor}</span><button onclick="cancelConsultantScheduleNow()" style="background:#e74c3c; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">Cancel Schedule</button>`;
+                box.style.display = 'flex';
+            } else {
+                box.style.display = 'none';
+            }
+        }
+
+        async function cancelConsultantScheduleNow() {
+            try {
+                const response = await fetch('/api/consultant/cancel-schedule', { method: 'POST' });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('Schedule cancelled.', 'success');
+                    document.getElementById('consultantStateBadge').textContent = 'TESTED';
+                    document.getElementById('consultantStateBadge').className = 'status-badge TESTED';
+                    document.getElementById('consultantStateTimestamp').textContent = 'Schedule cancelled';
+                    updateConsultantScheduledBox(null);
+                } else {
+                    showToast('Could not cancel: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+            }
+        }
+        // ===== END CONSULTANT SCHEDULE FUNCTIONS =====
 
         // Send now
         async function sendConsultantNow() {
@@ -6457,9 +6553,11 @@ Choose Recent Poll
                     document.getElementById('btnPreviewConsultant').disabled = true;
                     document.getElementById('btnTestConsultant').disabled = true;
                     document.getElementById('btnSendConsultant').disabled = true;
+                    document.getElementById('btnScheduleConsultant').disabled = true;
                     document.getElementById('consultantRecipientLocked').style.display = 'none';
                     document.getElementById('btnRemoveConsultantRecipient').style.display = 'none';
                     document.getElementById('btnConfirmConsultantRecipient').disabled = false;
+                    updateConsultantScheduledBox(null);
                 }, 2500);
 
             } catch (error) {

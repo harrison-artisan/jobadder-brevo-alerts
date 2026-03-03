@@ -739,6 +739,153 @@ function resetState(req, res) {
     }
 }
 
+// ============================================================
+// Internal send helper (no req/res — used by scheduler)
+// ============================================================
+async function sendToAllDirect(options = {}) {
+    const state = readState();
+    if (!state.templateParams) throw new Error('No template params in state');
+    const templateId = state.consultant && state.consultant.brevo_template_id
+        ? state.consultant.brevo_template_id : null;
+    const { recipientType, recipientId } = options;
+    let recipients;
+    if (recipientType === 'segment') {
+        recipients = await brevoService.getSegmentContacts(recipientId);
+    } else if (recipientType === 'list') {
+        recipients = await brevoService.getListContacts(recipientId);
+    } else {
+        throw new Error('Invalid recipient type');
+    }
+    if (!recipients || recipients.length === 0) throw new Error('No recipients found');
+    const testMode = process.env.TEST_MODE === 'true';
+    const finalRecipients = testMode ? [{ email: process.env.TEST_EMAIL }] : recipients;
+    if (templateId) {
+        await brevoService.sendBatchEmail(finalRecipients, parseInt(templateId), state.templateParams);
+    } else {
+        const emailPreviewService = require('../services/emailPreviewService');
+        const htmlContent = await renderConsultantTemplate(state.templateParams, emailPreviewService);
+        const newsletterName = state.consultant ? (state.consultant.newsletter_name || state.consultant.name) : 'Consultant';
+        const subject = `${newsletterName} — Artisan`;
+        for (const recipient of finalRecipients) {
+            await brevoService.sendEmailWithHtml({
+                to: { email: recipient.email, name: recipient.name || recipient.email },
+                subject, htmlContent
+            });
+        }
+    }
+    writeState({ ...state, state: 'SENT', sentAt: new Date().toISOString() });
+    console.log(`✅ Scheduled consultant newsletter sent to ${finalRecipients.length} recipients.`);
+    setTimeout(() => writeState({ state: 'EMPTY' }), 2000);
+    return { success: true, count: finalRecipients.length };
+}
+
+// ============================================================
+// POST /api/consultant/schedule
+// ============================================================
+let _consultantScheduledTask = null;
+
+async function scheduleConsultant(req, res) {
+    const cron = require('node-cron');
+    try {
+        const { recipientType, recipientId, scheduledAt } = req.body;
+        const state = readState();
+        if (!['GENERATED', 'TESTED'].includes(state.state) || !state.templateParams) {
+            return res.status(400).json({ success: false, message: 'Please parse the Gemini JSON first.' });
+        }
+        if (!scheduledAt) return res.status(400).json({ success: false, message: 'scheduledAt is required' });
+        const sendDate = new Date(scheduledAt);
+        if (isNaN(sendDate.getTime())) return res.status(400).json({ success: false, message: 'Invalid scheduledAt date' });
+        if (sendDate <= new Date()) return res.status(400).json({ success: false, message: 'Scheduled time must be in the future' });
+
+        const min = sendDate.getUTCMinutes();
+        const hr = sendDate.getUTCHours();
+        const dom = sendDate.getUTCDate();
+        const mon = sendDate.getUTCMonth() + 1;
+        const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
+        const scheduledFor = sendDate.toLocaleString('en-AU', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+            hour: '2-digit', minute: '2-digit', hour12: true,
+            timeZone: 'Australia/Melbourne'
+        }) + ' (Melbourne time)';
+
+        if (_consultantScheduledTask) { _consultantScheduledTask.stop(); _consultantScheduledTask = null; }
+        _consultantScheduledTask = cron.schedule(cronExpr, async () => {
+            console.log('📅 Executing scheduled consultant newsletter send...');
+            const s = readState();
+            if (s.state === 'SCHEDULED') writeState({ ...s, state: 'TESTED' });
+            try {
+                await sendToAllDirect({ recipientType, recipientId });
+            } catch (e) {
+                console.error('❌ Scheduled consultant send failed:', e.message);
+            }
+            if (_consultantScheduledTask) { _consultantScheduledTask.stop(); _consultantScheduledTask = null; }
+        }, { timezone: 'UTC' });
+
+        writeState({ ...state, state: 'SCHEDULED', scheduledAt: sendDate.toISOString(), scheduledFor, scheduledOptions: { recipientType, recipientId } });
+        console.log(`📅 Consultant newsletter scheduled for ${scheduledFor} (cron: ${cronExpr} UTC)`);
+        res.json({ success: true, scheduledFor, message: 'Consultant newsletter scheduled successfully' });
+    } catch (error) {
+        console.error('❌ Error scheduling consultant newsletter:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+}
+
+// ============================================================
+// POST /api/consultant/cancel-schedule
+// ============================================================
+function cancelConsultantSchedule(req, res) {
+    try {
+        if (_consultantScheduledTask) { _consultantScheduledTask.stop(); _consultantScheduledTask = null; }
+        const state = readState();
+        if (state.state === 'SCHEDULED') {
+            const { scheduledAt, scheduledFor, scheduledOptions, ...rest } = state;
+            writeState({ ...rest, state: 'TESTED' });
+        }
+        res.json({ success: true, message: 'Schedule cancelled' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+}
+
+// ============================================================
+// Restore scheduled cron on server startup
+// ============================================================
+function restoreConsultantSchedule() {
+    const cron = require('node-cron');
+    try {
+        const state = readState();
+        if (state.state !== 'SCHEDULED' || !state.scheduledAt) return;
+        const sendDate = new Date(state.scheduledAt);
+        if (sendDate <= new Date()) {
+            console.warn('⚠️  Consultant scheduled time has passed, clearing schedule');
+            const { scheduledAt, scheduledFor, scheduledOptions, ...rest } = state;
+            writeState({ ...rest, state: 'TESTED' });
+            return;
+        }
+        const { recipientType, recipientId } = state.scheduledOptions || {};
+        const min = sendDate.getUTCMinutes();
+        const hr = sendDate.getUTCHours();
+        const dom = sendDate.getUTCDate();
+        const mon = sendDate.getUTCMonth() + 1;
+        const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
+        if (_consultantScheduledTask) { _consultantScheduledTask.stop(); _consultantScheduledTask = null; }
+        _consultantScheduledTask = cron.schedule(cronExpr, async () => {
+            console.log('📅 Executing restored consultant newsletter send...');
+            const s = readState();
+            if (s.state === 'SCHEDULED') writeState({ ...s, state: 'TESTED' });
+            try {
+                await sendToAllDirect({ recipientType, recipientId });
+            } catch (e) {
+                console.error('❌ Restored consultant send failed:', e.message);
+            }
+            if (_consultantScheduledTask) { _consultantScheduledTask.stop(); _consultantScheduledTask = null; }
+        }, { timezone: 'UTC' });
+        console.log(`📅 Consultant schedule restored for ${state.scheduledFor}`);
+    } catch (error) {
+        console.error('❌ Error restoring consultant schedule:', error.message);
+    }
+}
+
 module.exports = {
     getState,
     getConsultantList,
@@ -748,5 +895,8 @@ module.exports = {
     previewConsultant,
     sendTest,
     sendToAll,
-    resetState
+    resetState,
+    scheduleConsultant,
+    cancelConsultantSchedule,
+    restoreConsultantSchedule
 };
