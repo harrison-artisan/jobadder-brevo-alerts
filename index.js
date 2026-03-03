@@ -886,6 +886,18 @@ app.post('/api/consultant/send', async (req, res) => {
 app.post('/api/consultant/reset', (req, res) => {
   consultantController.resetState(req, res);
 });
+// POST /api/consultant/schedule  - Schedule consultant newsletter
+app.post('/api/consultant/schedule', async (req, res) => {
+  try {
+    await consultantController.scheduleConsultant(req, res);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+// POST /api/consultant/cancel-schedule  - Cancel scheduled consultant newsletter
+app.post('/api/consultant/cancel-schedule', (req, res) => {
+  consultantController.cancelConsultantSchedule(req, res);
+});
 
 // Start server
 app.listen(PORT, () => {
@@ -937,6 +949,12 @@ app.listen(PORT, () => {
       console.log('🔄 Article schedule restore check complete');
     } catch (e) {
       console.warn('⚠️  Could not restore Article schedule:', e.message);
+    }
+    try {
+      consultantController.restoreConsultantSchedule();
+      console.log('🔄 Consultant schedule restore check complete');
+    } catch (e) {
+      console.warn('⚠️  Could not restore Consultant schedule:', e.message);
     }
   })();
 });

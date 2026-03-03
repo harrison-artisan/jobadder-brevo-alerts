@@ -116,46 +116,38 @@
         <!-- Email card -->
         <table width="650" cellpadding="0" cellspacing="0" border="0" role="presentation" class="email-container" style="max-width:650px;width:100%;background-color:#ffffff;border:2px solid #e0e0e0;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.09);overflow:hidden;">
 
-          <!-- ====== HEADER ====== -->
+          <!-- ====== HEADER (full-width dark band) ====== -->
           <tr>
-            <td style="padding:40px 45px 36px 45px;" class="mobile-pad">
+            <td style="background:linear-gradient(135deg,#1b334d 0%,#0f1f30 100%);padding:36px 45px 32px 45px;" class="mobile-pad">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
                 <tr>
-                  <!-- Left: Logo + tagline + newsletter name badge -->
-                  <td width="55%" valign="top" class="header-left">
-                    <a href="https://artisan.com.au/" style="text-decoration:none;display:block;margin-bottom:14px;" class="header-logo-link">
-                      <img src="https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png" alt="Artisan" width="64" height="64" style="display:block;border:0;" class="header-logo-img">
+                  <!-- Left: Logo + tagline + newsletter name -->
+                  <td width="55%" valign="middle" class="header-left">
+                    <a href="https://artisan.com.au/" style="text-decoration:none;display:block;margin-bottom:12px;" class="header-logo-link">
+                      <img src="https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png" alt="Artisan" width="56" height="56" style="display:block;border:0;" class="header-logo-img">
                     </a>
-                    <p style="margin:0 0 18px 0;font-size:13px;color:#666666;font-weight:600;line-height:1.5;">Creative, Digital and<br>Marketing Recruitment</p>
-                    <!-- Newsletter name badge -->
-                    <table cellpadding="0" cellspacing="0" border="0" role="presentation" class="header-badge-table">
-                      <tr>
-                        <td style="background:linear-gradient(135deg,#1b334d 0%,#0f1f30 100%);border-radius:28px;padding:12px 24px;">
-                          <span style="font-size:18px;font-weight:900;color:#ffffff;letter-spacing:0.3px;">{{ params.consultant.newsletter_name }}</span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="padding-top:10px;">
-                          <span style="font-size:13px;font-weight:600;color:#666666;">by <span style="color:#bd203d;">{{ params.consultant.name }}</span></span>
-                        </td>
-                      </tr>
-                    </table>
+                    <p style="margin:0 0 14px 0;font-size:12px;color:rgba(255,255,255,0.5);font-weight:600;letter-spacing:0.3px;line-height:1.5;">Creative, Digital and Marketing Recruitment</p>
+                    <!-- Newsletter name -->
+                    <div style="margin:0;">
+                      <span style="font-size:22px;font-weight:900;color:#ffffff;letter-spacing:0.2px;line-height:1.2;">{{ params.consultant.newsletter_name }}</span><br>
+                      <span style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.5);">by <span style="color:#e05070;">{{ params.consultant.name }}</span></span>
+                    </div>
                   </td>
                   <!-- Right: Book a meeting card -->
-                  <td width="45%" valign="top" align="right" class="header-right">
-                    <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#f7f7f7;border-radius:14px;padding:24px;max-width:220px;margin-left:auto;">
+                  <td width="45%" valign="middle" align="right" class="header-right">
+                    <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:14px;padding:20px;max-width:210px;margin-left:auto;">
                       <tr>
                         <td>
-                          <h3 style="margin:0 0 8px 0;font-size:15px;font-weight:900;color:#1b334d;text-align:center;">Book a Meeting</h3>
-                          <p style="margin:0 0 16px 0;font-size:12px;color:#888888;text-align:center;line-height:1.6;">Got a role to fill or a career move in mind? Let's talk.</p>
+                          <h3 style="margin:0 0 6px 0;font-size:14px;font-weight:900;color:#ffffff;text-align:center;">Book a Meeting</h3>
+                          <p style="margin:0 0 14px 0;font-size:11px;color:rgba(255,255,255,0.5);text-align:center;line-height:1.6;">Got a role to fill or a career move in mind? Let's talk.</p>
                           <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
                             <tr>
                               <td>
-                                <a href="{{ params.consultant.calendar_link }}" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:11px 20px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 4px 14px rgba(189,32,61,0.3);">BOOK NOW &#8594;</a>
+                                <a href="{{ params.consultant.calendar_link }}" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:11px 20px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 4px 14px rgba(189,32,61,0.4);">BOOK NOW &#8594;</a>
                               </td>
                             </tr>
                           </table>
-                          <p style="margin:10px 0 0 0;font-size:11px;color:#aaaaaa;text-align:center;font-style:italic;">Or simply reply to this email</p>
+                          <p style="margin:10px 0 0 0;font-size:11px;color:rgba(255,255,255,0.3);text-align:center;font-style:italic;">Or simply reply to this email</p>
                         </td>
                       </tr>
                     </table>
