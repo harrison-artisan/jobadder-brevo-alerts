@@ -82,38 +82,51 @@ class EmailPreviewService {
             }
         );
 
-        // Step 2: Handle {% if %} conditionals (for loop.index checks, etc.)
-        result = result.replace(/\{%\s*if\s+([^%]+)\s*%\}([\s\S]*?)(?:\{%\s*else\s*%\}([\s\S]*?))?\{%\s*endif\s*%\}/g,
-            (match, condition, trueBlock, falseBlock) => {
-                // Simple condition evaluation for loop.index patterns
-                const evalCondition = (cond, data) => {
-                    // Handle: loop.index % 2 == 0 (even)
-                    if (/loop\.index\s*%\s*2\s*==\s*0/.test(cond)) {
-                        return data.loop && data.loop.index % 2 === 0;
-                    }
-                    // Handle: loop.index % 2 == 1 (odd)
-                    if (/loop\.index\s*%\s*2\s*==\s*1/.test(cond)) {
-                        return data.loop && data.loop.index % 2 === 1;
-                    }
-                    // Handle: not loop.last
-                    if (/not\s+loop\.last/.test(cond)) {
-                        return data.loop && !data.loop.last;
-                    }
-                    // Handle: loop.first
-                    if (/loop\.first/.test(cond)) {
-                        return data.loop && data.loop.first;
-                    }
-                    // Handle: loop.last
-                    if (/loop\.last/.test(cond)) {
-                        return data.loop && data.loop.last;
-                    }
-                    return false;
-                };
-                
-                const conditionMet = evalCondition(condition, data);
-                return conditionMet ? trueBlock : (falseBlock || '');
-            }
-        );
+        // Step 2: Handle {% if %} conditionals — process iteratively to handle nested blocks
+        // Use a loop to handle nested if/endif pairs correctly
+        let ifIterations = 0;
+        while (result.includes('{%') && ifIterations < 20) {
+            const before = result;
+            result = result.replace(/\{%\s*if\s+([^%]+?)\s*%\}((?:(?!\{%\s*if\b)[\s\S])*?)(?:\{%\s*else\s*%\}((?:(?!\{%\s*if\b)[\s\S])*?))?\{%\s*endif\s*%\}/,
+                (match, condition, trueBlock, falseBlock) => {
+                    const evalCondition = (cond) => {
+                        const trimmed = cond.trim();
+                        // Handle: loop.index % 2 == 0
+                        if (/loop\.index\s*%\s*2\s*==\s*0/.test(trimmed)) return data.loop && data.loop.index % 2 === 0;
+                        // Handle: loop.index % 2 == 1
+                        if (/loop\.index\s*%\s*2\s*==\s*1/.test(trimmed)) return data.loop && data.loop.index % 2 === 1;
+                        // Handle: not loop.last
+                        if (/not\s+loop\.last/.test(trimmed)) return data.loop && !data.loop.last;
+                        // Handle: loop.first
+                        if (/loop\.first/.test(trimmed)) return data.loop && data.loop.first;
+                        // Handle: loop.last
+                        if (/loop\.last/.test(trimmed)) return data.loop && data.loop.last;
+                        // Handle: "path and path.length > N"
+                        const andLengthMatch = trimmed.match(/^([\w.]+)\s+and\s+[\w.]+\.length\s*>\s*(\d+)$/);
+                        if (andLengthMatch) {
+                            const arr = this.getNestedProperty(data, andLengthMatch[1], null);
+                            return Array.isArray(arr) && arr.length > parseInt(andLengthMatch[2], 10);
+                        }
+                        // Handle: "path.length > N"
+                        const lengthMatch = trimmed.match(/^([\w.]+)\.length\s*>\s*(\d+)$/);
+                        if (lengthMatch) {
+                            const arr = this.getNestedProperty(data, lengthMatch[1], null);
+                            return Array.isArray(arr) && arr.length > parseInt(lengthMatch[2], 10);
+                        }
+                        // Handle: general truthy property path (e.g. params.job.has_job)
+                        if (/^[\w.]+$/.test(trimmed)) {
+                            const val = this.getNestedProperty(data, trimmed, false);
+                            return !!(val);
+                        }
+                        return false;
+                    };
+                    const conditionMet = evalCondition(condition);
+                    return conditionMet ? (trueBlock || '') : (falseBlock || '');
+                }
+            );
+            if (result === before) break;
+            ifIterations++;
+        }
 
         // Step 3: Replace all {{ variable.path }} with actual values
         result = result.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (match, varPath) => {
