@@ -89,7 +89,7 @@ function getAListCandidate() {
 
 const STATE_FILE = path.join(__dirname, '..', '.consultant-state.json');
 const CONSULTANTS_FILE = path.join(__dirname, '..', 'config', 'consultants.json');
-const TEMPLATE_FILE = path.join(__dirname, '..', 'templates', 'brevo_template_consultant_newsletter.html');
+const TEMPLATE_FILE = path.join(__dirname, '..', 'templates', 'brevo_consultant_for_brevo.html');
 
 // ============================================================
 // State helpers
