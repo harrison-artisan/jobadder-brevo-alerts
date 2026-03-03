@@ -6070,7 +6070,7 @@ Choose Recent Poll
         // Toggle between view and edit mode
         function toggleProfileEdit() {
             profileEditOpen = !profileEditOpen;
-            document.getElementById('profileViewMode').style.display = profileEditOpen ? 'none' : 'grid';
+            document.getElementById('profileViewMode').style.display = profileEditOpen ? 'none' : 'flex';
             document.getElementById('profileEditMode').style.display = profileEditOpen ? 'block' : 'none';
             document.getElementById('btnSaveProfile').style.display = profileEditOpen ? 'inline-block' : 'none';
             document.querySelector('[onclick="toggleProfileEdit()"]').textContent = profileEditOpen ? 'Cancel' : 'Edit Profile';
