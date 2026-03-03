@@ -1745,7 +1745,6 @@
                         <!-- Actions -->
                         <div style="flex-shrink:0; display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
                             <button class="btn btn-secondary" style="padding:8px 18px; font-size:12px; white-space:nowrap;" onclick="toggleProfileEdit()">Edit Profile</button>
-                            <button class="btn btn-success" style="padding:8px 18px; font-size:12px; white-space:nowrap; display:none;" id="btnSaveProfile" onclick="saveConsultantProfile()">Save Profile</button>
                         </div>
                     </div>
 
@@ -1795,6 +1794,11 @@
                                     <option value="link">Link / URL Card</option>
                                 </select>
                             </div>
+                        </div>
+                        <!-- Save / Cancel buttons inside the edit form -->
+                        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.08);">
+                            <button class="btn btn-secondary" style="padding:10px 22px; font-size:13px;" onclick="toggleProfileEdit()">Cancel</button>
+                            <button class="btn btn-success" id="btnSaveProfile" style="padding:10px 22px; font-size:13px;" onclick="saveConsultantProfile()">Save Profile</button>
                         </div>
                     </div>
                 </div>
@@ -6072,8 +6076,6 @@ Choose Recent Poll
             profileEditOpen = !profileEditOpen;
             document.getElementById('profileViewMode').style.display = profileEditOpen ? 'none' : 'flex';
             document.getElementById('profileEditMode').style.display = profileEditOpen ? 'block' : 'none';
-            document.getElementById('btnSaveProfile').style.display = profileEditOpen ? 'inline-block' : 'none';
-            document.querySelector('[onclick="toggleProfileEdit()"]').textContent = profileEditOpen ? 'Cancel' : 'Edit Profile';
 
             if (profileEditOpen && currentProfile) {
                 // Populate edit fields
@@ -6125,8 +6127,6 @@ Choose Recent Poll
                 profileEditOpen = false;
                 document.getElementById('profileViewMode').style.display = 'flex';
                 document.getElementById('profileEditMode').style.display = 'none';
-                document.getElementById('btnSaveProfile').style.display = 'none';
-                document.querySelector('[onclick="toggleProfileEdit()"]').textContent = 'Edit Profile';
 
                 // Update status cards
                 document.getElementById('consultantNameDisplay').textContent = updated.name || selectedConsultantId;
