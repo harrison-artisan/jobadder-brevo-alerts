@@ -101,7 +101,7 @@ class WordpressService {
                     _embed: "true",
                 },
             });
-            return this.formatArticleData(response.data);
+            return this.formatArticleData(response.data, 2500);
         } catch (error) {
             console.error(`Error fetching article ${articleId} from WordPress:`, error.message);
             return null;
@@ -112,17 +112,17 @@ class WordpressService {
      * Formats the raw article data from the WordPress API into a clean object.
      * Strips HTML tags and decodes all HTML entities so plain text is passed to Brevo.
      * @param {Object} post - The raw post object from the API.
+     * @param {number} [maxLength=800] - Max excerpt length in characters.
      * @returns {Object}
      */
-    formatArticleData(post) {
+    formatArticleData(post, maxLength = 800) {
         const featuredImage = post._embedded?.["wp:featuredmedia"]?.[0]?.source_url || null;
 
         // Decode entities and strip HTML from both title and excerpt
         const title = decodeHtmlEntities(post.title.rendered);
         const excerpt = decodeHtmlEntities(post.excerpt.rendered);
 
-        // Truncate excerpt to ~800 chars and ensure it ends with ...
-        const maxLength = 800;
+        // Truncate excerpt to the specified length and ensure it ends with ...
         const truncatedExcerpt = excerpt.length > maxLength
             ? excerpt.substring(0, maxLength).replace(/\s+\S*$/, '') + '...'
             : excerpt;
