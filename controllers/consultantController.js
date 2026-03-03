@@ -15,7 +15,77 @@
 
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
+const http = require('http');
 const brevoService = require('../services/brevoService');
+
+const ALIST_STATE_FILE = path.join(__dirname, '..', '.alist-state.json');
+const WP_API = 'https://artisan.com.au/wp-json/wp/v2';
+const WP_ARTICLE_CATEGORY = 6; // 'Article' category ID
+
+// ============================================================
+// Fetch 3 latest Creative Community articles from WordPress
+// ============================================================
+async function fetchWordPressArticles() {
+    try {
+        const posts = await wpGet(`${WP_API}/posts?categories=${WP_ARTICLE_CATEGORY}&per_page=3&orderby=date&order=desc&_fields=id,title,link,featured_media`);
+        const articles = await Promise.all(posts.map(async (p) => {
+            let image = 'https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png';
+            if (p.featured_media) {
+                try {
+                    const media = await wpGet(`${WP_API}/media/${p.featured_media}?_fields=source_url`);
+                    if (media.source_url) image = media.source_url;
+                } catch (e) { /* use fallback */ }
+            }
+            return {
+                title: p.title && p.title.rendered ? p.title.rendered : '',
+                image,
+                link: p.link || 'https://artisan.com.au/creative-community/'
+            };
+        }));
+        console.log(`✅ Fetched ${articles.length} WordPress articles`);
+        return articles;
+    } catch (e) {
+        console.warn('⚠️  WordPress article fetch failed:', e.message);
+        return [];
+    }
+}
+
+// Simple HTTP GET helper that returns parsed JSON
+function wpGet(url) {
+    return new Promise((resolve, reject) => {
+        const mod = url.startsWith('https') ? https : http;
+        mod.get(url, { headers: { 'User-Agent': 'ArtisanDashboard/1.0' } }, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+                try { resolve(JSON.parse(data)); }
+                catch (e) { reject(new Error('JSON parse error: ' + e.message)); }
+            });
+        }).on('error', reject);
+    });
+}
+
+// ============================================================
+// Auto-pull first candidate from latest A-List state
+// ============================================================
+function getAListCandidate() {
+    try {
+        if (!fs.existsSync(ALIST_STATE_FILE)) return null;
+        const state = JSON.parse(fs.readFileSync(ALIST_STATE_FILE, 'utf8'));
+        if (!state || !state.candidates || state.candidates.length === 0) return null;
+        const c = state.candidates[0];
+        return {
+            title: c.title || '',
+            image_url: c.image_url || c.avatar_url || '',
+            mailto_link: c.mailto_link || '',
+            candidateId: c.candidateId || ''
+        };
+    } catch (e) {
+        console.warn('⚠️  Could not read A-List state:', e.message);
+        return null;
+    }
+}
 
 const STATE_FILE = path.join(__dirname, '..', '.consultant-state.json');
 const CONSULTANTS_FILE = path.join(__dirname, '..', 'config', 'consultants.json');
@@ -133,11 +203,12 @@ function saveProfile(req, res) {
 // ============================================================
 // POST /api/consultant/parse
 // Accepts raw JSON from Gemini Gem, validates, merges with config
+// Auto-fetches WordPress articles and A-List candidate
 // ============================================================
-function parseJSON(req, res) {
+async function parseJSON(req, res) {
     console.log('\n======== CONSULTANT: PARSE JSON ========');
 
-    const { jsonText, mediaType, mediaUrl, mediaCaption } = req.body;
+    const { jsonText } = req.body;
     if (!jsonText || !jsonText.trim()) {
         return res.status(400).json({ success: false, message: 'No JSON provided.' });
     }
@@ -187,12 +258,34 @@ function parseJSON(req, res) {
         return res.status(400).json({ success: false, message: 'Maximum 3 events allowed.' });
     }
 
-    // Resolve media — dashboard override takes priority over Gemini JSON
-    const resolvedMedia = {
-        type: mediaType || (parsed.media && parsed.media.type) || consultantConfig.media_type_default || 'none',
-        url: mediaUrl || (parsed.media && parsed.media.url) || '',
-        caption: mediaCaption || (parsed.media && parsed.media.caption) || ''
-    };
+    // Resolve media — supports array (multiple items) or single object from Gemini JSON
+    // media can be: { type, url, caption } OR [{ type, url, caption }, ...]
+    let resolvedMedia = [];
+    const rawMedia = parsed.media;
+    if (Array.isArray(rawMedia)) {
+        resolvedMedia = rawMedia.filter(m => m && m.type && m.type !== 'none' && m.url);
+    } else if (rawMedia && rawMedia.type && rawMedia.type !== 'none' && rawMedia.url) {
+        resolvedMedia = [rawMedia];
+    }
+
+    // Auto-fetch WordPress articles (falls back to empty array on failure)
+    console.log('📰 Fetching WordPress articles...');
+    const wpArticles = await fetchWordPressArticles();
+
+    // Merge: Gemini-provided articles override WordPress auto-fetch
+    const articles = [
+        parsed.article1 || wpArticles[0] || {},
+        parsed.article2 || wpArticles[1] || {},
+        parsed.article3 || wpArticles[2] || {}
+    ];
+
+    // Auto-pull A-List candidate (null if no A-List state exists)
+    const alistCandidate = getAListCandidate();
+    if (alistCandidate) {
+        console.log(`✅ A-List candidate auto-pulled: ${alistCandidate.title}`);
+    } else {
+        console.log('ℹ️  No A-List candidate available — job-only layout will be used.');
+    }
 
     // Build the merged state object
     const state = {
@@ -202,10 +295,12 @@ function parseJSON(req, res) {
         content: {
             industry_insight: parsed.industry_insight,
             life_update: parsed.life_update,
-            events: events,
-            media: resolvedMedia
+            events,
+            media: resolvedMedia,
+            articles,
+            alist_candidate: alistCandidate
         },
-        templateParams: buildTemplateParams(consultantConfig, parsed, resolvedMedia)
+        templateParams: buildTemplateParams(consultantConfig, parsed, resolvedMedia, articles, alistCandidate)
     };
 
     writeState(state);
@@ -213,10 +308,12 @@ function parseJSON(req, res) {
 
     res.json({
         success: true,
-        message: `Newsletter content parsed for ${consultantConfig.name}.`,
+        message: `Newsletter content parsed for ${consultantConfig.name}. ${wpArticles.length} articles auto-fetched from WordPress.${alistCandidate ? ' A-List candidate included.' : ''}`,
         consultant: consultantConfig.name,
         newsletter_name: consultantConfig.newsletter_name,
-        media: resolvedMedia,
+        media_count: resolvedMedia.length,
+        articles_from_wp: wpArticles.length,
+        alist_candidate: !!alistCandidate,
         state
     });
 }
@@ -224,12 +321,13 @@ function parseJSON(req, res) {
 // ============================================================
 // Build flat template params for Brevo
 // ============================================================
-function buildTemplateParams(consultant, parsed, media) {
-    const a1 = parsed.article1 || {};
-    const a2 = parsed.article2 || {};
-    const a3 = parsed.article3 || {};
+function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCandidate) {
+    const a1 = (articles && articles[0]) || {};
+    const a2 = (articles && articles[1]) || {};
+    const a3 = (articles && articles[2]) || {};
     const job = parsed.job || {};
-    const m = media || {};
+    const fallbackImg = 'https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png';
+    const fallbackArticleLink = 'https://artisan.com.au/creative-community/';
 
     return {
         // Newsletter identity
@@ -253,29 +351,34 @@ function buildTemplateParams(consultant, parsed, media) {
         life_update_heading: parsed.life_update.heading,
         life_update_body: parsed.life_update.body,
 
-        // Personal media
-        media_type: m.type || 'none',
-        media_url: m.url || '',
-        media_caption: m.caption || '',
+        // Personal media — array of { type, url, caption } objects
+        media_items: Array.isArray(mediaArray) ? mediaArray : [],
+        has_media: Array.isArray(mediaArray) && mediaArray.length > 0,
 
         // Featured job ad
         job_title: job.title || '',
         job_type: job.type || 'Full Time',
         job_location: job.location || '',
-        job_salary: job.salary || '',
         job_description: job.description || '',
         job_link: job.link || 'https://clientapps.jobadder.com/67514/artisan',
+        has_job: !!(job.title),
 
-        // Creative Community articles
+        // A-List candidate (auto-pulled from last A-List state)
+        alist_candidate_title: alistCandidate ? alistCandidate.title : '',
+        alist_candidate_image: alistCandidate ? (alistCandidate.image_url || fallbackImg) : fallbackImg,
+        alist_candidate_link: alistCandidate ? alistCandidate.mailto_link : '',
+        has_alist_candidate: !!alistCandidate,
+
+        // Creative Community articles (auto-fetched from WordPress, overridable via Gemini JSON)
         article1_title: a1.title || '',
-        article1_image: a1.image || 'https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png',
-        article1_link: a1.link || 'https://artisan.com.au/creative-community/',
+        article1_image: a1.image || fallbackImg,
+        article1_link: a1.link || fallbackArticleLink,
         article2_title: a2.title || '',
-        article2_image: a2.image || 'https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png',
-        article2_link: a2.link || 'https://artisan.com.au/creative-community/',
+        article2_image: a2.image || fallbackImg,
+        article2_link: a2.link || fallbackArticleLink,
         article3_title: a3.title || '',
-        article3_image: a3.image || 'https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png',
-        article3_link: a3.link || 'https://artisan.com.au/creative-community/',
+        article3_image: a3.image || fallbackImg,
+        article3_link: a3.link || fallbackArticleLink,
 
         // Events
         events: Array.isArray(parsed.events) ? parsed.events : [],
