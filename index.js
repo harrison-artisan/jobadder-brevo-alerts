@@ -674,12 +674,14 @@ app.post('/api/linkedin/disconnect', (req, res) => {
 
 // POST /api/linkedin/post - Post to LinkedIn
 app.post('/api/linkedin/post', async (req, res) => {
-  const { text, articleUrl, title, description } = req.body;
+  const { text, articleUrl, jobUrl, title, jobTitle, description } = req.body;
+  const resolvedUrl   = articleUrl || jobUrl || null;
+  const resolvedTitle = title     || jobTitle || '';
   if (!text) return res.status(400).json({ success: false, message: 'Post text is required.' });
   try {
     let result;
-    if (articleUrl) {
-      result = await linkedinService.postArticleToLinkedIn(text, articleUrl, title || '', description || '');
+    if (resolvedUrl) {
+      result = await linkedinService.postArticleToLinkedIn(text, resolvedUrl, resolvedTitle, description || '');
     } else {
       result = await linkedinService.postToLinkedIn(text);
     }
