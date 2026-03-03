@@ -1704,86 +1704,90 @@
             </div>
 
             <!-- Consultant Selector + Profile Card -->
-            <div class="actions-card">
-                <h2>Select Consultant</h2>
-                <div class="selector-row" style="margin-bottom: 20px;">
-                    <div class="selector-group" style="max-width: 360px;">
-                        <label for="consultantSelector">Consultant</label>
-                        <select id="consultantSelector" onchange="onConsultantSelected()">
-                            <option value="">-- Select a consultant --</option>
-                            <option value="debbie-younger">Debbie Younger</option>
-                            <option value="mathew-hehir">Mathew Hehir</option>
-                            <option value="sean-varian">Sean Varian</option>
-                        </select>
-                    </div>
+            <div class="actions-card" style="padding:0; overflow:hidden;">
+
+                <!-- Full-width selector bar -->
+                <div style="padding:20px 28px 0 28px;">
+                    <label for="consultantSelector" style="display:block; font-size:11px; font-weight:700; color:rgba(255,255,255,0.5); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:8px;">Select Consultant</label>
+                    <select id="consultantSelector" onchange="onConsultantSelected()" style="width:100%; padding:14px 18px; background:rgba(255,255,255,0.08); border:1.5px solid rgba(255,255,255,0.18); border-radius:10px; color:white; font-size:16px; font-weight:600; cursor:pointer; appearance:none; -webkit-appearance:none; background-image:url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'8\' viewBox=\'0 0 12 8\'><path d=\'M1 1l5 5 5-5\' stroke=\'rgba(255,255,255,0.5)\' stroke-width=\'2\' fill=\'none\' stroke-linecap=\'round\'/></svg>'); background-repeat:no-repeat; background-position:right 16px center;">
+                        <option value="">-- Select a consultant --</option>
+                        <option value="debbie-younger">Debbie Younger</option>
+                        <option value="mathew-hehir">Mathew Hehir</option>
+                        <option value="sean-varian">Sean Varian</option>
+                    </select>
                 </div>
 
                 <!-- Profile Card (shown after selecting a consultant) -->
                 <div id="consultantProfileCard" style="display:none;">
-                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
-                        <h3 style="margin:0; font-size:15px; color:white;">Consultant Profile <span style="font-size:12px; color:rgba(255,255,255,0.45); font-weight:400;">(saved permanently — edit once, used every issue)</span></h3>
-                        <div style="display:flex; gap:8px;">
-                            <button class="btn btn-secondary" style="padding:6px 14px; font-size:12px;" onclick="toggleProfileEdit()">Edit Profile</button>
-                            <button class="btn btn-success" style="padding:6px 14px; font-size:12px; display:none;" id="btnSaveProfile" onclick="saveConsultantProfile()">Save Profile</button>
-                        </div>
-                    </div>
 
-                    <!-- Read-only view -->
-                    <div id="profileViewMode" style="display:grid; grid-template-columns:80px 1fr; gap:16px; align-items:start;">
-                        <div style="text-align:center;">
-                            <img id="profilePhotoPreview" src="" alt="Photo" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.2);display:block;margin:0 auto 8px auto;">
-                            <a id="profileLinkedinLink" href="#" target="_blank" style="font-size:10px; color:#0077b5; font-weight:700; text-decoration:none;">LINKEDIN ↗</a>
+                    <!-- Profile hero band -->
+                    <div style="display:flex; align-items:center; gap:28px; padding:28px 28px 24px 28px; border-top:1px solid rgba(255,255,255,0.08); margin-top:20px;">
+                        <!-- Photo -->
+                        <div style="flex-shrink:0; position:relative;">
+                            <img id="profilePhotoPreview" src="" alt="Photo" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid rgba(189,32,61,0.6);display:block;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
                         </div>
-                        <div style="color:white; font-size:13px; line-height:1.8;">
-                            <div style="font-size:18px; font-weight:900; margin-bottom:2px;" id="profileViewName">-</div>
-                            <div style="color:rgba(255,255,255,0.6); margin-bottom:4px;" id="profileViewTitle">-</div>
-                            <div style="color:rgba(255,255,255,0.5); font-size:12px;" id="profileViewEmail">-</div>
-                            <div style="color:rgba(255,255,255,0.5); font-size:12px;" id="profileViewPhone">-</div>
-                            <div style="margin-top:8px; display:flex; gap:16px; flex-wrap:wrap;">
-                                <span style="font-size:11px; color:rgba(255,255,255,0.4);">Newsletter: <strong style="color:rgba(255,255,255,0.75);" id="profileViewNewsletterName">-</strong></span>
-                                <span style="font-size:11px; color:rgba(255,255,255,0.4);">Media default: <strong style="color:rgba(255,255,255,0.75);" id="profileViewMediaType">-</strong></span>
+                        <!-- Details -->
+                        <div style="flex:1; min-width:0;">
+                            <div style="font-size:10px; font-weight:700; color:#bd203d; letter-spacing:2px; text-transform:uppercase; margin-bottom:4px;" id="profileViewNewsletterName">-</div>
+                            <div style="font-size:24px; font-weight:900; color:white; line-height:1.2; margin-bottom:4px;" id="profileViewName">-</div>
+                            <div style="font-size:14px; color:rgba(255,255,255,0.55); margin-bottom:10px;" id="profileViewTitle">-</div>
+                            <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
+                                <span style="font-size:13px; color:rgba(255,255,255,0.65);" id="profileViewEmail">-</span>
+                                <span style="color:rgba(255,255,255,0.2); font-size:12px;">|</span>
+                                <span style="font-size:13px; color:rgba(255,255,255,0.65);" id="profileViewPhone">-</span>
+                                <span style="color:rgba(255,255,255,0.2); font-size:12px;">|</span>
+                                <a id="profileLinkedinLink" href="#" target="_blank" style="font-size:12px; color:#0a66c2; font-weight:700; text-decoration:none; background:rgba(10,102,194,0.15); padding:3px 10px; border-radius:20px;">LINKEDIN ↗</a>
                             </div>
+                            <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+                                <span style="font-size:11px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:20px; padding:3px 12px; color:rgba(255,255,255,0.6);">Media default: <strong style="color:rgba(255,255,255,0.85);" id="profileViewMediaType">-</strong></span>
+                            </div>
+                        </div>
+                        <!-- Actions -->
+                        <div style="flex-shrink:0; display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
+                            <button class="btn btn-secondary" style="padding:8px 18px; font-size:12px; white-space:nowrap;" onclick="toggleProfileEdit()">Edit Profile</button>
+                            <button class="btn btn-success" style="padding:8px 18px; font-size:12px; white-space:nowrap; display:none;" id="btnSaveProfile" onclick="saveConsultantProfile()">Save Profile</button>
                         </div>
                     </div>
 
                     <!-- Edit mode (hidden by default) -->
-                    <div id="profileEditMode" style="display:none; margin-top:16px;">
+                    <div id="profileEditMode" style="display:none; padding:0 28px 28px 28px; border-top:1px solid rgba(255,255,255,0.08);">
+                        <p style="font-size:12px; color:rgba(255,255,255,0.4); margin:16px 0 16px 0;">Saved permanently — edit once, used every issue.</p>
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
                             <div class="form-group">
                                 <label>Newsletter Name</label>
-                                <input type="text" id="profileEditNewsletterName" placeholder="e.g. Mat's Market Insights" style="width:100%;padding:9px 12px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;box-sizing:border-box;">
+                                <input type="text" id="profileEditNewsletterName" placeholder="e.g. Mat's Market Insights" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;box-sizing:border-box;">
                             </div>
                             <div class="form-group">
                                 <label>Full Name</label>
-                                <input type="text" id="profileEditName" placeholder="e.g. Mathew Hehir" style="width:100%;padding:9px 12px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;box-sizing:border-box;">
+                                <input type="text" id="profileEditName" placeholder="e.g. Mathew Hehir" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;box-sizing:border-box;">
                             </div>
                             <div class="form-group">
                                 <label>Job Title</label>
-                                <input type="text" id="profileEditTitle" placeholder="e.g. Senior Recruitment Consultant" style="width:100%;padding:9px 12px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;box-sizing:border-box;">
+                                <input type="text" id="profileEditTitle" placeholder="e.g. Senior Recruitment Consultant" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;box-sizing:border-box;">
                             </div>
                             <div class="form-group">
                                 <label>Email</label>
-                                <input type="email" id="profileEditEmail" placeholder="e.g. mathew@artisan.com.au" style="width:100%;padding:9px 12px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;box-sizing:border-box;">
+                                <input type="email" id="profileEditEmail" placeholder="e.g. mathew@artisan.com.au" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;box-sizing:border-box;">
                             </div>
                             <div class="form-group">
                                 <label>Phone</label>
-                                <input type="text" id="profileEditPhone" placeholder="e.g. +61 7 3333 1833" style="width:100%;padding:9px 12px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;box-sizing:border-box;">
+                                <input type="text" id="profileEditPhone" placeholder="e.g. +61 7 3333 1833" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;box-sizing:border-box;">
                             </div>
                             <div class="form-group">
                                 <label>Photo URL</label>
-                                <input type="url" id="profileEditPhoto" placeholder="https://...headshot.jpg" style="width:100%;padding:9px 12px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;box-sizing:border-box;">
+                                <input type="url" id="profileEditPhoto" placeholder="https://...headshot.jpg" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;box-sizing:border-box;">
                             </div>
                             <div class="form-group">
                                 <label>LinkedIn URL</label>
-                                <input type="url" id="profileEditLinkedin" placeholder="https://linkedin.com/in/..." style="width:100%;padding:9px 12px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;box-sizing:border-box;">
+                                <input type="url" id="profileEditLinkedin" placeholder="https://linkedin.com/in/..." style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;box-sizing:border-box;">
                             </div>
                             <div class="form-group">
                                 <label>Calendar / Booking Link</label>
-                                <input type="url" id="profileEditCalendar" placeholder="https://calendly.com/..." style="width:100%;padding:9px 12px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;box-sizing:border-box;">
+                                <input type="url" id="profileEditCalendar" placeholder="https://calendly.com/..." style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;box-sizing:border-box;">
                             </div>
                             <div class="form-group" style="grid-column:1/-1;">
                                 <label>Default Media Type <span style="font-size:11px;color:rgba(255,255,255,0.4);font-weight:400;">(their usual personal media preference)</span></label>
-                                <select id="profileEditMediaType" style="width:100%;padding:9px 12px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;">
+                                <select id="profileEditMediaType" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:13px;">
                                     <option value="none">None</option>
                                     <option value="image">Image (photo upload / URL)</option>
                                     <option value="instagram">Instagram Post</option>
