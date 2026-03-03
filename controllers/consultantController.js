@@ -475,7 +475,14 @@ async function sendTest(req, res) {
 
     const templateId = state.consultant && state.consultant.brevo_template_id
         ? state.consultant.brevo_template_id : null;
-
+    // DIAGNOSTIC: log exactly what templateParams looks like
+    console.log('🔍 state.templateParams keys:', state.templateParams ? Object.keys(state.templateParams) : 'MISSING');
+    if (state.templateParams && state.templateParams.consultant) {
+        console.log('🔍 consultant.name:', state.templateParams.consultant.name);
+        console.log('🔍 consultant.newsletter_name:', state.templateParams.consultant.newsletter_name);
+    } else {
+        console.log('🔍 templateParams.consultant is MISSING — flat keys?', state.templateParams ? Object.keys(state.templateParams).slice(0,5) : 'none');
+    }
     try {
         if (templateId) {
             console.log(`📧 Sending test via Brevo template #${templateId} for ${state.consultant.name}`);
