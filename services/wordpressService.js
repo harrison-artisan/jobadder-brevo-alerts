@@ -148,7 +148,7 @@ class WordpressService {
         // Use full article content (stripped of HTML tags) so WordPress excerpt truncation doesn't limit us
         const rawContent = post.content?.rendered || post.excerpt?.rendered || '';
         const excerpt = decodeHtmlEntities(rawContent);
-        const maxLength = 2500;
+        const maxLength = 500;
         const truncatedExcerpt = excerpt.length > maxLength
             ? excerpt.substring(0, maxLength).replace(/\s+\S*$/, '') + '...'
             : excerpt;
