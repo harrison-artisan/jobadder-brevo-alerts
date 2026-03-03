@@ -105,14 +105,36 @@ function writeState(data) {
 
 function loadConsultants() {
     try {
-        return JSON.parse(fs.readFileSync(CONSULTANTS_FILE, 'utf8'));
+        // Load base config from repo
+        const base = JSON.parse(fs.readFileSync(CONSULTANTS_FILE, 'utf8'));
+        // Merge in any overrides saved in Railway env var (survives deploys)
+        if (process.env.CONSULTANT_PROFILES_JSON) {
+            try {
+                const overrides = JSON.parse(process.env.CONSULTANT_PROFILES_JSON);
+                Object.keys(overrides).forEach(id => {
+                    if (base[id]) Object.assign(base[id], overrides[id]);
+                });
+            } catch (e) {
+                console.warn('⚠️  CONSULTANT_PROFILES_JSON is set but could not be parsed:', e.message);
+            }
+        }
+        return base;
     } catch (e) {
         throw new Error('Could not load consultants config. Check config/consultants.json.');
     }
 }
 
+// In-memory overrides cache (updated on save, lost on restart — Railway env var is the source of truth)
+let profileOverrides = {};
+try {
+    if (process.env.CONSULTANT_PROFILES_JSON) {
+        profileOverrides = JSON.parse(process.env.CONSULTANT_PROFILES_JSON);
+    }
+} catch (e) { profileOverrides = {}; }
+
 function saveConsultants(data) {
-    fs.writeFileSync(CONSULTANTS_FILE, JSON.stringify(data, null, 2));
+    // Write to repo file (works locally; on Railway this is overwritten on next deploy)
+    try { fs.writeFileSync(CONSULTANTS_FILE, JSON.stringify(data, null, 2)); } catch (e) {}
 }
 
 // ============================================================
@@ -192,8 +214,23 @@ function saveProfile(req, res) {
         });
 
         saveConsultants(consultants);
+
+        // Update in-memory overrides so changes take effect immediately without restart
+        if (!profileOverrides[id]) profileOverrides[id] = {};
+        allowedFields.forEach(field => {
+            if (updates[field] !== undefined) profileOverrides[id][field] = updates[field];
+        });
+
+        // Build the full overrides JSON string for the user to paste into Railway
+        const railwayEnvValue = JSON.stringify(profileOverrides);
+
         console.log(`✅ Profile saved for ${consultants[id].name}`);
-        res.json({ success: true, message: `Profile saved for ${consultants[id].name}.`, consultant: consultants[id] });
+        res.json({
+            success: true,
+            message: `Profile saved for ${consultants[id].name}.`,
+            consultant: consultants[id],
+            railway_env_value: railwayEnvValue
+        });
     } catch (error) {
         console.error('❌ Error saving profile:', error.message);
         res.status(500).json({ success: false, message: error.message });
