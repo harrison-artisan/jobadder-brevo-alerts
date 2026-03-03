@@ -857,24 +857,26 @@ app.listen(PORT, () => {
   `);
 
   // Restore any pending scheduled sends after server restart
-  try {
-    candidateAlertsController.restoreSchedule();
-    console.log('🔄 A-List schedule restore check complete');
-  } catch (e) {
-    console.warn('⚠️  Could not restore A-List schedule:', e.message);
-  }
-  try {
-    await xposeController.restoreSchedule();
-    console.log('🔄 Xpose schedule restore check complete');
-  } catch (e) {
-    console.warn('⚠️  Could not restore Xpose schedule:', e.message);
-  }
-  try {
-    xposeController.restoreArticleSchedule();
-    console.log('🔄 Article schedule restore check complete');
-  } catch (e) {
-    console.warn('⚠️  Could not restore Article schedule:', e.message);
-  }
+  (async () => {
+    try {
+      candidateAlertsController.restoreSchedule();
+      console.log('🔄 A-List schedule restore check complete');
+    } catch (e) {
+      console.warn('⚠️  Could not restore A-List schedule:', e.message);
+    }
+    try {
+      await xposeController.restoreSchedule();
+      console.log('🔄 Xpose schedule restore check complete');
+    } catch (e) {
+      console.warn('⚠️  Could not restore Xpose schedule:', e.message);
+    }
+    try {
+      xposeController.restoreArticleSchedule();
+      console.log('🔄 Article schedule restore check complete');
+    } catch (e) {
+      console.warn('⚠️  Could not restore Article schedule:', e.message);
+    }
+  })();
 });
 
 // Graceful shutdown
