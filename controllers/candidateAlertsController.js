@@ -361,17 +361,11 @@ class CandidateAlertsController {
       // Register the cron job and store reference for cancellation
       this._scheduledTask = cron.schedule(cronExpr, async () => {
         console.log('📅 Executing scheduled A-List send...');
-        await this.sendToAll(options);
-        // Clear scheduled state after send
+        // Temporarily set state to TESTED so sendToAll passes its state check
         const state = this.loadState();
-        if (state.state === 'SCHEDULED') {
-          state.state = 'SENT';
-          state.sentAt = new Date().toISOString();
-          delete state.scheduledAt;
-          delete state.scheduledFor;
-          delete state.scheduledOptions;
-          this.saveState(state);
-        }
+        state.state = 'TESTED';
+        this.saveState(state);
+        await this.sendToAll(options);
         if (this._scheduledTask) { this._scheduledTask.stop(); this._scheduledTask = null; }
       }, { timezone: 'UTC' });
 
@@ -442,16 +436,11 @@ class CandidateAlertsController {
       const options = state.scheduledOptions || {};
       this._scheduledTask = cron.schedule(cronExpr, async () => {
         console.log('📅 Executing restored A-List scheduled send...');
-        await this.sendToAll(options);
+        // Set state to TESTED so sendToAll passes its state check
         const s = this.loadState();
-        if (s.state === 'SCHEDULED') {
-          s.state = 'SENT';
-          s.sentAt = new Date().toISOString();
-          delete s.scheduledAt;
-          delete s.scheduledFor;
-          delete s.scheduledOptions;
-          this.saveState(s);
-        }
+        s.state = 'TESTED';
+        this.saveState(s);
+        await this.sendToAll(options);
         if (this._scheduledTask) { this._scheduledTask.stop(); this._scheduledTask = null; }
       }, { timezone: 'UTC' });
       console.log(`📅 A-List schedule restored for ${state.scheduledFor}`);

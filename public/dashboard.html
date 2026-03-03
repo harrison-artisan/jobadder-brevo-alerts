@@ -4325,12 +4325,12 @@ Choose Recent Poll
                 if (!schedBox) {
                     schedBox = document.createElement('div');
                     schedBox.id = 'alistScheduledBox';
-                    schedBox.style.cssText = 'margin-top:14px; padding:16px 20px; background:#1a7a3e; border:none; border-radius:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;';
+                    schedBox.style.cssText = 'margin-top:14px; padding:14px 16px; background:rgba(39,174,96,0.15); border:1px solid rgba(39,174,96,0.4); border-radius:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;';
                     // Insert after the schedule row
                     const schedRow = document.getElementById('alistScheduleRow');
                     if (schedRow && schedRow.parentNode) schedRow.parentNode.insertBefore(schedBox, schedRow.nextSibling);
                 }
-                schedBox.innerHTML = `<div style="display:flex; align-items:center; gap:12px;"><span style="font-size:24px;">📅</span><div><div style="color:#fff; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; opacity:0.8; margin-bottom:2px;">A-List Scheduled</div><div style="color:#fff; font-size:15px; font-weight:700;">${state.scheduledFor}</div></div></div><button onclick="cancelAListSchedule()" style="background:#e74c3c; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">Cancel Schedule</button>`;
+                schedBox.innerHTML = `<span style="color:rgba(255,255,255,0.9); font-size:14px;">📅 <strong>A-List Scheduled:</strong> ${state.scheduledFor}</span><button onclick="cancelAListSchedule()" style="background:#e74c3c; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">Cancel Schedule</button>`;
                 schedBox.style.display = 'flex';
             } else if (schedBox) {
                 schedBox.style.display = 'none';
@@ -4461,7 +4461,7 @@ Choose Recent Poll
             const recipientId = confirmedRecipients.alist.id;
             const recipientName = confirmedRecipients.alist.name;
             const recipientCount = confirmedRecipients.alist.count;
-            showConfirmation('A-List Schedule', recipientName, recipientCount, async (confirmed) => {
+            showScheduleConfirmation('A-List', recipientName, recipientCount, scheduledAt, async (confirmed) => {
                 if (!confirmed) return;
                 await executeAListSchedule(recipientType, recipientId, scheduledAt);
             });
@@ -4655,11 +4655,11 @@ Choose Recent Poll
                 if (!xposeSchedBox) {
                     xposeSchedBox = document.createElement('div');
                     xposeSchedBox.id = 'xposeScheduledBox';
-                    xposeSchedBox.style.cssText = 'margin-top:14px; padding:16px 20px; background:#1a7a3e; border:none; border-radius:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;';
+                    xposeSchedBox.style.cssText = 'margin-top:14px; padding:14px 16px; background:rgba(39,174,96,0.15); border:1px solid rgba(39,174,96,0.4); border-radius:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;';
                     const schedRow = document.getElementById('xposeScheduleRow');
                     if (schedRow && schedRow.parentNode) schedRow.parentNode.insertBefore(xposeSchedBox, schedRow.nextSibling);
                 }
-                xposeSchedBox.innerHTML = `<div style="display:flex; align-items:center; gap:12px;"><span style="font-size:24px;">📅</span><div><div style="color:#fff; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; opacity:0.8; margin-bottom:2px;">Xpose Newsletter Scheduled</div><div style="color:#fff; font-size:15px; font-weight:700;">${xposeState.scheduledFor}</div></div></div><button onclick="cancelXposeSchedule()" style="background:#e74c3c; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">Cancel Schedule</button>`;
+                xposeSchedBox.innerHTML = `<span style="color:rgba(255,255,255,0.9); font-size:14px;">📅 <strong>Xpose Scheduled:</strong> ${xposeState.scheduledFor}</span><button onclick="cancelXposeSchedule()" style="background:#e74c3c; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">Cancel Schedule</button>`;
                 xposeSchedBox.style.display = 'flex';
             } else if (xposeSchedBox) {
                 xposeSchedBox.style.display = 'none';
@@ -4775,7 +4775,7 @@ Choose Recent Poll
             const recipientId = confirmedRecipients.xpose.id;
             const recipientName = confirmedRecipients.xpose.name;
             const recipientCount = confirmedRecipients.xpose.count;
-            showConfirmation('Xpose Schedule', recipientName, recipientCount, async (confirmed) => {
+            showScheduleConfirmation('Xpose Newsletter', recipientName, recipientCount, scheduledAt, async (confirmed) => {
                 if (!confirmed) return;
                 await executeXposeSchedule(recipientType, recipientId, scheduledAt);
             });
@@ -5057,7 +5057,7 @@ Choose Recent Poll
             const recipientId = confirmedRecipients.article.id;
             const recipientName = confirmedRecipients.article.name;
             const recipientCount = confirmedRecipients.article.count;
-            showConfirmation('Article Schedule', recipientName, recipientCount, async (confirmed) => {
+            showScheduleConfirmation('Article Email', recipientName, recipientCount, scheduledAt, async (confirmed) => {
                 if (!confirmed) return;
                 await executeArticleSchedule(articleId, recipientType, recipientId, scheduledAt);
             });
@@ -5095,11 +5095,11 @@ Choose Recent Poll
                     if (!schedBox) {
                         schedBox = document.createElement('div');
                         schedBox.id = 'articleScheduledBox';
-                        schedBox.style.cssText = 'margin-top:14px; padding:16px 20px; background:#1a7a3e; border:none; border-radius:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;';
+                        schedBox.style.cssText = 'margin-top:14px; padding:14px 16px; background:rgba(39,174,96,0.15); border:1px solid rgba(39,174,96,0.4); border-radius:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;';
                         const schedRow = document.getElementById('articleScheduleRow');
                         if (schedRow && schedRow.parentNode) schedRow.parentNode.insertBefore(schedBox, schedRow.nextSibling);
                     }
-                    schedBox.innerHTML = `<div style="display:flex; align-items:center; gap:12px;"><span style="font-size:24px;">📅</span><div><div style="color:#fff; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; opacity:0.8; margin-bottom:2px;">Article Email Scheduled</div><div style="color:#fff; font-size:15px; font-weight:700;">${state.scheduledFor}</div></div></div><button onclick="cancelArticleScheduleServer()" style="background:#e74c3c; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">Cancel Schedule</button>`;
+                    schedBox.innerHTML = `<span style="color:rgba(255,255,255,0.9); font-size:14px;">📅 <strong>Article Scheduled:</strong> ${state.scheduledFor}</span><button onclick="cancelArticleScheduleServer()" style="background:#e74c3c; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">Cancel Schedule</button>`;
                     schedBox.style.display = 'flex';
                 } else if (schedBox) {
                     schedBox.style.display = 'none';
@@ -5157,6 +5157,29 @@ Choose Recent Poll
                 document.body.removeChild(modal);
                 callback(false);
             };
+        }
+
+        function showScheduleConfirmation(emailType, recipientName, recipientCount, scheduledAt, callback) {
+            const schedDate = new Date(scheduledAt);
+            const dateStr = schedDate.toLocaleDateString('en-AU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Australia/Melbourne' });
+            const timeStr = schedDate.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', timeZone: 'Australia/Melbourne' });
+            const message = `Schedule ${emailType} to ${recipientName} (${recipientCount} contacts) for ${dateStr} at ${timeStr} Melbourne time?`;
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+            const box = document.createElement('div');
+            box.style.cssText = 'background: white; padding: 30px; border-radius: 12px; max-width: 500px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);';
+            box.innerHTML = `
+                <h3 style="margin: 0 0 20px 0; color: #1b334d; font-size: 20px;">Confirm Schedule</h3>
+                <p style="margin: 0 0 25px 0; color: #333; line-height: 1.6;">${message}</p>
+                <div style="display: flex; gap: 15px; justify-content: flex-end;">
+                    <button id="cancelSchedBtn" style="padding: 10px 20px; border: 2px solid #e74c3c; background: white; color: #e74c3c; border-radius: 6px; cursor: pointer; font-weight: 600;">Cancel</button>
+                    <button id="confirmSchedBtn" style="padding: 10px 20px; border: none; background: #27ae60; color: white; border-radius: 6px; cursor: pointer; font-weight: 600;">Confirm Schedule</button>
+                </div>
+            `;
+            modal.appendChild(box);
+            document.body.appendChild(modal);
+            document.getElementById('confirmSchedBtn').onclick = () => { document.body.removeChild(modal); callback(true); };
+            document.getElementById('cancelSchedBtn').onclick = () => { document.body.removeChild(modal); callback(false); };
         }
 
         // ========== PERSISTENT MESSAGE SYSTEM ==========
