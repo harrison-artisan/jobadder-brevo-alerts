@@ -18,6 +18,8 @@ const path = require('path');
 const https = require('https');
 const http = require('http');
 const brevoService = require('../services/brevoService');
+const jobadderService = require('../services/jobadderService');
+const candidateService = require('../services/candidateService');
 
 const ALIST_STATE_FILE = path.join(__dirname, '..', '.alist-state.json');
 const WP_API = 'https://artisan.com.au/wp-json/wp/v2';
@@ -67,9 +69,9 @@ function wpGet(url) {
 }
 
 // ============================================================
-// Auto-pull first candidate from latest A-List state
+// Auto-pull first candidate from A-List state or live JobAdder
 // ============================================================
-function getAListCandidate() {
+function getAListCandidateFromState() {
     try {
         if (!fs.existsSync(ALIST_STATE_FILE)) return null;
         const state = JSON.parse(fs.readFileSync(ALIST_STATE_FILE, 'utf8'));
@@ -83,6 +85,56 @@ function getAListCandidate() {
         };
     } catch (e) {
         console.warn('⚠️  Could not read A-List state:', e.message);
+        return null;
+    }
+}
+
+async function fetchAListCandidateLive() {
+    try {
+        console.log('🔍 Fetching live candidate from JobAdder...');
+        const candidates = await candidateService.getRecentlyInterviewedCandidates(4);
+        if (!candidates || candidates.length === 0) {
+            console.log('ℹ️  No recent candidates found in JobAdder');
+            return null;
+        }
+        // Pick a random candidate from the pool (up to 10)
+        const pool = candidates.slice(0, 10);
+        const pick = pool[Math.floor(Math.random() * pool.length)];
+        const formatted = await candidateService.formatCandidateForEmail(pick, 1, '');
+        console.log(`✅ Live candidate fetched: ${formatted.title}`);
+        return {
+            title: formatted.title || '',
+            image_url: formatted.image_url || '',
+            mailto_link: formatted.mailto_link || '',
+            candidateId: formatted.candidateId || ''
+        };
+    } catch (e) {
+        console.warn('⚠️  Live candidate fetch failed:', e.message);
+        return null;
+    }
+}
+
+async function fetchLiveJob() {
+    try {
+        console.log('📋 Fetching live job from JobAdder...');
+        const liveJobs = await jobadderService.getLiveJobs();
+        if (!liveJobs || liveJobs.length === 0) {
+            console.log('ℹ️  No live jobs found in JobAdder');
+            return null;
+        }
+        // Pick the most recent job
+        const job = liveJobs[0];
+        const formatted = jobadderService.formatJobForEmail(job);
+        console.log(`✅ Live job fetched: ${formatted.job_title}`);
+        return {
+            title: formatted.job_title || '',
+            type: formatted.job_type || 'Full Time',
+            location: formatted.location || '',
+            description: formatted.job_description || '',
+            link: formatted.apply_url || 'https://clientapps.jobadder.com/67514/artisan'
+        };
+    } catch (e) {
+        console.warn('⚠️  Live job fetch failed:', e.message);
         return null;
     }
 }
@@ -299,10 +351,21 @@ async function parseJSON(req, res) {
     // media can be: { type, url, caption } OR [{ type, url, caption }, ...]
     let resolvedMedia = [];
     const rawMedia = parsed.media;
+    const enrichMedia = (m) => {
+        if (!m || !m.type || m.type === 'none' || !m.url) return null;
+        const item = { ...m };
+        // For YouTube: extract video ID and add thumbnail URL
+        if (m.type === 'youtube') {
+            const ytMatch = m.url.match(/(?:v=|youtu\.be\/)([\w-]{11})/);
+            if (ytMatch) item.thumbnail = `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`;
+        }
+        return item;
+    };
     if (Array.isArray(rawMedia)) {
-        resolvedMedia = rawMedia.filter(m => m && m.type && m.type !== 'none' && m.url);
+        resolvedMedia = rawMedia.map(enrichMedia).filter(Boolean);
     } else if (rawMedia && rawMedia.type && rawMedia.type !== 'none' && rawMedia.url) {
-        resolvedMedia = [rawMedia];
+        const enriched = enrichMedia(rawMedia);
+        if (enriched) resolvedMedia = [enriched];
     }
 
     // Auto-fetch WordPress articles (falls back to empty array on failure)
@@ -316,12 +379,23 @@ async function parseJSON(req, res) {
         parsed.article3 || wpArticles[2] || {}
     ];
 
-    // Auto-pull A-List candidate (null if no A-List state exists)
-    const alistCandidate = getAListCandidate();
+    // Auto-pull A-List candidate: try state file first, then fetch live from JobAdder
+    let alistCandidate = getAListCandidateFromState();
     if (alistCandidate) {
-        console.log(`✅ A-List candidate auto-pulled: ${alistCandidate.title}`);
+        console.log(`✅ A-List candidate from state: ${alistCandidate.title}`);
     } else {
-        console.log('ℹ️  No A-List candidate available — job-only layout will be used.');
+        console.log('ℹ️  No A-List state — fetching live candidate from JobAdder...');
+        alistCandidate = await fetchAListCandidateLive();
+        if (!alistCandidate) console.log('ℹ️  No candidate available — job-only layout will be used.');
+    }
+
+    // Auto-fetch a live job from JobAdder (unless Gemini JSON provided one)
+    let liveJob = null;
+    if (parsed.job && parsed.job.title) {
+        liveJob = parsed.job;
+        console.log(`✅ Job from Gemini JSON: ${liveJob.title}`);
+    } else {
+        liveJob = await fetchLiveJob();
     }
 
     // Build the merged state object
@@ -337,7 +411,7 @@ async function parseJSON(req, res) {
             articles,
             alist_candidate: alistCandidate
         },
-        templateParams: buildTemplateParams(consultantConfig, parsed, resolvedMedia, articles, alistCandidate)
+        templateParams: buildTemplateParams(consultantConfig, parsed, resolvedMedia, articles, alistCandidate, liveJob)
     };
 
     writeState(state);
@@ -345,12 +419,13 @@ async function parseJSON(req, res) {
 
     res.json({
         success: true,
-        message: `Newsletter content parsed for ${consultantConfig.name}. ${wpArticles.length} articles auto-fetched from WordPress.${alistCandidate ? ' A-List candidate included.' : ''}`,
+        message: `Newsletter content parsed for ${consultantConfig.name}. ${wpArticles.length} articles auto-fetched from WordPress.${alistCandidate ? ' A-List candidate included.' : ''}${liveJob ? ` Live job: ${liveJob.title}.` : ''}`,
         consultant: consultantConfig.name,
         newsletter_name: consultantConfig.newsletter_name,
         media_count: resolvedMedia.length,
         articles_from_wp: wpArticles.length,
         alist_candidate: !!alistCandidate,
+        live_job: !!liveJob,
         state
     });
 }
@@ -360,8 +435,9 @@ async function parseJSON(req, res) {
 // Brevo's Nunjucks engine requires nested objects (not flat strings)
 // for {{ params.xxx }} substitution to work correctly.
 // ============================================================
-function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCandidate) {
-    const job = parsed.job || {};
+function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCandidate, liveJob) {
+    // liveJob is pre-fetched from JobAdder (or from Gemini JSON if provided)
+    const job = liveJob || parsed.job || {};
     const fallbackImg = 'https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png';
     const fallbackArticleLink = 'https://artisan.com.au/creative-community/';
 
