@@ -4310,13 +4310,31 @@ Choose Recent Poll
             
             // Update button states based on state string (uppercase)
             const stateUpper = state.state ? state.state.toUpperCase() : 'EMPTY';
+            const isScheduled = stateUpper === 'SCHEDULED';
             
             btnGenerate.disabled = false;
             // Regenerate button removed - Generate button allows regeneration
-            document.getElementById('btnPreviewAlist').disabled = !(stateUpper === 'GENERATED' || stateUpper === 'TESTED');
-            btnSendTest.disabled = !(stateUpper === 'GENERATED' || stateUpper === 'TESTED');
+            document.getElementById('btnPreviewAlist').disabled = !(stateUpper === 'GENERATED' || stateUpper === 'TESTED' || isScheduled);
+            btnSendTest.disabled = !(stateUpper === 'GENERATED' || stateUpper === 'TESTED' || isScheduled);
             btnSchedule.disabled = stateUpper !== 'TESTED';
             btnSendNow.disabled = stateUpper !== 'TESTED';
+
+            // Show/hide scheduled info box
+            let schedBox = document.getElementById('alistScheduledBox');
+            if (isScheduled && state.scheduledFor) {
+                if (!schedBox) {
+                    schedBox = document.createElement('div');
+                    schedBox.id = 'alistScheduledBox';
+                    schedBox.style.cssText = 'margin-top:14px; padding:14px 16px; background:rgba(39,174,96,0.15); border:1px solid rgba(39,174,96,0.4); border-radius:8px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;';
+                    // Insert after the schedule row
+                    const schedRow = document.getElementById('alistScheduleRow');
+                    if (schedRow && schedRow.parentNode) schedRow.parentNode.insertBefore(schedBox, schedRow.nextSibling);
+                }
+                schedBox.innerHTML = `<span style="color:rgba(255,255,255,0.9); font-size:14px;">📅 <strong>Scheduled:</strong> ${state.scheduledFor}</span><button class="btn" onclick="cancelAListSchedule()" style="background:#e74c3c; font-size:13px; padding:6px 14px;">Cancel Schedule</button>`;
+                schedBox.style.display = 'flex';
+            } else if (schedBox) {
+                schedBox.style.display = 'none';
+            }
             
             // Update candidates preview
             if (state.candidates && state.candidates.length > 0) {
@@ -4465,6 +4483,7 @@ Choose Recent Poll
                 if (result.success) {
                     showMessage(`A-List scheduled for ${result.scheduledFor}`, 'success');
                     document.getElementById('alistScheduleRow').style.display = 'none';
+                    await loadAListState();
                 } else {
                     showMessage(`Scheduling failed: ${result.message}`, 'error');
                 }
@@ -4475,6 +4494,21 @@ Choose Recent Poll
             if (btn) { btn.disabled = false; btn.innerHTML = 'Confirm Schedule'; }
         }
         
+        async function cancelAListSchedule() {
+            try {
+                const response = await fetch('/api/alist/cancel-schedule', { method: 'POST' });
+                const result = await response.json();
+                if (result.success) {
+                    showMessage('Schedule cancelled.', 'success');
+                    await loadAListState();
+                } else {
+                    showMessage(`Could not cancel: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`Error: ${error.message}`, 'error');
+            }
+        }
+
         async function sendNowAList() {
             // Validate confirmed recipient selection
             if (!confirmedRecipients.alist) {
@@ -4607,12 +4641,34 @@ Choose Recent Poll
 
             const isGenerated = xposeState.state === 'GENERATED';
             const isTested = xposeState.state === 'TESTED';
+            const isScheduled = xposeState.state === 'SCHEDULED';
 
             // Regenerate button removed - Generate button allows regeneration
-            document.getElementById('btnPreviewXpose').disabled = !isGenerated && !isTested;
-            document.getElementById('btnSendTestXpose').disabled = !isGenerated && !isTested;
+            document.getElementById('btnPreviewXpose').disabled = !isGenerated && !isTested && !isScheduled;
+            document.getElementById('btnSendTestXpose').disabled = !isGenerated && !isTested && !isScheduled;
             document.getElementById('btnScheduleXpose').disabled = !isTested;
             document.getElementById('btnSendNowXpose').disabled = !isTested;
+
+            // Show/hide scheduled info box for Xpose
+            let xposeSchedBox = document.getElementById('xposeScheduledBox');
+            if (isScheduled && xposeState.scheduledFor) {
+                if (!xposeSchedBox) {
+                    xposeSchedBox = document.createElement('div');
+                    xposeSchedBox.id = 'xposeScheduledBox';
+                    xposeSchedBox.style.cssText = 'margin-top:14px; padding:14px 16px; background:rgba(39,174,96,0.15); border:1px solid rgba(39,174,96,0.4); border-radius:8px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;';
+                    const schedRow = document.getElementById('xposeScheduleRow');
+                    if (schedRow && schedRow.parentNode) schedRow.parentNode.insertBefore(xposeSchedBox, schedRow.nextSibling);
+                }
+                xposeSchedBox.innerHTML = `<span style="color:rgba(255,255,255,0.9); font-size:14px;">📅 <strong>Scheduled:</strong> ${xposeState.scheduledFor}</span><button class="btn" onclick="cancelXposeSchedule()" style="background:#e74c3c; font-size:13px; padding:6px 14px;">Cancel Schedule</button>`;
+                xposeSchedBox.style.display = 'flex';
+            } else if (xposeSchedBox) {
+                xposeSchedBox.style.display = 'none';
+            }
+
+            // Update timestamp to show scheduled info if scheduled
+            if (isScheduled && xposeState.scheduledFor) {
+                stateTimestamp.textContent = `Scheduled: ${xposeState.scheduledFor}`;
+            }
         }
 
         async function generateXpose() {
@@ -4743,6 +4799,7 @@ Choose Recent Poll
                     showToast(`✅ ${msg}`, 'success');
                     showTabMessage('xpose', msg, 'success');
                     document.getElementById('xposeScheduleRow').style.display = 'none';
+                    await loadXposeState();
                 } else {
                     const msg = `Scheduling failed: ${result.message}`;
                     showToast(`❌ ${msg}`, 'error');
@@ -4754,6 +4811,21 @@ Choose Recent Poll
             
             if (btn) { btn.disabled = false; btn.innerHTML = 'Confirm Schedule'; }
             updateXposeUI();
+        }
+
+        async function cancelXposeSchedule() {
+            try {
+                const response = await fetch('/api/xpose/cancel-schedule', { method: 'POST' });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('✅ Xpose schedule cancelled.', 'success');
+                    await loadXposeState();
+                } else {
+                    showToast(`❌ Could not cancel: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showToast(`❌ Error: ${error.message}`, 'error');
+            }
         }
         
         async function sendNowXpose() {
@@ -5004,6 +5076,7 @@ Choose Recent Poll
                 if (result.success) {
                     showToast(`✅ Article scheduled for ${result.scheduledFor}`, 'success');
                     document.getElementById('articleScheduleRow').style.display = 'none';
+                    await loadArticleScheduleState();
                 } else {
                     showToast(`❌ Scheduling failed: ${result.message}`, 'error');
                 }
@@ -5011,6 +5084,42 @@ Choose Recent Poll
                 showToast(`❌ Error: ${error.message}`, 'error');
             }
             if (btn) { btn.disabled = false; btn.innerHTML = 'Confirm Schedule'; }
+        }
+
+        async function loadArticleScheduleState() {
+            try {
+                const response = await fetch('/api/xpose/article-schedule-state');
+                const state = await response.json();
+                let schedBox = document.getElementById('articleScheduledBox');
+                if (state && state.scheduledFor) {
+                    if (!schedBox) {
+                        schedBox = document.createElement('div');
+                        schedBox.id = 'articleScheduledBox';
+                        schedBox.style.cssText = 'margin-top:14px; padding:14px 16px; background:rgba(39,174,96,0.15); border:1px solid rgba(39,174,96,0.4); border-radius:8px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;';
+                        const schedRow = document.getElementById('articleScheduleRow');
+                        if (schedRow && schedRow.parentNode) schedRow.parentNode.insertBefore(schedBox, schedRow.nextSibling);
+                    }
+                    schedBox.innerHTML = `<span style="color:rgba(255,255,255,0.9); font-size:14px;">📅 <strong>Scheduled:</strong> ${state.scheduledFor}</span><button class="btn" onclick="cancelArticleScheduleServer()" style="background:#e74c3c; font-size:13px; padding:6px 14px;">Cancel Schedule</button>`;
+                    schedBox.style.display = 'flex';
+                } else if (schedBox) {
+                    schedBox.style.display = 'none';
+                }
+            } catch (e) {}
+        }
+
+        async function cancelArticleScheduleServer() {
+            try {
+                const response = await fetch('/api/xpose/cancel-article-schedule', { method: 'POST' });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('✅ Article schedule cancelled.', 'success');
+                    await loadArticleScheduleState();
+                } else {
+                    showToast(`❌ Could not cancel: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showToast(`❌ Error: ${error.message}`, 'error');
+            }
         }
 
         // ========== CONFIRMATION POPUP SYSTEM ==========
@@ -5640,6 +5749,10 @@ Choose Recent Poll
             
             // A-List event listener
             document.getElementById('btnPreviewAlist')?.addEventListener('click', previewAlist);
+
+            // Load Xpose state and article schedule state on page load
+            loadXposeState();
+            loadArticleScheduleState();
         });
         
         // ===== SHOW COUNT FUNCTIONS =====
