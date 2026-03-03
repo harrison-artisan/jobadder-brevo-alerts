@@ -34,15 +34,24 @@
       .header-right { padding-top: 18px !important; }
       .header-right > table { margin: 0 auto !important; }
       .header-badge-table { margin: 0 auto !important; }
+      .header-logo-link { text-align: center !important; display: block !important; }
+      .header-logo-img { margin: 0 auto !important; }
 
       /* Consultant hero: stack photo and content */
       .hero-photo-cell {
+        text-align: center !important;
         display: block !important;
         width: 100% !important;
         text-align: center !important;
         padding: 28px 18px 10px 18px !important;
       }
+      .mobile-book-btn { display: block !important; width: 100% !important; padding-top: 12px !important; }
+      /* Book a meeting: stack icon+text, then button below */
+      .cal-icon-cell { display: block !important; width: 100% !important; text-align: center !important; padding: 0 0 12px 0 !important; }
+      .cal-text-cell { display: block !important; width: 100% !important; text-align: center !important; padding: 0 0 16px 0 !important; }
+      .cal-btn-cell { display: block !important; width: 100% !important; text-align: center !important; padding: 0 !important; }
       .hero-content-cell {
+        text-align: center !important;
         display: block !important;
         width: 100% !important;
         text-align: center !important;
@@ -114,8 +123,8 @@
                 <tr>
                   <!-- Left: Logo + tagline + newsletter name badge -->
                   <td width="55%" valign="top" class="header-left">
-                    <a href="https://artisan.com.au/" style="text-decoration:none;display:block;margin-bottom:14px;">
-                      <img src="https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png" alt="Artisan" width="64" height="64" style="display:block;border:0;">
+                    <a href="https://artisan.com.au/" style="text-decoration:none;display:block;margin-bottom:14px;" class="header-logo-link">
+                      <img src="https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png" alt="Artisan" width="64" height="64" style="display:block;border:0;" class="header-logo-img">
                     </a>
                     <p style="margin:0 0 18px 0;font-size:13px;color:#666666;font-weight:600;line-height:1.5;">Creative, Digital and<br>Marketing Recruitment</p>
                     <!-- Newsletter name badge -->
@@ -162,13 +171,13 @@
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#1b334d 0%,#0f1f30 100%);border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(27,51,77,0.25);">
                 <tr>
                   <!-- Photo -->
-                  <td width="160" valign="middle" align="center" style="padding:36px 0 36px 40px;" class="hero-photo-cell">
+                  <td width="160" valign="middle" align="center" style="padding:22px 0 22px 36px;" class="hero-photo-cell">
                     <img src="{{ params.consultant.photo }}" alt="{{ params.consultant.name }}" width="120" height="120" style="display:block;border:0;border-radius:50%;width:120px;height:120px;object-fit:cover;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
                     <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" style="margin-top:14px;">
                       <tr>
                         <td>
-                          <a href="{{ params.consultant.linkedin }}" style="display:inline-block;background-color:#0077b5;color:#ffffff;padding:8px 16px;border-radius:20px;text-decoration:none;font-weight:700;font-size:11px;letter-spacing:0.5px;line-height:1;">
-                            <img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" alt="" width="14" height="14" style="display:inline-block;border:0;vertical-align:middle;margin-right:6px;">
+                          <a href="{{ params.consultant.linkedin }}" style="display:inline-block;background-color:#0077b5;color:#ffffff;padding:9px 20px;border-radius:20px;text-decoration:none;font-weight:700;font-size:11px;letter-spacing:0.5px;line-height:1;min-width:110px;text-align:center;">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/c/ca/LinkedIn_logo_initials.png" alt="in" width="14" height="14" style="display:inline-block;border:0;vertical-align:middle;margin-right:7px;border-radius:2px;">
                             <span style="vertical-align:middle;">LINKEDIN</span>
                           </a>
                         </td>
@@ -176,7 +185,7 @@
                     </table>
                   </td>
                   <!-- Details -->
-                  <td valign="middle" style="padding:36px 40px 36px 28px;" class="hero-content-cell">
+                  <td valign="middle" style="padding:22px 36px 22px 24px;" class="hero-content-cell">
                     <h1 style="margin:0 0 6px 0;font-size:24px;font-weight:900;color:#ffffff;line-height:1.2;">{{ params.consultant.name }}</h1>
                     <p style="margin:0 0 18px 0;font-size:13px;font-weight:600;color:#bd203d;letter-spacing:0.3px;">{{ params.consultant.title }}</p>
                     <table cellpadding="0" cellspacing="0" border="0" role="presentation">
@@ -281,18 +290,28 @@
                     </table>
                   </td>
                 </tr>
-                <!-- Post preview area -->
+                <!-- Post image (scraped) -->
+                {% if item.scraped_image %}
                 <tr>
-                  <td style="background:#fafafa;padding:20px 24px;border-bottom:1px solid #efefef;">
+                  <td style="padding:0;line-height:0;">
+                    <a href="{{ item.url }}">
+                      <img src="{{ item.scraped_image }}" alt="Instagram post" width="100%" style="display:block;border:0;width:100%;max-height:320px;object-fit:cover;">
+                    </a>
+                  </td>
+                </tr>
+                {% endif %}
+                <!-- Post caption -->
+                <tr>
+                  <td style="background:#fafafa;padding:16px 20px;border-bottom:1px solid #efefef;">
                     <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
                       <tr>
-                        <td width="48" valign="top" style="padding-right:12px;">
-                          <img src="https://artisan.com.au/wp-content/uploads/2025/03/DEBBIE.png" alt="Artisan" width="40" height="40" style="display:block;border:0;border-radius:50%;width:40px;height:40px;object-fit:cover;">
+                        <td width="40" valign="top" style="padding-right:10px;">
+                          <img src="{{ params.consultant.photo }}" alt="{{ params.consultant.name }}" width="36" height="36" style="display:block;border:0;border-radius:50%;width:36px;height:36px;object-fit:cover;">
                         </td>
                         <td valign="top">
-                          <p style="margin:0 0 2px 0;font-size:13px;font-weight:700;color:#262626;">get_artisan</p>
+                          <p style="margin:0 0 2px 0;font-size:13px;font-weight:700;color:#262626;">{{ item.handle or "get_artisan" }}</p>
                           {% if item.caption %}
-                          <p style="margin:0;font-size:14px;color:#262626;line-height:1.6;">{{ item.caption }}</p>
+                          <p style="margin:0;font-size:13px;color:#262626;line-height:1.5;">{{ item.caption }}</p>
                           {% endif %}
                         </td>
                       </tr>
@@ -411,7 +430,8 @@
                       <tr>
                         <td height="200" style="padding:20px 22px;text-align:center;vertical-align:middle;height:200px;">
                           <p style="margin:0 0 8px 0;font-size:9px;font-weight:700;color:#bd203d;letter-spacing:2px;text-transform:uppercase;">A-List Candidate</p>
-                          <h3 style="margin:0 0 16px 0;font-size:17px;font-weight:900;color:#1b334d;line-height:1.3;">{{ params.alist.title }}</h3>
+                          <img src="{{ params.alist.image }}" alt="{{ params.alist.title }}" width="64" height="64" style="display:block;border:0;border-radius:50%;width:64px;height:64px;object-fit:cover;margin:0 auto 10px auto;box-shadow:0 3px 10px rgba(189,32,61,0.2);">
+                          <h3 style="margin:0 0 14px 0;font-size:16px;font-weight:900;color:#1b334d;line-height:1.3;">{{ params.alist.title }}</h3>
                           <a href="{{ params.alist.link }}" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:10px 20px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 4px 12px rgba(189,32,61,0.35);">FIND OUT MORE &#8594;</a>
                         </td>
                       </tr>
@@ -458,7 +478,10 @@
                   </td>
                   <td valign="middle" style="padding:20px 24px;" class="event-content-cell">
                     <h3 style="margin:0 0 4px 0;font-size:16px;font-weight:900;color:#1b334d;line-height:1.3;">{{ event.title }}</h3>
-                    <p style="margin:0;font-size:13px;line-height:1.6;color:#666666;">{{ event.description }}</p>
+                    <p style="margin:0 0 10px 0;font-size:13px;line-height:1.6;color:#666666;">{{ event.description }}</p>
+                    {% if event.link %}
+                    <a href="{{ event.link }}" style="display:inline-block;background:linear-gradient(135deg,#1b334d 0%,#0f1f30 100%);color:#ffffff;padding:7px 16px;border-radius:8px;text-decoration:none;font-weight:700;font-size:11px;letter-spacing:0.5px;">FIND OUT MORE &#8594;</a>
+                    {% endif %}
                   </td>
                 </tr>
               </table>
@@ -511,7 +534,7 @@
                   <td style="padding:32px 32px 28px 32px;">
                     <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
                       <tr>
-                        <td width="60" valign="middle" align="center" style="padding-right:20px;">
+                        <td width="60" valign="middle" align="center" style="padding-right:20px;" class="cal-icon-cell">
                           <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);border-radius:12px;width:52px;height:52px;">
                             <tr>
                               <td align="center" valign="middle" style="padding:10px;">
@@ -520,12 +543,12 @@
                             </tr>
                           </table>
                         </td>
-                        <td valign="middle">
+                        <td valign="middle" class="cal-text-cell">
                           <p style="margin:0 0 4px 0;font-size:10px;font-weight:700;color:#bd203d;letter-spacing:2px;text-transform:uppercase;">Let's Connect</p>
                           <h2 style="margin:0 0 4px 0;font-size:18px;font-weight:900;color:#1b334d;line-height:1.2;">Book a Meeting with {{ params.consultant.name }}</h2>
                           <p style="margin:0;font-size:13px;color:#666666;line-height:1.5;">Got a role to fill, a career move in mind, or just want to catch up?</p>
                         </td>
-                        <td width="150" valign="middle" align="right" style="padding-left:16px;">
+                        <td width="150" valign="middle" align="right" style="padding-left:16px;" class="cal-btn-cell">
                           <a href="{{ params.consultant.calendar_link }}" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:13px 22px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 4px 14px rgba(189,32,61,0.3);white-space:nowrap;">BOOK NOW &#8594;</a>
                           <p style="margin:8px 0 0 0;font-size:11px;color:#aaaaaa;text-align:center;font-style:italic;">Or reply to this email</p>
                         </td>

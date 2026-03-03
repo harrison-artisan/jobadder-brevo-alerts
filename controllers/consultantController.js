@@ -69,6 +69,65 @@ function wpGet(url) {
 }
 
 // ============================================================
+// Scrape Instagram post data (image + caption) from public post URL
+// Uses Facebook crawler user-agent to get og:image / og:description
+// ============================================================
+async function fetchInstagramPostData(url) {
+    return new Promise((resolve) => {
+        try {
+            const mod = url.startsWith('https') ? https : http;
+            const options = {
+                headers: {
+                    'User-Agent': 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)',
+                    'Accept': 'text/html,application/xhtml+xml',
+                    'Accept-Language': 'en-US,en;q=0.9'
+                }
+            };
+            const req = mod.get(url, options, (res) => {
+                let data = '';
+                res.on('data', chunk => data += chunk);
+                res.on('end', () => {
+                    try {
+                        const ogImage = (data.match(/<meta property="og:image" content="([^"]+)"/) || [])[1];
+                        const ogDesc = (data.match(/<meta property="og:description" content="([^"]+)"/) || [])[1];
+                        const ogTitle = (data.match(/<meta property="og:title" content="([^"]+)"/) || [])[1];
+                        // Decode HTML entities
+                        const decode = s => s ? s.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>') : '';
+                        const imageUrl = decode(ogImage || '');
+                        // Extract caption from og:description (format: "X likes, Y comments - handle on date: \"caption\"")
+                        let caption = decode(ogDesc || '');
+                        const captionMatch = caption.match(/:\s*"(.+)"\s*$/);
+                        if (captionMatch) caption = captionMatch[1];
+                        // Extract handle from og:title (format: "Name on Instagram: ...")
+                        let handle = '';
+                        const titleStr = decode(ogTitle || '');
+                        const handleMatch = titleStr.match(/^([^:]+) on Instagram/);
+                        if (handleMatch) handle = handleMatch[1].trim();
+                        console.log(`✅ Instagram post scraped: image=${imageUrl ? 'yes' : 'no'}, handle=${handle}`);
+                        resolve({ imageUrl, caption, handle });
+                    } catch (e) {
+                        console.warn('⚠️  Instagram scrape parse error:', e.message);
+                        resolve({ imageUrl: '', caption: '', handle: '' });
+                    }
+                });
+            });
+            req.on('error', (e) => {
+                console.warn('⚠️  Instagram scrape request error:', e.message);
+                resolve({ imageUrl: '', caption: '', handle: '' });
+            });
+            req.setTimeout(10000, () => {
+                req.destroy();
+                console.warn('⚠️  Instagram scrape timed out');
+                resolve({ imageUrl: '', caption: '', handle: '' });
+            });
+        } catch (e) {
+            console.warn('⚠️  Instagram scrape error:', e.message);
+            resolve({ imageUrl: '', caption: '', handle: '' });
+        }
+    });
+}
+
+// ============================================================
 // Auto-pull first candidate from A-List state or live JobAdder
 // ============================================================
 function getAListCandidateFromState() {
@@ -349,24 +408,32 @@ async function parseJSON(req, res) {
 
     // Resolve media — supports array (multiple items) or single object from Gemini JSON
     // media can be: { type, url, caption } OR [{ type, url, caption }, ...]
-    let resolvedMedia = [];
     const rawMedia = parsed.media;
-    const enrichMedia = (m) => {
+    const rawMediaArray = Array.isArray(rawMedia)
+        ? rawMedia
+        : (rawMedia && rawMedia.type && rawMedia.type !== 'none' && rawMedia.url ? [rawMedia] : []);
+
+    // Enrich each media item (async for Instagram scraping)
+    const enrichMedia = async (m) => {
         if (!m || !m.type || m.type === 'none' || !m.url) return null;
         const item = { ...m };
         // For YouTube: extract video ID and add thumbnail URL
         if (m.type === 'youtube') {
-            const ytMatch = m.url.match(/(?:v=|youtu\.be\/)([\w-]{11})/);
+            const ytMatch = m.url.match(/(?:v=|youtu\.be\/)?([\w-]{11})/);
             if (ytMatch) item.thumbnail = `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`;
+        }
+        // For Instagram: scrape og:image and og:description from the public post page
+        if (m.type === 'instagram') {
+            console.log(`📸 Scraping Instagram post: ${m.url}`);
+            const igData = await fetchInstagramPostData(m.url);
+            if (igData.imageUrl) item.scraped_image = igData.imageUrl;
+            if (igData.caption && !item.caption) item.caption = igData.caption;
+            if (igData.handle) item.handle = igData.handle;
         }
         return item;
     };
-    if (Array.isArray(rawMedia)) {
-        resolvedMedia = rawMedia.map(enrichMedia).filter(Boolean);
-    } else if (rawMedia && rawMedia.type && rawMedia.type !== 'none' && rawMedia.url) {
-        const enriched = enrichMedia(rawMedia);
-        if (enriched) resolvedMedia = [enriched];
-    }
+
+    const resolvedMedia = (await Promise.all(rawMediaArray.map(enrichMedia))).filter(Boolean);
 
     // Auto-fetch WordPress articles (falls back to empty array on failure)
     console.log('📰 Fetching WordPress articles...');
