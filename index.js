@@ -300,6 +300,15 @@ app.post('/api/alist/schedule', async (req, res) => {
   }
 });
 
+app.post('/api/alist/cancel-schedule', async (req, res) => {
+  try {
+    const result = candidateAlertsController.cancelSchedule();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 app.get('/api/alist/state', async (req, res) => {
   try {
     const state = candidateAlertsController.getState();
@@ -404,6 +413,15 @@ app.post('/api/xpose/schedule', async (req, res) => {
   try {
     const { recipientType, recipientId, scheduledAt } = req.body;
     const result = await xposeController.scheduleForThursday({ recipientType, recipientId, scheduledAt });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.post('/api/xpose/cancel-schedule', async (req, res) => {
+  try {
+    const result = await xposeController.cancelSchedule();
     res.json(result);
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -534,6 +552,24 @@ app.post('/api/xpose/schedule-article/:articleId', async (req, res) => {
     res.json(result);
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.post('/api/xpose/cancel-article-schedule', async (req, res) => {
+  try {
+    const result = xposeController.cancelArticleSchedule();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.get('/api/xpose/article-schedule-state', async (req, res) => {
+  try {
+    const state = xposeController.getArticleScheduleState();
+    res.json(state || { scheduled: false });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -819,6 +855,26 @@ app.listen(PORT, () => {
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
   `);
+
+  // Restore any pending scheduled sends after server restart
+  try {
+    candidateAlertsController.restoreSchedule();
+    console.log('🔄 A-List schedule restore check complete');
+  } catch (e) {
+    console.warn('⚠️  Could not restore A-List schedule:', e.message);
+  }
+  try {
+    await xposeController.restoreSchedule();
+    console.log('🔄 Xpose schedule restore check complete');
+  } catch (e) {
+    console.warn('⚠️  Could not restore Xpose schedule:', e.message);
+  }
+  try {
+    xposeController.restoreArticleSchedule();
+    console.log('🔄 Article schedule restore check complete');
+  } catch (e) {
+    console.warn('⚠️  Could not restore Article schedule:', e.message);
+  }
 });
 
 // Graceful shutdown

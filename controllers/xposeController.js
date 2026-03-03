@@ -351,7 +351,37 @@ class XposeController {
     };
 
     /**
+     * Load article schedule state from disk
+     */
+    loadArticleScheduleState() {
+        const fs = require('fs');
+        const path = require('path');
+        const stateFile = path.join(__dirname, '..', '.article-schedule-state.json');
+        try {
+            if (fs.existsSync(stateFile)) {
+                return JSON.parse(fs.readFileSync(stateFile, 'utf8'));
+            }
+        } catch (e) {}
+        return null;
+    }
+
+    /**
+     * Save article schedule state to disk
+     */
+    saveArticleScheduleState(data) {
+        const fs = require('fs');
+        const path = require('path');
+        const stateFile = path.join(__dirname, '..', '.article-schedule-state.json');
+        if (data === null) {
+            try { fs.unlinkSync(stateFile); } catch (e) {}
+        } else {
+            fs.writeFileSync(stateFile, JSON.stringify(data, null, 2));
+        }
+    }
+
+    /**
      * Schedule a single article send at a user-specified Melbourne datetime
+     * Persists schedule to state file so it survives page refreshes and restarts
      */
     async scheduleArticle(articleId, options = {}) {
         const cron = require('node-cron');
@@ -363,7 +393,6 @@ class XposeController {
                 if (isNaN(sendDate.getTime())) throw new Error('Invalid scheduledAt date');
                 if (sendDate <= new Date()) throw new Error('Scheduled time must be in the future');
             } else {
-                // Fallback: tomorrow 9am Melbourne
                 const nowMelb = new Date(new Date().toLocaleString('en-US', { timeZone: 'Australia/Melbourne' }));
                 sendDate = new Date(nowMelb);
                 sendDate.setDate(nowMelb.getDate() + 1);
@@ -382,15 +411,31 @@ class XposeController {
                 timeZone: 'Australia/Melbourne'
             }) + ' (Melbourne time)';
 
-            cron.schedule(cronExpr, async () => {
+            // Cancel any existing article scheduled task
+            if (this._articleScheduledTask) {
+                this._articleScheduledTask.stop();
+                this._articleScheduledTask = null;
+            }
+
+            this._articleScheduledTask = cron.schedule(cronExpr, async () => {
                 console.log(`📅 Executing scheduled article ${articleId} send...`);
                 const fakeReq = { params: { articleId }, body: { recipientType: options.recipientType, recipientId: options.recipientId } };
                 const fakeRes = { json: () => {}, status: () => ({ json: () => {} }) };
                 await this.sendSingleArticle(fakeReq, fakeRes);
+                this.saveArticleScheduleState(null);
+                if (this._articleScheduledTask) { this._articleScheduledTask.stop(); this._articleScheduledTask = null; }
             }, { timezone: 'UTC' });
 
+            // Persist schedule state
+            this.saveArticleScheduleState({
+                articleId,
+                scheduledAt: sendDate.toISOString(),
+                scheduledFor,
+                options: { recipientType: options.recipientType, recipientId: options.recipientId }
+            });
+
             console.log(`📅 Article ${articleId} scheduled for ${scheduledFor} (cron: ${cronExpr} UTC)`);
-            return { success: true, scheduledFor, message: 'Article scheduled successfully' };
+            return { success: true, scheduledFor, articleId, message: 'Article scheduled successfully' };
         } catch (error) {
             console.error('❌ Error scheduling article:', error);
             return { success: false, message: error.message };
@@ -398,7 +443,66 @@ class XposeController {
     }
 
     /**
+     * Cancel a pending article schedule
+     */
+    cancelArticleSchedule() {
+        try {
+            if (this._articleScheduledTask) {
+                this._articleScheduledTask.stop();
+                this._articleScheduledTask = null;
+            }
+            this.saveArticleScheduleState(null);
+            return { success: true, message: 'Article schedule cancelled' };
+        } catch (error) {
+            console.error('❌ Error cancelling article schedule:', error);
+            return { success: false, message: error.message };
+        }
+    }
+
+    /**
+     * Get current article schedule state
+     */
+    getArticleScheduleState() {
+        return this.loadArticleScheduleState();
+    }
+
+    /**
+     * Re-register article scheduled cron job on server startup
+     */
+    restoreArticleSchedule() {
+        const cron = require('node-cron');
+        try {
+            const saved = this.loadArticleScheduleState();
+            if (!saved || !saved.scheduledAt) return;
+            const sendDate = new Date(saved.scheduledAt);
+            if (sendDate <= new Date()) {
+                console.warn('⚠️  Article scheduled time has passed, clearing schedule');
+                this.saveArticleScheduleState(null);
+                return;
+            }
+            const min = sendDate.getUTCMinutes();
+            const hr = sendDate.getUTCHours();
+            const dom = sendDate.getUTCDate();
+            const mon = sendDate.getUTCMonth() + 1;
+            const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
+            const { articleId, options } = saved;
+            this._articleScheduledTask = cron.schedule(cronExpr, async () => {
+                console.log(`📅 Executing restored article ${articleId} scheduled send...`);
+                const fakeReq = { params: { articleId }, body: { recipientType: options.recipientType, recipientId: options.recipientId } };
+                const fakeRes = { json: () => {}, status: () => ({ json: () => {} }) };
+                await this.sendSingleArticle(fakeReq, fakeRes);
+                this.saveArticleScheduleState(null);
+                if (this._articleScheduledTask) { this._articleScheduledTask.stop(); this._articleScheduledTask = null; }
+            }, { timezone: 'UTC' });
+            console.log(`📅 Article schedule restored for ${saved.scheduledFor}`);
+        } catch (error) {
+            console.error('❌ Error restoring article schedule:', error);
+        }
+    }
+
+    /**
      * Schedule Xpose newsletter send at a user-specified Melbourne datetime
+     * Persists schedule to state file so it survives page refreshes and restarts
      */
     async scheduleForThursday(options = {}) {
         const cron = require('node-cron');
@@ -409,7 +513,6 @@ class XposeController {
                 if (isNaN(sendDate.getTime())) throw new Error('Invalid scheduledAt date');
                 if (sendDate <= new Date()) throw new Error('Scheduled time must be in the future');
             } else {
-                // Fallback: next Thursday 10am Melbourne
                 const nowMelb = new Date(new Date().toLocaleString('en-US', { timeZone: 'Australia/Melbourne' }));
                 const day = nowMelb.getDay();
                 let daysUntilThursday = (4 - day + 7) % 7 || 7;
@@ -430,18 +533,93 @@ class XposeController {
                 timeZone: 'Australia/Melbourne'
             }) + ' (Melbourne time)';
 
-            cron.schedule(cronExpr, async () => {
+            // Cancel any existing scheduled task
+            if (this._scheduledTask) {
+                this._scheduledTask.stop();
+                this._scheduledTask = null;
+            }
+
+            // Register cron job and store reference for cancellation
+            this._scheduledTask = cron.schedule(cronExpr, async () => {
                 console.log('📅 Executing scheduled Xpose send...');
                 const fakeReq = { body: { recipientType: options.recipientType, recipientId: options.recipientId } };
                 const fakeRes = { json: () => {}, status: () => ({ json: () => {} }) };
                 await this.sendToAll(fakeReq, fakeRes);
+                // Clear scheduled state after send
+                if (this.state.state === 'SCHEDULED') {
+                    await this.saveState({ state: 'SENT', sentAt: new Date().toISOString(), scheduledAt: null, scheduledFor: null, scheduledOptions: null });
+                }
+                if (this._scheduledTask) { this._scheduledTask.stop(); this._scheduledTask = null; }
             }, { timezone: 'UTC' });
+
+            // Persist scheduled state
+            await this.saveState({
+                state: 'SCHEDULED',
+                scheduledAt: sendDate.toISOString(),
+                scheduledFor,
+                scheduledOptions: { recipientType: options.recipientType, recipientId: options.recipientId }
+            });
 
             console.log(`📅 Xpose scheduled for ${scheduledFor} (cron: ${cronExpr} UTC)`);
             return { success: true, scheduledFor, message: 'Xpose scheduled successfully' };
         } catch (error) {
             console.error('❌ Error scheduling Xpose:', error);
             return { success: false, message: error.message };
+        }
+    }
+
+    /**
+     * Cancel a pending Xpose schedule
+     */
+    async cancelSchedule() {
+        try {
+            if (this._scheduledTask) {
+                this._scheduledTask.stop();
+                this._scheduledTask = null;
+            }
+            if (this.state.state === 'SCHEDULED') {
+                await this.saveState({ state: 'TESTED', scheduledAt: null, scheduledFor: null, scheduledOptions: null });
+            }
+            return { success: true, message: 'Xpose schedule cancelled' };
+        } catch (error) {
+            console.error('❌ Error cancelling Xpose schedule:', error);
+            return { success: false, message: error.message };
+        }
+    }
+
+    /**
+     * Re-register scheduled cron job on server startup if state is SCHEDULED
+     */
+    async restoreSchedule() {
+        const cron = require('node-cron');
+        try {
+            await this.loadState();
+            if (this.state.state !== 'SCHEDULED' || !this.state.scheduledAt) return;
+            const sendDate = new Date(this.state.scheduledAt);
+            if (sendDate <= new Date()) {
+                console.warn('⚠️  Xpose scheduled time has passed, clearing schedule');
+                await this.saveState({ state: 'TESTED', scheduledAt: null, scheduledFor: null, scheduledOptions: null });
+                return;
+            }
+            const min = sendDate.getUTCMinutes();
+            const hr = sendDate.getUTCHours();
+            const dom = sendDate.getUTCDate();
+            const mon = sendDate.getUTCMonth() + 1;
+            const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
+            const options = this.state.scheduledOptions || {};
+            this._scheduledTask = cron.schedule(cronExpr, async () => {
+                console.log('📅 Executing restored Xpose scheduled send...');
+                const fakeReq = { body: { recipientType: options.recipientType, recipientId: options.recipientId } };
+                const fakeRes = { json: () => {}, status: () => ({ json: () => {} }) };
+                await this.sendToAll(fakeReq, fakeRes);
+                if (this.state.state === 'SCHEDULED') {
+                    await this.saveState({ state: 'SENT', sentAt: new Date().toISOString(), scheduledAt: null, scheduledFor: null, scheduledOptions: null });
+                }
+                if (this._scheduledTask) { this._scheduledTask.stop(); this._scheduledTask = null; }
+            }, { timezone: 'UTC' });
+            console.log(`📅 Xpose schedule restored for ${this.state.scheduledFor}`);
+        } catch (error) {
+            console.error('❌ Error restoring Xpose schedule:', error);
         }
     }
 }

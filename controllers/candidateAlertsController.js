@@ -320,19 +320,18 @@ class CandidateAlertsController {
   
   /**
    * Schedule A-List send at a user-specified Melbourne datetime
+   * Persists schedule to state file so it survives page refreshes and restarts
    */
   async scheduleForFriday(options = {}) {
     const cron = require('node-cron');
     
     try {
-      // Use scheduledAt if provided (ISO string from frontend), else default to next Friday 9am Melbourne
       let sendDate;
       if (options.scheduledAt) {
         sendDate = new Date(options.scheduledAt);
         if (isNaN(sendDate.getTime())) throw new Error('Invalid scheduledAt date');
         if (sendDate <= new Date()) throw new Error('Scheduled time must be in the future');
       } else {
-        // Fallback: next Friday 9am Melbourne
         const nowMelb = new Date(new Date().toLocaleString('en-US', { timeZone: 'Australia/Melbourne' }));
         const day = nowMelb.getDay();
         let daysUntilFriday = (5 - day + 7) % 7 || 7;
@@ -341,7 +340,6 @@ class CandidateAlertsController {
         sendDate.setHours(9, 0, 0, 0);
       }
 
-      // Build cron expression from the UTC equivalent of the chosen Melbourne time
       const min = sendDate.getUTCMinutes();
       const hr = sendDate.getUTCHours();
       const dom = sendDate.getUTCDate();
@@ -354,17 +352,111 @@ class CandidateAlertsController {
         timeZone: 'Australia/Melbourne'
       }) + ' (Melbourne time)';
 
-      cron.schedule(cronExpr, async () => {
+      // Cancel any existing scheduled task
+      if (this._scheduledTask) {
+        this._scheduledTask.stop();
+        this._scheduledTask = null;
+      }
+
+      // Register the cron job and store reference for cancellation
+      this._scheduledTask = cron.schedule(cronExpr, async () => {
         console.log('📅 Executing scheduled A-List send...');
         await this.sendToAll(options);
+        // Clear scheduled state after send
+        const state = this.loadState();
+        if (state.state === 'SCHEDULED') {
+          state.state = 'SENT';
+          state.sentAt = new Date().toISOString();
+          delete state.scheduledAt;
+          delete state.scheduledFor;
+          delete state.scheduledOptions;
+          this.saveState(state);
+        }
+        if (this._scheduledTask) { this._scheduledTask.stop(); this._scheduledTask = null; }
       }, { timezone: 'UTC' });
 
-      console.log(`📅 A-List scheduled for ${scheduledFor} (cron: ${cronExpr} UTC)`);
+      // Persist scheduled state to file
+      const state = this.loadState();
+      state.state = 'SCHEDULED';
+      state.scheduledAt = sendDate.toISOString();
+      state.scheduledFor = scheduledFor;
+      state.scheduledOptions = { recipientType: options.recipientType, recipientId: options.recipientId };
+      this.saveState(state);
 
+      console.log(`📅 A-List scheduled for ${scheduledFor} (cron: ${cronExpr} UTC)`);
       return { success: true, scheduledFor, message: 'A-List scheduled successfully' };
     } catch (error) {
       console.error('❌ Error scheduling A-List:', error);
       return { success: false, message: error.message };
+    }
+  }
+
+  /**
+   * Cancel a pending A-List schedule
+   */
+  cancelSchedule() {
+    try {
+      if (this._scheduledTask) {
+        this._scheduledTask.stop();
+        this._scheduledTask = null;
+      }
+      const state = this.loadState();
+      if (state.state === 'SCHEDULED') {
+        state.state = 'TESTED';
+        delete state.scheduledAt;
+        delete state.scheduledFor;
+        delete state.scheduledOptions;
+        this.saveState(state);
+      }
+      return { success: true, message: 'Schedule cancelled' };
+    } catch (error) {
+      console.error('❌ Error cancelling A-List schedule:', error);
+      return { success: false, message: error.message };
+    }
+  }
+
+  /**
+   * Re-register scheduled cron job on server startup if state is SCHEDULED
+   */
+  restoreSchedule() {
+    const cron = require('node-cron');
+    try {
+      const state = this.loadState();
+      if (state.state !== 'SCHEDULED' || !state.scheduledAt) return;
+      const sendDate = new Date(state.scheduledAt);
+      if (sendDate <= new Date()) {
+        // Missed — clear the scheduled state
+        console.warn('⚠️  A-List scheduled time has passed, clearing schedule');
+        state.state = 'TESTED';
+        delete state.scheduledAt;
+        delete state.scheduledFor;
+        delete state.scheduledOptions;
+        this.saveState(state);
+        return;
+      }
+      const min = sendDate.getUTCMinutes();
+      const hr = sendDate.getUTCHours();
+      const dom = sendDate.getUTCDate();
+      const mon = sendDate.getUTCMonth() + 1;
+      const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
+      const options = state.scheduledOptions || {};
+      this._scheduledTask = cron.schedule(cronExpr, async () => {
+        console.log('📅 Executing restored A-List scheduled send...');
+        await this.sendToAll(options);
+        const s = this.loadState();
+        if (s.state === 'SCHEDULED') {
+          s.state = 'SENT';
+          s.sentAt = new Date().toISOString();
+          delete s.scheduledAt;
+          delete s.scheduledFor;
+          delete s.scheduledOptions;
+          this.saveState(s);
+        }
+        if (this._scheduledTask) { this._scheduledTask.stop(); this._scheduledTask = null; }
+      }, { timezone: 'UTC' });
+      console.log(`📅 A-List schedule restored for ${state.scheduledFor}`);
+    } catch (error) {
+      console.error('❌ Error restoring A-List schedule:', error);
     }
   }
 
