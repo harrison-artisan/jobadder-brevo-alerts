@@ -244,10 +244,16 @@ async function sendTest(req, res) {
         return res.status(400).json({ success: false, message: 'TEST_EMAIL environment variable is not set.' });
     }
 
-    // Use per-consultant template ID from config (falls back to env var, then inline HTML)
-    const templateId = state.consultant && state.consultant.brevo_template_id
-        ? state.consultant.brevo_template_id
-        : process.env.BREVO_CONSULTANT_NEWSLETTER_TEMPLATE_ID || null;
+    // Resolve template ID: Railway env var (per-consultant) → config file value → inline HTML fallback
+    const consultantId = state.consultant ? state.consultant.id : null;
+    const envVarName = consultantId
+        ? `BREVO_CONSULTANT_NEWSLETTER_TEMPLATE_ID_${consultantId.replace(/-/g, '_').toUpperCase()}`
+        : null;
+    const templateId = (envVarName && process.env[envVarName])
+        ? parseInt(process.env[envVarName])
+        : (state.consultant && state.consultant.brevo_template_id)
+            ? state.consultant.brevo_template_id
+            : null;
 
     try {
         if (templateId) {
@@ -291,10 +297,16 @@ async function sendToAll(req, res) {
         return res.status(400).json({ success: false, message: 'Please parse the Gemini JSON first.' });
     }
 
-    // Use per-consultant template ID from config (falls back to env var, then inline HTML)
-    const templateId = state.consultant && state.consultant.brevo_template_id
-        ? state.consultant.brevo_template_id
-        : process.env.BREVO_CONSULTANT_NEWSLETTER_TEMPLATE_ID || null;
+    // Resolve template ID: Railway env var (per-consultant) → config file value → inline HTML fallback
+    const consultantId = state.consultant ? state.consultant.id : null;
+    const envVarName = consultantId
+        ? `BREVO_CONSULTANT_NEWSLETTER_TEMPLATE_ID_${consultantId.replace(/-/g, '_').toUpperCase()}`
+        : null;
+    const templateId = (envVarName && process.env[envVarName])
+        ? parseInt(process.env[envVarName])
+        : (state.consultant && state.consultant.brevo_template_id)
+            ? state.consultant.brevo_template_id
+            : null;
 
     try {
         const { recipientType, recipientId } = req.body;
