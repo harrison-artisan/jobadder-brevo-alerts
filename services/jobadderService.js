@@ -355,7 +355,7 @@ class JobAdderService {
     
     // Get location and work type from job details if available
     let location = 'Location TBD';
-    let jobType = 'Not specified';
+    let jobType = 'Permanent';
     
     if (ad.jobDetails) {
       // Use structured data from job details
@@ -437,7 +437,7 @@ class JobAdderService {
       return 'Part-time';
     }
     
-    return 'Not specified';
+    return 'Permanent';
   }
 
   /**
