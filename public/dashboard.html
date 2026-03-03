@@ -885,17 +885,21 @@
         
         /* Recipient Selector Styles */
         .recipient-selector {
-            background: rgba(255, 255, 255, 0.92);
+            background: rgba(255, 255, 255, 0.10);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             padding: 25px 30px;
             border-radius: 10px;
             margin-bottom: 35px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.18);
         }
         
         .recipient-selector h3 {
-            color: #1b334d;
+            color: rgba(255, 255, 255, 0.92);
             margin-bottom: 15px;
             font-size: 18px;
+            font-weight: 700;
         }
         
         .selector-row {
@@ -911,7 +915,7 @@
         
         .selector-group label {
             display: block;
-            color: #555;
+            color: rgba(255, 255, 255, 0.65);
             font-size: 13px;
             font-weight: 600;
             margin-bottom: 5px;
@@ -919,81 +923,98 @@
         
         .selector-group select {
             width: 100%;
-            padding: 10px;
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 8px;
             font-size: 14px;
-            background: white;
-            transition: border-color 0.3s;
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            transition: border-color 0.2s;
+            cursor: pointer;
+        }
+        
+        .selector-group select option {
+            background: #1a2332;
+            color: white;
         }
         
         .selector-group select:focus {
             outline: none;
-            border-color: #bd203d;
+            border-color: rgba(189, 32, 61, 0.7);
+            background: rgba(255, 255, 255, 0.12);
+        }
+        
+        .selector-group select:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
         }
         
         .recipient-preview {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 6px;
-            border-left: 4px solid #bd203d;
+            background: rgba(255, 255, 255, 0.07);
+            padding: 15px 18px;
+            border-radius: 8px;
+            border-left: 3px solid #bd203d;
         }
         
         .recipient-preview h4 {
-            color: #1b334d;
+            color: rgba(255, 255, 255, 0.9);
             font-size: 14px;
             margin-bottom: 8px;
         }
         
         .recipient-preview p {
-            color: #666;
+            color: rgba(255, 255, 255, 0.6);
             font-size: 13px;
             margin: 4px 0;
         }
         
         .recipient-preview .count {
-            color: #bd203d;
+            color: #e87c9a;
             font-weight: 700;
             font-size: 16px;
         }
         
         .btn-confirm {
-            background: #28a745;
+            background: rgba(40, 167, 69, 0.85);
             color: white;
             padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
+            border: 1px solid rgba(40, 167, 69, 0.4);
+            border-radius: 8px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s;
             margin-top: 10px;
         }
         
         .btn-confirm:hover:not(:disabled) {
-            background: #218838;
+            background: rgba(40, 167, 69, 1);
             transform: translateY(-1px);
         }
         
         .btn-confirm:disabled {
-            background: #ccc;
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.3);
             cursor: not-allowed;
         }
         
         .btn-confirm.confirmed {
-            background: #6c757d;
+            background: rgba(108, 117, 125, 0.6);
+            border-color: rgba(108, 117, 125, 0.3);
         }
         
         .recipient-locked {
-            background: rgba(40, 167, 69, 0.12);
-            border: 1px solid rgba(40, 167, 69, 0.25);
+            background: rgba(40, 167, 69, 0.1);
+            border: 1px solid rgba(40, 167, 69, 0.3);
             border-radius: 8px;
             padding: 12px 15px;
             margin-top: 12px;
+            color: rgba(255, 255, 255, 0.85);
         }
         
         .recipient-locked .lock-icon {
-            color: #28a745;
+            color: #5dd879;
             font-size: 20px;
             margin-right: 8px;
         }
