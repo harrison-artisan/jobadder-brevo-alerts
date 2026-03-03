@@ -1460,8 +1460,15 @@
                         Send Now
                     </button>
                 </div>
-                <div style="margin-top: 10px; font-size: 13px; color: #7f8c8d; text-align: center;">
-                    <em>Scheduled send: Next Friday at 9:00 AM Melbourne time</em>
+                <!-- Schedule date/time picker for A-List (shown when Schedule button clicked) -->
+                <div id="alistScheduleRow" style="display:none; margin-top:14px; padding:14px 16px; background:rgba(52,152,219,0.1); border:1px solid rgba(52,152,219,0.3); border-radius:8px;">
+                    <label style="display:block; color:rgba(255,255,255,0.9); font-weight:600; margin-bottom:8px; font-size:14px;">Schedule Date &amp; Time (Melbourne / AEDT)</label>
+                    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                        <input type="datetime-local" id="alistScheduleDate" style="padding:10px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px; min-width:240px; color-scheme:dark;">
+                        <button class="btn btn-info" id="btnConfirmAListSchedule" onclick="confirmAListSchedule()" style="min-width:140px;">Confirm Schedule</button>
+                        <button class="btn" onclick="cancelAListSchedule()" style="background:rgba(255,255,255,0.1); min-width:80px;">Cancel</button>
+                    </div>
+                    <p style="color:rgba(255,255,255,0.45); font-size:12px; margin:8px 0 0;">Times are in Melbourne local time (AEDT/AEST).</p>
                 </div>
                 
                 <div class="loading-indicator" id="alistLoading">
@@ -1563,8 +1570,15 @@
                         Send Now
                     </button>
                 </div>
-                <div style="margin-top: 10px; font-size: 13px; color: #7f8c8d; text-align: center;">
-                    <em>Scheduled send: Next Thursday at 10:00 AM Melbourne time</em>
+                <!-- Schedule date/time picker for Xpose (shown when Schedule button clicked) -->
+                <div id="xposeScheduleRow" style="display:none; margin-top:14px; padding:14px 16px; background:rgba(52,152,219,0.1); border:1px solid rgba(52,152,219,0.3); border-radius:8px;">
+                    <label style="display:block; color:rgba(255,255,255,0.9); font-weight:600; margin-bottom:8px; font-size:14px;">Schedule Date &amp; Time (Melbourne / AEDT)</label>
+                    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                        <input type="datetime-local" id="xposeScheduleDate" style="padding:10px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px; min-width:240px; color-scheme:dark;">
+                        <button class="btn btn-info" id="btnConfirmXposeSchedule" onclick="confirmXposeSchedule()" style="min-width:140px;">Confirm Schedule</button>
+                        <button class="btn" onclick="cancelXposeSchedule()" style="background:rgba(255,255,255,0.1); min-width:80px;">Cancel</button>
+                    </div>
+                    <p style="color:rgba(255,255,255,0.45); font-size:12px; margin:8px 0 0;">Times are in Melbourne local time (AEDT/AEST).</p>
                 </div>
             </div>
 
@@ -1620,9 +1634,22 @@
                     <button class="btn btn-warning" onclick="sendTestSingleArticle()" id="btnTestSingleArticle">
                         Send Test Article
                     </button>
+                    <button class="btn btn-info" onclick="scheduleArticle()" id="btnScheduleArticle" disabled>
+                        Approve &amp; Schedule
+                    </button>
                     <button class="btn btn-primary" onclick="sendSingleArticle()" id="btnSingleArticle">
                         Send Article to All
                     </button>
+                </div>
+                <!-- Schedule date/time picker for Single Article -->
+                <div id="articleScheduleRow" style="display:none; margin-top:14px; padding:14px 16px; background:rgba(52,152,219,0.1); border:1px solid rgba(52,152,219,0.3); border-radius:8px;">
+                    <label style="display:block; color:rgba(255,255,255,0.9); font-weight:600; margin-bottom:8px; font-size:14px;">Schedule Date &amp; Time (Melbourne / AEDT)</label>
+                    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                        <input type="datetime-local" id="articleScheduleDate" style="padding:10px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px; min-width:240px; color-scheme:dark;">
+                        <button class="btn btn-info" id="btnConfirmArticleSchedule" onclick="confirmArticleSchedule()" style="min-width:140px;">Confirm Schedule</button>
+                        <button class="btn" onclick="cancelArticleSchedule()" style="background:rgba(255,255,255,0.1); min-width:80px;">Cancel</button>
+                    </div>
+                    <p style="color:rgba(255,255,255,0.45); font-size:12px; margin:8px 0 0;">Times are in Melbourne local time (AEDT/AEST).</p>
                 </div>
             </div>
         </div>
@@ -4377,45 +4404,75 @@ Choose Recent Poll
                 showMessage('Please confirm your recipient selection before scheduling', 'error');
                 return;
             }
-            
+            // Show the date/time picker row
+            const row = document.getElementById('alistScheduleRow');
+            if (row) {
+                row.style.display = 'block';
+                // Default to next Friday 9am Melbourne time
+                const now = new Date();
+                const day = now.getDay();
+                const daysUntilFriday = (5 - day + 7) % 7 || 7;
+                const nextFriday = new Date(now);
+                nextFriday.setDate(now.getDate() + daysUntilFriday);
+                nextFriday.setHours(9, 0, 0, 0);
+                const pad = n => String(n).padStart(2, '0');
+                const defaultVal = `${nextFriday.getFullYear()}-${pad(nextFriday.getMonth()+1)}-${pad(nextFriday.getDate())}T09:00`;
+                document.getElementById('alistScheduleDate').value = defaultVal;
+            }
+        }
+
+        function cancelAListSchedule() {
+            const row = document.getElementById('alistScheduleRow');
+            if (row) row.style.display = 'none';
+        }
+
+        async function confirmAListSchedule() {
+            if (!confirmedRecipients.alist) {
+                showMessage('Please confirm your recipient selection before scheduling', 'error');
+                return;
+            }
+            const schedEl = document.getElementById('alistScheduleDate');
+            if (!schedEl || !schedEl.value) {
+                showMessage('Please select a date and time to schedule the A-List.', 'error');
+                return;
+            }
+            // Convert Melbourne local time input to UTC ISO string
+            const melbDate = new Date(schedEl.value);
+            const scheduledAt = melbDate.toISOString();
             const recipientType = confirmedRecipients.alist.type;
             const recipientId = confirmedRecipients.alist.id;
             const recipientName = confirmedRecipients.alist.name;
             const recipientCount = confirmedRecipients.alist.count;
-            
-            // Show confirmation popup
             showConfirmation('A-List Schedule', recipientName, recipientCount, async (confirmed) => {
                 if (!confirmed) return;
-                
-                await executeAListSchedule(recipientType, recipientId);
+                await executeAListSchedule(recipientType, recipientId, scheduledAt);
             });
         }
         
-        async function executeAListSchedule(recipientType, recipientId) {
-            const btn = document.getElementById('btnScheduleAList');
-            btn.disabled = true;
-            btn.innerHTML = 'Scheduling... <span class="spinner"></span>';
+        async function executeAListSchedule(recipientType, recipientId, scheduledAt) {
+            const btn = document.getElementById('btnConfirmAListSchedule');
+            if (btn) { btn.disabled = true; btn.innerHTML = 'Scheduling... <span class="spinner"></span>'; }
             
             try {
                 const response = await fetch('/api/alist/schedule', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ recipientType, recipientId })
+                    body: JSON.stringify({ recipientType, recipientId, scheduledAt })
                 });
                 
                 const result = await response.json();
                 
                 if (result.success) {
-                    showMessage(`✅ A-List scheduled for ${result.scheduledFor}`, 'success');
+                    showMessage(`A-List scheduled for ${result.scheduledFor}`, 'success');
+                    document.getElementById('alistScheduleRow').style.display = 'none';
                 } else {
-                    showMessage(`❌ Scheduling failed: ${result.message}`, 'error');
+                    showMessage(`Scheduling failed: ${result.message}`, 'error');
                 }
             } catch (error) {
-                showMessage(`❌ Error: ${error.message}`, 'error');
+                showMessage(`Error: ${error.message}`, 'error');
             }
             
-            btn.disabled = false;
-            btn.innerHTML = 'Approve & Schedule';
+            if (btn) { btn.disabled = false; btn.innerHTML = 'Confirm Schedule'; }
         }
         
         async function sendNowAList() {
@@ -4624,30 +4681,59 @@ Choose Recent Poll
                 showToast('Please confirm your recipient selection before scheduling', 'error');
                 return;
             }
-            
+            // Show the date/time picker row
+            const row = document.getElementById('xposeScheduleRow');
+            if (row) {
+                row.style.display = 'block';
+                // Default to next Thursday 10am Melbourne time
+                const now = new Date();
+                const day = now.getDay();
+                const daysUntilThursday = (4 - day + 7) % 7 || 7;
+                const nextThursday = new Date(now);
+                nextThursday.setDate(now.getDate() + daysUntilThursday);
+                nextThursday.setHours(10, 0, 0, 0);
+                const pad = n => String(n).padStart(2, '0');
+                const defaultVal = `${nextThursday.getFullYear()}-${pad(nextThursday.getMonth()+1)}-${pad(nextThursday.getDate())}T10:00`;
+                document.getElementById('xposeScheduleDate').value = defaultVal;
+            }
+        }
+
+        function cancelXposeSchedule() {
+            const row = document.getElementById('xposeScheduleRow');
+            if (row) row.style.display = 'none';
+        }
+
+        async function confirmXposeSchedule() {
+            if (!confirmedRecipients.xpose) {
+                showToast('Please confirm your recipient selection before scheduling', 'error');
+                return;
+            }
+            const schedEl = document.getElementById('xposeScheduleDate');
+            if (!schedEl || !schedEl.value) {
+                showToast('Please select a date and time to schedule Xpose.', 'error');
+                return;
+            }
+            const melbDate = new Date(schedEl.value);
+            const scheduledAt = melbDate.toISOString();
             const recipientType = confirmedRecipients.xpose.type;
             const recipientId = confirmedRecipients.xpose.id;
             const recipientName = confirmedRecipients.xpose.name;
             const recipientCount = confirmedRecipients.xpose.count;
-            
-            // Show confirmation popup
             showConfirmation('Xpose Schedule', recipientName, recipientCount, async (confirmed) => {
                 if (!confirmed) return;
-                
-                await executeXposeSchedule(recipientType, recipientId);
+                await executeXposeSchedule(recipientType, recipientId, scheduledAt);
             });
         }
         
-        async function executeXposeSchedule(recipientType, recipientId) {
-            const btn = document.getElementById('btnScheduleXpose');
-            btn.disabled = true;
-            btn.innerHTML = 'Scheduling... <span class="spinner"></span>';
+        async function executeXposeSchedule(recipientType, recipientId, scheduledAt) {
+            const btn = document.getElementById('btnConfirmXposeSchedule');
+            if (btn) { btn.disabled = true; btn.innerHTML = 'Scheduling... <span class="spinner"></span>'; }
             
             try {
                 const response = await fetch('/api/xpose/schedule', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ recipientType, recipientId })
+                    body: JSON.stringify({ recipientType, recipientId, scheduledAt })
                 });
                 
                 const result = await response.json();
@@ -4656,6 +4742,7 @@ Choose Recent Poll
                     const msg = `Xpose scheduled for ${result.scheduledFor}`;
                     showToast(`✅ ${msg}`, 'success');
                     showTabMessage('xpose', msg, 'success');
+                    document.getElementById('xposeScheduleRow').style.display = 'none';
                 } else {
                     const msg = `Scheduling failed: ${result.message}`;
                     showToast(`❌ ${msg}`, 'error');
@@ -4665,8 +4752,7 @@ Choose Recent Poll
                 showToast(`❌ Error: ${error.message}`, 'error');
             }
             
-            btn.disabled = false;
-            btn.innerHTML = 'Approve & Schedule';
+            if (btn) { btn.disabled = false; btn.innerHTML = 'Confirm Schedule'; }
             updateXposeUI();
         }
         
@@ -4744,10 +4830,12 @@ Choose Recent Poll
                         option.textContent = article.title;
                         select.appendChild(option);
                     });
-                    // Enable Preview button when article is selected
+                    // Enable Preview and Schedule buttons when article is selected
                     select.addEventListener('change', function() {
                         const previewBtn = document.getElementById('btnPreviewArticle');
                         previewBtn.disabled = !this.value;
+                        const schedBtn = document.getElementById('btnScheduleArticle');
+                        if (schedBtn) schedBtn.disabled = !this.value;
                     });
                 } else {
                     select.innerHTML = '<option value="">No articles found</option>';
@@ -4852,6 +4940,77 @@ Choose Recent Poll
             
             btn.disabled = false;
             btn.textContent = 'Send Article to All';
+        }
+
+        // ========== SINGLE ARTICLE SCHEDULING ==========
+        async function scheduleArticle() {
+            const articleId = document.getElementById('articleSelector').value;
+            if (!articleId) {
+                showToast('Please select an article first.', 'error');
+                return;
+            }
+            if (!confirmedRecipients.article) {
+                showToast('Please confirm your recipient selection before scheduling.', 'error');
+                return;
+            }
+            // Show the date/time picker row
+            const row = document.getElementById('articleScheduleRow');
+            if (row) {
+                row.style.display = 'block';
+                // Default to tomorrow 9am
+                const now = new Date();
+                const tomorrow = new Date(now);
+                tomorrow.setDate(now.getDate() + 1);
+                tomorrow.setHours(9, 0, 0, 0);
+                const pad = n => String(n).padStart(2, '0');
+                const defaultVal = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth()+1)}-${pad(tomorrow.getDate())}T09:00`;
+                document.getElementById('articleScheduleDate').value = defaultVal;
+            }
+        }
+
+        function cancelArticleSchedule() {
+            const row = document.getElementById('articleScheduleRow');
+            if (row) row.style.display = 'none';
+        }
+
+        async function confirmArticleSchedule() {
+            const articleId = document.getElementById('articleSelector').value;
+            if (!articleId) { showToast('Please select an article.', 'error'); return; }
+            if (!confirmedRecipients.article) { showToast('Please confirm your recipient selection.', 'error'); return; }
+            const schedEl = document.getElementById('articleScheduleDate');
+            if (!schedEl || !schedEl.value) { showToast('Please select a date and time.', 'error'); return; }
+            const melbDate = new Date(schedEl.value);
+            const scheduledAt = melbDate.toISOString();
+            const recipientType = confirmedRecipients.article.type;
+            const recipientId = confirmedRecipients.article.id;
+            const recipientName = confirmedRecipients.article.name;
+            const recipientCount = confirmedRecipients.article.count;
+            showConfirmation('Article Schedule', recipientName, recipientCount, async (confirmed) => {
+                if (!confirmed) return;
+                await executeArticleSchedule(articleId, recipientType, recipientId, scheduledAt);
+            });
+        }
+
+        async function executeArticleSchedule(articleId, recipientType, recipientId, scheduledAt) {
+            const btn = document.getElementById('btnConfirmArticleSchedule');
+            if (btn) { btn.disabled = true; btn.innerHTML = 'Scheduling... <span class="spinner"></span>'; }
+            try {
+                const response = await fetch(`/api/xpose/schedule-article/${articleId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ recipientType, recipientId, scheduledAt })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast(`✅ Article scheduled for ${result.scheduledFor}`, 'success');
+                    document.getElementById('articleScheduleRow').style.display = 'none';
+                } else {
+                    showToast(`❌ Scheduling failed: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showToast(`❌ Error: ${error.message}`, 'error');
+            }
+            if (btn) { btn.disabled = false; btn.innerHTML = 'Confirm Schedule'; }
         }
 
         // ========== CONFIRMATION POPUP SYSTEM ==========

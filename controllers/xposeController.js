@@ -349,6 +349,101 @@ class XposeController {
             `);
         }
     };
+
+    /**
+     * Schedule a single article send at a user-specified Melbourne datetime
+     */
+    async scheduleArticle(articleId, options = {}) {
+        const cron = require('node-cron');
+        try {
+            if (!articleId) throw new Error('No article ID provided');
+            let sendDate;
+            if (options.scheduledAt) {
+                sendDate = new Date(options.scheduledAt);
+                if (isNaN(sendDate.getTime())) throw new Error('Invalid scheduledAt date');
+                if (sendDate <= new Date()) throw new Error('Scheduled time must be in the future');
+            } else {
+                // Fallback: tomorrow 9am Melbourne
+                const nowMelb = new Date(new Date().toLocaleString('en-US', { timeZone: 'Australia/Melbourne' }));
+                sendDate = new Date(nowMelb);
+                sendDate.setDate(nowMelb.getDate() + 1);
+                sendDate.setHours(9, 0, 0, 0);
+            }
+
+            const min = sendDate.getUTCMinutes();
+            const hr = sendDate.getUTCHours();
+            const dom = sendDate.getUTCDate();
+            const mon = sendDate.getUTCMonth() + 1;
+            const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
+
+            const scheduledFor = sendDate.toLocaleString('en-AU', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+                hour: '2-digit', minute: '2-digit', hour12: true,
+                timeZone: 'Australia/Melbourne'
+            }) + ' (Melbourne time)';
+
+            cron.schedule(cronExpr, async () => {
+                console.log(`📅 Executing scheduled article ${articleId} send...`);
+                const fakeReq = { params: { articleId }, body: { recipientType: options.recipientType, recipientId: options.recipientId } };
+                const fakeRes = { json: () => {}, status: () => ({ json: () => {} }) };
+                await this.sendSingleArticle(fakeReq, fakeRes);
+            }, { timezone: 'UTC' });
+
+            console.log(`📅 Article ${articleId} scheduled for ${scheduledFor} (cron: ${cronExpr} UTC)`);
+            return { success: true, scheduledFor, message: 'Article scheduled successfully' };
+        } catch (error) {
+            console.error('❌ Error scheduling article:', error);
+            return { success: false, message: error.message };
+        }
+    }
+
+    /**
+     * Schedule Xpose newsletter send at a user-specified Melbourne datetime
+     */
+    async scheduleForThursday(options = {}) {
+        const cron = require('node-cron');
+        try {
+            let sendDate;
+            if (options.scheduledAt) {
+                sendDate = new Date(options.scheduledAt);
+                if (isNaN(sendDate.getTime())) throw new Error('Invalid scheduledAt date');
+                if (sendDate <= new Date()) throw new Error('Scheduled time must be in the future');
+            } else {
+                // Fallback: next Thursday 10am Melbourne
+                const nowMelb = new Date(new Date().toLocaleString('en-US', { timeZone: 'Australia/Melbourne' }));
+                const day = nowMelb.getDay();
+                let daysUntilThursday = (4 - day + 7) % 7 || 7;
+                sendDate = new Date(nowMelb);
+                sendDate.setDate(nowMelb.getDate() + daysUntilThursday);
+                sendDate.setHours(10, 0, 0, 0);
+            }
+
+            const min = sendDate.getUTCMinutes();
+            const hr = sendDate.getUTCHours();
+            const dom = sendDate.getUTCDate();
+            const mon = sendDate.getUTCMonth() + 1;
+            const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
+
+            const scheduledFor = sendDate.toLocaleString('en-AU', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+                hour: '2-digit', minute: '2-digit', hour12: true,
+                timeZone: 'Australia/Melbourne'
+            }) + ' (Melbourne time)';
+
+            cron.schedule(cronExpr, async () => {
+                console.log('📅 Executing scheduled Xpose send...');
+                const fakeReq = { body: { recipientType: options.recipientType, recipientId: options.recipientId } };
+                const fakeRes = { json: () => {}, status: () => ({ json: () => {} }) };
+                await this.sendToAll(fakeReq, fakeRes);
+            }, { timezone: 'UTC' });
+
+            console.log(`📅 Xpose scheduled for ${scheduledFor} (cron: ${cronExpr} UTC)`);
+            return { success: true, scheduledFor, message: 'Xpose scheduled successfully' };
+        } catch (error) {
+            console.error('❌ Error scheduling Xpose:', error);
+            return { success: false, message: error.message };
+        }
+    }
 }
 
 module.exports = new XposeController();
