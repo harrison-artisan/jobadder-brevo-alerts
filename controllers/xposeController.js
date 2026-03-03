@@ -101,7 +101,7 @@ class XposeController {
                 this.state
             );
 
-            await this.saveState({ state: 'TESTED' });
+            await this.saveState({ state: 'TESTED', testSentAt: new Date().toISOString() });
             console.log(`✅ Test email sent to ${testEmail}`);
             res.json({ 
                 success: true, 
@@ -167,7 +167,7 @@ class XposeController {
                 this.state
             );
 
-            await this.saveState({ state: 'SENT' });
+            await this.saveState({ state: 'SENT', sentAt: new Date().toISOString() });
             console.log(`✅ Xpose sent to ${finalRecipients.length} recipients.`);
             res.json({ 
                 success: true, 

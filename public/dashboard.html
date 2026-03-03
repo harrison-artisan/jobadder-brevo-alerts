@@ -441,6 +441,18 @@
             color: #27ae60;
             border: 1px solid rgba(39, 174, 96, 0.4);
         }
+
+        .status-badge.SCHEDULED {
+            background: rgba(39, 174, 96, 0.2);
+            color: #27ae60;
+            border: 1px solid rgba(39, 174, 96, 0.4);
+        }
+
+        .status-badge.READY {
+            background: rgba(52, 152, 219, 0.2);
+            color: #3498db;
+            border: 1px solid rgba(52, 152, 219, 0.4);
+        }
         
         .candidates-grid {
             display: grid;
@@ -1510,10 +1522,15 @@
                     <div class="status-value" style="color: white;" id="xposeJobsCount">0</div>
                     <div class="status-label">in newsletter</div>
                 </div>
-            </div>
 
+                <div class="status-card">
+                    <h3>Last Action</h3>
+                    <div class="status-value" style="font-size: 16px; color: white;" id="xposeLastAction">None</div>
+                    <div class="status-label" id="xposeLastActionTime">-</div>
+                </div>
+            </div>
             <div class="actions-card">
-                <h2>Xpose Newsletter</h2>
+                <h2>Xpose Newsletter</h2>>
                 
                 <!-- Recipient Selector -->
                 <div class="recipient-selector">
@@ -1638,7 +1655,7 @@
                         Approve &amp; Schedule
                     </button>
                     <button class="btn btn-primary" onclick="sendSingleArticle()" id="btnSingleArticle">
-                        Send Article to All
+                        Send Now
                     </button>
                 </div>
                 <!-- Schedule date/time picker for Single Article -->
@@ -4687,6 +4704,25 @@ Choose Recent Poll
             if (isScheduled && xposeState.scheduledFor) {
                 stateTimestamp.textContent = `Scheduled: ${xposeState.scheduledFor}`;
             }
+
+            // Update Last Action
+            const lastAction = document.getElementById('xposeLastAction');
+            const lastActionTime = document.getElementById('xposeLastActionTime');
+            if (lastAction && lastActionTime) {
+                if (xposeState.sentAt) {
+                    lastAction.textContent = 'Sent to All';
+                    lastActionTime.textContent = formatTimestamp(xposeState.sentAt);
+                } else if (xposeState.testSentAt) {
+                    lastAction.textContent = 'Test Sent';
+                    lastActionTime.textContent = formatTimestamp(xposeState.testSentAt);
+                } else if (xposeState.generatedAt) {
+                    lastAction.textContent = 'Generated';
+                    lastActionTime.textContent = formatTimestamp(xposeState.generatedAt);
+                } else {
+                    lastAction.textContent = 'None';
+                    lastActionTime.textContent = '-';
+                }
+            }
         }
 
         async function generateXpose() {
@@ -5029,7 +5065,7 @@ Choose Recent Poll
             }
             
             btn.disabled = false;
-            btn.textContent = 'Send Article to All';
+            btn.textContent = 'Send Now';
         }
 
         // ========== SINGLE ARTICLE SCHEDULING ==========
