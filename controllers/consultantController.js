@@ -244,11 +244,15 @@ async function sendTest(req, res) {
         return res.status(400).json({ success: false, message: 'TEST_EMAIL environment variable is not set.' });
     }
 
-    const templateId = process.env.BREVO_CONSULTANT_NEWSLETTER_TEMPLATE_ID;
+    // Use per-consultant template ID from config (falls back to env var, then inline HTML)
+    const templateId = state.consultant && state.consultant.brevo_template_id
+        ? state.consultant.brevo_template_id
+        : process.env.BREVO_CONSULTANT_NEWSLETTER_TEMPLATE_ID || null;
 
     try {
         if (templateId) {
             // Preferred path: send via Brevo template
+            console.log(`📧 Sending test via Brevo template #${templateId} for ${state.consultant ? state.consultant.name : 'consultant'}`);
             await brevoService.sendBatchEmail(
                 [{ email: testEmail, name: 'Test User' }],
                 parseInt(templateId),
@@ -256,7 +260,7 @@ async function sendTest(req, res) {
             );
         } else {
             // Fallback: render inline HTML and send directly
-            console.log('ℹ️  No BREVO_CONSULTANT_NEWSLETTER_TEMPLATE_ID set — sending inline HTML test email.');
+            console.log('ℹ️  No template ID configured — sending inline HTML test email.');
             const emailPreviewService = require('../services/emailPreviewService');
             const htmlContent = await renderConsultantTemplate(state.templateParams, emailPreviewService);
             const consultantName = state.consultant ? state.consultant.name : 'Consultant';
@@ -287,7 +291,10 @@ async function sendToAll(req, res) {
         return res.status(400).json({ success: false, message: 'Please parse the Gemini JSON first.' });
     }
 
-    const templateId = process.env.BREVO_CONSULTANT_NEWSLETTER_TEMPLATE_ID;
+    // Use per-consultant template ID from config (falls back to env var, then inline HTML)
+    const templateId = state.consultant && state.consultant.brevo_template_id
+        ? state.consultant.brevo_template_id
+        : process.env.BREVO_CONSULTANT_NEWSLETTER_TEMPLATE_ID || null;
 
     try {
         const { recipientType, recipientId } = req.body;
@@ -314,7 +321,8 @@ async function sendToAll(req, res) {
         const finalRecipients = testMode ? [{ email: process.env.TEST_EMAIL }] : recipients;
 
         if (templateId) {
-            // Preferred: send via Brevo template
+            // Preferred: send via Brevo template (per-consultant)
+            console.log(`📧 Sending via Brevo template #${templateId} for ${state.consultant ? state.consultant.name : 'consultant'}`);
             await brevoService.sendBatchEmail(
                 finalRecipients,
                 parseInt(templateId),
@@ -322,7 +330,7 @@ async function sendToAll(req, res) {
             );
         } else {
             // Fallback: render inline HTML and send to each recipient individually
-            console.log('ℹ️  No BREVO_CONSULTANT_NEWSLETTER_TEMPLATE_ID set — sending inline HTML to all recipients.');
+            console.log('ℹ️  No template ID configured — sending inline HTML to all recipients.');
             const emailPreviewService = require('../services/emailPreviewService');
             const htmlContent = await renderConsultantTemplate(state.templateParams, emailPreviewService);
             const consultantName = state.consultant ? state.consultant.name : 'Consultant';
