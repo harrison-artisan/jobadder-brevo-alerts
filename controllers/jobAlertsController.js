@@ -261,19 +261,21 @@ class JobAlertsController {
     try {
       console.log(`\n======== 🔍 PREVIEWING JOB ${jobId} ========`);
       
-      // Fetch job details
-      const job = await jobadderService.getJobDetails(jobId);
-      if (!job) {
+      // Use same approach as sendSingleJobAlert: fetch live jobs and find by adId
+      const liveJobs = await jobadderService.getLiveJobs();
+      const jobAd = liveJobs.find(job => job.adId === parseInt(jobId));
+      
+      if (!jobAd) {
         return res.status(404).send(`
           <div style="padding: 40px; text-align: center; font-family: Arial, sans-serif;">
             <h2 style="color: #e74c3c;">Job Not Found</h2>
-            <p style="color: #666;">Job ID ${jobId} could not be found.</p>
+            <p style="color: #666;">Job ad ID ${jobId} could not be found in live jobs.</p>
           </div>
         `);
       }
       
-      // Format job for email
-      const formattedJob = jobadderService.formatJobForEmail(job);
+      // Format job for email — returns { job_title, location, job_type, job_description, apply_url, reference }
+      const formattedJob = jobadderService.formatJobForEmail(jobAd);
       
       // Use emailPreviewService to render the preview
       const emailPreviewService = require('../services/emailPreviewService');

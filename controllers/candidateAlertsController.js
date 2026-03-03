@@ -366,6 +366,34 @@ class CandidateAlertsController {
       };
     }
   }
+
+  /**
+   * Preview the A-List email using the current generated state
+   */
+  async previewAlist(req, res) {
+    try {
+      const state = this.loadState();
+      if (!state || !state.candidates || state.candidates.length === 0) {
+        return res.status(404).send(`
+          <div style="padding: 40px; text-align: center; font-family: Arial, sans-serif;">
+            <h2 style="color: #e74c3c;">No A-List Data</h2>
+            <p style="color: #666;">Please generate the A-List first before previewing.</p>
+          </div>
+        `);
+      }
+      const emailPreviewService = require('../services/emailPreviewService');
+      const html = await emailPreviewService.renderAlist(state);
+      res.send(html);
+    } catch (error) {
+      console.error('❌ Error generating A-List preview:', error);
+      res.status(500).send(`
+        <div style="padding: 40px; text-align: center; font-family: Arial, sans-serif;">
+          <h2 style="color: #e74c3c;">Preview Unavailable</h2>
+          <p style="color: #666;">${error.message}</p>
+        </div>
+      `);
+    }
+  }
 }
 
 module.exports = new CandidateAlertsController();
