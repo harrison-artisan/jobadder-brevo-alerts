@@ -16,6 +16,8 @@
       .article-col { display: table-cell !important; width: 33% !important; padding: 0 3px !important; }
       .two-col-left, .two-col-right { display: block !important; width: 100% !important; padding: 0 0 16px 0 !important; }
       .cta-btn-row td { display: block !important; width: 100% !important; text-align: center !important; padding: 8px 16px !important; box-sizing: border-box !important; }
+      .yt-thumb-cell { display: block !important; width: 100% !important; border-radius: 14px 14px 0 0 !important; }
+      .yt-text-cell { display: block !important; width: 100% !important; padding: 20px 20px 24px 20px !important; }
       .footer-phones td { font-size: 10px !important; padding: 0 4px !important; }
     }
   </style>
@@ -81,9 +83,6 @@
               </table>
             </td>
           </tr>
-
-          <!-- Gradient rule -->
-          <tr><td style="padding:0 45px;"><div style="height:3px;background:linear-gradient(90deg,#1b334d 0%,#bd203d 100%);border-radius:2px;"></div></td></tr>
 
           <!-- ====== CONSULTANT HERO ====== -->
           <tr>
@@ -181,14 +180,54 @@
           {% if item.type == 'instagram' %}
           <tr>
             <td style="padding:20px 45px 0 45px;" class="mobile-pad">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#f09433 0%,#e6683c 20%,#dc2743 40%,#cc2366 70%,#bc1888 100%);border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(188,24,136,0.2);">
+              <!-- Instagram embed-style card -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;border:1px solid #dbdbdb;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.1);">
+                <!-- Instagram header bar -->
                 <tr>
-                  <td style="padding:28px 32px;text-align:center;">
-                    <p style="margin:0 0 6px 0;font-size:10px;font-weight:700;color:rgba(255,255,255,0.75);letter-spacing:2px;text-transform:uppercase;">Instagram</p>
-                    {% if item.caption %}
-                    <p style="margin:0 0 20px 0;font-size:15px;font-weight:600;color:#ffffff;line-height:1.6;">{{ item.caption }}</p>
-                    {% endif %}
-                    <a href="{{ item.url }}" style="display:inline-block;background-color:rgba(255,255,255,0.2);color:#ffffff;border:2px solid rgba(255,255,255,0.6);padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;letter-spacing:0.5px;">VIEW ON INSTAGRAM &#8599;</a>
+                  <td style="background:linear-gradient(90deg,#f09433 0%,#e6683c 20%,#dc2743 40%,#cc2366 70%,#bc1888 100%);padding:10px 16px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+                      <tr>
+                        <td valign="middle">
+                          <table cellpadding="0" cellspacing="0" border="0" role="presentation">
+                            <tr>
+                              <td valign="middle" style="padding-right:10px;">
+                                <img src="https://cdn-icons-png.flaticon.com/512/174/174855.png" alt="Instagram" width="24" height="24" style="display:block;border:0;border-radius:50%;">
+                              </td>
+                              <td valign="middle">
+                                <span style="font-size:13px;font-weight:700;color:#ffffff;">get_artisan</span>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                        <td align="right" valign="middle">
+                          <a href="{{ item.url }}" style="font-size:11px;font-weight:700;color:#ffffff;text-decoration:none;background:rgba(255,255,255,0.25);padding:5px 12px;border-radius:20px;">View Post &#8599;</a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <!-- Post preview area -->
+                <tr>
+                  <td style="background:#fafafa;padding:20px 24px;border-bottom:1px solid #efefef;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+                      <tr>
+                        <td width="48" valign="top" style="padding-right:12px;">
+                          <img src="https://artisan.com.au/wp-content/uploads/2025/03/DEBBIE.png" alt="Artisan" width="40" height="40" style="display:block;border:0;border-radius:50%;width:40px;height:40px;object-fit:cover;">
+                        </td>
+                        <td valign="top">
+                          <p style="margin:0 0 2px 0;font-size:13px;font-weight:700;color:#262626;">get_artisan</p>
+                          {% if item.caption %}
+                          <p style="margin:0;font-size:14px;color:#262626;line-height:1.6;">{{ item.caption }}</p>
+                          {% endif %}
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <!-- View on Instagram CTA -->
+                <tr>
+                  <td style="padding:14px 24px;text-align:center;">
+                    <a href="{{ item.url }}" style="display:inline-block;background:linear-gradient(135deg,#f09433 0%,#e6683c 20%,#dc2743 40%,#cc2366 70%,#bc1888 100%);color:#ffffff;padding:11px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;letter-spacing:0.5px;box-shadow:0 4px 14px rgba(188,24,136,0.3);">VIEW ON INSTAGRAM &#8599;</a>
                   </td>
                 </tr>
               </table>
@@ -199,21 +238,21 @@
           {% if item.type == 'youtube' %}
           <tr>
             <td style="padding:20px 45px 0 45px;" class="mobile-pad">
+              <!-- YouTube left-right layout: thumbnail left, text+button right -->
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#0d0d0d;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.25);">
-                {% if item.thumbnail %}
                 <tr>
-                  <td style="padding:0;line-height:0;">
-                    <!-- Thumbnail with play button overlay using background-image (email-safe) -->
+                  <!-- Left: thumbnail with play overlay -->
+                  {% if item.thumbnail %}
+                  <td width="48%" valign="middle" style="padding:0;line-height:0;" class="yt-thumb-cell">
                     <a href="{{ item.url }}" style="display:block;line-height:0;">
                       <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"
                              background="{{ item.thumbnail }}"
-                             style="background-image:url('{{ item.thumbnail }}');background-size:cover;background-position:center;background-repeat:no-repeat;border-radius:14px 14px 0 0;">
+                             style="background-image:url('{{ item.thumbnail }}');background-size:cover;background-position:center;background-repeat:no-repeat;border-radius:14px 0 0 14px;">
                         <tr>
-                          <td height="220" align="center" valign="middle" style="height:220px;">
-                            <!-- Red circle play button -->
-                            <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:rgba(255,0,0,0.9);border-radius:50%;width:72px;height:72px;">
-                              <tr><td align="center" valign="middle" width="72" height="72" style="width:72px;height:72px;text-align:center;vertical-align:middle;">
-                                <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663319947996/HBRtevfnUXnTbiPd.png" width="28" height="28" alt="Play" style="display:inline-block;border:0;">
+                          <td height="200" align="center" valign="middle" style="height:200px;">
+                            <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:rgba(255,0,0,0.88);border-radius:50%;width:64px;height:64px;">
+                              <tr><td align="center" valign="middle" width="64" height="64" style="width:64px;height:64px;text-align:center;vertical-align:middle;">
+                                <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663319947996/HBRtevfnUXnTbiPd.png" width="24" height="24" alt="Play" style="display:inline-block;border:0;">
                               </td></tr>
                             </table>
                           </td>
@@ -221,15 +260,14 @@
                       </table>
                     </a>
                   </td>
-                </tr>
-                {% endif %}
-                <tr>
-                  <td style="padding:20px 32px 26px 32px;text-align:center;">
-                    <p style="margin:0 0 6px 0;font-size:10px;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:2px;text-transform:uppercase;">Now Playing</p>
+                  {% endif %}
+                  <!-- Right: label, caption, button -->
+                  <td valign="middle" style="padding:28px 28px 28px 24px;" class="yt-text-cell">
+                    <p style="margin:0 0 8px 0;font-size:10px;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:2px;text-transform:uppercase;">Now Playing</p>
                     {% if item.caption %}
-                    <p style="margin:0 0 18px 0;font-size:15px;font-weight:600;color:#ffffff;line-height:1.6;">{{ item.caption }}</p>
+                    <p style="margin:0 0 20px 0;font-size:15px;font-weight:600;color:#ffffff;line-height:1.6;">{{ item.caption }}</p>
                     {% endif %}
-                    <a href="{{ item.url }}" style="display:inline-block;background:linear-gradient(135deg,#ff0000 0%,#cc0000 100%);color:#ffffff;padding:13px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;letter-spacing:0.5px;box-shadow:0 4px 14px rgba(255,0,0,0.35);">&#9654; WATCH ON YOUTUBE</a>
+                    <a href="{{ item.url }}" style="display:inline-block;background:linear-gradient(135deg,#ff0000 0%,#cc0000 100%);color:#ffffff;padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;letter-spacing:0.5px;box-shadow:0 4px 14px rgba(255,0,0,0.35);">&#9654; WATCH ON YOUTUBE</a>
                   </td>
                 </tr>
               </table>
@@ -329,42 +367,10 @@
             </td>
           </tr>
 
+          <!-- ====== EVENTS (conditional) — shown ABOVE Creative Community ====== -->
+          {% if params.events %}
           <!-- Gradient rule -->
           <tr><td style="padding:40px 45px 0 45px;"><div style="height:3px;background:linear-gradient(90deg,#1b334d 0%,#bd203d 100%);border-radius:2px;"></div></td></tr>
-
-          <!-- ====== CREATIVE COMMUNITY ARTICLES ====== -->
-          <tr>
-            <td style="padding:40px 45px;" class="mobile-pad">
-              <h2 style="margin:0 0 6px 0;font-size:18px;font-weight:900;color:#1b334d;text-align:center;text-transform:uppercase;letter-spacing:0.5px;">From the Creative Community</h2>
-              <p style="margin:0 0 28px 0;font-size:13px;color:#888888;text-align:center;line-height:1.5;">Insights, ideas and industry news from Artisan XPOSE.</p>
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                <tr>
-                  {% for article in params.articles %}
-                  <td width="33%" valign="top" style="padding:0 6px;" class="article-col">
-                    <a href="{{ article.link }}?utm_source=brevo&utm_campaign=CONSULTANT&utm_medium=email" style="text-decoration:none;display:block;">
-                      <img src="{{ article.image }}" alt="{{ article.title }}" style="display:block;width:100%;height:auto;border-radius:8px;border:1px solid #e0e0e0;">
-                    </a>
-                    <p style="margin:8px 0 3px 0;font-size:11px;font-weight:700;color:#1b334d;line-height:1.4;text-align:center;">
-                      <a href="{{ article.link }}?utm_source=brevo&utm_campaign=CONSULTANT&utm_medium=email" style="color:#1b334d;text-decoration:none;">{{ article.title }}</a>
-                    </p>
-                    <p style="margin:0;text-align:center;"><a href="{{ article.link }}?utm_source=brevo&utm_campaign=CONSULTANT&utm_medium=email" style="font-size:10px;color:#bd203d;font-weight:700;text-decoration:none;">READ &#8594;</a></p>
-                  </td>
-                  {% endfor %}
-                </tr>
-              </table>
-              <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" style="margin-top:24px;">
-                <tr>
-                  <td>
-                    <a href="https://artisan.com.au/creative-community/?utm_source=brevo&utm_campaign=CONSULTANT&utm_medium=email" style="display:inline-block;background-color:#ffffff;color:#1b334d;border:2px solid #1b334d;padding:10px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 3px 10px rgba(27,51,77,0.1);">VISIT THE CREATIVE COMMUNITY &#8594;</a>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- ====== EVENTS (conditional) ====== -->
-          {% if params.events %}
-          <tr><td style="padding:0 45px;"><div style="height:3px;background:linear-gradient(90deg,#bd203d 0%,#1b334d 100%);border-radius:2px;"></div></td></tr>
           <tr>
             <td style="padding:40px 45px;" class="mobile-pad">
               <h2 style="margin:0 0 24px 0;font-size:18px;font-weight:900;color:#1b334d;text-align:center;text-transform:uppercase;letter-spacing:0.5px;">What's On</h2>
@@ -387,6 +393,39 @@
             </td>
           </tr>
           {% endif %}
+
+          <!-- Gradient rule -->
+          <tr><td style="padding:0 45px;"><div style="height:3px;background:linear-gradient(90deg,#bd203d 0%,#1b334d 100%);border-radius:2px;"></div></td></tr>
+
+          <!-- ====== CREATIVE COMMUNITY ARTICLES ====== -->
+          <tr>
+            <td style="padding:40px 45px;" class="mobile-pad">
+              <h2 style="margin:0 0 6px 0;font-size:18px;font-weight:900;color:#1b334d;text-align:center;text-transform:uppercase;letter-spacing:0.5px;">From the Creative Community</h2>
+              <p style="margin:0 0 28px 0;font-size:13px;color:#888888;text-align:center;line-height:1.5;">Insights, ideas and industry news from Artisan XPOSE.</p>
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+                <tr>
+                  {% for article in params.articles %}
+                  <td width="33%" valign="top" style="padding:0 6px;" class="article-col">
+                    <a href="{{ article.link }}?utm_source=brevo&utm_campaign=CONSULTANT&utm_medium=email" style="text-decoration:none;display:block;">
+                      <img src="{{ article.image }}" alt="{{ article.title }}" style="display:block;width:100%;height:150px;border-radius:8px;border:1px solid #e0e0e0;object-fit:cover;">
+                    </a>
+                    <p style="margin:8px 0 3px 0;font-size:11px;font-weight:700;color:#1b334d;line-height:1.4;text-align:center;">
+                      <a href="{{ article.link }}?utm_source=brevo&utm_campaign=CONSULTANT&utm_medium=email" style="color:#1b334d;text-decoration:none;">{{ article.title }}</a>
+                    </p>
+                    <p style="margin:0;text-align:center;"><a href="{{ article.link }}?utm_source=brevo&utm_campaign=CONSULTANT&utm_medium=email" style="font-size:10px;color:#bd203d;font-weight:700;text-decoration:none;">READ &#8594;</a></p>
+                  </td>
+                  {% endfor %}
+                </tr>
+              </table>
+              <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" style="margin-top:24px;">
+                <tr>
+                  <td>
+                    <a href="https://artisan.com.au/creative-community/?utm_source=brevo&utm_campaign=CONSULTANT&utm_medium=email" style="display:inline-block;background-color:#ffffff;color:#1b334d;border:2px solid #1b334d;padding:10px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 3px 10px rgba(27,51,77,0.1);">VISIT THE CREATIVE COMMUNITY &#8594;</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
           <!-- Gradient rule -->
           <tr><td style="padding:0 45px;"><div style="height:3px;background:linear-gradient(90deg,#bd203d 0%,#1b334d 100%);border-radius:2px;"></div></td></tr>
