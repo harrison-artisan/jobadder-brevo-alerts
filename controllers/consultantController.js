@@ -418,11 +418,7 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
         article3_link: a3.link || fallbackArticleLink,
 
         // Events
-        events: Array.isArray(parsed.events) ? parsed.events : [],
-
-        // Brevo system vars (overridden in preview)
-        update_profile: '{{ update_profile }}',
-        unsubscribe: '{{ unsubscribe }}'
+        events: Array.isArray(parsed.events) ? parsed.events : []
     };
 }
 

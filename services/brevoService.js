@@ -90,6 +90,8 @@ class BrevoService {
           payload.sender = { email: this.senderEmail, name: this.senderName };
         }
         console.log(`📧 Sending email to 1 recipient: ${recipient.email}`);
+        console.log('📦 Brevo payload params keys:', Object.keys(params || {}));
+        console.log('📦 Brevo payload sample:', JSON.stringify(payload).substring(0, 500));
         const response = await axios.post(`${this.baseUrl}/smtp/email`, payload, {
           headers: { 'api-key': this.apiKey, 'Content-Type': 'application/json' }
         });
