@@ -7,136 +7,88 @@
   <title>Artisan A-LIST</title>
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;900&display=swap" rel="stylesheet">
   <style type="text/css">
-    /* Mobile Responsive Styles */
     @media only screen and (max-width: 600px) {
-      .email-container {
-        width: 100% !important;
-        max-width: 100% !important;
-      }
-      .header-row td {
-        display: block !important;
-        width: 100% !important;
-        text-align: center !important;
-      }
-      .left-column {
-        margin-bottom: 20px !important;
-      }
-      .left-column table,
-      .left-column td,
-      .left-column img,
-      .left-column p,
-      .left-column span {
-        margin-left: auto !important;
-        margin-right: auto !important;
-        text-align: center !important;
-      }
-      .gray-container {
-        max-width: 100% !important;
-        margin: 0 auto !important;
-      }
-      .mobile-padding {
-        padding: 30px 20px !important;
-      }
-      .mobile-text {
-        font-size: 13px !important;
-      }
-      .mobile-heading {
-        font-size: 20px !important;
-      }
-      /* Force candidate containers to stack properly */
-      .candidate-table,
-      .candidate-row {
-        display: block !important;
-        width: 100% !important;
-      }
-      .candidate-image-cell,
-      .candidate-content-cell {
-        display: block !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-      }
-      .candidate-image-cell {
-        text-align: center !important;
-        padding: 20px !important;
-        width: 100% !important;
-      }
-      .candidate-image-cell img {
-        margin: 0 auto !important;
-        display: block !important;
-        width: 100px !important;
-        height: 100px !important;
-      }
-      .candidate-content-cell {
-        padding: 0 20px 20px 20px !important;
-        text-align: left !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-      }
-      .candidate-content-cell h3 {
-        font-size: 17px !important;
-        line-height: 1.4 !important;
-        word-wrap: break-word !important;
-        overflow-wrap: break-word !important;
-        white-space: normal !important;
-      }
-      .candidate-content-cell p {
-        font-size: 13px !important;
-        line-height: 1.6 !important;
-        word-wrap: break-word !important;
-        overflow-wrap: break-word !important;
-        white-space: normal !important;
-      }
-      .candidate-content-cell a {
-        display: block !important;
-        width: auto !important;
-        max-width: 100% !important;
-        box-sizing: border-box !important;
-      }
-      /* Footer mobile centering */
-      table[role="presentation"] td {
-        text-align: center !important;
-      }
-      table[role="presentation"] table {
-        margin: 0 auto !important;
-      }
+      /* === CONTAINER === */
+      .email-container { width: 100% !important; max-width: 100% !important; border-radius: 12px !important; margin: 0 8px !important; }
+
+      /* === HEADER: centre logo, tagline, badge === */
+      .header-row td { display: block !important; width: 100% !important; text-align: center !important; padding-left: 0 !important; padding-right: 0 !important; }
+      .left-column { margin-bottom: 24px !important; text-align: center !important; }
+      .left-column table, .left-column-inner { margin: 0 auto !important; float: none !important; }
+      .left-column td { text-align: center !important; }
+      .left-column img { margin: 0 auto !important; display: block !important; }
+      .left-column p { text-align: center !important; }
+      .left-column span { display: inline-block !important; }
+      .gray-container { max-width: 100% !important; width: 100% !important; margin: 0 auto !important; box-sizing: border-box !important; border-radius: 12px !important; }
+
+      /* === PADDING === */
+      .mobile-padding { padding: 20px 16px !important; }
+
+      /* === TYPOGRAPHY === */
+      .mobile-text { font-size: 14px !important; }
+      .mobile-heading { font-size: 22px !important; }
+
+      /* === CANDIDATE CARDS: stack photo above content === */
+      .candidate-table, .candidate-row { display: block !important; width: 100% !important; }
+      .candidate-image-cell, .candidate-content-cell { display: block !important; width: 100% !important; box-sizing: border-box !important; }
+      .candidate-image-cell { text-align: center !important; padding: 20px 16px 12px 16px !important; }
+      .candidate-image-cell img { margin: 0 auto !important; display: block !important; width: 90px !important; height: 90px !important; border-radius: 10px !important; }
+      .candidate-content-cell { padding: 0 16px 20px 16px !important; text-align: left !important; }
+      .candidate-content-cell h3 { font-size: 17px !important; line-height: 1.4 !important; word-wrap: break-word !important; overflow-wrap: break-word !important; white-space: normal !important; }
+      .candidate-content-cell p { font-size: 14px !important; line-height: 1.6 !important; word-wrap: break-word !important; overflow-wrap: break-word !important; white-space: normal !important; }
+      .candidate-content-cell a { display: block !important; width: auto !important; max-width: 100% !important; box-sizing: border-box !important; text-align: center !important; }
+
+      /* === CREATIVE COMMUNITY 3-COL: stack vertically on mobile === */
+      .article-col { display: block !important; width: 100% !important; padding: 0 0 20px 0 !important; }
+      .article-col img { width: 100% !important; max-width: 100% !important; height: auto !important; border-radius: 10px !important; }
+      .article-col p { text-align: center !important; }
+
+      /* === WORK WITH ARTISAN: stack buttons === */
+      .cta-button-row td { display: block !important; width: 100% !important; text-align: center !important; padding: 8px 16px !important; box-sizing: border-box !important; }
+      .cta-button-row a { width: 100% !important; box-sizing: border-box !important; display: block !important; }
+
+      /* === SOCIAL BUTTONS === */
+      .social-icon-cell { padding: 0 4px !important; }
+
+      /* === FOOTER PHONE ROW: stack === */
+      .footer-phone-row td { display: block !important; width: 100% !important; text-align: center !important; padding: 4px 0 !important; }
+      .footer-phone-sep { display: none !important; }
     }
   </style>
   <!--[if mso]>
-  <style type="text/css">
-    body, table, td {font-family: Arial, sans-serif !important;}
-  </style>
+  <style type="text/css">body, table, td {font-family: Arial, sans-serif !important;}</style>
   <![endif]-->
 </head>
 <body style="margin: 0; padding: 0; font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background-color: #f5f5f5; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;">
-  
+
   <!-- Preheader Text -->
   <div style="display: none; max-height: 0; overflow: hidden; opacity: 0;">
     Top 5 candidates ready now. See who's available and move fast.
   </div>
-  
+
   <!-- Main Container -->
   <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color: #f5f5f5; padding: 40px 20px;">
     <tr>
       <td align="center">
-        
+
         <!-- Email Wrapper (650px) -->
         <table width="650" cellpadding="0" cellspacing="0" border="0" role="presentation" class="email-container" style="max-width: 650px; width: 100%; background-color: #ffffff; border: 2px solid #e0e0e0; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden;">
-          
+
           <!-- Header Section -->
           <tr>
             <td style="padding: 45px 45px 40px 45px;" class="mobile-padding">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
                 <tr class="header-row">
-                  <!-- Left Column: Logo, Tagline, Badge (Vertical) -->
-                  <td width="50%" valign="top" class="left-column">
-                    <table cellpadding="0" cellspacing="0" border="0" role="presentation">
-                      <!-- Logo -->
+                  <!-- Left Column: Logo, Tagline, Badge -->
+                  <td width="50%" valign="top" class="left-column" align="left">
+                    <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="left" class="left-column-inner">
                       <tr>
                         <td style="padding-top: 24px; padding-bottom: 14px;">
-                          <img src="https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png" alt="Artisan" width="70" height="70" style="display: block; border: 0; line-height: 100%;">
+                          <a href="https://artisan.com.au/" style="text-decoration: none; display: block;">
+                            <img src="https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png" alt="Artisan" width="70" height="70" style="display: block; border: 0; line-height: 100%;">
+                          </a>
                         </td>
                       </tr>
-                      <!-- Tagline -->
                       <tr>
                         <td style="padding-bottom: 14px;">
                           <p style="margin: 0; font-size: 13px; color: #666666; font-weight: 600; letter-spacing: 0.3px; line-height: 1.5;">
@@ -144,7 +96,6 @@
                           </p>
                         </td>
                       </tr>
-                      <!-- A-LIST Badge -->
                       <tr>
                         <td>
                           <span style="display: inline-block; background: linear-gradient(135deg, #ffe8e8 0%, #ffd4d4 100%); color: #bd203d; padding: 11px 20px; border-radius: 24px; font-size: 15px; font-weight: 700; letter-spacing: 0.5px; box-shadow: 0 2px 8px rgba(189, 32, 61, 0.15);">
@@ -154,35 +105,27 @@
                       </tr>
                     </table>
                   </td>
-                  
+
                   <!-- Right Column: CTA in Gray Container -->
                   <td width="50%" valign="top" align="right">
-                    <!-- Gray Container -->
                     <table cellpadding="0" cellspacing="0" border="0" role="presentation" class="gray-container" style="background-color: #f7f7f7; border-radius: 12px; padding: 0 24px 24px 24px; max-width: 260px;">
                       <tr>
                         <td style="padding-top: 24px;">
-                          <!-- Heading -->
                           <h2 style="margin: 0 0 14px 0; font-size: 18px; font-weight: 900; color: #bd203d; text-align: center; letter-spacing: 0.3px; line-height: 1.3;">Need to hire now?</h2>
-                          
-                          <!-- Description -->
                           <p style="margin: 0 0 18px 0; font-size: 13px; color: #666666; text-align: center; line-height: 1.6; font-weight: 400;">
                             Reply now or use the quick action below to view available talent.
                           </p>
-                          
-                          <!-- Button (Centered) -->
                           <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
                             <tr>
                               <td>
-                                <a href="#candidates" style="display: inline-block; background-color: #ffffff; color: #bd203d; border: 2px solid #bd203d; padding: 13px 20px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 12px; text-align: center; letter-spacing: 0.5px; box-shadow: 0 3px 12px rgba(189, 32, 61, 0.2); white-space: nowrap;">
+                                <a href="https://artisan.com.au/looking-for-talent/?utm_source=brevo&utm_campaign=ALIST&utm_medium=email" style="display: inline-block; background-color: #ffffff; color: #bd203d; border: 2px solid #bd203d; padding: 13px 20px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 12px; text-align: center; letter-spacing: 0.5px; box-shadow: 0 3px 12px rgba(189, 32, 61, 0.2); white-space: nowrap;">
                                   SEE WHO'S AVAILABLE
                                 </a>
                               </td>
                             </tr>
                           </table>
-                          
-                          <!-- Subtext -->
                           <p style="margin: 14px 0 0 0; font-size: 11px; color: #999999; text-align: center; font-style: italic; font-weight: 400;">
-                            Freelance, Contract & Permanent
+                            Freelance, Contract &amp; Permanent
                           </p>
                         </td>
                       </tr>
@@ -192,105 +135,291 @@
               </table>
             </td>
           </tr>
-          
+
           <!-- Main Content -->
           <tr>
             <td style="padding: 35px 45px 40px 45px;" class="mobile-padding">
               <h1 style="margin: 0 0 22px 0; font-size: 20px; font-weight: 600; color: #1b334d; letter-spacing: -0.3px; line-height: 1.3;" class="mobile-heading">
                 Hi {{ contact.FIRSTNAME }},
               </h1>
-              
               <p style="margin: 0 0 15px 0; font-size: 14px; line-height: 1.7; color: #333333; font-weight: 400;" class="mobile-text">
-                The momentum is real—<strong style="color: #bd203d; font-weight: 600;">top talent moves fast</strong>. See someone you like? Act now. Don't see the right fit? We likely have them.
+                The momentum is real, <strong style="color: #bd203d; font-weight: 600;">top talent moves fast</strong>. See someone you like? Act now. Don't see the right fit? We likely have them.
               </p>
-              
               <p style="margin: 0 0 15px 0; font-size: 14px; line-height: 1.7; color: #333333; font-weight: 400;" class="mobile-text">
-                For 27 years, Australia's leading brands have trusted Artisan for exceptional talent in <strong style="color: #1b334d; font-weight: 600;">design, marketing, digital, and strategy</strong>—freelance or permanent.
+                For 27 years, Australia's leading brands have trusted Artisan for exceptional talent in <strong style="color: #1b334d; font-weight: 600;">design, marketing, digital, and strategy</strong>, freelance or permanent.
               </p>
-              
               <p style="margin: 0 0 26px 0; font-size: 14px; line-height: 1.7; color: #333333; font-weight: 400;" class="mobile-text">
-                Great talent doesn't wait. <a href="mailto:reply@artisan.com.au" style="color: #bd203d; font-weight: 700; text-decoration: none; border-bottom: 2px solid #bd203d;">Hit reply now</a> and secure your team today.
+                Great talent doesn't wait. <a href="mailto:artisan@artisan.com.au" style="color: #bd203d; font-weight: 700; text-decoration: none; border-bottom: 2px solid #bd203d;">Hit reply now</a> and secure your team today.
               </p>
             </td>
           </tr>
-          
+
           <!-- Gradient Divider -->
           <tr>
             <td style="padding: 0 45px;">
               <div style="height: 3px; background: linear-gradient(90deg, #bd203d 0%, #1b334d 100%); border-radius: 2px;"></div>
             </td>
           </tr>
-          
+
           <!-- Candidates Section -->
           <tr>
             <td id="candidates" style="padding: 40px 45px;" class="mobile-padding">
               <h2 style="margin: 0 0 30px 0; font-size: 24px; font-weight: 900; color: #1b334d; text-align: center; letter-spacing: 0.3px; line-height: 1.2;">
                 This Week's Top 5 Candidates
               </h2>
-              
+
               <!-- Candidate Loop -->
               {% for candidate in params.candidates %}
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" class="candidate-table" style="background: linear-gradient(135deg, #ffffff 0%, #f9f9f9 100%); border: 1px solid #e8e8e8; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); overflow: hidden;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" class="candidate-table" style="background-color: #fafafa; border-radius: 12px; margin-bottom: 20px; overflow: hidden; border: 1px solid #eeeeee;">
                 <tr class="candidate-row">
-                  <!-- Image Column (Left) -->
                   <td width="100" valign="top" style="padding: 28px 0 28px 28px;" class="candidate-image-cell">
                     <img src="{{ candidate.image_url }}" alt="Candidate {{ candidate.number }}" width="100" height="100" style="display: block; border: 0; margin: 0; border-radius: 8px; background-color: #ffffff;">
                   </td>
-                  
-                  <!-- Content Column (Right) -->
-                  <td valign="top" style="padding: 28px 28px 28px 20px; word-wrap: break-word; word-break: break-word;" class="candidate-content-cell">
-                    <!-- Candidate Number and Title -->
+                  <td valign="top" style="padding: 28px;" class="candidate-content-cell">
                     <h3 style="margin: 0 0 14px 0; font-size: 19px; font-weight: 900; color: #bd203d; letter-spacing: 0.3px; line-height: 1.3;">
                       #{{ candidate.number }}. {{ candidate.title }}
                     </h3>
-                    
-                    <!-- Candidate Summary -->
                     <p style="margin: 0 0 20px 0; font-size: 14px; line-height: 1.7; color: #555555; font-weight: 400;">
                       {{ candidate.summary }}
                     </p>
-                    
-                    <!-- Find Out More Button -->
-                    <a href="{{ candidate.profile_url }}?utm_source=brevo&utm_campaign=ALIST&utm_medium=email" style="display: inline-block; background: linear-gradient(135deg, #1b334d 0%, #2a4a6a 100%); color: #ffffff; padding: 13px 26px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 13px; letter-spacing: 0.5px; box-shadow: 0 3px 12px rgba(27, 51, 77, 0.25);">
-                      FIND OUT MORE →
+                    <a href="{{ candidate.mailto_link }}?utm_source=brevo&utm_campaign=ALIST&utm_medium=email" style="display: inline-block; background: linear-gradient(135deg, #1b334d 0%, #2a4a6a 100%); color: #ffffff; padding: 13px 26px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 13px; letter-spacing: 0.5px; box-shadow: 0 3px 12px rgba(27, 51, 77, 0.25);">
+                      FIND OUT MORE &#8594;
                     </a>
                   </td>
                 </tr>
               </table>
               {% endfor %}
-              
+
             </td>
           </tr>
-          
+
+          <!-- Gradient Divider -->
+          <tr>
+            <td style="padding: 0 45px;">
+              <div style="height: 3px; background: linear-gradient(90deg, #bd203d 0%, #1b334d 100%); border-radius: 2px;"></div>
+            </td>
+          </tr>
+
+          <!-- ===================== FROM THE CREATIVE COMMUNITY ===================== -->
+          <tr>
+            <td style="padding: 40px 45px;" class="mobile-padding">
+              <h2 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 900; color: #1b334d; text-align: center; letter-spacing: 0.5px; text-transform: uppercase;">
+                From the Creative Community
+              </h2>
+              <p style="margin: 0 0 28px 0; font-size: 13px; color: #888888; text-align: center; font-weight: 400; line-height: 1.5;">
+                Insights, ideas and industry news from Artisan XPOSE.
+              </p>
+
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+                <tr>
+                  <!-- Article 1 -->
+                  <td width="33%" valign="top" style="padding: 0 6px;" class="article-col">
+                    <a href="{{ params.article1.link }}?utm_source=brevo&utm_campaign=ALIST&utm_medium=email" style="text-decoration: none; display: block;">
+                      <img src="{{ params.article1.featuredImage }}" alt="{{ params.article1.title }}" width="160" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #e0e0e0;">
+                    </a>
+                    <p style="margin: 8px 0 3px 0; font-size: 11px; font-weight: 700; color: #1b334d; line-height: 1.4; text-align: center;">
+                      <a href="{{ params.article1.link }}?utm_source=brevo&utm_campaign=ALIST&utm_medium=email" style="color: #1b334d; text-decoration: none;">{{ params.article1.title }}</a>
+                    </p>
+                    <p style="margin: 0; text-align: center;">
+                      <a href="{{ params.article1.link }}?utm_source=brevo&utm_campaign=ALIST&utm_medium=email" style="font-size: 10px; color: #bd203d; font-weight: 700; text-decoration: none; letter-spacing: 0.3px;">READ &#8594;</a>
+                    </p>
+                  </td>
+                  <!-- Article 2 -->
+                  <td width="33%" valign="top" style="padding: 0 6px;" class="article-col">
+                    <a href="{{ params.article2.link }}?utm_source=brevo&utm_campaign=ALIST&utm_medium=email" style="text-decoration: none; display: block;">
+                      <img src="{{ params.article2.featuredImage }}" alt="{{ params.article2.title }}" width="160" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #e0e0e0;">
+                    </a>
+                    <p style="margin: 8px 0 3px 0; font-size: 11px; font-weight: 700; color: #1b334d; line-height: 1.4; text-align: center;">
+                      <a href="{{ params.article2.link }}?utm_source=brevo&utm_campaign=ALIST&utm_medium=email" style="color: #1b334d; text-decoration: none;">{{ params.article2.title }}</a>
+                    </p>
+                    <p style="margin: 0; text-align: center;">
+                      <a href="{{ params.article2.link }}?utm_source=brevo&utm_campaign=ALIST&utm_medium=email" style="font-size: 10px; color: #bd203d; font-weight: 700; text-decoration: none; letter-spacing: 0.3px;">READ &#8594;</a>
+                    </p>
+                  </td>
+                  <!-- Article 3 -->
+                  <td width="33%" valign="top" style="padding: 0 6px;" class="article-col">
+                    <a href="{{ params.article3.link }}?utm_source=brevo&utm_campaign=ALIST&utm_medium=email" style="text-decoration: none; display: block;">
+                      <img src="{{ params.article3.featuredImage }}" alt="{{ params.article3.title }}" width="160" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #e0e0e0;">
+                    </a>
+                    <p style="margin: 8px 0 3px 0; font-size: 11px; font-weight: 700; color: #1b334d; line-height: 1.4; text-align: center;">
+                      <a href="{{ params.article3.link }}?utm_source=brevo&utm_campaign=ALIST&utm_medium=email" style="color: #1b334d; text-decoration: none;">{{ params.article3.title }}</a>
+                    </p>
+                    <p style="margin: 0; text-align: center;">
+                      <a href="{{ params.article3.link }}?utm_source=brevo&utm_campaign=ALIST&utm_medium=email" style="font-size: 10px; color: #bd203d; font-weight: 700; text-decoration: none; letter-spacing: 0.3px;">READ &#8594;</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" style="margin-top: 24px;">
+                <tr>
+                  <td>
+                    <a href="https://www.artisan.com.au/creative-community?utm_source=brevo&utm_campaign=ALIST&utm_medium=email" style="display: inline-block; background-color: #ffffff; color: #1b334d; border: 2px solid #1b334d; padding: 12px 28px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 12px; letter-spacing: 0.5px; box-shadow: 0 3px 12px rgba(27,51,77,0.15);">
+                      VISIT THE CREATIVE COMMUNITY &#8594;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Gradient Divider -->
+          <tr>
+            <td style="padding: 0 45px;">
+              <div style="height: 3px; background: linear-gradient(90deg, #bd203d 0%, #1b334d 100%); border-radius: 2px;"></div>
+            </td>
+          </tr>
+
+          <!-- ===================== WORK WITH ARTISAN ===================== -->
+          <tr>
+            <td style="padding: 40px 45px;" class="mobile-padding">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background: linear-gradient(135deg, #1b334d 0%, #0f1f30 100%); border-radius: 14px; overflow: hidden;">
+                <tr>
+                  <td style="padding: 36px 32px; text-align: center;">
+                    <h2 style="margin: 0 0 14px 0; font-size: 22px; font-weight: 900; color: #ffffff; letter-spacing: 0.5px; text-transform: uppercase;">
+                      Work With Artisan
+                    </h2>
+                    <p style="margin: 0 0 28px 0; font-size: 13px; color: #b0c4d8; line-height: 1.7; max-width: 420px; margin-left: auto; margin-right: auto;">
+                      Sometimes you just need to get through all of the noise, so here you go. Whether you need someone in your team permanently or to freelance, or you are looking for your next project, just click below.
+                    </p>
+                    <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" class="cta-button-row">
+                      <tr>
+                        <td style="padding: 0 10px;">
+                          <table cellpadding="0" cellspacing="0" border="0" role="presentation">
+                            <tr>
+                              <td align="center">
+                                <a href="https://artisan.com.au/looking-for-talent/?utm_source=brevo&utm_campaign=ALIST&utm_medium=email" style="display: inline-block; background: linear-gradient(135deg, #bd203d 0%, #9a1830 100%); color: #ffffff; padding: 14px 24px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 13px; letter-spacing: 0.5px; box-shadow: 0 4px 16px rgba(189,32,61,0.4); white-space: nowrap;">
+                                  I'M LOOKING FOR TALENT &#8594;
+                                </a>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td align="center" style="padding-top: 8px;">
+                                <span style="font-size: 10px; color: #7a9ab8; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;">LET'S TALK</span>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                        <td style="padding: 0 10px;">
+                          <table cellpadding="0" cellspacing="0" border="0" role="presentation">
+                            <tr>
+                              <td align="center">
+                                <a href="https://clientapps.jobadder.com/67514/artisan?utm_source=brevo&utm_campaign=ALIST&utm_medium=email" style="display: inline-block; background-color: transparent; color: #ffffff; border: 2px solid rgba(255,255,255,0.4); padding: 13px 24px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 13px; letter-spacing: 0.5px; white-space: nowrap;">
+                                  I'M LOOKING FOR WORK &#8594;
+                                </a>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td align="center" style="padding-top: 8px;">
+                                <span style="font-size: 10px; color: #7a9ab8; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;">APPLY NOW</span>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Gradient Divider -->
+          <tr>
+            <td style="padding: 0 45px;">
+              <div style="height: 3px; background: linear-gradient(90deg, #bd203d 0%, #1b334d 100%); border-radius: 2px;"></div>
+            </td>
+          </tr>
+
+          <!-- ===================== LET'S GET SOCIAL ===================== -->
+          <tr>
+            <td style="padding: 28px 45px;" class="mobile-padding">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+                <tr>
+                  <td align="center">
+                    <h3 style="margin: 0 0 8px 0; font-size: 15px; font-weight: 900; color: #1b334d; letter-spacing: 0.5px; text-transform: uppercase;">Let's Get Social</h3>
+                    <p style="margin: 0 0 18px 0; font-size: 12px; color: #888888; line-height: 1.6;">
+                      Tag us with <strong style="color: #bd203d;">#GetArtisan</strong> &#8212; we could be sharing your work to our huge network of Australia's best creatives. Win/Win/Winning!
+                    </p>
+                    <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
+                      <tr>
+                        <!-- LinkedIn -->
+                        <td class="social-icon-cell" style="padding: 0 6px;">
+                          <a href="https://www.linkedin.com/company/artisan-recruitment/?utm_source=brevo&utm_campaign=ALIST&utm_medium=email" style="text-decoration: none;">
+                            <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color: #0077b5; border-radius: 8px; width: 90px;">
+                              <tr>
+                                <td align="center" style="padding: 10px 8px 6px 8px;">
+                                  <img src="https://upload.wikimedia.org/wikipedia/commons/c/ca/LinkedIn_logo_initials.png" alt="LinkedIn" width="20" height="20" style="display: block; border: 0; margin: 0 auto;">
+                                </td>
+                              </tr>
+                              <tr>
+                                <td align="center" style="padding: 0 8px 8px 8px; font-size: 9px; font-weight: 700; color: #ffffff; letter-spacing: 0.5px;">LINKEDIN</td>
+                              </tr>
+                            </table>
+                          </a>
+                        </td>
+                        <!-- Instagram -->
+                        <td class="social-icon-cell" style="padding: 0 6px;">
+                          <a href="https://www.instagram.com/get_artisan?utm_source=brevo&utm_campaign=ALIST&utm_medium=email" style="text-decoration: none;">
+                            <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); border-radius: 8px; width: 90px;">
+                              <tr>
+                                <td align="center" style="padding: 10px 8px 6px 8px;">
+                                  <img src="https://cdn-icons-png.flaticon.com/512/174/174855.png" alt="Instagram" width="20" height="20" style="display: block; border: 0; margin: 0 auto;">
+                                </td>
+                              </tr>
+                              <tr>
+                                <td align="center" style="padding: 0 8px 8px 8px; font-size: 9px; font-weight: 700; color: #ffffff; letter-spacing: 0.5px;">INSTAGRAM</td>
+                              </tr>
+                            </table>
+                          </a>
+                        </td>
+                        <!-- TikTok -->
+                        <td class="social-icon-cell" style="padding: 0 6px;">
+                          <a href="https://www.tiktok.com/@artisancreativecommunity?utm_source=brevo&utm_campaign=ALIST&utm_medium=email" style="text-decoration: none;">
+                            <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color: #010101; border-radius: 8px; width: 90px;">
+                              <tr>
+                                <td align="center" style="padding: 10px 8px 6px 8px;">
+                                  <img src="https://cdn-icons-png.flaticon.com/512/3046/3046121.png" alt="TikTok" width="20" height="20" style="display: block; border: 0; margin: 0 auto;">
+                                </td>
+                              </tr>
+                              <tr>
+                                <td align="center" style="padding: 0 8px 8px 8px; font-size: 9px; font-weight: 700; color: #ffffff; letter-spacing: 0.5px;">TIKTOK</td>
+                              </tr>
+                            </table>
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
           <!-- Footer -->
           <tr>
             <td style="padding: 40px 45px; background: linear-gradient(180deg, #f9f9f9 0%, #f0f0f0 100%); border-top: 2px solid #e0e0e0;" class="mobile-padding">
-              
-              <!-- Company Info -->
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
                 <tr>
                   <td align="center" style="padding-bottom: 20px;">
-                    <h3 style="margin: 0 0 6px 0; font-size: 18px; font-weight: 900; color: #1b334d; letter-spacing: 0.5px;">
-                      ARTISAN
-                    </h3>
+                    <h3 style="margin: 0 0 6px 0; font-size: 18px; font-weight: 900; color: #1b334d; letter-spacing: 0.5px;">ARTISAN</h3>
                     <p style="margin: 0; font-size: 13px; color: #999999; font-weight: 400;">
                       <a href="https://www.artisan.com.au?utm_source=brevo&utm_campaign=ALIST&utm_medium=email" style="color: #bd203d; text-decoration: none; font-weight: 600;">www.artisan.com.au</a>
                     </p>
                   </td>
                 </tr>
-                
-                <!-- Phone Numbers -->
                 <tr>
                   <td align="center" style="padding-bottom: 18px;">
-                    <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
+                    <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" class="footer-phone-row">
                       <tr>
                         <td style="padding: 0 10px; font-size: 12px; color: #666666; white-space: nowrap; font-weight: 400;">
                           <strong style="color: #1b334d; font-weight: 700;">BNE</strong> <a href="tel:+61733331833" style="color: #666666; text-decoration: none;">(07) 3333 1833</a>
                         </td>
-                        <td style="padding: 0 6px; font-size: 12px; color: #cccccc;">|</td>
+                        <td class="footer-phone-sep" style="padding: 0 6px; font-size: 12px; color: #cccccc;">|</td>
                         <td style="padding: 0 10px; font-size: 12px; color: #666666; white-space: nowrap; font-weight: 400;">
                           <strong style="color: #1b334d; font-weight: 700;">MEL</strong> <a href="tel:+61395141000" style="color: #666666; text-decoration: none;">(03) 9514 1000</a>
                         </td>
-                        <td style="padding: 0 6px; font-size: 12px; color: #cccccc;">|</td>
+                        <td class="footer-phone-sep" style="padding: 0 6px; font-size: 12px; color: #cccccc;">|</td>
                         <td style="padding: 0 10px; font-size: 12px; color: #666666; white-space: nowrap; font-weight: 400;">
                           <strong style="color: #1b334d; font-weight: 700;">SYD</strong> <a href="tel:+61282144666" style="color: #666666; text-decoration: none;">(02) 8214 4666</a>
                         </td>
@@ -298,8 +427,6 @@
                     </table>
                   </td>
                 </tr>
-                
-                <!-- Footer Links -->
                 <tr>
                   <td align="center" style="padding-bottom: 16px;">
                     <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
@@ -319,29 +446,30 @@
                     </table>
                   </td>
                 </tr>
-                
-                <!-- Copyright and Unsubscribe -->
                 <tr>
                   <td align="center">
                     <p style="margin: 0 0 6px 0; font-size: 11px; color: #999999; font-weight: 400;">
-                      © Artisan Nasitra Pty Ltd 2026
+                      &copy; Artisan Nasitra Pty Ltd 2026
                     </p>
-                    <p style="margin: 0; font-size: 11px; color: #999999; font-weight: 400;">
-                      <a href="{{ unsubscribe }}" style="color: #999999; text-decoration: underline;">Unsubscribe</a>
+                    <p style="margin: 0 0 6px 0; font-size: 12px; color: #999999; font-weight: 400;">
+                      You can update your Artisan email preferences,
+                      <a href="{{ update_profile }}" style="color: #007bff; text-decoration: underline;">by clicking here</a>.
+                    </p>
+                    <p style="margin: 0; font-size: 9px; color: #999999; font-weight: 400;">
+                      Or you can leave the creative community by clicking
+                      <a href="{{ unsubscribe }}" style="color: #999999; text-decoration: underline;">Unsubscribe</a>.
                     </p>
                   </td>
                 </tr>
               </table>
-              
             </td>
           </tr>
-          
+
         </table>
-        
+
       </td>
     </tr>
   </table>
-  
+
 </body>
 </html>
-
