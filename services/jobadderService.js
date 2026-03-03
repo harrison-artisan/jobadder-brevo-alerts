@@ -360,12 +360,15 @@ class JobAdderService {
     if (ad.jobDetails) {
       // Use structured data from job details
       location = ad.jobDetails.location?.name || ad.jobDetails.location || this.extractLocation(ad.summary, ad.bulletPoints);
-      // Only use workType if explicitly set — leave blank if not specified
-      jobType = ad.jobDetails.workType?.name || ad.jobDetails.workType || '';
+      // Map workType from JobAdder — if not found, fall back to text extraction
+      const rawWorkType = ad.jobDetails.workType?.name || ad.jobDetails.workType || '';
+      jobType = rawWorkType
+        ? this.mapWorkType(rawWorkType)
+        : this.extractJobType(ad.summary, ad.bulletPoints);
     } else {
-      // Fallback to extraction from text only
+      // Fallback to extraction from text
       location = this.extractLocation(ad.summary, ad.bulletPoints);
-      jobType = '';
+      jobType = this.extractJobType(ad.summary, ad.bulletPoints);
     }
     
     // Build description from summary and bullet points
@@ -413,30 +416,33 @@ class JobAdderService {
   }
 
   /**
-   * Extract job type from summary text
+   * Map a raw JobAdder workType string to the display label used in emails.
+   * Temporary / Temp → Freelance, Contract → Contract, Permanent → Permanent.
+   */
+  mapWorkType(raw) {
+    const s = (raw || '').toLowerCase().trim();
+    if (/temp|temporary|freelance|casual/i.test(s)) return 'Freelance';
+    if (/contract/i.test(s)) return 'Contract';
+    if (/permanent/i.test(s)) return 'Permanent';
+    if (/part[\s-]?time/i.test(s)) return 'Part-time';
+    if (/full[\s-]?time/i.test(s)) return 'Full-time';
+    // Return the raw value capitalised if we don't recognise it
+    return raw.charAt(0).toUpperCase() + raw.slice(1);
+  }
+
+  /**
+   * Extract job type from summary / bullet-point text when JobAdder workType is absent.
+   * Temporary / Temp → Freelance to match Artisan's terminology.
    */
   extractJobType(summary, bulletPoints) {
     const text = `${summary || ''} ${(bulletPoints || []).join(' ')}`;
     
-    // Check for job type keywords
-    if (/\b(\d+\s*(?:month|mth|week|wk))\s+contract/i.test(text)) {
-      return 'Contract';
-    }
-    if (/\bcontract\b/i.test(text)) {
-      return 'Contract';
-    }
-    if (/\bpermanent\b/i.test(text)) {
-      return 'Permanent';
-    }
-    if (/\btemp\b|\btemporary\b/i.test(text)) {
-      return 'Temporary';
-    }
-    if (/\bfull[\s-]?time\b/i.test(text)) {
-      return 'Full-time';
-    }
-    if (/\bpart[\s-]?time\b/i.test(text)) {
-      return 'Part-time';
-    }
+    if (/\b(\d+\s*(?:month|mth|week|wk))\s+contract/i.test(text)) return 'Contract';
+    if (/\bcontract\b/i.test(text)) return 'Contract';
+    if (/\bpermanent\b/i.test(text)) return 'Permanent';
+    if (/\btemp\b|\btemporary\b|\bfreelance\b|\bcasual\b/i.test(text)) return 'Freelance';
+    if (/\bfull[\s-]?time\b/i.test(text)) return 'Full-time';
+    if (/\bpart[\s-]?time\b/i.test(text)) return 'Part-time';
     
     return '';
   }
