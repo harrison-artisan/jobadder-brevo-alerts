@@ -1703,6 +1703,27 @@
                 </div>
             </div>
 
+            <!-- Consultant Selector -->
+            <div class="actions-card">
+                <h2>Select Consultant</h2>
+                <div class="selector-row" style="margin-bottom: 0;">
+                    <div class="selector-group" style="max-width: 360px;">
+                        <label for="consultantSelector">Consultant</label>
+                        <select id="consultantSelector" onchange="onConsultantSelected()">
+                            <option value="">-- Select a consultant --</option>
+                            <option value="debbie-younger">Debbie Younger</option>
+                            <option value="mathew-hehir">Mathew Hehir</option>
+                            <option value="sean-varian">Sean Varian</option>
+                        </select>
+                    </div>
+                    <div id="consultantSelectedInfo" style="display:none; padding: 10px 16px; background: rgba(255,255,255,0.07); border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); color: white; font-size: 13px; line-height: 1.7;">
+                        <strong id="consultantSelectedName" style="font-size:15px;"></strong><br>
+                        <span id="consultantSelectedTitle" style="color:rgba(255,255,255,0.6);"></span><br>
+                        <span id="consultantSelectedEmail" style="color:rgba(255,255,255,0.5); font-size:12px;"></span>
+                    </div>
+                </div>
+            </div>
+
             <!-- Step 1: Gemini JSON Paste -->
             <div class="actions-card">
                 <h2>Step 1 — Paste Gemini Output</h2>
@@ -5854,6 +5875,79 @@ Choose Recent Poll
 
         let consultantParsed = false; // true once JSON has been successfully parsed
         let consultantSegment = null; // { type, id, name } once confirmed
+        let selectedConsultantId = null; // currently selected consultant ID
+
+        // Consultant data — mirrors config/consultants.json
+        const CONSULTANTS = {
+            'debbie-younger': {
+                name: 'Debbie Younger',
+                title: 'Senior Recruitment Consultant',
+                email: 'debbie@artisan.com.au',
+                segmentKeyword: 'Debbie'
+            },
+            'mathew-hehir': {
+                name: 'Mathew Hehir',
+                title: 'Senior Recruitment Consultant',
+                email: 'mathew@artisan.com.au',
+                segmentKeyword: 'Mathew'
+            },
+            'sean-varian': {
+                name: 'Sean Varian',
+                title: 'Senior Recruitment Consultant',
+                email: 'sean@artisan.com.au',
+                segmentKeyword: 'Sean'
+            }
+        };
+
+        // Called when consultant dropdown changes
+        async function onConsultantSelected() {
+            const id = document.getElementById('consultantSelector').value;
+            selectedConsultantId = id || null;
+
+            const infoBox = document.getElementById('consultantSelectedInfo');
+
+            if (!id) {
+                infoBox.style.display = 'none';
+                return;
+            }
+
+            const c = CONSULTANTS[id];
+            if (!c) return;
+
+            // Show consultant info
+            document.getElementById('consultantSelectedName').textContent = c.name;
+            document.getElementById('consultantSelectedTitle').textContent = c.title;
+            document.getElementById('consultantSelectedEmail').textContent = c.email;
+            infoBox.style.display = 'block';
+
+            // Update status card
+            document.getElementById('consultantNameDisplay').textContent = c.name;
+            document.getElementById('consultantTitleDisplay').textContent = c.title;
+
+            // Auto-load segments and pre-select the one matching this consultant
+            const typeSelect = document.getElementById('consultantRecipientType');
+            typeSelect.value = 'segment';
+            await loadConsultantRecipients();
+
+            // Try to auto-select the matching segment by keyword
+            const selector = document.getElementById('consultantRecipientSelector');
+            const keyword = c.segmentKeyword.toLowerCase();
+            let matched = false;
+            for (let i = 0; i < selector.options.length; i++) {
+                if (selector.options[i].text.toLowerCase().includes(keyword)) {
+                    selector.selectedIndex = i;
+                    matched = true;
+                    break;
+                }
+            }
+
+            if (matched) {
+                previewConsultantRecipients();
+                showToast(c.name + ' selected — recipient segment pre-filled.', 'success');
+            } else {
+                showToast(c.name + ' selected. Please choose a recipient segment.', 'info');
+            }
+        }
 
         // Called on every keystroke in the textarea — clears error styling
         function onConsultantJsonInput() {
