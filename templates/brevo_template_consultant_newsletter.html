@@ -8,26 +8,21 @@
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;900&display=swap" rel="stylesheet">
   <style type="text/css">
     @media only screen and (max-width: 600px) {
-      .email-container { width: 100% !important; max-width: 100% !important; border-radius: 12px !important; margin: 0 8px !important; }
-      .header-row td { display: block !important; width: 100% !important; text-align: center !important; padding-left: 0 !important; padding-right: 0 !important; }
-      .left-column { margin-bottom: 24px !important; text-align: center !important; }
-      .left-column table, .left-column-inner { margin: 0 auto !important; float: none !important; }
-      .left-column td { text-align: center !important; }
-      .left-column img { margin: 0 auto !important; display: block !important; }
-      .left-column p { text-align: center !important; }
-      .left-column span { display: inline-block !important; }
-      .gray-container { max-width: 100% !important; width: 100% !important; margin: 0 auto !important; box-sizing: border-box !important; border-radius: 12px !important; }
+      .email-container { width: 100% !important; max-width: 100% !important; border-radius: 12px !important; }
       .mobile-padding { padding: 20px 16px !important; }
       .mobile-text { font-size: 14px !important; }
-      .mobile-heading { font-size: 22px !important; }
-      .consultant-profile-row td { display: block !important; width: 100% !important; text-align: center !important; }
-      .consultant-photo-cell { text-align: center !important; padding-bottom: 16px !important; }
-      .cta-button-row td { display: block !important; width: 100% !important; text-align: center !important; padding: 8px 16px !important; box-sizing: border-box !important; }
-      .cta-button-row a { width: 100% !important; box-sizing: border-box !important; display: block !important; }
+      .mobile-heading { font-size: 20px !important; }
+      .hero-inner { padding: 28px 20px !important; }
+      .hero-photo { width: 80px !important; height: 80px !important; }
+      .hero-contact td { display: block !important; padding: 2px 0 !important; }
+      .hero-contact .sep { display: none !important; }
+      .article-col { display: table-cell !important; width: 33% !important; padding: 0 4px !important; }
+      .article-col img { width: 100% !important; height: auto !important; border-radius: 8px !important; }
+      .article-col p { text-align: center !important; }
+      .job-two-col td { display: block !important; width: 100% !important; padding: 0 0 16px 0 !important; }
       .social-icon-cell { padding: 0 4px !important; }
       .footer-phone-row td { display: table-cell !important; padding: 0 4px !important; font-size: 10px !important; white-space: nowrap !important; }
       .footer-phone-sep { display: table-cell !important; }
-      .event-row td { display: block !important; width: 100% !important; padding: 4px 0 !important; }
     }
   </style>
   <!--[if mso]>
@@ -36,47 +31,82 @@
 </head>
 <body style="margin: 0; padding: 0; font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background-color: #f5f5f5; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;">
 
-  <!-- Preheader Text -->
-  <div style="display: none; max-height: 0; overflow: hidden; opacity: 0;">
-    {{ preheader_text }}
-  </div>
+  <!-- Preheader -->
+  <div style="display: none; max-height: 0; overflow: hidden; opacity: 0;">{{ preheader_text }}</div>
 
-  <!-- Main Container -->
   <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color: #f5f5f5; padding: 40px 20px;">
     <tr>
       <td align="center">
 
-        <!-- Email Wrapper (650px) -->
         <table width="650" cellpadding="0" cellspacing="0" border="0" role="presentation" class="email-container" style="max-width: 650px; width: 100%; background-color: #ffffff; border: 2px solid #e0e0e0; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden;">
 
-          <!-- ===================== HEADER ===================== -->
+
+          <!-- ============================================================ -->
+          <!-- HEADER: Artisan logo + tagline + badge                       -->
+          <!-- ============================================================ -->
           <tr>
-            <td style="padding: 45px 45px 40px 45px;" class="mobile-padding">
+            <td style="padding: 32px 45px 28px 45px; border-bottom: 1px solid #f0f0f0;" class="mobile-padding">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                <tr class="header-row">
-                  <!-- Left: Logo + Tagline -->
-                  <td width="50%" valign="top" class="left-column" align="left">
-                    <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="left" class="left-column-inner">
+                <tr>
+                  <td valign="middle" align="left">
+                    <a href="https://artisan.com.au/" style="text-decoration: none; display: inline-block; vertical-align: middle;">
+                      <img src="https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png" alt="Artisan" width="50" height="50" style="display: inline-block; border: 0; vertical-align: middle;">
+                    </a>
+                    <span style="display: inline-block; vertical-align: middle; margin-left: 12px;">
+                      <span style="display: block; font-size: 17px; font-weight: 900; color: #1b334d; letter-spacing: 0.3px; line-height: 1.1;">ARTISAN</span>
+                      <span style="display: block; font-size: 11px; color: #888888; font-weight: 600; letter-spacing: 0.3px; line-height: 1.4;">Creative, Digital &amp; Marketing Recruitment</span>
+                    </span>
+                  </td>
+                  <td valign="middle" align="right">
+                    <span style="display: inline-block; background: linear-gradient(135deg, #bd203d 0%, #9a1830 100%); color: #ffffff; padding: 9px 16px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; box-shadow: 0 2px 8px rgba(189,32,61,0.3);">
+                      Consultant Newsletter
+                    </span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+
+          <!-- ============================================================ -->
+          <!-- HERO: Consultant profile — dark band                         -->
+          <!-- ============================================================ -->
+          <tr>
+            <td style="padding: 0;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background: linear-gradient(135deg, #1b334d 0%, #0d1e2e 100%);">
+                <tr>
+                  <td class="hero-inner" style="padding: 36px 45px 32px 45px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
                       <tr>
-                        <td style="padding-top: 24px; padding-bottom: 14px;">
-                          <a href="https://artisan.com.au/" style="text-decoration: none; display: block;">
-                            <img src="https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png" alt="Artisan" width="70" height="70" style="display: block; border: 0; line-height: 100%;">
-                          </a>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="padding-bottom: 14px;">
-                          <p style="margin: 0; font-size: 13px; color: #666666; font-weight: 600; letter-spacing: 0.3px; line-height: 1.5;">
-                            Creative, Digital and<br>Marketing Recruitment
-                          </p>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <table cellpadding="0" cellspacing="0" border="0" role="presentation">
+                        <!-- Photo -->
+                        <td valign="top" width="116" style="padding-right: 26px;">
+                          <img src="{{ consultant_photo }}" alt="{{ consultant_name }}" width="100" height="100" class="hero-photo"
+                            style="display: block; width: 100px; height: 100px; border-radius: 50%; border: 3px solid #bd203d; object-fit: cover; box-shadow: 0 6px 20px rgba(0,0,0,0.45);">
+                          <!-- LinkedIn button below photo -->
+                          <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-top: 12px;">
                             <tr>
-                              <td style="background-color: #bd203d; border-radius: 6px; padding: 6px 14px;">
-                                <span style="font-size: 11px; font-weight: 900; color: #ffffff; letter-spacing: 1.5px; text-transform: uppercase;">CONSULTANT NEWSLETTER</span>
+                              <td align="center">
+                                <a href="{{ consultant_linkedin }}" style="display: inline-block; background-color: #0077b5; color: #ffffff; border-radius: 6px; padding: 6px 10px; text-decoration: none; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; white-space: nowrap;">
+                                  &#x1F517; LinkedIn
+                                </a>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                        <!-- Name, title, contact -->
+                        <td valign="middle">
+                          <p style="margin: 0 0 5px 0; font-size: 10px; font-weight: 700; color: #bd203d; letter-spacing: 2px; text-transform: uppercase;">Personal Newsletter</p>
+                          <h1 style="margin: 0 0 4px 0; font-size: 28px; font-weight: 900; color: #ffffff; letter-spacing: 0.2px; line-height: 1.1;" class="mobile-heading">{{ consultant_name }}</h1>
+                          <p style="margin: 0 0 18px 0; font-size: 13px; color: #7a9ab8; font-weight: 600; letter-spacing: 0.3px;">{{ consultant_title }}</p>
+                          <!-- Contact details -->
+                          <table cellpadding="0" cellspacing="0" border="0" role="presentation" class="hero-contact">
+                            <tr>
+                              <td style="padding-right: 12px; padding-bottom: 6px;">
+                                <a href="tel:{{ consultant_phone }}" style="font-size: 12px; color: #b0c4d8; text-decoration: none; font-weight: 600;">{{ consultant_phone }}</a>
+                              </td>
+                              <td class="sep" style="padding-right: 12px; padding-bottom: 6px; font-size: 12px; color: rgba(255,255,255,0.2);">|</td>
+                              <td style="padding-bottom: 6px;">
+                                <a href="mailto:{{ consultant_email }}" style="font-size: 12px; color: #b0c4d8; text-decoration: none; font-weight: 600;">{{ consultant_email }}</a>
                               </td>
                             </tr>
                           </table>
@@ -84,38 +114,115 @@
                       </tr>
                     </table>
                   </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-                  <!-- Right: Consultant Profile Card -->
-                  <td width="50%" valign="top" align="right" class="gray-container" style="padding-top: 16px;">
-                    <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color: #f7f7f7; border-radius: 12px; padding: 0 24px 24px 24px; max-width: 260px; margin-left: auto;">
+
+          <!-- Gradient divider -->
+          <tr>
+            <td style="padding: 0 45px;">
+              <div style="height: 3px; background: linear-gradient(90deg, #bd203d 0%, #1b334d 100%); border-radius: 2px;"></div>
+            </td>
+          </tr>
+
+
+          <!-- ============================================================ -->
+          <!-- INDUSTRY INSIGHT                                              -->
+          <!-- ============================================================ -->
+          <tr>
+            <td style="padding: 36px 45px 28px 45px;" class="mobile-padding">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color: #f7f9fc; border-radius: 14px; border-left: 5px solid #bd203d; overflow: hidden;">
+                <tr>
+                  <td style="padding: 28px 28px 24px 28px;">
+                    <p style="margin: 0 0 4px 0; font-size: 10px; font-weight: 900; color: #bd203d; letter-spacing: 2px; text-transform: uppercase;">Industry Insight</p>
+                    <h2 style="margin: 0 0 14px 0; font-size: 21px; font-weight: 900; color: #1b334d; line-height: 1.3;" class="mobile-heading">{{ industry_insight_heading }}</h2>
+                    <p style="margin: 0; font-size: 15px; color: #444444; line-height: 1.8;" class="mobile-text">{{ industry_insight_body }}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+
+          <!-- Gradient divider -->
+          <tr>
+            <td style="padding: 0 45px;">
+              <div style="height: 3px; background: linear-gradient(90deg, #1b334d 0%, #bd203d 100%); border-radius: 2px;"></div>
+            </td>
+          </tr>
+
+
+          <!-- ============================================================ -->
+          <!-- LIFE UPDATE                                                   -->
+          <!-- ============================================================ -->
+          <tr>
+            <td style="padding: 36px 45px 28px 45px;" class="mobile-padding">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color: #fffaf5; border-radius: 14px; border-left: 5px solid #f0a500; overflow: hidden;">
+                <tr>
+                  <td style="padding: 28px 28px 24px 28px;">
+                    <p style="margin: 0 0 4px 0; font-size: 10px; font-weight: 900; color: #f0a500; letter-spacing: 2px; text-transform: uppercase;">From {{ consultant_name }}</p>
+                    <h2 style="margin: 0 0 14px 0; font-size: 21px; font-weight: 900; color: #1b334d; line-height: 1.3;" class="mobile-heading">{{ life_update_heading }}</h2>
+                    <p style="margin: 0; font-size: 15px; color: #444444; line-height: 1.8;" class="mobile-text">{{ life_update_body }}</p>
+                  </td>
+                </tr>
+              </table>
+              {% if media_url %}
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-top: 18px;">
+                <tr>
+                  <td align="center">
+                    <a href="{{ media_url }}" style="text-decoration: none; display: block;">
+                      <img src="{{ media_url }}" alt="From {{ consultant_name }}" width="560" style="display: block; width: 100%; max-width: 560px; height: auto; border-radius: 12px; border: 1px solid #e0e0e0;">
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              {% endif %}
+            </td>
+          </tr>
+
+
+          <!-- Gradient divider -->
+          <tr>
+            <td style="padding: 0 45px;">
+              <div style="height: 3px; background: linear-gradient(90deg, #bd203d 0%, #1b334d 100%); border-radius: 2px;"></div>
+            </td>
+          </tr>
+
+
+          <!-- ============================================================ -->
+          <!-- FEATURED JOB AD                                               -->
+          <!-- ============================================================ -->
+          <tr>
+            <td style="padding: 36px 45px 28px 45px;" class="mobile-padding">
+              <p style="margin: 0 0 5px 0; font-size: 10px; font-weight: 700; color: #bd203d; letter-spacing: 2px; text-transform: uppercase;">Featured Opportunity</p>
+              <h2 style="margin: 0 0 18px 0; font-size: 20px; font-weight: 900; color: #1b334d; line-height: 1.3;">On The Radar Right Now</h2>
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background: linear-gradient(135deg, #1b334d 0%, #0d1e2e 100%); border-radius: 14px; overflow: hidden;">
+                <tr>
+                  <td style="padding: 28px 30px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" class="job-two-col">
                       <tr>
-                        <td align="center" style="padding-top: 20px; padding-bottom: 14px;" class="consultant-photo-cell">
-                          <img src="{{ consultant_photo }}" alt="{{ consultant_name }}" width="80" height="80" style="display: block; border-radius: 50%; border: 3px solid #bd203d; margin: 0 auto; object-fit: cover;">
+                        <!-- Left: job details -->
+                        <td valign="top" style="width: 62%; padding-right: 20px;">
+                          <p style="margin: 0 0 4px 0; font-size: 10px; font-weight: 700; color: #bd203d; letter-spacing: 2px; text-transform: uppercase;">{{ job_type }}</p>
+                          <h3 style="margin: 0 0 6px 0; font-size: 20px; font-weight: 900; color: #ffffff; line-height: 1.2;">{{ job_title }}</h3>
+                          <p style="margin: 0 0 4px 0; font-size: 12px; color: #7a9ab8; font-weight: 600;">{{ job_location }}</p>
+                          <p style="margin: 0 0 20px 0; font-size: 13px; color: #b0c4d8; line-height: 1.7;">{{ job_description }}</p>
+                          <a href="{{ job_link }}" style="display: inline-block; background: linear-gradient(135deg, #bd203d 0%, #9a1830 100%); color: #ffffff; padding: 12px 22px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 12px; letter-spacing: 0.5px; box-shadow: 0 4px 16px rgba(189,32,61,0.4);">VIEW ROLE &#8594;</a>
                         </td>
-                      </tr>
-                      <tr>
-                        <td align="center" style="padding-bottom: 4px;">
-                          <p style="margin: 0; font-size: 15px; font-weight: 900; color: #1b334d; letter-spacing: 0.3px;">{{ consultant_name }}</p>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td align="center" style="padding-bottom: 10px;">
-                          <p style="margin: 0; font-size: 12px; color: #888888; font-weight: 600;">{{ consultant_title }}</p>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td align="center" style="padding-bottom: 6px;">
-                          <a href="tel:{{ consultant_phone }}" style="font-size: 12px; color: #1b334d; text-decoration: none; font-weight: 600;">{{ consultant_phone }}</a>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td align="center" style="padding-bottom: 10px;">
-                          <a href="mailto:{{ consultant_email }}" style="font-size: 12px; color: #bd203d; text-decoration: none; font-weight: 600;">{{ consultant_email }}</a>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td align="center">
-                          <a href="{{ consultant_linkedin }}" style="display: inline-block; background-color: #0077b5; color: #ffffff; border-radius: 6px; padding: 7px 16px; text-decoration: none; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;">CONNECT ON LINKEDIN</a>
+                        <!-- Right: salary/type box -->
+                        <td valign="top" style="width: 38%;">
+                          <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background: rgba(255,255,255,0.07); border-radius: 10px; border: 1px solid rgba(255,255,255,0.12);">
+                            <tr>
+                              <td style="padding: 18px 16px;">
+                                <p style="margin: 0 0 6px 0; font-size: 10px; font-weight: 700; color: #7a9ab8; letter-spacing: 1.5px; text-transform: uppercase;">Package</p>
+                                <p style="margin: 0 0 16px 0; font-size: 17px; font-weight: 900; color: #ffffff; line-height: 1.2;">{{ job_salary }}</p>
+                                <p style="margin: 0 0 6px 0; font-size: 10px; font-weight: 700; color: #7a9ab8; letter-spacing: 1.5px; text-transform: uppercase;">Type</p>
+                                <p style="margin: 0; font-size: 13px; font-weight: 700; color: #ffffff;">{{ job_type }}</p>
+                              </td>
+                            </tr>
+                          </table>
                         </td>
                       </tr>
                     </table>
@@ -125,169 +232,196 @@
             </td>
           </tr>
 
-          <!-- Gradient Divider -->
+
+          <!-- Gradient divider -->
           <tr>
             <td style="padding: 0 45px;">
-              <div style="height: 3px; background: linear-gradient(90deg, #bd203d 0%, #1b334d 100%); border-radius: 2px;"></div>
+              <div style="height: 3px; background: linear-gradient(90deg, #1b334d 0%, #bd203d 100%); border-radius: 2px;"></div>
             </td>
           </tr>
 
-          <!-- ===================== INTRO ===================== -->
+
+          <!-- ============================================================ -->
+          <!-- FROM THE CREATIVE COMMUNITY — 3 articles                     -->
+          <!-- ============================================================ -->
           <tr>
             <td style="padding: 36px 45px 28px 45px;" class="mobile-padding">
-              <p style="margin: 0 0 12px 0; font-size: 22px; font-weight: 900; color: #1b334d; line-height: 1.3;" class="mobile-heading">
-                Hey there,
-              </p>
-              <p style="margin: 0; font-size: 15px; color: #444444; line-height: 1.7;" class="mobile-text">
-                It's {{ consultant_name }} here. Thanks for being part of my network — I put this together each month to share what I'm seeing in the industry, a bit about what I've been up to, and anything worth knowing about.
-              </p>
-            </td>
-          </tr>
-
-          <!-- ===================== INDUSTRY INSIGHT ===================== -->
-          <tr>
-            <td style="padding: 0 45px 32px 45px;" class="mobile-padding">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color: #f7f9fc; border-radius: 14px; border-left: 5px solid #bd203d; overflow: hidden;">
+              <h2 style="margin: 0 0 6px 0; font-size: 20px; font-weight: 900; color: #1b334d; text-align: center; letter-spacing: 0.5px; text-transform: uppercase;">From the Creative Community</h2>
+              <p style="margin: 0 0 26px 0; font-size: 13px; color: #888888; text-align: center; font-weight: 400; line-height: 1.5;">Insights, ideas and industry news from Artisan.</p>
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
                 <tr>
-                  <td style="padding: 28px 28px 24px 28px;">
-                    <p style="margin: 0 0 4px 0; font-size: 10px; font-weight: 900; color: #bd203d; letter-spacing: 2px; text-transform: uppercase;">Industry Insight</p>
-                    <h2 style="margin: 0 0 14px 0; font-size: 20px; font-weight: 900; color: #1b334d; line-height: 1.3;">{{ industry_insight_heading }}</h2>
-                    <p style="margin: 0; font-size: 15px; color: #444444; line-height: 1.7;" class="mobile-text">{{ industry_insight_body }}</p>
+                  <td width="33%" valign="top" style="padding: 0 6px;" class="article-col">
+                    <a href="{{ article1_link }}" style="text-decoration: none; display: block;">
+                      <img src="{{ article1_image }}" alt="{{ article1_title }}" width="160" style="display: block; width: 100%; height: auto; border-radius: 10px; border: 1px solid #e0e0e0;">
+                    </a>
+                    <p style="margin: 10px 0 3px 0; font-size: 11px; font-weight: 700; color: #1b334d; line-height: 1.4; text-align: center;">
+                      <a href="{{ article1_link }}" style="color: #1b334d; text-decoration: none;">{{ article1_title }}</a>
+                    </p>
+                    <p style="margin: 0; text-align: center;">
+                      <a href="{{ article1_link }}" style="font-size: 10px; color: #bd203d; font-weight: 700; text-decoration: none; letter-spacing: 0.3px;">READ &#8594;</a>
+                    </p>
+                  </td>
+                  <td width="33%" valign="top" style="padding: 0 6px;" class="article-col">
+                    <a href="{{ article2_link }}" style="text-decoration: none; display: block;">
+                      <img src="{{ article2_image }}" alt="{{ article2_title }}" width="160" style="display: block; width: 100%; height: auto; border-radius: 10px; border: 1px solid #e0e0e0;">
+                    </a>
+                    <p style="margin: 10px 0 3px 0; font-size: 11px; font-weight: 700; color: #1b334d; line-height: 1.4; text-align: center;">
+                      <a href="{{ article2_link }}" style="color: #1b334d; text-decoration: none;">{{ article2_title }}</a>
+                    </p>
+                    <p style="margin: 0; text-align: center;">
+                      <a href="{{ article2_link }}" style="font-size: 10px; color: #bd203d; font-weight: 700; text-decoration: none; letter-spacing: 0.3px;">READ &#8594;</a>
+                    </p>
+                  </td>
+                  <td width="33%" valign="top" style="padding: 0 6px;" class="article-col">
+                    <a href="{{ article3_link }}" style="text-decoration: none; display: block;">
+                      <img src="{{ article3_image }}" alt="{{ article3_title }}" width="160" style="display: block; width: 100%; height: auto; border-radius: 10px; border: 1px solid #e0e0e0;">
+                    </a>
+                    <p style="margin: 10px 0 3px 0; font-size: 11px; font-weight: 700; color: #1b334d; line-height: 1.4; text-align: center;">
+                      <a href="{{ article3_link }}" style="color: #1b334d; text-decoration: none;">{{ article3_title }}</a>
+                    </p>
+                    <p style="margin: 0; text-align: center;">
+                      <a href="{{ article3_link }}" style="font-size: 10px; color: #bd203d; font-weight: 700; text-decoration: none; letter-spacing: 0.3px;">READ &#8594;</a>
+                    </p>
                   </td>
                 </tr>
               </table>
-            </td>
-          </tr>
-
-          <!-- ===================== LIFE UPDATE ===================== -->
-          <tr>
-            <td style="padding: 0 45px 32px 45px;" class="mobile-padding">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color: #fffaf5; border-radius: 14px; border-left: 5px solid #f0a500; overflow: hidden;">
+              <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" style="margin-top: 22px;">
                 <tr>
-                  <td style="padding: 28px 28px 24px 28px;">
-                    <p style="margin: 0 0 4px 0; font-size: 10px; font-weight: 900; color: #f0a500; letter-spacing: 2px; text-transform: uppercase;">Life Update</p>
-                    <h2 style="margin: 0 0 14px 0; font-size: 20px; font-weight: 900; color: #1b334d; line-height: 1.3;">{{ life_update_heading }}</h2>
-                    <p style="margin: 0; font-size: 15px; color: #444444; line-height: 1.7;" class="mobile-text">{{ life_update_body }}</p>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- ===================== MEDIA (conditional) ===================== -->
-          {% if media_url %}
-          <tr>
-            <td style="padding: 0 45px 32px 45px;" class="mobile-padding">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-radius: 14px; overflow: hidden; border: 1px solid #e0e0e0;">
-                <tr>
-                  <td align="center" style="padding: 0;">
-                    <a href="{{ media_url }}" style="display: block;">
-                      <img src="{{ media_url }}" alt="From {{ consultant_name }}" style="display: block; width: 100%; max-width: 560px; height: auto; border-radius: 13px;" width="560">
+                  <td>
+                    <a href="https://artisan.com.au/creative-community/?utm_source=brevo&utm_campaign=consultant-newsletter&utm_medium=email" style="display: inline-block; background-color: #ffffff; color: #1b334d; border: 2px solid #1b334d; padding: 12px 28px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 12px; letter-spacing: 0.5px; box-shadow: 0 3px 12px rgba(27,51,77,0.15);">
+                      VISIT THE CREATIVE COMMUNITY &#8594;
                     </a>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
-          {% endif %}
 
-          <!-- ===================== EVENTS (conditional) ===================== -->
-          {% if events and events.length > 0 %}
-          <tr>
-            <td style="padding: 0 45px 32px 45px;" class="mobile-padding">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color: #f0f4f8; border-radius: 14px; overflow: hidden;">
-                <tr>
-                  <td style="padding: 28px 28px 8px 28px;">
-                    <p style="margin: 0 0 4px 0; font-size: 10px; font-weight: 900; color: #1b334d; letter-spacing: 2px; text-transform: uppercase;">Events Worth Knowing</p>
-                    <h2 style="margin: 0 0 20px 0; font-size: 20px; font-weight: 900; color: #1b334d; line-height: 1.3;">What's On</h2>
-                  </td>
-                </tr>
-                {% for event in events %}
-                <tr>
-                  <td style="padding: 0 28px 20px 28px;">
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color: #ffffff; border-radius: 10px; border: 1px solid #dde4ec;">
-                      <tr class="event-row">
-                        <td style="padding: 16px 20px; vertical-align: top;">
-                          <p style="margin: 0 0 4px 0; font-size: 15px; font-weight: 700; color: #1b334d;">{{ event.title }}</p>
-                          <p style="margin: 0; font-size: 13px; color: #888888; font-weight: 600;">{{ event.date }}</p>
-                        </td>
-                        {% if event.link %}
-                        <td style="padding: 16px 20px; vertical-align: middle; text-align: right; white-space: nowrap;">
-                          <a href="{{ event.link }}" style="display: inline-block; background-color: #1b334d; color: #ffffff; border-radius: 8px; padding: 8px 16px; text-decoration: none; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; white-space: nowrap;">FIND OUT MORE</a>
-                        </td>
-                        {% endif %}
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-                {% endfor %}
-              </table>
-            </td>
-          </tr>
-          {% endif %}
 
-          <!-- ===================== WORK WITH ARTISAN ===================== -->
-          <tr>
-            <td style="padding: 0 45px 40px 45px;" class="mobile-padding">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background: linear-gradient(135deg, #1b334d 0%, #0f1f30 100%); border-radius: 14px; overflow: hidden;">
-                <tr>
-                  <td style="padding: 36px 32px; text-align: center;">
-                    <h2 style="margin: 0 0 14px 0; font-size: 22px; font-weight: 900; color: #ffffff; letter-spacing: 0.5px; text-transform: uppercase;">
-                      Work With Artisan
-                    </h2>
-                    <p style="margin: 0 0 28px 0; font-size: 13px; color: #b0c4d8; line-height: 1.7; max-width: 420px; margin-left: auto; margin-right: auto;">
-                      Whether you need someone in your team permanently or to freelance, or you are looking for your next project, just click below.
-                    </p>
-                    <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" class="cta-button-row">
-                      <tr>
-                        <td style="padding: 0 10px;">
-                          <table cellpadding="0" cellspacing="0" border="0" role="presentation">
-                            <tr>
-                              <td align="center">
-                                <a href="https://artisan.com.au/looking-for-talent/?utm_source=brevo&utm_campaign=consultant-newsletter&utm_medium=email" style="display: inline-block; background: linear-gradient(135deg, #bd203d 0%, #9a1830 100%); color: #ffffff; padding: 14px 24px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 13px; letter-spacing: 0.5px; box-shadow: 0 4px 16px rgba(189,32,61,0.4); white-space: nowrap;">
-                                  I'M LOOKING FOR TALENT &#8594;
-                                </a>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td align="center" style="padding-top: 8px;">
-                                <span style="font-size: 10px; color: #7a9ab8; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;">LET'S TALK</span>
-                              </td>
-                            </tr>
-                          </table>
-                        </td>
-                        <td style="padding: 0 10px;">
-                          <table cellpadding="0" cellspacing="0" border="0" role="presentation">
-                            <tr>
-                              <td align="center">
-                                <a href="https://clientapps.jobadder.com/67514/artisan?utm_source=brevo&utm_campaign=consultant-newsletter&utm_medium=email" style="display: inline-block; background-color: transparent; color: #ffffff; border: 2px solid rgba(255,255,255,0.4); padding: 13px 24px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 13px; letter-spacing: 0.5px; white-space: nowrap;">
-                                  I'M LOOKING FOR WORK &#8594;
-                                </a>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td align="center" style="padding-top: 8px;">
-                                <span style="font-size: 10px; color: #7a9ab8; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;">APPLY NOW</span>
-                              </td>
-                            </tr>
-                          </table>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- Gradient Divider -->
+          <!-- Gradient divider -->
           <tr>
             <td style="padding: 0 45px;">
               <div style="height: 3px; background: linear-gradient(90deg, #bd203d 0%, #1b334d 100%); border-radius: 2px;"></div>
             </td>
           </tr>
 
-          <!-- ===================== LET'S GET SOCIAL ===================== -->
+
+          <!-- ============================================================ -->
+          <!-- EVENTS (conditional)                                          -->
+          <!-- ============================================================ -->
+          {% if events and events.length > 0 %}
+          <tr>
+            <td style="padding: 36px 45px 28px 45px;" class="mobile-padding">
+              <p style="margin: 0 0 5px 0; font-size: 10px; font-weight: 700; color: #1b334d; letter-spacing: 2px; text-transform: uppercase;">What's On</p>
+              <h2 style="margin: 0 0 18px 0; font-size: 20px; font-weight: 900; color: #1b334d; line-height: 1.3;">Upcoming Events</h2>
+              {% for event in events %}
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom: 10px; background-color: #f7f9fc; border-radius: 10px; border: 1px solid #e4ecf4; overflow: hidden;">
+                <tr>
+                  <td valign="top" width="68" style="background: linear-gradient(135deg, #bd203d 0%, #9a1830 100%); padding: 14px 10px; text-align: center;">
+                    <p style="margin: 0; font-size: 20px; font-weight: 900; color: #ffffff; line-height: 1;">{{ event.day }}</p>
+                    <p style="margin: 2px 0 0 0; font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.85); letter-spacing: 1px; text-transform: uppercase;">{{ event.month }}</p>
+                  </td>
+                  <td valign="middle" style="padding: 14px 18px;">
+                    <p style="margin: 0 0 3px 0; font-size: 14px; font-weight: 700; color: #1b334d; line-height: 1.3;">{{ event.title }}</p>
+                    <p style="margin: 0; font-size: 12px; color: #888888; font-weight: 400;">{{ event.description }}</p>
+                  </td>
+                </tr>
+              </table>
+              {% endfor %}
+            </td>
+          </tr>
+          <!-- Gradient divider -->
+          <tr>
+            <td style="padding: 0 45px;">
+              <div style="height: 3px; background: linear-gradient(90deg, #1b334d 0%, #bd203d 100%); border-radius: 2px;"></div>
+            </td>
+          </tr>
+          {% endif %}
+
+
+          <!-- ============================================================ -->
+          <!-- BOOK A MEETING — Calendar CTA                                -->
+          <!-- ============================================================ -->
+          <tr>
+            <td style="padding: 36px 45px 28px 45px;" class="mobile-padding">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background: linear-gradient(135deg, #fdf2f4 0%, #fce8ec 100%); border-radius: 14px; border: 2px solid #f5c6cf; overflow: hidden;">
+                <tr>
+                  <td style="padding: 32px 36px; text-align: center;">
+                    <!-- Calendar icon block -->
+                    <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" style="margin-bottom: 14px;">
+                      <tr>
+                        <td style="background-color: #bd203d; border-radius: 10px; padding: 10px 13px;">
+                          <img src="https://cdn-icons-png.flaticon.com/512/2693/2693507.png" alt="Calendar" width="28" height="28" style="display: block; border: 0; filter: brightness(0) invert(1);">
+                        </td>
+                      </tr>
+                    </table>
+                    <h2 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 900; color: #1b334d; letter-spacing: 0.3px;">Let's Catch Up</h2>
+                    <p style="margin: 0 0 22px 0; font-size: 14px; color: #666666; line-height: 1.7; max-width: 380px; margin-left: auto; margin-right: auto;">
+                      Got a role to fill, a career move in mind, or just want to stay connected? Book a time directly in my calendar — no back and forth.
+                    </p>
+                    <a href="{{ calendar_link }}" style="display: inline-block; background: linear-gradient(135deg, #bd203d 0%, #9a1830 100%); color: #ffffff; padding: 15px 34px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 14px; letter-spacing: 0.5px; box-shadow: 0 4px 16px rgba(189,32,61,0.35);">
+                      BOOK A MEETING &#8594;
+                    </a>
+                    <p style="margin: 14px 0 0 0; font-size: 11px; color: #999999;">Or reply directly to this email — I'm always happy to chat.</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+
+          <!-- Gradient divider -->
+          <tr>
+            <td style="padding: 0 45px;">
+              <div style="height: 3px; background: linear-gradient(90deg, #bd203d 0%, #1b334d 100%); border-radius: 2px;"></div>
+            </td>
+          </tr>
+
+
+          <!-- ============================================================ -->
+          <!-- WORK WITH ARTISAN CTA                                        -->
+          <!-- ============================================================ -->
+          <tr>
+            <td style="padding: 36px 45px 28px 45px;" class="mobile-padding">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background: linear-gradient(135deg, #1b334d 0%, #0d1e2e 100%); border-radius: 14px; overflow: hidden;">
+                <tr>
+                  <td style="padding: 36px 32px; text-align: center;">
+                    <h2 style="margin: 0 0 14px 0; font-size: 22px; font-weight: 900; color: #ffffff; letter-spacing: 0.5px; text-transform: uppercase;">Work With Artisan</h2>
+                    <p style="margin: 0 0 28px 0; font-size: 13px; color: #b0c4d8; line-height: 1.7; max-width: 420px; margin-left: auto; margin-right: auto;">
+                      Whether you need someone in your team permanently or to freelance, or you are looking for your next project — just click below.
+                    </p>
+                    <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
+                      <tr>
+                        <td style="padding: 0 10px;">
+                          <a href="https://artisan.com.au/looking-for-talent/?utm_source=brevo&utm_campaign=consultant-newsletter&utm_medium=email" style="display: inline-block; background: linear-gradient(135deg, #bd203d 0%, #9a1830 100%); color: #ffffff; padding: 14px 24px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 13px; letter-spacing: 0.5px; box-shadow: 0 4px 16px rgba(189,32,61,0.4); white-space: nowrap;">
+                            I'M LOOKING FOR TALENT &#8594;
+                          </a>
+                        </td>
+                        <td style="padding: 0 10px;">
+                          <a href="https://clientapps.jobadder.com/67514/artisan?utm_source=brevo&utm_campaign=consultant-newsletter&utm_medium=email" style="display: inline-block; background-color: transparent; color: #ffffff; border: 2px solid rgba(255,255,255,0.4); padding: 13px 24px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 13px; letter-spacing: 0.5px; white-space: nowrap;">
+                            I'M LOOKING FOR WORK &#8594;
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+
+          <!-- Gradient divider -->
+          <tr>
+            <td style="padding: 0 45px;">
+              <div style="height: 3px; background: linear-gradient(90deg, #1b334d 0%, #bd203d 100%); border-radius: 2px;"></div>
+            </td>
+          </tr>
+
+
+          <!-- ============================================================ -->
+          <!-- LET'S GET SOCIAL                                             -->
+          <!-- ============================================================ -->
           <tr>
             <td style="padding: 28px 45px;" class="mobile-padding">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
@@ -295,7 +429,7 @@
                   <td align="center">
                     <h3 style="margin: 0 0 8px 0; font-size: 15px; font-weight: 900; color: #1b334d; letter-spacing: 0.5px; text-transform: uppercase;">Let's Get Social</h3>
                     <p style="margin: 0 0 18px 0; font-size: 12px; color: #888888; line-height: 1.6;">
-                      Tag us with <strong style="color: #bd203d;">#GetArtisan</strong> &#8212; we could be sharing your work to our huge network of Australia's best creatives.
+                      Tag us with <strong style="color: #bd203d;">#GetArtisan</strong> &#8212; we could be sharing your work to our huge network of Australia's best creatives. Win/Win/Winning!
                     </p>
                     <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
                       <tr>
@@ -331,7 +465,10 @@
             </td>
           </tr>
 
-          <!-- ===================== FOOTER ===================== -->
+
+          <!-- ============================================================ -->
+          <!-- FOOTER                                                        -->
+          <!-- ============================================================ -->
           <tr>
             <td style="padding: 40px 45px; background: linear-gradient(180deg, #f9f9f9 0%, #f0f0f0 100%); border-top: 2px solid #e0e0e0;" class="mobile-padding">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
@@ -383,16 +520,12 @@
                 </tr>
                 <tr>
                   <td align="center">
-                    <p style="margin: 0 0 6px 0; font-size: 11px; color: #999999; font-weight: 400;">
-                      &copy; Artisan Nasitra Pty Ltd 2026
-                    </p>
+                    <p style="margin: 0 0 6px 0; font-size: 11px; color: #999999; font-weight: 400;">&copy; Artisan Nasitra Pty Ltd 2026</p>
                     <p style="margin: 0 0 6px 0; font-size: 12px; color: #999999; font-weight: 400;">
-                      You can update your Artisan email preferences,
-                      <a href="{{ update_profile }}" style="color: #007bff; text-decoration: underline;">by clicking here</a>.
+                      You can update your Artisan email preferences, <a href="{{ update_profile }}" style="color: #007bff; text-decoration: underline;">by clicking here</a>.
                     </p>
                     <p style="margin: 0; font-size: 9px; color: #999999; font-weight: 400;">
-                      Or you can leave the creative community by clicking
-                      <a href="{{ unsubscribe }}" style="color: #999999; text-decoration: underline;">Unsubscribe</a>.
+                      Or you can leave the creative community by clicking <a href="{{ unsubscribe }}" style="color: #999999; text-decoration: underline;">Unsubscribe</a>.
                     </p>
                   </td>
                 </tr>
@@ -400,9 +533,8 @@
             </td>
           </tr>
 
-        </table>
-        <!-- /Email Wrapper -->
 
+        </table>
       </td>
     </tr>
   </table>

@@ -7,9 +7,9 @@
     "phone": "+61 7 3123 4567",
     "linkedin": "https://www.linkedin.com/in/debbie-younger/",
     "photo_url": "https://artisan.com.au/wp-content/uploads/debbie-younger.jpg",
+    "calendar_link": "https://calendly.com/debbie-artisan",
     "bio": "Debbie has over 15 years of experience placing creative talent across Queensland and beyond.",
     "brevo_template_id": 173,
-    "env_var_name": "BREVO_CNSL_TMPL_DEBBIE",
     "segment_keyword": "Debbie"
   },
   "mathew-hehir": {
@@ -20,9 +20,9 @@
     "phone": "+61 3 9123 4567",
     "linkedin": "https://www.linkedin.com/in/mathew-hehir/",
     "photo_url": "https://artisan.com.au/wp-content/uploads/mathew-hehir.jpg",
+    "calendar_link": "https://calendly.com/mathew-artisan",
     "bio": "Mathew specialises in connecting creative professionals with leading agencies and studios in Melbourne.",
     "brevo_template_id": 171,
-    "env_var_name": "BREVO_CNSL_TMPL_MATHEW",
     "segment_keyword": "Mathew"
   },
   "sean-varian": {
@@ -33,9 +33,9 @@
     "phone": "+61 2 9123 4567",
     "linkedin": "https://www.linkedin.com/in/sean-varian/",
     "photo_url": "https://artisan.com.au/wp-content/uploads/sean-varian.jpg",
+    "calendar_link": "https://calendly.com/sean-artisan",
     "bio": "Sean works with Sydney's top creative and marketing teams to find exceptional talent.",
     "brevo_template_id": 172,
-    "env_var_name": "BREVO_CNSL_TMPL_SEAN",
     "segment_keyword": "Sean"
   }
 }

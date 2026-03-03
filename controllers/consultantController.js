@@ -163,20 +163,61 @@ function parseJSON(req, res) {
 // Build flat template params for Brevo
 // ============================================================
 function buildTemplateParams(consultant, parsed) {
+    // Articles — optional, fall back to empty strings
+    const a1 = parsed.article1 || {};
+    const a2 = parsed.article2 || {};
+    const a3 = parsed.article3 || {};
+
+    // Job ad — optional
+    const job = parsed.job || {};
+
     return {
+        // Consultant profile (from config)
         consultant_name: consultant.name,
         consultant_title: consultant.title,
         consultant_email: consultant.email,
         consultant_phone: consultant.phone,
         consultant_linkedin: consultant.linkedin,
         consultant_photo: consultant.photo_url,
-        preheader_text: `${parsed.industry_insight.heading} — from ${consultant.name} at Artisan`,
+        calendar_link: consultant.calendar_link || 'https://artisan.com.au/contact',
+
+        // Email metadata
+        preheader_text: parsed.preheader_text || `${parsed.industry_insight.heading} — from ${consultant.name} at Artisan`,
+
+        // Industry insight
         industry_insight_heading: parsed.industry_insight.heading,
         industry_insight_body: parsed.industry_insight.body,
+
+        // Life update
         life_update_heading: parsed.life_update.heading,
         life_update_body: parsed.life_update.body,
+        media_url: parsed.media_url || null,
+
+        // Featured job ad
+        job_title: job.title || '',
+        job_type: job.type || 'Full Time',
+        job_location: job.location || '',
+        job_salary: job.salary || '',
+        job_description: job.description || '',
+        job_link: job.link || 'https://clientapps.jobadder.com/67514/artisan',
+
+        // Creative Community articles
+        article1_title: a1.title || '',
+        article1_image: a1.image || 'https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png',
+        article1_link: a1.link || 'https://artisan.com.au/creative-community/',
+        article2_title: a2.title || '',
+        article2_image: a2.image || 'https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png',
+        article2_link: a2.link || 'https://artisan.com.au/creative-community/',
+        article3_title: a3.title || '',
+        article3_image: a3.image || 'https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png',
+        article3_link: a3.link || 'https://artisan.com.au/creative-community/',
+
+        // Events
         events: Array.isArray(parsed.events) ? parsed.events : [],
-        media_url: parsed.media_url || null
+
+        // Brevo system vars
+        update_profile: '{{ update_profile }}',
+        unsubscribe: '{{ unsubscribe }}'
     };
 }
 
@@ -207,23 +248,12 @@ async function renderConsultantTemplate(params, emailPreviewService) {
     const templateHtml = fs.readFileSync(TEMPLATE_FILE, 'utf8');
 
     // Build data object matching the template variable paths
-    const data = {
-        consultant_name: params.consultant_name,
-        consultant_title: params.consultant_title,
-        consultant_email: params.consultant_email,
-        consultant_phone: params.consultant_phone,
-        consultant_linkedin: params.consultant_linkedin,
-        consultant_photo: params.consultant_photo,
-        preheader_text: params.preheader_text,
-        industry_insight_heading: params.industry_insight_heading,
-        industry_insight_body: params.industry_insight_body,
-        life_update_heading: params.life_update_heading,
-        life_update_body: params.life_update_body,
-        events: params.events || [],
-        media_url: params.media_url || null,
-        update_profile: 'https://artisan.com.au/email-preferences',
-        unsubscribe: 'https://artisan.com.au/unsubscribe'
-    };
+    // The template uses {{ params.xxx }} syntax for Brevo, but the preview
+    // service uses {{ xxx }} — so we pass all params at the top level.
+    const data = { ...params };
+    // Override Brevo system vars with preview-friendly values
+    data.update_profile = 'https://artisan.com.au/email-preferences';
+    data.unsubscribe = 'https://artisan.com.au/unsubscribe';
 
     return emailPreviewService.replaceTemplateVariables(templateHtml, data);
 }
