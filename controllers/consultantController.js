@@ -356,68 +356,69 @@ async function parseJSON(req, res) {
 }
 
 // ============================================================
-// Build flat template params for Brevo
+// Build nested template params for Brevo
+// Brevo's Nunjucks engine requires nested objects (not flat strings)
+// for {{ params.xxx }} substitution to work correctly.
 // ============================================================
 function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCandidate) {
-    const a1 = (articles && articles[0]) || {};
-    const a2 = (articles && articles[1]) || {};
-    const a3 = (articles && articles[2]) || {};
     const job = parsed.job || {};
     const fallbackImg = 'https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png';
     const fallbackArticleLink = 'https://artisan.com.au/creative-community/';
 
     return {
-        // Newsletter identity
-        newsletter_name: consultant.newsletter_name || consultant.name,
-        consultant_name: consultant.name,
-        consultant_title: consultant.title,
-        consultant_email: consultant.email,
-        consultant_phone: consultant.phone,
-        consultant_linkedin: consultant.linkedin,
-        consultant_photo: consultant.photo_url,
-        calendar_link: consultant.calendar_link || 'https://artisan.com.au/contact',
+        // Consultant identity — nested object
+        consultant: {
+            newsletter_name: consultant.newsletter_name || consultant.name,
+            name: consultant.name,
+            title: consultant.title,
+            email: consultant.email,
+            phone: consultant.phone,
+            linkedin: consultant.linkedin,
+            photo: consultant.photo_url,
+            calendar_link: consultant.calendar_link || 'https://artisan.com.au/contact'
+        },
 
-        // Email metadata
-        preheader_text: parsed.preheader_text || `${parsed.industry_insight.heading} — from ${consultant.name} at Artisan`,
+        // Email content — nested object
+        content: {
+            preheader_text: parsed.preheader_text || `${parsed.industry_insight.heading} — from ${consultant.name} at Artisan`,
+            industry_insight_heading: parsed.industry_insight.heading,
+            industry_insight_body: parsed.industry_insight.body,
+            life_update_heading: parsed.life_update.heading,
+            life_update_body: parsed.life_update.body
+        },
 
-        // Industry insight
-        industry_insight_heading: parsed.industry_insight.heading,
-        industry_insight_body: parsed.industry_insight.body,
+        // Personal media — nested object with items array
+        media: {
+            has_media: Array.isArray(mediaArray) && mediaArray.length > 0,
+            items: Array.isArray(mediaArray) ? mediaArray : []
+        },
 
-        // Life update
-        life_update_heading: parsed.life_update.heading,
-        life_update_body: parsed.life_update.body,
+        // Featured job — nested object
+        job: {
+            has_job: !!(job.title),
+            title: job.title || '',
+            type: job.type || 'Full Time',
+            location: job.location || '',
+            description: job.description || '',
+            link: job.link || 'https://clientapps.jobadder.com/67514/artisan'
+        },
 
-        // Personal media — array of { type, url, caption } objects
-        media_items: Array.isArray(mediaArray) ? mediaArray : [],
-        has_media: Array.isArray(mediaArray) && mediaArray.length > 0,
+        // A-List candidate — nested object
+        alist: {
+            has_candidate: !!alistCandidate,
+            title: alistCandidate ? alistCandidate.title : '',
+            image: alistCandidate ? (alistCandidate.image_url || fallbackImg) : fallbackImg,
+            link: alistCandidate ? alistCandidate.mailto_link : ''
+        },
 
-        // Featured job ad
-        job_title: job.title || '',
-        job_type: job.type || 'Full Time',
-        job_location: job.location || '',
-        job_description: job.description || '',
-        job_link: job.link || 'https://clientapps.jobadder.com/67514/artisan',
-        has_job: !!(job.title),
+        // Creative Community articles — array of objects (iterated with {% for %})
+        articles: (articles || []).slice(0, 3).map(a => ({
+            title: a.title || '',
+            image: a.image || fallbackImg,
+            link: a.link || fallbackArticleLink
+        })),
 
-        // A-List candidate (auto-pulled from last A-List state)
-        alist_candidate_title: alistCandidate ? alistCandidate.title : '',
-        alist_candidate_image: alistCandidate ? (alistCandidate.image_url || fallbackImg) : fallbackImg,
-        alist_candidate_link: alistCandidate ? alistCandidate.mailto_link : '',
-        has_alist_candidate: !!alistCandidate,
-
-        // Creative Community articles (auto-fetched from WordPress, overridable via Gemini JSON)
-        article1_title: a1.title || '',
-        article1_image: a1.image || fallbackImg,
-        article1_link: a1.link || fallbackArticleLink,
-        article2_title: a2.title || '',
-        article2_image: a2.image || fallbackImg,
-        article2_link: a2.link || fallbackArticleLink,
-        article3_title: a3.title || '',
-        article3_image: a3.image || fallbackImg,
-        article3_link: a3.link || fallbackArticleLink,
-
-        // Events
+        // Events — array of objects
         events: Array.isArray(parsed.events) ? parsed.events : []
     };
 }
@@ -446,9 +447,13 @@ async function previewConsultant(req, res) {
 // ============================================================
 async function renderConsultantTemplate(params, emailPreviewService) {
     const templateHtml = fs.readFileSync(TEMPLATE_FILE, 'utf8');
-    const data = { ...params };
-    data.update_profile = 'https://artisan.com.au/email-preferences';
-    data.unsubscribe = 'https://artisan.com.au/unsubscribe';
+    // Wrap params in { params: ... } so {{ params.consultant.name }} resolves correctly
+    // via getNestedProperty(data, 'params.consultant.name')
+    const data = {
+        params,
+        update_profile: 'https://artisan.com.au/email-preferences',
+        unsubscribe: 'https://artisan.com.au/unsubscribe'
+    };
     return emailPreviewService.replaceTemplateVariables(templateHtml, data);
 }
 
