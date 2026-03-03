@@ -367,6 +367,25 @@ app.post('/api/alist/reset', async (req, res) => {
 // ===============================================
 // XPOSE NEWSLETTER API ENDPOINTS
 // ===============================================
+
+// Config check endpoint - helps diagnose missing env vars
+app.get('/api/xpose/config-check', (req, res) => {
+  const config = {
+    TEST_EMAIL: process.env.TEST_EMAIL ? `set (${process.env.TEST_EMAIL})` : 'NOT SET',
+    BREVO_API_KEY: process.env.BREVO_API_KEY ? 'set' : 'NOT SET',
+    BREVO_XPOSE_NEWSLETTER_TEMPLATE_ID: process.env.BREVO_XPOSE_NEWSLETTER_TEMPLATE_ID || 'NOT SET',
+    BREVO_XPOSE_SINGLE_ARTICLE_TEMPLATE_ID: process.env.BREVO_XPOSE_SINGLE_ARTICLE_TEMPLATE_ID || 'NOT SET',
+    TEST_MODE: process.env.TEST_MODE || 'false',
+  };
+  const missing = Object.entries(config).filter(([k, v]) => v === 'NOT SET').map(([k]) => k);
+  res.json({ 
+    success: missing.length === 0, 
+    config, 
+    missing,
+    message: missing.length === 0 ? 'All required env vars are set.' : `Missing: ${missing.join(', ')}`
+  });
+});
+
 app.get('/api/xpose/state', async (req, res) => {
   try {
     if (!jobadderService.isAuthorized()) {
