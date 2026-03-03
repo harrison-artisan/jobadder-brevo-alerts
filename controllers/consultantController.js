@@ -244,11 +244,15 @@ async function sendTest(req, res) {
         return res.status(400).json({ success: false, message: 'TEST_EMAIL environment variable is not set.' });
     }
 
-    // Resolve template ID: Railway env var (per-consultant) → config file value → inline HTML fallback
+    // Resolve template ID: Railway env var → config file value → inline HTML fallback
+    // Env var names are kept short to avoid Railway's variable name length limit
+    const CONSULTANT_ENV_VARS = {
+        'debbie-younger': 'BREVO_CNSL_TMPL_DEBBIE',
+        'sean-varian':    'BREVO_CNSL_TMPL_SEAN',
+        'mathew-hehir':   'BREVO_CNSL_TMPL_MATHEW'
+    };
     const consultantId = state.consultant ? state.consultant.id : null;
-    const envVarName = consultantId
-        ? `BREVO_CONSULTANT_NEWSLETTER_TEMPLATE_ID_${consultantId.replace(/-/g, '_').toUpperCase()}`
-        : null;
+    const envVarName = consultantId ? CONSULTANT_ENV_VARS[consultantId] : null;
     const templateId = (envVarName && process.env[envVarName])
         ? parseInt(process.env[envVarName])
         : (state.consultant && state.consultant.brevo_template_id)
@@ -297,11 +301,14 @@ async function sendToAll(req, res) {
         return res.status(400).json({ success: false, message: 'Please parse the Gemini JSON first.' });
     }
 
-    // Resolve template ID: Railway env var (per-consultant) → config file value → inline HTML fallback
+    // Resolve template ID: Railway env var → config file value → inline HTML fallback
+    const CONSULTANT_ENV_VARS = {
+        'debbie-younger': 'BREVO_CNSL_TMPL_DEBBIE',
+        'sean-varian':    'BREVO_CNSL_TMPL_SEAN',
+        'mathew-hehir':   'BREVO_CNSL_TMPL_MATHEW'
+    };
     const consultantId = state.consultant ? state.consultant.id : null;
-    const envVarName = consultantId
-        ? `BREVO_CONSULTANT_NEWSLETTER_TEMPLATE_ID_${consultantId.replace(/-/g, '_').toUpperCase()}`
-        : null;
+    const envVarName = consultantId ? CONSULTANT_ENV_VARS[consultantId] : null;
     const templateId = (envVarName && process.env[envVarName])
         ? parseInt(process.env[envVarName])
         : (state.consultant && state.consultant.brevo_template_id)
