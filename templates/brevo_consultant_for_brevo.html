@@ -7,18 +7,90 @@
   <title>{{ params.consultant.newsletter_name }} — Artisan</title>
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;900&display=swap" rel="stylesheet">
   <style type="text/css">
+    /* ===== MOBILE RESPONSIVE ===== */
     @media only screen and (max-width: 600px) {
-      .email-container { width: 100% !important; max-width: 100% !important; margin: 0 !important; border-radius: 0 !important; }
-      .mobile-pad { padding: 20px 16px !important; }
-      .hero-photo-cell, .hero-content-cell { display: block !important; width: 100% !important; text-align: center !important; }
-      .hero-photo-cell { padding: 28px 16px 8px 16px !important; }
-      .hero-content-cell { padding: 0 16px 28px 16px !important; }
-      .article-col { display: table-cell !important; width: 33% !important; padding: 0 3px !important; }
-      .two-col-left, .two-col-right { display: block !important; width: 100% !important; padding: 0 0 16px 0 !important; }
-      .cta-btn-row td { display: block !important; width: 100% !important; text-align: center !important; padding: 8px 16px !important; box-sizing: border-box !important; }
-      .yt-thumb-cell { display: block !important; width: 100% !important; border-radius: 14px 14px 0 0 !important; }
-      .yt-text-cell { display: block !important; width: 100% !important; padding: 20px 20px 24px 20px !important; }
-      .footer-phones td { font-size: 10px !important; padding: 0 4px !important; }
+
+      /* Outer wrapper */
+      .outer-wrapper { padding: 12px 10px !important; }
+
+      /* Email card — keep rounded corners on mobile */
+      .email-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 20px !important;
+        border-width: 1px !important;
+      }
+
+      /* Section padding */
+      .mobile-pad { padding: 22px 18px !important; }
+      .mobile-pad-sm { padding: 16px 18px 0 18px !important; }
+
+      /* Header: stack columns */
+      .header-left, .header-right {
+        display: block !important;
+        width: 100% !important;
+        text-align: center !important;
+      }
+      .header-right { padding-top: 18px !important; }
+      .header-right > table { margin: 0 auto !important; }
+      .header-badge-table { margin: 0 auto !important; }
+
+      /* Consultant hero: stack photo and content */
+      .hero-photo-cell {
+        display: block !important;
+        width: 100% !important;
+        text-align: center !important;
+        padding: 28px 18px 10px 18px !important;
+      }
+      .hero-content-cell {
+        display: block !important;
+        width: 100% !important;
+        text-align: center !important;
+        padding: 0 18px 28px 18px !important;
+      }
+
+      /* Two-column sections */
+      .two-col-left, .two-col-right {
+        display: block !important;
+        width: 100% !important;
+        padding: 0 0 12px 0 !important;
+      }
+      .two-col-right { padding: 0 !important; }
+
+      /* CTA buttons */
+      .cta-btn-row td {
+        display: block !important;
+        width: 100% !important;
+        text-align: center !important;
+        padding: 6px 0 !important;
+        box-sizing: border-box !important;
+      }
+
+      /* YouTube: stack thumbnail above text */
+      .yt-thumb-cell {
+        display: block !important;
+        width: 100% !important;
+        border-radius: 14px 14px 0 0 !important;
+      }
+      .yt-text-cell {
+        display: block !important;
+        width: 100% !important;
+        padding: 18px 18px 22px 18px !important;
+      }
+
+      /* Articles: keep 3-col but tighter */
+      .article-col { padding: 0 2px !important; }
+      .article-img { height: 70px !important; }
+
+      /* Events */
+      .event-date-cell { padding: 14px 0 14px 14px !important; }
+      .event-content-cell { padding: 14px 14px !important; }
+
+      /* Footer phones */
+      .footer-phones td { font-size: 10px !important; padding: 0 5px !important; }
+
+      /* Hide desktop-only spacers */
+      .desktop-only { display: none !important; }
     }
   </style>
 </head>
@@ -28,7 +100,7 @@
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;">{{ params.content.preheader_text }}</div>
 
   <!-- Outer wrapper -->
-  <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#f5f5f5;padding:40px 20px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" class="outer-wrapper" style="background-color:#f5f5f5;padding:40px 20px;">
     <tr>
       <td align="center">
 
@@ -41,13 +113,13 @@
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
                 <tr>
                   <!-- Left: Logo + tagline + newsletter name badge -->
-                  <td width="55%" valign="top">
+                  <td width="55%" valign="top" class="header-left">
                     <a href="https://artisan.com.au/" style="text-decoration:none;display:block;margin-bottom:14px;">
                       <img src="https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png" alt="Artisan" width="64" height="64" style="display:block;border:0;">
                     </a>
                     <p style="margin:0 0 18px 0;font-size:13px;color:#666666;font-weight:600;line-height:1.5;">Creative, Digital and<br>Marketing Recruitment</p>
                     <!-- Newsletter name badge -->
-                    <table cellpadding="0" cellspacing="0" border="0" role="presentation">
+                    <table cellpadding="0" cellspacing="0" border="0" role="presentation" class="header-badge-table">
                       <tr>
                         <td style="background:linear-gradient(135deg,#1b334d 0%,#0f1f30 100%);border-radius:28px;padding:12px 24px;">
                           <span style="font-size:18px;font-weight:900;color:#ffffff;letter-spacing:0.3px;">{{ params.consultant.newsletter_name }}</span>
@@ -61,7 +133,7 @@
                     </table>
                   </td>
                   <!-- Right: Book a meeting card -->
-                  <td width="45%" valign="top" align="right">
+                  <td width="45%" valign="top" align="right" class="header-right">
                     <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#f7f7f7;border-radius:14px;padding:24px;max-width:220px;margin-left:auto;">
                       <tr>
                         <td>
@@ -86,7 +158,7 @@
 
           <!-- ====== CONSULTANT HERO ====== -->
           <tr>
-            <td style="padding:20px 45px 0 45px;" class="mobile-pad">
+            <td style="padding:20px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#1b334d 0%,#0f1f30 100%);border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(27,51,77,0.25);">
                 <tr>
                   <!-- Photo -->
@@ -142,7 +214,7 @@
 
           <!-- ====== LIFE UPDATE ====== -->
           <tr>
-            <td style="padding:20px 45px 0 45px;" class="mobile-pad">
+            <td style="padding:20px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#f8faff 0%,#f0f4ff 100%);border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(27,51,77,0.06);">
                 <tr>
                   <td style="padding:32px 32px 28px 32px;">
@@ -161,7 +233,7 @@
 
           {% if item.type == 'image' %}
           <tr>
-            <td style="padding:20px 45px 0 45px;" class="mobile-pad">
+            <td style="padding:20px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;border:1px solid #e8e8e8;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.05);">
                 <tr>
                   <td style="padding:0;">
@@ -182,7 +254,7 @@
 
           {% if item.type == 'instagram' %}
           <tr>
-            <td style="padding:20px 45px 0 45px;" class="mobile-pad">
+            <td style="padding:20px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
               <!-- Instagram embed-style card -->
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;border:1px solid #dbdbdb;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.1);">
                 <!-- Instagram header bar -->
@@ -240,7 +312,7 @@
 
           {% if item.type == 'youtube' %}
           <tr>
-            <td style="padding:20px 45px 0 45px;" class="mobile-pad">
+            <td style="padding:20px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
               <!-- YouTube left-right layout: thumbnail left, text+button right -->
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#0d0d0d;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.25);">
                 <tr>
@@ -280,7 +352,7 @@
 
           {% if item.type == 'link' %}
           <tr>
-            <td style="padding:20px 45px 0 45px;" class="mobile-pad">
+            <td style="padding:20px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#f0f4ff 0%,#e8eeff 100%);border:1px solid #d0d8ff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(27,51,77,0.07);">
                 <tr>
                   <td style="padding:28px 32px;text-align:center;">
@@ -378,13 +450,13 @@
               {% for event in params.events %}
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;border:1px solid #e8e8e8;border-radius:12px;margin-bottom:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
                 <tr>
-                  <td width="72" valign="middle" align="center" style="padding:20px 0 20px 20px;">
+                  <td width="72" valign="middle" align="center" style="padding:20px 0 20px 20px;" class="event-date-cell">
                     <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);border-radius:10px;width:56px;text-align:center;">
                       <tr><td style="padding:10px 8px 4px 8px;font-size:22px;font-weight:900;color:#ffffff;line-height:1;">{{ event.day }}</td></tr>
                       <tr><td style="padding:0 8px 10px 8px;font-size:9px;font-weight:700;color:rgba(255,255,255,0.85);letter-spacing:1px;text-transform:uppercase;">{{ event.month }}</td></tr>
                     </table>
                   </td>
-                  <td valign="middle" style="padding:20px 24px;">
+                  <td valign="middle" style="padding:20px 24px;" class="event-content-cell">
                     <h3 style="margin:0 0 4px 0;font-size:16px;font-weight:900;color:#1b334d;line-height:1.3;">{{ event.title }}</h3>
                     <p style="margin:0;font-size:13px;line-height:1.6;color:#666666;">{{ event.description }}</p>
                   </td>
