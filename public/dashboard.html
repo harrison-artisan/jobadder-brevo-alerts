@@ -4620,6 +4620,24 @@ Choose Recent Poll
         // ===============================================
         let xposeState = { state: 'EMPTY' };
 
+        async function loadXposeState() {
+            try {
+                const response = await fetch('/api/xpose/state');
+                const data = await response.json();
+                if (response.ok && data.state) {
+                    xposeState = data.state;
+                    updateXposeUI();
+                } else if (response.ok) {
+                    xposeState = data;
+                    updateXposeUI();
+                } else {
+                    console.error('Failed to load Xpose state:', data);
+                }
+            } catch (error) {
+                console.error('Error loading Xpose state:', error);
+            }
+        }
+
         function updateXposeUI() {
             const stateBadge = document.getElementById('xposeStateBadge');
             const stateTimestamp = document.getElementById('xposeStateTimestamp');
