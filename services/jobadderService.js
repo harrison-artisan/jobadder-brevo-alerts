@@ -355,16 +355,17 @@ class JobAdderService {
     
     // Get location and work type from job details if available
     let location = 'Location TBD';
-    let jobType = 'Permanent';
+    let jobType = '';
     
     if (ad.jobDetails) {
       // Use structured data from job details
       location = ad.jobDetails.location?.name || ad.jobDetails.location || this.extractLocation(ad.summary, ad.bulletPoints);
-      jobType = ad.jobDetails.workType?.name || ad.jobDetails.workType || this.extractJobType(ad.summary, ad.bulletPoints);
+      // Only use workType if explicitly set — leave blank if not specified
+      jobType = ad.jobDetails.workType?.name || ad.jobDetails.workType || '';
     } else {
-      // Fallback to extraction from text
+      // Fallback to extraction from text only
       location = this.extractLocation(ad.summary, ad.bulletPoints);
-      jobType = this.extractJobType(ad.summary, ad.bulletPoints);
+      jobType = '';
     }
     
     // Build description from summary and bullet points
@@ -437,7 +438,7 @@ class JobAdderService {
       return 'Part-time';
     }
     
-    return 'Permanent';
+    return '';
   }
 
   /**

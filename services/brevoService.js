@@ -58,6 +58,8 @@ class BrevoService {
 
   /**
    * Send batch email using Brevo transactional API
+   * For single recipients: uses direct to+params (more reliable)
+   * For multiple recipients: uses messageVersions batch API
    */
   async sendBatchEmail(recipients, templateId, params) {
     if (!recipients || recipients.length === 0) {
@@ -70,11 +72,34 @@ class BrevoService {
       console.log(`🧪 TEST MODE ACTIVE: Sending to ${recipients.length} test recipient(s)`);
     }
 
+    const tid = parseInt(templateId);
+    if (isNaN(tid)) {
+      throw new Error(`Invalid templateId: "${templateId}". Check that BREVO_XPOSE_NEWSLETTER_TEMPLATE_ID (or equivalent) is set in Railway environment variables.`);
+    }
+
     try {
-      // Brevo allows up to 1000 recipients per batch
-      const batchSize = 1000;
+      // For single recipient: use direct to+params (simpler, more reliable)
+      if (recipients.length === 1) {
+        const recipient = recipients[0];
+        const payload = {
+          templateId: tid,
+          to: [{ email: recipient.email, name: recipient.name || recipient.email }],
+          params: params
+        };
+        if (this.senderEmail) {
+          payload.sender = { email: this.senderEmail, name: this.senderName };
+        }
+        console.log(`📧 Sending email to 1 recipient: ${recipient.email}`);
+        const response = await axios.post(`${this.baseUrl}/smtp/email`, payload, {
+          headers: { 'api-key': this.apiKey, 'Content-Type': 'application/json' }
+        });
+        console.log(`✅ Email sent successfully to ${recipient.email} (messageId: ${response.data?.messageId})`);
+        return;
+      }
+
+      // For multiple recipients: use messageVersions batch API
+      const batchSize = 99; // Brevo max per messageVersion
       const batches = [];
-      
       for (let i = 0; i < recipients.length; i += batchSize) {
         batches.push(recipients.slice(i, i + batchSize));
       }
@@ -84,33 +109,24 @@ class BrevoService {
       for (let i = 0; i < batches.length; i++) {
         const batch = batches[i];
         const messageVersions = batch.map(recipient => ({
-          to: [{ email: recipient.email, name: recipient.name }],
+          to: [{ email: recipient.email, name: recipient.name || recipient.email }],
           params: params
         }));
 
         const payload = {
-          templateId: parseInt(templateId),
+          templateId: tid,
           messageVersions: messageVersions
         };
-        
-        // Add sender if configured (required for some Brevo setups)
         if (this.senderEmail) {
-          payload.sender = {
-            email: this.senderEmail,
-            name: this.senderName
-          };
+          payload.sender = { email: this.senderEmail, name: this.senderName };
         }
-        
+
         const response = await axios.post(`${this.baseUrl}/smtp/email`, payload, {
-          headers: {
-            'api-key': this.apiKey,
-            'Content-Type': 'application/json'
-          }
+          headers: { 'api-key': this.apiKey, 'Content-Type': 'application/json' }
         });
 
         console.log(`✅ Batch ${i + 1}/${batches.length} sent successfully (${batch.length} recipients)`);
-        
-        // Small delay between batches to avoid rate limiting
+
         if (i < batches.length - 1) {
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
