@@ -319,51 +319,52 @@ class CandidateAlertsController {
   }
   
   /**
-   * Schedule A-List send for next Friday at 9:00 AM Melbourne time
+   * Schedule A-List send at a user-specified Melbourne datetime
    */
   async scheduleForFriday(options = {}) {
     const cron = require('node-cron');
     
     try {
-      // Calculate next Friday 9:00 AM Melbourne time using Intl
-      const nowUtc = new Date();
-      // Get current day-of-week in Melbourne
-      const melbDay = Number(new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Melbourne', weekday: 'short' }).format(nowUtc) === 'Fri' ? 5 : new Date(new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Melbourne', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hour12: false }).format(nowUtc)).getDay());
-      const melbParts = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Melbourne', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(nowUtc);
-      const mp = {}; melbParts.forEach(p => { mp[p.type] = p.value; });
-      const melbNow = new Date(`${mp.year}-${mp.month}-${mp.day}T${mp.hour}:${mp.minute}:00`);
-      const dayOfWeek = melbNow.getDay(); // 0=Sun, 5=Fri
-      let daysUntilFriday = (5 - dayOfWeek + 7) % 7;
-      // If today is Friday and already past 9am, go to next Friday
-      if (daysUntilFriday === 0 && melbNow.getHours() >= 9) daysUntilFriday = 7;
-      if (daysUntilFriday === 0) daysUntilFriday = 7; // safety: always schedule future
-      const nextFridayDate = new Date(melbNow);
-      nextFridayDate.setDate(nextFridayDate.getDate() + daysUntilFriday);
-      nextFridayDate.setHours(9, 0, 0, 0);
-      const scheduledFor = nextFridayDate.toLocaleDateString('en-AU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Australia/Melbourne' }) + ' at 9:00 AM';
-      
-      // Schedule cron job for Friday 9am Melbourne time (0 9 * * 5)
-      // Note: This is a one-time schedule - in production you'd want to persist this
-      cron.schedule('0 9 * * 5', async () => {
+      // Use scheduledAt if provided (ISO string from frontend), else default to next Friday 9am Melbourne
+      let sendDate;
+      if (options.scheduledAt) {
+        sendDate = new Date(options.scheduledAt);
+        if (isNaN(sendDate.getTime())) throw new Error('Invalid scheduledAt date');
+        if (sendDate <= new Date()) throw new Error('Scheduled time must be in the future');
+      } else {
+        // Fallback: next Friday 9am Melbourne
+        const nowMelb = new Date(new Date().toLocaleString('en-US', { timeZone: 'Australia/Melbourne' }));
+        const day = nowMelb.getDay();
+        let daysUntilFriday = (5 - day + 7) % 7 || 7;
+        sendDate = new Date(nowMelb);
+        sendDate.setDate(nowMelb.getDate() + daysUntilFriday);
+        sendDate.setHours(9, 0, 0, 0);
+      }
+
+      // Build cron expression from the UTC equivalent of the chosen Melbourne time
+      const min = sendDate.getUTCMinutes();
+      const hr = sendDate.getUTCHours();
+      const dom = sendDate.getUTCDate();
+      const mon = sendDate.getUTCMonth() + 1;
+      const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
+
+      const scheduledFor = sendDate.toLocaleString('en-AU', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', hour12: true,
+        timeZone: 'Australia/Melbourne'
+      }) + ' (Melbourne time)';
+
+      cron.schedule(cronExpr, async () => {
         console.log('📅 Executing scheduled A-List send...');
         await this.sendToAll(options);
-      }, {
-        timezone: 'Australia/Melbourne'
-      });
-      
-      console.log(`📅 A-List scheduled for ${scheduledFor}`);
-      
-      return {
-        success: true,
-        scheduledFor,
-        message: 'A-List scheduled successfully'
-      };
+      }, { timezone: 'UTC' });
+
+      console.log(`📅 A-List scheduled for ${scheduledFor} (cron: ${cronExpr} UTC)`);
+
+      return { success: true, scheduledFor, message: 'A-List scheduled successfully' };
     } catch (error) {
       console.error('❌ Error scheduling A-List:', error);
-      return {
-        success: false,
-        message: error.message
-      };
+      return { success: false, message: error.message };
     }
   }
 

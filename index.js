@@ -292,8 +292,8 @@ app.get('/api/brevo/lists', async (req, res) => {
 // A-List API endpoints
 app.post('/api/alist/schedule', async (req, res) => {
   try {
-    const { recipientType, recipientId } = req.body;
-    const result = await candidateAlertsController.scheduleForFriday({ recipientType, recipientId });
+    const { recipientType, recipientId, scheduledAt } = req.body;
+    const result = await candidateAlertsController.scheduleForFriday({ recipientType, recipientId, scheduledAt });
     res.json(result);
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -402,8 +402,8 @@ app.get('/api/xpose/state', async (req, res) => {
 
 app.post('/api/xpose/schedule', async (req, res) => {
   try {
-    const { recipientType, recipientId } = req.body;
-    const result = await xposeController.scheduleForThursday({ recipientType, recipientId });
+    const { recipientType, recipientId, scheduledAt } = req.body;
+    const result = await xposeController.scheduleForThursday({ recipientType, recipientId, scheduledAt });
     res.json(result);
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -524,6 +524,16 @@ app.post('/api/xpose/send-article/:articleId', async (req, res) => {
     await xposeController.sendSingleArticle(req, res);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/xpose/schedule-article/:articleId', async (req, res) => {
+  try {
+    const { recipientType, recipientId, scheduledAt } = req.body;
+    const result = await xposeController.scheduleArticle(req.params.articleId, { recipientType, recipientId, scheduledAt });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
