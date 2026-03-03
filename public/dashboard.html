@@ -1830,6 +1830,16 @@
             loadAListState();
             checkBrevoStatus();
             loadDailyAlertsStatus();
+
+            // A-List button bindings — must be inside DOMContentLoaded so elements exist
+            const btnGenerate = document.getElementById('btnGenerate');
+            if (btnGenerate) btnGenerate.addEventListener('click', generateAList);
+            const btnSendTest = document.getElementById('btnSendTest');
+            if (btnSendTest) btnSendTest.addEventListener('click', sendAListTest);
+            const btnScheduleAList = document.getElementById('btnScheduleAList');
+            if (btnScheduleAList) btnScheduleAList.addEventListener('click', scheduleAList);
+            const btnSendNowAList = document.getElementById('btnSendNowAList');
+            if (btnSendNowAList) btnSendNowAList.addEventListener('click', sendNowAList);
         });
         
         function toggleMobileStatus() {
@@ -4223,11 +4233,7 @@ Choose Recent Poll
         
         // ========== A-LIST FUNCTIONS ==========
         
-        // Button event listeners for A-List
-        document.getElementById('btnGenerate').addEventListener('click', generateAList);
-        document.getElementById('btnSendTest').addEventListener('click', sendAListTest);
-        document.getElementById('btnScheduleAList').addEventListener('click', scheduleAList);
-        document.getElementById('btnSendNowAList').addEventListener('click', sendNowAList);
+        // A-List button bindings moved into DOMContentLoaded above
 
         async function loadAListState() {
             try {
