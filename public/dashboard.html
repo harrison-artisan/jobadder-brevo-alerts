@@ -1721,7 +1721,7 @@
                 <div id="consultantProfileCard" style="display:none;">
 
                     <!-- Profile hero band -->
-                    <div style="display:flex; align-items:center; gap:28px; padding:28px 28px 24px 28px; border-top:1px solid rgba(255,255,255,0.08); margin-top:20px;">
+                    <div id="profileViewMode" style="display:flex; align-items:center; gap:28px; padding:28px 28px 24px 28px; border-top:1px solid rgba(255,255,255,0.08); margin-top:20px;">
                         <!-- Photo -->
                         <div style="flex-shrink:0; position:relative;">
                             <img id="profilePhotoPreview" src="" alt="Photo" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid rgba(189,32,61,0.6);display:block;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
@@ -1797,6 +1797,21 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Railway Env Persistence Panel (shown after saving profile) -->
+            <div id="railwayEnvPanel" style="display:none; margin-bottom:20px;">
+                <div class="actions-card" style="border:2px solid rgba(189,32,61,0.4); background:rgba(189,32,61,0.08);">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                        <div>
+                            <h3 style="margin:0 0 4px 0; font-size:15px; color:white;">&#128274; Make This Permanent in Railway</h3>
+                            <p style="margin:0; font-size:12px; color:rgba(255,255,255,0.5); line-height:1.5;">Copy this value and paste it into Railway as the <strong style="color:rgba(255,255,255,0.8);">CONSULTANT_PROFILES_JSON</strong> environment variable. Your profile changes will survive every future deploy.</p>
+                        </div>
+                        <button id="btnCopyRailway" class="btn btn-primary" style="flex-shrink:0; margin-left:16px; padding:8px 18px; font-size:12px;" onclick="copyRailwayEnvValue()">Copy Value</button>
+                    </div>
+                    <code id="railwayEnvValue" style="display:block; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:12px 14px; font-size:11px; color:rgba(255,255,255,0.7); word-break:break-all; line-height:1.6; max-height:80px; overflow-y:auto;"></code>
+                    <p style="margin:10px 0 0 0; font-size:11px; color:rgba(255,255,255,0.35);">Railway → Your Service → Variables → Add Variable: <strong style="color:rgba(255,255,255,0.5);">CONSULTANT_PROFILES_JSON</strong> = (paste value above)</p>
                 </div>
             </div>
 
@@ -5318,6 +5333,25 @@ Choose Recent Poll
             return toast;
         }
         
+        // ========== RAILWAY ENV PANEL ==========
+        function showRailwayEnvPanel(jsonValue) {
+            let panel = document.getElementById('railwayEnvPanel');
+            if (!panel) return;
+            document.getElementById('railwayEnvValue').textContent = jsonValue;
+            panel.style.display = 'block';
+            panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function copyRailwayEnvValue() {
+            const val = document.getElementById('railwayEnvValue').textContent;
+            navigator.clipboard.writeText(val).then(() => {
+                showToast('Copied! Now paste into Railway as CONSULTANT_PROFILES_JSON', 'success');
+                const btn = document.getElementById('btnCopyRailway');
+                btn.textContent = 'Copied!';
+                setTimeout(() => { btn.textContent = 'Copy Value'; }, 2000);
+            });
+        }
+
         // ========== PREVIEW PANEL FUNCTIONS ==========
         let previewTimeout = null;
         let currentIframe = null;
@@ -6089,7 +6123,7 @@ Choose Recent Poll
 
                 // Close edit mode
                 profileEditOpen = false;
-                document.getElementById('profileViewMode').style.display = 'grid';
+                document.getElementById('profileViewMode').style.display = 'flex';
                 document.getElementById('profileEditMode').style.display = 'none';
                 document.getElementById('btnSaveProfile').style.display = 'none';
                 document.querySelector('[onclick="toggleProfileEdit()"]').textContent = 'Edit Profile';
@@ -6098,7 +6132,12 @@ Choose Recent Poll
                 document.getElementById('consultantNameDisplay').textContent = updated.name || selectedConsultantId;
                 document.getElementById('consultantTitleDisplay').textContent = updated.title || '';
 
-                showToast('Profile saved for ' + updated.name + '!', 'success');
+                // Show Railway env var copy panel if returned
+                if (data.railway_env_value) {
+                    showRailwayEnvPanel(data.railway_env_value);
+                }
+
+                showToast('Profile saved for ' + updated.name + '! Copy the value below to Railway to make it permanent.', 'success');
             } catch (e) {
                 showToast('Save failed: ' + e.message, 'error');
             } finally {
