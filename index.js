@@ -5,6 +5,7 @@ const jobAlertsController = require('./controllers/jobAlertsController');
 const candidateAlertsController = require('./controllers/candidateAlertsController');
 const xposeController = require('./controllers/xposeController');
 const contentMarketingController = require('./controllers/contentMarketingController');
+const consultantController = require('./controllers/consultantController');
 const jobadderService = require('./services/jobadderService');
 const jobTrackingService = require('./services/jobTrackingService');
 
@@ -823,6 +824,57 @@ app.post('/api/linkedin/post-poll', async (req, res) => {
     console.error('[LinkedIn] Poll error:', err.response ? JSON.stringify(err.response.data) : err.message);
     res.status(500).json({ success: false, message: err.message });
   }
+});
+
+// ============================================================
+// Consultant Newsletter Routes
+// ============================================================
+
+// GET  /api/consultant/list     - Return list of consultants for dropdown
+app.get('/api/consultant/list', (req, res) => {
+  consultantController.getConsultantList(req, res);
+});
+
+// GET  /api/consultant/state    - Return current consultant newsletter state
+app.get('/api/consultant/state', (req, res) => {
+  consultantController.getState(req, res);
+});
+
+// POST /api/consultant/parse    - Parse & validate Gemini JSON, save state
+app.post('/api/consultant/parse', (req, res) => {
+  consultantController.parseJSON(req, res);
+});
+
+// GET  /api/preview/consultant  - Render HTML preview of consultant newsletter
+app.get('/api/preview/consultant', async (req, res) => {
+  try {
+    await consultantController.previewConsultant(req, res);
+  } catch (error) {
+    res.status(500).send('<div style="padding: 40px; text-align: center;"><h2>Error</h2><p>' + error.message + '</p></div>');
+  }
+});
+
+// POST /api/consultant/send-test - Send test email to TEST_EMAIL
+app.post('/api/consultant/send-test', async (req, res) => {
+  try {
+    await consultantController.sendTest(req, res);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// POST /api/consultant/send     - Send to selected segment/list
+app.post('/api/consultant/send', async (req, res) => {
+  try {
+    await consultantController.sendToAll(req, res);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// POST /api/consultant/reset    - Reset consultant state
+app.post('/api/consultant/reset', (req, res) => {
+  consultantController.resetState(req, res);
 });
 
 // Start server

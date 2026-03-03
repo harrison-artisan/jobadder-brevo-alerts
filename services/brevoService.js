@@ -232,6 +232,33 @@ class BrevoService {
   }
 
   /**
+   * Send a single transactional email with inline HTML content (no template ID required)
+   * Used for test sends when no Brevo template has been configured yet.
+   */
+  async sendEmailWithHtml({ to, subject, htmlContent, fromName, fromEmail }) {
+    const sender = {
+      email: fromEmail || this.senderEmail || 'hello@artisan.com.au',
+      name: fromName || this.senderName || 'Artisan'
+    };
+    const payload = {
+      sender,
+      to: Array.isArray(to) ? to : [to],
+      subject: subject || 'Artisan Newsletter',
+      htmlContent
+    };
+    try {
+      const response = await axios.post(`${this.baseUrl}/smtp/email`, payload, {
+        headers: { 'api-key': this.apiKey, 'Content-Type': 'application/json' }
+      });
+      console.log(`✅ Inline HTML email sent to ${payload.to.map(r => r.email).join(', ')} (messageId: ${response.data?.messageId})`);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error sending inline HTML email:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  /**
    * Get contacts from a specific list
    */
   async getListContacts(listId) {
