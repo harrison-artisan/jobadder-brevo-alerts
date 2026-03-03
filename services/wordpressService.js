@@ -101,7 +101,7 @@ class WordpressService {
                     _embed: "true",
                 },
             });
-            return this.formatArticleData(response.data);
+            return this.formatArticleDataLong(response.data);
         } catch (error) {
             console.error(`Error fetching article ${articleId} from WordPress:`, error.message);
             return null;
@@ -127,6 +127,29 @@ class WordpressService {
             ? excerpt.substring(0, maxLength).replace(/\s+\S*$/, '') + '...'
             : excerpt;
 
+        return {
+            id: post.id,
+            title,
+            excerpt: truncatedExcerpt,
+            link: post.link,
+            date: post.date,
+            featuredImage,
+        };
+    }
+
+    /**
+     * Same as formatArticleData but with a longer excerpt (2500 chars).
+     * Used only by getArticleById for single article emails.
+     * NEVER pass this as a .map() callback.
+     */
+    formatArticleDataLong(post) {
+        const featuredImage = post._embedded?.["wp:featuredmedia"]?.[0]?.source_url || null;
+        const title = decodeHtmlEntities(post.title.rendered);
+        const excerpt = decodeHtmlEntities(post.excerpt.rendered);
+        const maxLength = 2500;
+        const truncatedExcerpt = excerpt.length > maxLength
+            ? excerpt.substring(0, maxLength).replace(/\s+\S*$/, '') + '...'
+            : excerpt;
         return {
             id: post.id,
             title,
