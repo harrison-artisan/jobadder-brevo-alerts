@@ -987,7 +987,7 @@ app.post('/api/linkedin/post-poll', async (req, res) => {
 // LinkedIn Post from Existing Article Routes
 // ============================================================
 
-const ARTICLE_POST_SCHEDULE_FILE = path.join(__dirname, '.article-post-schedule.json');
+const ARTICLE_POST_SCHEDULE_FILE = require('path').join(__dirname, '.article-post-schedule.json');
 let _articlePostScheduledTask = null;
 
 // GET /api/linkedin/wp-articles - Fetch live WordPress articles for the picker
