@@ -871,6 +871,86 @@ app.get('/api/linkedin/recent-polls', async (req, res) => {
   }
 });
 
+// POST /api/linkedin/schedule-poll - Schedule a poll to be posted at a future time
+const POLL_SCHEDULE_FILE = require('path').join(__dirname, '.linkedin-poll-schedule.json');
+let _pollScheduledTask = null;
+
+app.post('/api/linkedin/schedule-poll', async (req, res) => {
+  try {
+    const { text, question, options, duration, scheduledAt } = req.body;
+    if (!text || !question || !options || options.length < 2) {
+      return res.status(400).json({ success: false, message: 'text, question, and at least 2 options are required.' });
+    }
+    if (!scheduledAt) return res.status(400).json({ success: false, message: 'scheduledAt is required.' });
+    const sendDate = new Date(scheduledAt);
+    if (isNaN(sendDate.getTime())) return res.status(400).json({ success: false, message: 'Invalid scheduledAt date.' });
+    if (sendDate <= new Date()) return res.status(400).json({ success: false, message: 'Scheduled time must be in the future.' });
+
+    const min = sendDate.getUTCMinutes();
+    const hr = sendDate.getUTCHours();
+    const dom = sendDate.getUTCDate();
+    const mon = sendDate.getUTCMonth() + 1;
+    const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
+
+    const scheduledFor = sendDate.toLocaleString('en-AU', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: true,
+      timeZone: 'Australia/Melbourne'
+    }) + ' (Melbourne time)';
+
+    if (_pollScheduledTask) { _pollScheduledTask.stop(); _pollScheduledTask = null; }
+
+    _pollScheduledTask = cron.schedule(cronExpr, async () => {
+      console.log('📅 Executing scheduled LinkedIn poll post...');
+      try {
+        await linkedinService.postPoll(text, question, options, duration || 'ONE_WEEK');
+        console.log('✅ Scheduled poll posted to LinkedIn.');
+      } catch (e) {
+        console.error('❌ Scheduled poll post failed:', e.message);
+      }
+      const fs = require('fs');
+      if (require('fs').existsSync(POLL_SCHEDULE_FILE)) require('fs').unlinkSync(POLL_SCHEDULE_FILE);
+      if (_pollScheduledTask) { _pollScheduledTask.stop(); _pollScheduledTask = null; }
+    }, { timezone: 'UTC' });
+
+    require('fs').writeFileSync(POLL_SCHEDULE_FILE, JSON.stringify({
+      scheduledAt: sendDate.toISOString(),
+      scheduledFor,
+      poll: { text, question, options, duration: duration || 'ONE_WEEK' }
+    }, null, 2));
+
+    console.log(`📅 LinkedIn poll scheduled for ${scheduledFor} (cron: ${cronExpr} UTC)`);
+    res.json({ success: true, scheduledFor, message: 'Poll scheduled successfully.' });
+  } catch (err) {
+    console.error('[LinkedIn] Schedule poll error:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/linkedin/cancel-poll-schedule - Cancel a scheduled poll
+app.post('/api/linkedin/cancel-poll-schedule', (req, res) => {
+  try {
+    if (_pollScheduledTask) { _pollScheduledTask.stop(); _pollScheduledTask = null; }
+    if (require('fs').existsSync(POLL_SCHEDULE_FILE)) require('fs').unlinkSync(POLL_SCHEDULE_FILE);
+    res.json({ success: true, message: 'Poll schedule cancelled.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/linkedin/poll-schedule-state - Get current poll schedule state
+app.get('/api/linkedin/poll-schedule-state', (req, res) => {
+  try {
+    if (require('fs').existsSync(POLL_SCHEDULE_FILE)) {
+      const state = JSON.parse(require('fs').readFileSync(POLL_SCHEDULE_FILE, 'utf8'));
+      return res.json({ success: true, state });
+    }
+    res.json({ success: true, state: null });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // POST /api/linkedin/post-image - Post with image to LinkedIn
 app.post('/api/linkedin/post-image', async (req, res) => {
   const { text, imageBase64, mimeType, imageTitle } = req.body;
@@ -1044,6 +1124,40 @@ app.listen(PORT, () => {
       console.log('🔄 Job Alerts single job schedule restore check complete');
     } catch (e) {
       console.warn('⚠️  Could not restore Job Alerts single job schedule:', e.message);
+    }
+    try {
+      if (require('fs').existsSync(POLL_SCHEDULE_FILE)) {
+        const saved = JSON.parse(require('fs').readFileSync(POLL_SCHEDULE_FILE, 'utf8'));
+        if (saved && saved.scheduledAt) {
+          const sendDate = new Date(saved.scheduledAt);
+          if (sendDate <= new Date()) {
+            console.warn('⚠️  Poll scheduled time has passed, clearing schedule');
+            require('fs').unlinkSync(POLL_SCHEDULE_FILE);
+          } else {
+            const min = sendDate.getUTCMinutes();
+            const hr = sendDate.getUTCHours();
+            const dom = sendDate.getUTCDate();
+            const mon = sendDate.getUTCMonth() + 1;
+            const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
+            if (_pollScheduledTask) { _pollScheduledTask.stop(); _pollScheduledTask = null; }
+            _pollScheduledTask = cron.schedule(cronExpr, async () => {
+              console.log('📅 Executing restored LinkedIn poll post...');
+              try {
+                const { text, question, options, duration } = saved.poll;
+                await linkedinService.postPoll(text, question, options, duration || 'ONE_WEEK');
+                console.log('✅ Restored poll posted to LinkedIn.');
+              } catch (e) {
+                console.error('❌ Restored poll post failed:', e.message);
+              }
+              if (require('fs').existsSync(POLL_SCHEDULE_FILE)) require('fs').unlinkSync(POLL_SCHEDULE_FILE);
+              if (_pollScheduledTask) { _pollScheduledTask.stop(); _pollScheduledTask = null; }
+            }, { timezone: 'UTC' });
+            console.log(`🔄 LinkedIn poll schedule restored for ${saved.scheduledFor}`);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('⚠️  Could not restore LinkedIn poll schedule:', e.message);
     }
   })();
 });

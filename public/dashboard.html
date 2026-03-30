@@ -2684,8 +2684,20 @@
                                 </div>
                                 <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                                     <button onclick="cmPostPoll()" style="padding:10px 24px; background:#0077b5; border:none; border-radius:8px; color:white; cursor:pointer; font-size:14px; font-weight:700;">Post Poll to LinkedIn</button>
+                                    <button onclick="cmShowPollScheduleRow()" id="btnSchedulePoll" style="padding:10px 18px; background:rgba(52,152,219,0.15); border:1px solid rgba(52,152,219,0.4); border-radius:8px; color:#5dade2; cursor:pointer; font-size:14px; font-weight:600;">Schedule Poll</button>
                                     <span id="cmPollStatus" style="font-size:13px; color:rgba(255,255,255,0.6);"></span>
                                 </div>
+                                <!-- Schedule row -->
+                                <div id="cmPollScheduleRow" style="display:none; margin-top:14px; padding:14px 16px; background:rgba(52,152,219,0.08); border:1px solid rgba(52,152,219,0.2); border-radius:8px;">
+                                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                                        <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; white-space:nowrap;">Schedule for:</label>
+                                        <input type="datetime-local" id="cmPollScheduleDate" style="padding:8px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:7px; color:white; font-size:13px; flex:1; min-width:200px;">
+                                        <button onclick="cmConfirmPollSchedule()" id="btnConfirmPollSchedule" style="padding:8px 18px; background:#3498db; border:none; border-radius:7px; color:white; cursor:pointer; font-size:13px; font-weight:600; white-space:nowrap;">Confirm Schedule</button>
+                                        <button onclick="cmHidePollScheduleRow()" style="padding:8px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:7px; color:rgba(255,255,255,0.6); cursor:pointer; font-size:13px;">Cancel</button>
+                                    </div>
+                                </div>
+                                <!-- Scheduled status box -->
+                                <div id="cmPollScheduledBox" style="display:none; margin-top:12px;"></div>
                             </div>
                         </div>
                     </div>
@@ -2693,6 +2705,7 @@
                 `;
                 // Load any existing state
                 cmLoadState();
+                cmLoadPollScheduleState();
 
             }
         }
@@ -3910,6 +3923,115 @@
             const list = document.getElementById('cmPollIdeasList');
             if (list) list.innerHTML = '';
             if (panel) panel.style.display = 'none';
+        }
+
+        // ---- POLL SCHEDULING ----
+
+        function cmShowPollScheduleRow() {
+            const row = document.getElementById('cmPollScheduleRow');
+            if (!row) return;
+            row.style.display = 'block';
+            // Default to tomorrow at 9am local
+            const now = new Date();
+            const tomorrow = new Date(now);
+            tomorrow.setDate(now.getDate() + 1);
+            const pad = n => String(n).padStart(2, '0');
+            const defaultVal = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth()+1)}-${pad(tomorrow.getDate())}T09:00`;
+            const dateEl = document.getElementById('cmPollScheduleDate');
+            if (dateEl) dateEl.value = defaultVal;
+        }
+
+        function cmHidePollScheduleRow() {
+            const row = document.getElementById('cmPollScheduleRow');
+            if (row) row.style.display = 'none';
+        }
+
+        async function cmConfirmPollSchedule() {
+            const dateEl = document.getElementById('cmPollScheduleDate');
+            if (!dateEl || !dateEl.value) {
+                const statusEl = document.getElementById('cmPollStatus');
+                if (statusEl) { statusEl.style.color = '#e74c3c'; statusEl.textContent = 'Please select a date and time.'; }
+                return;
+            }
+
+            // Collect poll data
+            const text = (document.getElementById('cmPollText') || {}).value || '';
+            const question = (document.getElementById('cmPollQuestion') || {}).value || '';
+            if (!text || !question) {
+                const statusEl = document.getElementById('cmPollStatus');
+                if (statusEl) { statusEl.style.color = '#e74c3c'; statusEl.textContent = 'Post copy and question are required before scheduling.'; }
+                return;
+            }
+            const optionInputs = document.querySelectorAll('#cmPollOptions .poll-option-row input');
+            const options = Array.from(optionInputs).map(i => i.value.trim()).filter(v => v.length > 0);
+            if (options.length < 2) {
+                const statusEl = document.getElementById('cmPollStatus');
+                if (statusEl) { statusEl.style.color = '#e74c3c'; statusEl.textContent = 'At least 2 poll options are required.'; }
+                return;
+            }
+            const durationBtn = document.querySelector('.poll-duration-btn.active-duration');
+            const duration = durationBtn ? durationBtn.getAttribute('data-duration') || 'ONE_WEEK' : 'ONE_WEEK';
+
+            const scheduledAt = new Date(dateEl.value).toISOString();
+            const scheduledFor = new Date(dateEl.value).toLocaleString('en-AU', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+                hour: '2-digit', minute: '2-digit', hour12: true,
+                timeZone: 'Australia/Melbourne'
+            }) + ' (Melbourne time)';
+
+            const btn = document.getElementById('btnConfirmPollSchedule');
+            if (btn) { btn.disabled = true; btn.textContent = 'Scheduling...'; }
+
+            try {
+                const resp = await fetch('/api/linkedin/schedule-poll', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text, question, options, duration, scheduledAt })
+                });
+                const result = await resp.json();
+                if (result.success) {
+                    const statusEl = document.getElementById('cmPollStatus');
+                    if (statusEl) { statusEl.style.color = '#2ecc71'; statusEl.textContent = ''; }
+                    cmHidePollScheduleRow();
+                    cmLoadPollScheduleState();
+                } else {
+                    const statusEl = document.getElementById('cmPollStatus');
+                    if (statusEl) { statusEl.style.color = '#e74c3c'; statusEl.textContent = 'Scheduling failed: ' + result.message; }
+                }
+            } catch (err) {
+                const statusEl = document.getElementById('cmPollStatus');
+                if (statusEl) { statusEl.style.color = '#e74c3c'; statusEl.textContent = 'Error: ' + err.message; }
+            }
+
+            if (btn) { btn.disabled = false; btn.textContent = 'Confirm Schedule'; }
+        }
+
+        async function cmCancelPollSchedule() {
+            try {
+                const resp = await fetch('/api/linkedin/cancel-poll-schedule', { method: 'POST' });
+                const result = await resp.json();
+                if (result.success) {
+                    cmLoadPollScheduleState();
+                    const statusEl = document.getElementById('cmPollStatus');
+                    if (statusEl) { statusEl.style.color = 'rgba(255,255,255,0.6)'; statusEl.textContent = 'Schedule cancelled.'; }
+                }
+            } catch (err) {}
+        }
+
+        async function cmLoadPollScheduleState() {
+            try {
+                const resp = await fetch('/api/linkedin/poll-schedule-state');
+                const data = await resp.json();
+                const box = document.getElementById('cmPollScheduledBox');
+                if (!box) return;
+                if (data.state && data.state.scheduledFor) {
+                    box.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:12px; padding:12px 16px; background:rgba(52,152,219,0.12); border:1px solid rgba(52,152,219,0.3); border-radius:8px;';
+                    box.innerHTML = `<span style="color:rgba(255,255,255,0.9); font-size:14px;">&#128197; <strong>Poll Scheduled:</strong> ${data.state.scheduledFor}</span><button onclick="cmCancelPollSchedule()" style="background:#e74c3c; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">Cancel Schedule</button>`;
+                } else {
+                    box.style.display = 'none';
+                    box.innerHTML = '';
+                }
+            } catch (e) {}
         }
 
         function cmAddPollOption() {
