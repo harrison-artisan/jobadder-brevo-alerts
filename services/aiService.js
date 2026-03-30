@@ -59,6 +59,43 @@ class AIService {
   }
 
   /**
+   * Generate 10 LinkedIn poll topic ideas for Artisan's audience.
+   */
+  async generatePollIdeas() {
+    try {
+      const client = this.getClient();
+      if (!client) throw new Error('OpenAI API key not configured.');
+
+      console.log('    🤖 Generating 10 poll ideas with OpenAI (gpt-4o-mini)...');
+
+      const response = await client.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a social media strategist for Artisan, a specialist Australian recruitment agency with 27 years of experience placing creative, digital, and marketing professionals. Generate 10 distinct LinkedIn poll topic ideas that will spark genuine conversation among creative, digital, and marketing professionals in Australia. Each idea should be a short, specific topic or angle — not a full question. Topics should be timely, opinionated, and relevant to the Australian market. No emojis. Output as a numbered list only.`
+          },
+          {
+            role: 'user',
+            content: 'Generate 10 LinkedIn poll topic ideas for Artisan.'
+          }
+        ],
+        temperature: 0.8,
+        max_tokens: 400
+      });
+
+      const text = response.choices[0].message.content.trim();
+      const ideas = text.split('\n').map(line => line.replace(/^\d+\.\s*/, '').trim()).filter(line => line.length > 0);
+
+      console.log(`    ✅ AI generated ${ideas.length} poll ideas.`);
+      return ideas;
+    } catch (error) {
+      console.error('❌ Error generating poll ideas:', error.message);
+      throw error;
+    }
+  }
+
+  /**
    * Generate an anonymized, gender-neutral professional summary for a candidate using Manus API
    */
   async generateCandidateSummary(candidate) {

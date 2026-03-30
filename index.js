@@ -836,6 +836,17 @@ app.post('/api/linkedin/generate-poll', async (req, res) => {
   }
 });
 
+// POST /api/linkedin/generate-poll-ideas - AI-generate 10 poll topic ideas
+app.post('/api/linkedin/generate-poll-ideas', async (req, res) => {
+  try {
+    const ideas = await aiService.generatePollIdeas();
+    res.json({ success: true, ideas });
+  } catch (err) {
+    console.error('[AI] Generate poll ideas error:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // POST /api/linkedin/generate-job-post - AI-generate punchy LinkedIn job post copy
 app.post('/api/linkedin/generate-job-post', async (req, res) => {
   try {
