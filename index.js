@@ -703,6 +703,7 @@ app.post('/api/content/reset', async (req, res) => {
 // ============================================================
 const linkedinService = require('./services/linkedinService');
 const aiService = require('./services/aiService');
+const wordpressService = require('./services/wordpressService');
 const crypto = require('crypto');
 
 // In-memory CSRF state store (keyed by state string, value = timestamp)

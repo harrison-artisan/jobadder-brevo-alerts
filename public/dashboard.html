@@ -2485,7 +2485,7 @@
                             <!-- Post Type Selector -->
                             <div style="padding:20px 28px 0;">
                                 <p style="color:rgba(255,255,255,0.6); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:1px; margin:0 0 12px;">Post Type</p>
-                                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:24px;">
+                                <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; margin-bottom:24px;">
                                     <button onclick="cmSetPostType('standard')" id="cmPostTypeStandard"
                                         style="padding:14px 10px; border-radius:10px; border:2px solid #0077b5; background:rgba(0,119,181,0.15); color:white; cursor:pointer; font-size:13px; font-weight:600; text-align:center; transition:all 0.2s;">
                                         <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:5px;">POST</div>
@@ -2503,6 +2503,12 @@
                                         <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:5px;">POLL</div>
                                         <div>Poll</div>
                                         <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:3px;">Ask your audience</div>
+                                    </button>
+                                    <button onclick="cmSetPostType('articlepost')" id="cmPostTypeArticlepost"
+                                        style="padding:14px 10px; border-radius:10px; border:2px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:white; cursor:pointer; font-size:13px; font-weight:600; text-align:center; transition:all 0.2s;">
+                                        <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:5px;">ARTICLE</div>
+                                        <div>From Article</div>
+                                        <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:3px;">Post from live article</div>
                                     </button>
                                 </div>
                             </div>
@@ -2700,28 +2706,18 @@
                                 <div id="cmPollScheduledBox" style="display:none; margin-top:12px;"></div>
                             </div>
                         </div>
-                    </div>
+                        </div>
 
-                        <!-- ===== POST FROM EXISTING ARTICLE CARD ===== -->
-                        <div class="actions-card" id="cmArticlePostCard" style="padding:0; overflow:hidden; margin-top:24px;">
-                            <!-- Header -->
-                            <div style="padding:24px 28px 20px; border-bottom:1px solid rgba(255,255,255,0.08);">
-                                <div style="display:flex; align-items:center; gap:12px; margin-bottom:6px;">
-                                    <div style="background:#0077b5; border-radius:6px; padding:4px 12px; font-size:12px; font-weight:700; color:white; letter-spacing:0.5px;">in</div>
-                                    <h2 style="margin:0; font-size:18px; font-weight:700; color:white;">Post from Existing Article</h2>
-                                </div>
-                                <p style="color:rgba(255,255,255,0.5); font-size:13px; margin:0;">Pick a live article from the website, generate a LinkedIn post with AI, edit it, then post immediately or schedule it.</p>
-                            </div>
-
-                            <div style="padding:20px 28px 28px;">
-                                <!-- Step 1: Article Picker -->
+                            <!-- ===== ARTICLE POST PANEL ===== -->
+                            <div id="cmPanelArticlepost" style="display:none; padding:0 28px 28px;">
+                                <!-- Article Picker -->
                                 <div style="margin-bottom:20px;">
                                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                                         <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600;">Select Article</label>
-                                        <button onclick="cmLoadWpArticles()" id="cmArticleRefreshBtn" style="padding:4px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:5px; color:rgba(255,255,255,0.7); cursor:pointer; font-size:12px;">Refresh</button>
+                                        <button onclick="cmLoadWpArticles()" style="padding:4px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:5px; color:rgba(255,255,255,0.7); cursor:pointer; font-size:12px;">Refresh</button>
                                     </div>
                                     <select id="cmArticlePicker" onchange="cmOnArticlePickerChange()" style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; box-sizing:border-box; cursor:pointer;">
-                                        <option value="">Loading articles...</option>
+                                        <option value="">-- Select an article --</option>
                                     </select>
                                     <div id="cmArticlePickerError" style="display:none; margin-top:6px; font-size:12px; color:#e74c3c;"></div>
                                 </div>
@@ -2774,7 +2770,6 @@
                                     <div id="cmArticlePostScheduledBox" style="display:none; margin-top:12px;"></div>
                                 </div>
                             </div>
-                        </div>
 
                     </div>
                 </div>
@@ -2783,7 +2778,6 @@
                 cmLoadState();
                 cmLoadPollScheduleState();
                 cmLoadArticlePostScheduleState();
-                cmLoadWpArticles();
 
             }
         }
@@ -3770,7 +3764,7 @@
 
         function cmSetPostType(type) {
             cmCurrentPostType = type;
-            ['Standard','Job','Poll'].forEach(p => {
+            ['Standard','Job','Poll','Articlepost'].forEach(p => {
                 const panel = document.getElementById('cmPanel' + p);
                 const btn = document.getElementById('cmPostType' + p);
                 if (p.toLowerCase() === type) {
@@ -3784,6 +3778,10 @@
             // Load jobs into dropdown the first time the Job panel is opened
             if (type === 'job' && !cmJobsCache) {
                 cmLoadJobDropdown();
+            }
+            // Load articles into dropdown the first time the Article panel is opened
+            if (type === 'articlepost') {
+                cmLoadWpArticles();
             }
         }
 
