@@ -109,9 +109,10 @@ app.get('/api/jobs/for-post', async (req, res) => {
     // Build a richer object for each job
     const jobList = jobs.map(job => {
       const d = job.jobDetails || {};
-      // Job URL: prefer the ad's apply URL, fall back to a constructed URL
-      const jobUrl = job.applyUrl || job.url ||
-        (job.adId ? `https://app.jobadder.com/jobs/${job.adId}` : null);
+      // Job URL: prefer links.ui.self (the real clientapps URL from the JobAdder API),
+      // then fall back to a correctly constructed clientapps URL
+      const jobUrl = job.links?.ui?.self ||
+        (job.adId ? `https://clientapps.jobadder.com/67514/artisan/${job.adId}` : null);
       // Location
       const location = d.location
         ? (d.location.name || d.location.city || d.location.state || '')

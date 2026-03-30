@@ -361,8 +361,8 @@ class LinkedInService {
 
     // Step 1: Determine the image URL to upload as thumbnail
     const BROWSER_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
-    // Fallback: Artisan logo — ensures a thumbnail is always present
-    const FALLBACK_IMAGE_URL = 'https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png';
+    // Fallback: Artisan logo (pre-padded to 1200x628 so it isn't zoomed in on LinkedIn)
+    const FALLBACK_IMAGE_URL = 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663319947996/QMRfbbWOrNtjaxVy.jpg';
     let resolvedImageUrl = imageUrl || null;
 
     // If no pre-fetched image, try to scrape OG image from the page
