@@ -25,6 +25,17 @@ function readState() {
     try { return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')); } catch (e) { return {}; }
 }
 
+async function generateIdeas() {
+    console.log("\n💡 Generating article ideas...");
+    try {
+        const ideas = await aiService.generateArticleIdeas();
+        return ideas;
+    } catch (error) {
+        console.error("❌ Error generating article ideas:", error.message);
+        throw error;
+    }
+}
+
 function writeState(data) {
     fs.writeFileSync(STATE_FILE, JSON.stringify(data, null, 2));
 }
@@ -68,7 +79,7 @@ async function generateArticle(req, res) {
         });
     } catch (error) {
         console.error('Error generating article:', error.message);
-        res.status(500).json({ success: false, message: error.message });
+        throw error;
     }
 }
 
@@ -133,7 +144,7 @@ async function generateImage(req, res) {
         });
     } catch (error) {
         console.error('Error with image step:', error.message);
-        res.status(500).json({ success: false, message: error.message });
+        throw error;
     }
 }
 
@@ -193,7 +204,7 @@ async function publishToWordPress(req, res) {
         });
     } catch (error) {
         console.error('❌ Error publishing to WordPress:', error.message);
-        res.status(500).json({ success: false, message: error.message });
+        throw error;
     }
 }
 
@@ -207,7 +218,7 @@ async function getWordPressCategories(req, res) {
         res.json({ success: true, categories });
     } catch (error) {
         console.error('❌ Error fetching categories:', error.message);
-        res.status(500).json({ success: false, message: error.message });
+        throw error;
     }
 }
 
@@ -233,7 +244,7 @@ async function generateSocialPosts(req, res) {
         res.json({ success: true, posts });
     } catch (error) {
         console.error('❌ Error generating social posts:', error.message);
-        res.status(500).json({ success: false, message: error.message });
+        throw error;
     }
 }
 
@@ -249,7 +260,7 @@ async function getState(req, res) {
         // Return full state including imageDataUrl for preview restoration
         res.json({ success: true, state });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        throw error;
     }
 }
 
@@ -261,7 +272,7 @@ async function resetState(req, res) {
         if (fs.existsSync(STATE_FILE)) fs.unlinkSync(STATE_FILE);
         res.json({ success: true, message: 'Content state reset.' });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        throw error;
     }
 }
 
@@ -272,5 +283,6 @@ module.exports = {
     getWordPressCategories,
     generateSocialPosts,
     getState,
-    resetState
+    resetState,
+    generateIdeas
 };

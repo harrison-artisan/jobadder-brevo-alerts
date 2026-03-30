@@ -628,6 +628,15 @@ app.post('/api/content/social-posts', async (req, res) => {
 });
 
 // POST /api/content/reset                 - Reset content state
+app.post('/api/content/generate-ideas', async (req, res) => {
+  try {
+    const ideas = await contentMarketingController.generateIdeas();
+    res.json({ success: true, ideas });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 app.post('/api/content/reset', async (req, res) => {
   await contentMarketingController.resetState(req, res);
 });

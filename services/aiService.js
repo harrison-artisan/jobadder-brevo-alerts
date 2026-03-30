@@ -18,6 +18,47 @@ class AIService {
   }
 
   /**
+   * Generate article ideas using OpenAI
+   */
+  async generateArticleIdeas() {
+    try {
+      const client = this.getClient();
+      if (!client) {
+        throw new Error("OpenAI API key not configured.");
+      }
+
+      console.log("    🤖 Generating 10 article ideas with OpenAI (gpt-4o-mini)...");
+
+      const response = await client.chat.completions.create({
+        model: 'gemini-2.5-flash',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a creative content strategist for a recruitment agency specializing in creative, digital, and marketing roles. Generate 10 distinct and engaging article ideas for a blog, focusing on current trends, career advice, industry insights, or success stories relevant to these fields. Each idea should be a concise title or a very short phrase. Output them as a numbered list.'
+          },
+          {
+            role: 'user',
+            content: 'Generate 10 article ideas for a recruitment agency blog.'
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 500
+      });
+
+      const ideasText = response.choices[0].message.content.trim();
+      // Parse the numbered list into an array of strings
+      const ideas = ideasText.split('\n').map(line => line.replace(/^\d+\.\s*/, '').trim()).filter(line => line.length > 0);
+
+      console.log(`    ✅ AI generated ${ideas.length} article ideas.`);
+      return ideas;
+
+    } catch (error) {
+      console.error("❌ Error generating article ideas:", error.message);
+      throw error;
+    }
+  }
+
+  /**
    * Generate an anonymized, gender-neutral professional summary for a candidate using Manus API
    */
   async generateCandidateSummary(candidate) {
@@ -114,7 +155,7 @@ OUTPUT ONLY THE SUMMARY - NO EXPLANATIONS OR EXTRA TEXT.`;
       console.log(`    🤖 Generating with OpenAI (gpt-4o-mini)...`);
       
       const response = await client.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: 'gemini-2.5-flash',
         messages: [
           {
             role: 'system',
@@ -748,7 +789,7 @@ Generate exactly this JSON (no markdown fences):
 }`;
 
     const response = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gemini-2.5-flash',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.75,
       max_tokens: 800
@@ -803,7 +844,7 @@ Generate a LinkedIn poll for Artisan. Return ONLY valid JSON (no markdown fences
 You may include 3 or 4 options if the topic genuinely needs them. Never use emojis.`;
 
     const response = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gemini-2.5-flash',
       messages: [
         { role: 'system', content: systemMsg },
         { role: 'user', content: userMsg }
@@ -860,7 +901,7 @@ ${job.jobUrl ? `\nJob URL: ${job.jobUrl}` : ''}
 Return ONLY the post copy as plain text. No JSON, no markdown, no extra commentary.`;
 
     const response = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gemini-2.5-flash',
       messages: [
         { role: 'system', content: systemMsg },
         { role: 'user',   content: userMsg   }
