@@ -151,8 +151,8 @@ app.post('/trigger/daily-roundup', async (req, res) => {
         message: 'Please complete JobAdder authorization at /auth/jobadder' 
       });
     }
-    const { recipientType, recipientId } = req.body;
-    const result = await jobAlertsController.sendDailyRoundup({ recipientType, recipientId });
+    const { recipientType, recipientId, force } = req.body;
+    const result = await jobAlertsController.sendDailyRoundup({ recipientType, recipientId, force: !!force });
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -191,6 +191,63 @@ app.post('/api/daily-alerts/toggle', (req, res) => {
     res.json(newState);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Job Alerts Scheduling API
+app.post('/api/job-alerts/schedule-roundup', async (req, res) => {
+  try {
+    const { recipientType, recipientId, scheduledAt, force } = req.body;
+    const result = await jobAlertsController.scheduleRoundup({ recipientType, recipientId, scheduledAt, force: !!force });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.post('/api/job-alerts/cancel-roundup-schedule', (req, res) => {
+  try {
+    const result = jobAlertsController.cancelRoundupSchedule();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.get('/api/job-alerts/roundup-schedule-state', (req, res) => {
+  try {
+    const state = jobAlertsController.getRoundupScheduleState();
+    res.json({ success: true, state });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.post('/api/job-alerts/schedule-single', async (req, res) => {
+  try {
+    const { adId, recipientType, recipientId, scheduledAt } = req.body;
+    const result = await jobAlertsController.scheduleSingleJobAlert(adId, { recipientType, recipientId, scheduledAt });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.post('/api/job-alerts/cancel-single-schedule', (req, res) => {
+  try {
+    const result = jobAlertsController.cancelSingleJobSchedule();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.get('/api/job-alerts/single-schedule-state', (req, res) => {
+  try {
+    const state = jobAlertsController.getSingleJobScheduleState();
+    res.json({ success: true, state });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
@@ -964,6 +1021,18 @@ app.listen(PORT, () => {
       console.log('🔄 Consultant schedule restore check complete');
     } catch (e) {
       console.warn('⚠️  Could not restore Consultant schedule:', e.message);
+    }
+    try {
+      jobAlertsController.restoreRoundupSchedule();
+      console.log('🔄 Job Alerts roundup schedule restore check complete');
+    } catch (e) {
+      console.warn('⚠️  Could not restore Job Alerts roundup schedule:', e.message);
+    }
+    try {
+      jobAlertsController.restoreSingleJobSchedule();
+      console.log('🔄 Job Alerts single job schedule restore check complete');
+    } catch (e) {
+      console.warn('⚠️  Could not restore Job Alerts single job schedule:', e.message);
     }
   })();
 });

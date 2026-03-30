@@ -1319,11 +1319,29 @@
                 </div>
             </div>
                 
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+                        <input type="checkbox" id="dailyRoundupForce" style="width:16px; height:16px; cursor:pointer;">
+                        <label for="dailyRoundupForce" style="color:rgba(255,255,255,0.8); font-size:13px; cursor:pointer;">Force send (ignore new-jobs check)</label>
+                    </div>
                     <div class="button-group">
                         <button class="btn btn-primary" onclick="triggerDailyRoundup()" id="btnDailyRoundup">
                             Send Daily Roundup
                         </button>
+                        <button class="btn btn-info" onclick="scheduleRoundup()" id="btnScheduleRoundup">
+                            Schedule Roundup
+                        </button>
                     </div>
+                    <!-- Schedule date/time picker for Daily Roundup -->
+                    <div id="roundupScheduleRow" style="display:none; margin-top:14px; padding:14px 16px; background:rgba(52,152,219,0.1); border:1px solid rgba(52,152,219,0.3); border-radius:8px;">
+                        <label style="display:block; color:rgba(255,255,255,0.9); font-weight:600; margin-bottom:8px; font-size:14px;">Schedule Date &amp; Time (Melbourne / AEDT)</label>
+                        <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                            <input type="datetime-local" id="roundupScheduleDate" style="padding:10px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px; min-width:240px; color-scheme:dark;">
+                            <button class="btn btn-info" id="btnConfirmRoundupSchedule" onclick="confirmRoundupSchedule()" style="min-width:140px;">Confirm Schedule</button>
+                            <button class="btn" onclick="cancelRoundupScheduleRow()" style="background:rgba(255,255,255,0.1); min-width:80px;">Cancel</button>
+                        </div>
+                        <p style="color:rgba(255,255,255,0.45); font-size:12px; margin:8px 0 0;">Times are in Melbourne local time (AEDT/AEST).</p>
+                    </div>
+                    <div id="roundupScheduledBox" style="display:none; margin-top:12px;"></div>
                 </div>
                 
                 <!-- On-Demand Single Job Alert Container -->
@@ -1382,7 +1400,21 @@
                         <button class="btn btn-primary" onclick="sendSingleJobAlert()" id="btnSingleJob">
                             Send Job Alert
                         </button>
+                        <button class="btn btn-info" onclick="scheduleSingleJob()" id="btnScheduleSingleJob">
+                            Schedule Job Alert
+                        </button>
                     </div>
+                    <!-- Schedule date/time picker for Single Job Alert -->
+                    <div id="singleJobScheduleRow" style="display:none; margin-top:14px; padding:14px 16px; background:rgba(52,152,219,0.1); border:1px solid rgba(52,152,219,0.3); border-radius:8px;">
+                        <label style="display:block; color:rgba(255,255,255,0.9); font-weight:600; margin-bottom:8px; font-size:14px;">Schedule Date &amp; Time (Melbourne / AEDT)</label>
+                        <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                            <input type="datetime-local" id="singleJobScheduleDate" style="padding:10px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px; min-width:240px; color-scheme:dark;">
+                            <button class="btn btn-info" id="btnConfirmSingleJobSchedule" onclick="confirmSingleJobSchedule()" style="min-width:140px;">Confirm Schedule</button>
+                            <button class="btn" onclick="cancelSingleJobScheduleRow()" style="background:rgba(255,255,255,0.1); min-width:80px;">Cancel</button>
+                        </div>
+                        <p style="color:rgba(255,255,255,0.45); font-size:12px; margin:8px 0 0;">Times are in Melbourne local time (AEDT/AEST).</p>
+                    </div>
+                    <div id="singleJobScheduledBox" style="display:none; margin-top:12px;"></div>
                     
                     <div class="result-box" id="resultBox"></div>
             </div>
@@ -1954,6 +1986,8 @@
             loadAListState();
             checkBrevoStatus();
             loadDailyAlertsStatus();
+            loadRoundupScheduleState();
+            loadSingleJobScheduleState();
 
             // A-List button bindings — must be inside DOMContentLoaded so elements exist
             const btnGenerate = document.getElementById('btnGenerate');
@@ -4355,6 +4389,222 @@ Choose Recent Poll
             // Keep message visible until next action (don't auto-hide)
         }
         
+        // ========== JOB ALERTS SCHEDULING FUNCTIONS ==========
+
+        async function scheduleRoundup() {
+            if (!confirmedRecipients.daily) {
+                showResult('Please confirm your recipient selection before scheduling', 'error');
+                return;
+            }
+            const row = document.getElementById('roundupScheduleRow');
+            if (row) {
+                row.style.display = 'block';
+                // Default to next weekday at 2pm Melbourne time
+                const now = new Date();
+                const tomorrow = new Date(now);
+                tomorrow.setDate(now.getDate() + 1);
+                tomorrow.setHours(14, 0, 0, 0);
+                const pad = n => String(n).padStart(2, '0');
+                const defaultVal = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth()+1)}-${pad(tomorrow.getDate())}T14:00`;
+                document.getElementById('roundupScheduleDate').value = defaultVal;
+            }
+        }
+
+        function cancelRoundupScheduleRow() {
+            const row = document.getElementById('roundupScheduleRow');
+            if (row) row.style.display = 'none';
+        }
+
+        async function confirmRoundupSchedule() {
+            if (!confirmedRecipients.daily) {
+                showResult('Please confirm your recipient selection before scheduling', 'error');
+                return;
+            }
+            const schedEl = document.getElementById('roundupScheduleDate');
+            if (!schedEl || !schedEl.value) {
+                showResult('Please select a date and time to schedule the roundup.', 'error');
+                return;
+            }
+            const melbDate = new Date(schedEl.value);
+            const scheduledAt = melbDate.toISOString();
+            const force = document.getElementById('dailyRoundupForce') ? document.getElementById('dailyRoundupForce').checked : false;
+            const recipientType = confirmedRecipients.daily.type;
+            const recipientId = confirmedRecipients.daily.id;
+            const recipientName = confirmedRecipients.daily.name;
+            const recipientCount = confirmedRecipients.daily.count;
+            showScheduleConfirmation('Daily Roundup', recipientName, recipientCount, scheduledAt, async (confirmed) => {
+                if (!confirmed) return;
+                await executeRoundupSchedule(recipientType, recipientId, scheduledAt, force);
+            });
+        }
+
+        async function executeRoundupSchedule(recipientType, recipientId, scheduledAt, force) {
+            const btn = document.getElementById('btnConfirmRoundupSchedule');
+            if (btn) { btn.disabled = true; btn.innerHTML = 'Scheduling...'; }
+            try {
+                const response = await fetch('/api/job-alerts/schedule-roundup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ recipientType, recipientId, scheduledAt, force })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showResult(`Daily Roundup scheduled for ${result.scheduledFor}`, 'success');
+                    document.getElementById('roundupScheduleRow').style.display = 'none';
+                    await loadRoundupScheduleState();
+                } else {
+                    showResult(`Scheduling failed: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showResult(`Error: ${error.message}`, 'error');
+            }
+            if (btn) { btn.disabled = false; btn.innerHTML = 'Confirm Schedule'; }
+        }
+
+        async function cancelRoundupSchedule() {
+            try {
+                const response = await fetch('/api/job-alerts/cancel-roundup-schedule', { method: 'POST' });
+                const result = await response.json();
+                if (result.success) {
+                    showResult('Roundup schedule cancelled.', 'success');
+                    await loadRoundupScheduleState();
+                } else {
+                    showResult(`Could not cancel: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showResult(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadRoundupScheduleState() {
+            try {
+                const response = await fetch('/api/job-alerts/roundup-schedule-state');
+                const data = await response.json();
+                const box = document.getElementById('roundupScheduledBox');
+                if (!box) return;
+                if (data.state && data.state.scheduledFor) {
+                    box.style.display = 'flex';
+                    box.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:12px; padding:12px 16px; background:rgba(52,152,219,0.12); border:1px solid rgba(52,152,219,0.3); border-radius:8px;';
+                    box.innerHTML = `<span style="color:rgba(255,255,255,0.9); font-size:14px;">&#128197; <strong>Roundup Scheduled:</strong> ${data.state.scheduledFor}</span><button onclick="cancelRoundupSchedule()" style="background:#e74c3c; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">Cancel Schedule</button>`;
+                } else {
+                    box.style.display = 'none';
+                    box.innerHTML = '';
+                }
+            } catch (e) {}
+        }
+
+        // Single Job Alert scheduling
+        async function scheduleSingleJob() {
+            const selector = document.getElementById('jobSelector');
+            const adId = selector ? selector.value : '';
+            if (!adId) {
+                showResult('Please select a job first', 'error');
+                return;
+            }
+            if (!confirmedRecipients.singleJob) {
+                showResult('Please confirm your recipient selection before scheduling', 'error');
+                return;
+            }
+            const row = document.getElementById('singleJobScheduleRow');
+            if (row) {
+                row.style.display = 'block';
+                const now = new Date();
+                const tomorrow = new Date(now);
+                tomorrow.setDate(now.getDate() + 1);
+                tomorrow.setHours(9, 0, 0, 0);
+                const pad = n => String(n).padStart(2, '0');
+                const defaultVal = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth()+1)}-${pad(tomorrow.getDate())}T09:00`;
+                document.getElementById('singleJobScheduleDate').value = defaultVal;
+            }
+        }
+
+        function cancelSingleJobScheduleRow() {
+            const row = document.getElementById('singleJobScheduleRow');
+            if (row) row.style.display = 'none';
+        }
+
+        async function confirmSingleJobSchedule() {
+            const selector = document.getElementById('jobSelector');
+            const adId = selector ? selector.value : '';
+            if (!adId) {
+                showResult('Please select a job first', 'error');
+                return;
+            }
+            if (!confirmedRecipients.singleJob) {
+                showResult('Please confirm your recipient selection before scheduling', 'error');
+                return;
+            }
+            const schedEl = document.getElementById('singleJobScheduleDate');
+            if (!schedEl || !schedEl.value) {
+                showResult('Please select a date and time to schedule the job alert.', 'error');
+                return;
+            }
+            const melbDate = new Date(schedEl.value);
+            const scheduledAt = melbDate.toISOString();
+            const recipientType = confirmedRecipients.singleJob.type;
+            const recipientId = confirmedRecipients.singleJob.id;
+            const recipientName = confirmedRecipients.singleJob.name;
+            const recipientCount = confirmedRecipients.singleJob.count;
+            showScheduleConfirmation('Single Job Alert', recipientName, recipientCount, scheduledAt, async (confirmed) => {
+                if (!confirmed) return;
+                await executeSingleJobSchedule(adId, recipientType, recipientId, scheduledAt);
+            });
+        }
+
+        async function executeSingleJobSchedule(adId, recipientType, recipientId, scheduledAt) {
+            const btn = document.getElementById('btnConfirmSingleJobSchedule');
+            if (btn) { btn.disabled = true; btn.innerHTML = 'Scheduling...'; }
+            try {
+                const response = await fetch('/api/job-alerts/schedule-single', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ adId, recipientType, recipientId, scheduledAt })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showResult(`Job Alert scheduled for ${result.scheduledFor}`, 'success');
+                    document.getElementById('singleJobScheduleRow').style.display = 'none';
+                    await loadSingleJobScheduleState();
+                } else {
+                    showResult(`Scheduling failed: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showResult(`Error: ${error.message}`, 'error');
+            }
+            if (btn) { btn.disabled = false; btn.innerHTML = 'Confirm Schedule'; }
+        }
+
+        async function cancelSingleJobSchedule() {
+            try {
+                const response = await fetch('/api/job-alerts/cancel-single-schedule', { method: 'POST' });
+                const result = await response.json();
+                if (result.success) {
+                    showResult('Single job schedule cancelled.', 'success');
+                    await loadSingleJobScheduleState();
+                } else {
+                    showResult(`Could not cancel: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showResult(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadSingleJobScheduleState() {
+            try {
+                const response = await fetch('/api/job-alerts/single-schedule-state');
+                const data = await response.json();
+                const box = document.getElementById('singleJobScheduledBox');
+                if (!box) return;
+                if (data.state && data.state.scheduledFor) {
+                    box.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:12px; padding:12px 16px; background:rgba(52,152,219,0.12); border:1px solid rgba(52,152,219,0.3); border-radius:8px;';
+                    box.innerHTML = `<span style="color:rgba(255,255,255,0.9); font-size:14px;">&#128197; <strong>Job Alert Scheduled:</strong> ${data.state.scheduledFor}</span><button onclick="cancelSingleJobSchedule()" style="background:#e74c3c; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">Cancel Schedule</button>`;
+                } else {
+                    box.style.display = 'none';
+                    box.innerHTML = '';
+                }
+            } catch (e) {}
+        }
+
         // ========== A-LIST FUNCTIONS ==========
         
         // A-List button bindings moved into DOMContentLoaded above

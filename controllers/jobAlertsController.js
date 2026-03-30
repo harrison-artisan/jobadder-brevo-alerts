@@ -24,10 +24,11 @@ class JobAlertsController {
   }
 
   /**
-   * Send daily roundup of all live jobs (ONLY if new jobs detected)
+   * Send daily roundup of all live jobs (ONLY if new jobs detected, unless force=true)
    * @param {Object} options - Sending options
    * @param {string} options.recipientType - 'segment' or 'list'
    * @param {string} options.recipientId - Segment or List ID
+   * @param {boolean} options.force - If true, send regardless of whether new jobs exist
    */
   async sendDailyRoundup(options = {}) {
     console.log('\n🔄 Starting daily job roundup...');
@@ -49,15 +50,19 @@ class JobAlertsController {
         return { success: true, message: 'No live jobs to send' };
       }
 
-      // 2. Check for new jobs
+      // 2. Check for new jobs (skip check if force=true)
       const jobCheck = jobTrackingService.checkForNewJobs(liveJobs);
       
-      if (!jobCheck.hasNewJobs) {
+      if (!options.force && !jobCheck.hasNewJobs) {
         console.log('⏭️  No new jobs detected. Skipping email send to avoid duplicates.');
         return { success: true, message: 'No new jobs posted today' };
       }
 
-      console.log(`🆕 ${jobCheck.newJobIds.length} new job(s) detected! Proceeding with email...`);
+      if (options.force) {
+        console.log('🔁 Force send enabled — sending all live jobs regardless of new-job check.');
+      } else {
+        console.log(`🆕 ${jobCheck.newJobIds.length} new job(s) detected! Proceeding with email...`);
+      }
 
       // 3. Limit to 10 most recent jobs
       const recentJobs = liveJobs.slice(0, 10);
@@ -252,6 +257,243 @@ class JobAlertsController {
     } catch (error) {
       console.error('❌ Error sending single job alert:', error);
       throw error;
+    }
+  }
+
+  // ============================================================
+  // Scheduling: Daily Roundup
+  // ============================================================
+
+  /**
+   * Schedule a daily roundup send at a user-specified datetime.
+   * Persists to .job-alerts-roundup-schedule.json so it survives restarts.
+   */
+  async scheduleRoundup(options = {}) {
+    const cron = require('node-cron');
+    const fs = require('fs');
+    const path = require('path');
+    const scheduleFile = path.join(__dirname, '..', '.job-alerts-roundup-schedule.json');
+    try {
+      if (!options.scheduledAt) throw new Error('scheduledAt is required');
+      const sendDate = new Date(options.scheduledAt);
+      if (isNaN(sendDate.getTime())) throw new Error('Invalid scheduledAt date');
+      if (sendDate <= new Date()) throw new Error('Scheduled time must be in the future');
+
+      const min = sendDate.getUTCMinutes();
+      const hr = sendDate.getUTCHours();
+      const dom = sendDate.getUTCDate();
+      const mon = sendDate.getUTCMonth() + 1;
+      const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
+
+      const scheduledFor = sendDate.toLocaleString('en-AU', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', hour12: true,
+        timeZone: 'Australia/Melbourne'
+      }) + ' (Melbourne time)';
+
+      if (this._roundupScheduledTask) { this._roundupScheduledTask.stop(); this._roundupScheduledTask = null; }
+
+      this._roundupScheduledTask = cron.schedule(cronExpr, async () => {
+        console.log('📅 Executing scheduled daily roundup send...');
+        try {
+          await this.sendDailyRoundup({ recipientType: options.recipientType, recipientId: options.recipientId, force: options.force });
+        } catch (e) {
+          console.error('❌ Scheduled roundup send failed:', e.message);
+        }
+        fs.existsSync(scheduleFile) && fs.unlinkSync(scheduleFile);
+        if (this._roundupScheduledTask) { this._roundupScheduledTask.stop(); this._roundupScheduledTask = null; }
+      }, { timezone: 'UTC' });
+
+      fs.writeFileSync(scheduleFile, JSON.stringify({
+        scheduledAt: sendDate.toISOString(),
+        scheduledFor,
+        options: { recipientType: options.recipientType, recipientId: options.recipientId, force: options.force }
+      }, null, 2));
+
+      console.log(`📅 Daily roundup scheduled for ${scheduledFor} (cron: ${cronExpr} UTC)`);
+      return { success: true, scheduledFor, message: 'Daily roundup scheduled successfully' };
+    } catch (error) {
+      console.error('❌ Error scheduling daily roundup:', error.message);
+      return { success: false, message: error.message };
+    }
+  }
+
+  cancelRoundupSchedule() {
+    const fs = require('fs');
+    const path = require('path');
+    const scheduleFile = path.join(__dirname, '..', '.job-alerts-roundup-schedule.json');
+    try {
+      if (this._roundupScheduledTask) { this._roundupScheduledTask.stop(); this._roundupScheduledTask = null; }
+      if (fs.existsSync(scheduleFile)) fs.unlinkSync(scheduleFile);
+      return { success: true, message: 'Roundup schedule cancelled' };
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
+  }
+
+  getRoundupScheduleState() {
+    const fs = require('fs');
+    const path = require('path');
+    const scheduleFile = path.join(__dirname, '..', '.job-alerts-roundup-schedule.json');
+    try {
+      if (fs.existsSync(scheduleFile)) return JSON.parse(fs.readFileSync(scheduleFile, 'utf8'));
+    } catch (e) {}
+    return null;
+  }
+
+  restoreRoundupSchedule() {
+    const cron = require('node-cron');
+    const fs = require('fs');
+    const path = require('path');
+    const scheduleFile = path.join(__dirname, '..', '.job-alerts-roundup-schedule.json');
+    try {
+      if (!fs.existsSync(scheduleFile)) return;
+      const saved = JSON.parse(fs.readFileSync(scheduleFile, 'utf8'));
+      if (!saved || !saved.scheduledAt) return;
+      const sendDate = new Date(saved.scheduledAt);
+      if (sendDate <= new Date()) {
+        console.warn('⚠️  Roundup scheduled time has passed, clearing schedule');
+        fs.unlinkSync(scheduleFile);
+        return;
+      }
+      const { recipientType, recipientId, force } = saved.options || {};
+      const min = sendDate.getUTCMinutes();
+      const hr = sendDate.getUTCHours();
+      const dom = sendDate.getUTCDate();
+      const mon = sendDate.getUTCMonth() + 1;
+      const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
+      if (this._roundupScheduledTask) { this._roundupScheduledTask.stop(); this._roundupScheduledTask = null; }
+      this._roundupScheduledTask = cron.schedule(cronExpr, async () => {
+        console.log('📅 Executing restored daily roundup send...');
+        try {
+          await this.sendDailyRoundup({ recipientType, recipientId, force });
+        } catch (e) {
+          console.error('❌ Restored roundup send failed:', e.message);
+        }
+        if (fs.existsSync(scheduleFile)) fs.unlinkSync(scheduleFile);
+        if (this._roundupScheduledTask) { this._roundupScheduledTask.stop(); this._roundupScheduledTask = null; }
+      }, { timezone: 'UTC' });
+      console.log(`📅 Daily roundup schedule restored for ${saved.scheduledFor}`);
+    } catch (error) {
+      console.error('❌ Error restoring roundup schedule:', error.message);
+    }
+  }
+
+  // ============================================================
+  // Scheduling: Single Job Alert
+  // ============================================================
+
+  async scheduleSingleJobAlert(adId, options = {}) {
+    const cron = require('node-cron');
+    const fs = require('fs');
+    const path = require('path');
+    const scheduleFile = path.join(__dirname, '..', '.job-alerts-single-schedule.json');
+    try {
+      if (!adId) throw new Error('No job adId provided');
+      if (!options.scheduledAt) throw new Error('scheduledAt is required');
+      const sendDate = new Date(options.scheduledAt);
+      if (isNaN(sendDate.getTime())) throw new Error('Invalid scheduledAt date');
+      if (sendDate <= new Date()) throw new Error('Scheduled time must be in the future');
+
+      const min = sendDate.getUTCMinutes();
+      const hr = sendDate.getUTCHours();
+      const dom = sendDate.getUTCDate();
+      const mon = sendDate.getUTCMonth() + 1;
+      const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
+
+      const scheduledFor = sendDate.toLocaleString('en-AU', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', hour12: true,
+        timeZone: 'Australia/Melbourne'
+      }) + ' (Melbourne time)';
+
+      if (this._singleJobScheduledTask) { this._singleJobScheduledTask.stop(); this._singleJobScheduledTask = null; }
+
+      this._singleJobScheduledTask = cron.schedule(cronExpr, async () => {
+        console.log(`📅 Executing scheduled single job alert for ad ${adId}...`);
+        try {
+          await this.sendSingleJobAlert(adId, { recipientType: options.recipientType, recipientId: options.recipientId });
+        } catch (e) {
+          console.error('❌ Scheduled single job send failed:', e.message);
+        }
+        if (fs.existsSync(scheduleFile)) fs.unlinkSync(scheduleFile);
+        if (this._singleJobScheduledTask) { this._singleJobScheduledTask.stop(); this._singleJobScheduledTask = null; }
+      }, { timezone: 'UTC' });
+
+      fs.writeFileSync(scheduleFile, JSON.stringify({
+        adId,
+        scheduledAt: sendDate.toISOString(),
+        scheduledFor,
+        options: { recipientType: options.recipientType, recipientId: options.recipientId }
+      }, null, 2));
+
+      console.log(`📅 Single job alert (ad ${adId}) scheduled for ${scheduledFor} (cron: ${cronExpr} UTC)`);
+      return { success: true, scheduledFor, adId, message: 'Single job alert scheduled successfully' };
+    } catch (error) {
+      console.error('❌ Error scheduling single job alert:', error.message);
+      return { success: false, message: error.message };
+    }
+  }
+
+  cancelSingleJobSchedule() {
+    const fs = require('fs');
+    const path = require('path');
+    const scheduleFile = path.join(__dirname, '..', '.job-alerts-single-schedule.json');
+    try {
+      if (this._singleJobScheduledTask) { this._singleJobScheduledTask.stop(); this._singleJobScheduledTask = null; }
+      if (fs.existsSync(scheduleFile)) fs.unlinkSync(scheduleFile);
+      return { success: true, message: 'Single job schedule cancelled' };
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
+  }
+
+  getSingleJobScheduleState() {
+    const fs = require('fs');
+    const path = require('path');
+    const scheduleFile = path.join(__dirname, '..', '.job-alerts-single-schedule.json');
+    try {
+      if (fs.existsSync(scheduleFile)) return JSON.parse(fs.readFileSync(scheduleFile, 'utf8'));
+    } catch (e) {}
+    return null;
+  }
+
+  restoreSingleJobSchedule() {
+    const cron = require('node-cron');
+    const fs = require('fs');
+    const path = require('path');
+    const scheduleFile = path.join(__dirname, '..', '.job-alerts-single-schedule.json');
+    try {
+      if (!fs.existsSync(scheduleFile)) return;
+      const saved = JSON.parse(fs.readFileSync(scheduleFile, 'utf8'));
+      if (!saved || !saved.scheduledAt) return;
+      const sendDate = new Date(saved.scheduledAt);
+      if (sendDate <= new Date()) {
+        console.warn('⚠️  Single job scheduled time has passed, clearing schedule');
+        fs.unlinkSync(scheduleFile);
+        return;
+      }
+      const { recipientType, recipientId } = saved.options || {};
+      const { adId } = saved;
+      const min = sendDate.getUTCMinutes();
+      const hr = sendDate.getUTCHours();
+      const dom = sendDate.getUTCDate();
+      const mon = sendDate.getUTCMonth() + 1;
+      const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
+      if (this._singleJobScheduledTask) { this._singleJobScheduledTask.stop(); this._singleJobScheduledTask = null; }
+      this._singleJobScheduledTask = cron.schedule(cronExpr, async () => {
+        console.log(`📅 Executing restored single job alert for ad ${adId}...`);
+        try {
+          await this.sendSingleJobAlert(adId, { recipientType, recipientId });
+        } catch (e) {
+          console.error('❌ Restored single job send failed:', e.message);
+        }
+        if (fs.existsSync(scheduleFile)) fs.unlinkSync(scheduleFile);
+        if (this._singleJobScheduledTask) { this._singleJobScheduledTask.stop(); this._singleJobScheduledTask = null; }
+      }, { timezone: 'UTC' });
+      console.log(`📅 Single job alert schedule restored for ${saved.scheduledFor}`);
+    } catch (error) {
+      console.error('❌ Error restoring single job schedule:', error.message);
     }
   }
 
