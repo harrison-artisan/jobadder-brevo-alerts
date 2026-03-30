@@ -574,6 +574,118 @@ class LinkedInService {
     return { id: postId };
   }
 
+  // ---- Video Upload (REST Videos API) ----
+
+  /**
+   * Initialize a video upload using the REST Videos API.
+   * Returns { uploadUrl, videoUrn } for use in postWithVideo.
+   * @param {number} fileSizeBytes - Size of the video file in bytes
+   * @returns {object} { uploadInstructions, videoUrn }
+   */
+  async initializeVideoUpload(fileSizeBytes) {
+    if (!this.isConnected()) throw new Error('LinkedIn is not connected.');
+    const response = await axios.post(
+      'https://api.linkedin.com/rest/videos?action=initializeUpload',
+      {
+        initializeUploadRequest: {
+          owner: tokenStore.orgUrn,
+          fileSizeBytes,
+          uploadCaptions: false,
+          uploadThumbnail: false,
+        },
+      },
+      { headers: this._postHeaders() }
+    );
+    const value = response.data.value;
+    return {
+      uploadInstructions: value.uploadInstructions || [],
+      videoUrn: value.video,
+    };
+  }
+
+  /**
+   * Upload video binary chunks to LinkedIn using the instructions from initializeVideoUpload.
+   * @param {Array} uploadInstructions - Array of { uploadUrl, firstByte, lastByte }
+   * @param {Buffer} videoBuffer - Full video file buffer
+   * @param {string} mimeType - e.g. 'video/mp4'
+   * @returns {Array} ETags from each chunk upload
+   */
+  async uploadVideoChunks(uploadInstructions, videoBuffer, mimeType) {
+    const eTags = [];
+    for (const instruction of uploadInstructions) {
+      const chunk = videoBuffer.slice(instruction.firstByte, instruction.lastByte + 1);
+      const resp = await axios.put(instruction.uploadUrl, chunk, {
+        headers: {
+          Authorization: `Bearer ${tokenStore.accessToken}`,
+          'Content-Type': mimeType,
+        },
+      });
+      eTags.push(resp.headers['etag'] || '');
+    }
+    return eTags;
+  }
+
+  /**
+   * Finalize a video upload after all chunks have been uploaded.
+   * @param {string} videoUrn - The video URN from initializeVideoUpload
+   * @param {Array} eTags - ETags from uploadVideoChunks
+   */
+  async finalizeVideoUpload(videoUrn, eTags) {
+    await axios.post(
+      'https://api.linkedin.com/rest/videos?action=finalizeUpload',
+      {
+        finalizeUploadRequest: {
+          video: videoUrn,
+          uploadToken: '',
+          uploadedPartIds: eTags,
+        },
+      },
+      { headers: this._postHeaders() }
+    );
+  }
+
+  /**
+   * Post a text update with an attached video to the Artisan Company Page.
+   * Uses the REST Videos API + REST Posts API.
+   * @param {string} text - Post body text
+   * @param {Buffer} videoBuffer - Raw video buffer
+   * @param {string} mimeType - e.g. 'video/mp4'
+   * @param {string} videoTitle - Title for the video
+   * @returns {object} { id }
+   */
+  async postWithVideo(text, videoBuffer, mimeType, videoTitle = '') {
+    if (!this.isConnected()) throw new Error('LinkedIn is not connected.');
+    // Step 1: Initialize upload
+    const { uploadInstructions, videoUrn } = await this.initializeVideoUpload(videoBuffer.length);
+    // Step 2: Upload chunks
+    const eTags = await this.uploadVideoChunks(uploadInstructions, videoBuffer, mimeType);
+    // Step 3: Finalize upload
+    await this.finalizeVideoUpload(videoUrn, eTags);
+    // Step 4: Create post referencing video URN
+    const payload = {
+      author: tokenStore.orgUrn,
+      commentary: text,
+      visibility: 'PUBLIC',
+      distribution: this._distribution(),
+      content: {
+        media: {
+          title: videoTitle || '',
+          id: videoUrn,
+        },
+      },
+      lifecycleState: 'PUBLISHED',
+      isReshareDisabledByAuthor: false,
+    };
+    const response = await axios.post(
+      'https://api.linkedin.com/rest/posts',
+      payload,
+      { headers: this._postHeaders() }
+    );
+    const postId = response.headers['x-restli-id'] || response.data.id || null;
+    console.log(`[LinkedIn] Video post published. ID: ${postId}`);
+    return { id: postId };
+  }
+
   // ---- Poll (REST Posts API) ----
 
   /**

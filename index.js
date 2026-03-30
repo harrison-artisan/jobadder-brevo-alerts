@@ -9,6 +9,9 @@ const consultantController = require('./controllers/consultantController');
 const jobadderService = require('./services/jobadderService');
 const jobTrackingService = require('./services/jobTrackingService');
 
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 100 * 1024 * 1024 } });
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -805,15 +808,21 @@ app.post('/api/linkedin/disconnect', (req, res) => {
   res.json({ success: true, message: 'LinkedIn disconnected.' });
 });
 
-// POST /api/linkedin/post - Post to LinkedIn
-app.post('/api/linkedin/post', async (req, res) => {
-  const { text, articleUrl, jobUrl, title, jobTitle, description } = req.body;
+// POST /api/linkedin/post - Post to LinkedIn (supports optional image/video via multipart)
+app.post('/api/linkedin/post', upload.single('media'), async (req, res) => {
+  const { text, articleUrl, jobUrl, title, jobTitle, description, mediaType } = req.body;
   const resolvedUrl   = articleUrl || jobUrl || null;
   const resolvedTitle = title     || jobTitle || '';
   if (!text) return res.status(400).json({ success: false, message: 'Post text is required.' });
   try {
     let result;
-    if (resolvedUrl) {
+    if (req.file) {
+      if (mediaType === 'video') {
+        result = await linkedinService.postWithVideo(text, req.file.buffer, req.file.mimetype, req.file.originalname);
+      } else {
+        result = await linkedinService.postWithImage(text, req.file.buffer, req.file.mimetype);
+      }
+    } else if (resolvedUrl) {
       result = await linkedinService.postWithLinkPreview(text, resolvedUrl, resolvedTitle, description || '');
     } else {
       result = await linkedinService.postToLinkedIn(text);
@@ -984,14 +993,26 @@ app.post('/api/linkedin/post-image', async (req, res) => {
   }
 });
 
-// POST /api/linkedin/post-poll - Post a poll to LinkedIn
-app.post('/api/linkedin/post-poll', async (req, res) => {
-  const { text, question, options, duration } = req.body;
+// POST /api/linkedin/post-poll - Post a poll to LinkedIn (supports optional image/video via multipart)
+app.post('/api/linkedin/post-poll', upload.single('media'), async (req, res) => {
+  let { text, question, options, duration, mediaType } = req.body;
+  // options may arrive as a JSON string from FormData
+  if (typeof options === 'string') { try { options = JSON.parse(options); } catch(e) { options = [options]; } }
   if (!text) return res.status(400).json({ success: false, message: 'Post text is required.' });
   if (!question) return res.status(400).json({ success: false, message: 'Poll question is required.' });
   if (!options || options.length < 2) return res.status(400).json({ success: false, message: 'At least 2 poll options are required.' });
   try {
-    const result = await linkedinService.postPoll(text, question, options, duration || 'ONE_WEEK');
+    let result;
+    if (req.file) {
+      // Post media first, then poll (LinkedIn doesn't support media+poll in one call; post media post instead)
+      if (mediaType === 'video') {
+        result = await linkedinService.postWithVideo(text + '\n\n' + question + '\n' + options.join(' | '), req.file.buffer, req.file.mimetype, req.file.originalname);
+      } else {
+        result = await linkedinService.postWithImage(text + '\n\n' + question + '\n' + options.join(' | '), req.file.buffer, req.file.mimetype);
+      }
+    } else {
+      result = await linkedinService.postPoll(text, question, options, duration || 'ONE_WEEK');
+    }
     res.json({ success: true, postId: result.id, message: 'Poll published to LinkedIn.' });
   } catch (err) {
     console.error('[LinkedIn] Poll error:', err.response ? JSON.stringify(err.response.data) : err.message);
@@ -1030,13 +1051,19 @@ app.post('/api/linkedin/generate-post-from-article', async (req, res) => {
   }
 });
 
-// POST /api/linkedin/post-article-post - Post the article LinkedIn post immediately
-app.post('/api/linkedin/post-article-post', async (req, res) => {
-  const { text, url, title, description } = req.body;
+// POST /api/linkedin/post-article-post - Post the article LinkedIn post immediately (supports optional media)
+app.post('/api/linkedin/post-article-post', upload.single('media'), async (req, res) => {
+  const { text, url, title, description, mediaType } = req.body;
   if (!text) return res.status(400).json({ success: false, message: 'Post text is required.' });
   try {
     let result;
-    if (url) {
+    if (req.file) {
+      if (mediaType === 'video') {
+        result = await linkedinService.postWithVideo(text, req.file.buffer, req.file.mimetype, req.file.originalname);
+      } else {
+        result = await linkedinService.postWithImage(text, req.file.buffer, req.file.mimetype);
+      }
+    } else if (url) {
       result = await linkedinService.postWithLinkPreview(text, url, title || '', description || '');
     } else {
       result = await linkedinService.postToLinkedIn(text);
@@ -1223,15 +1250,27 @@ app.post('/api/linkedin/generate-alist-post', async (req, res) => {
 
 // POST /api/linkedin/post-alist-post - Post A-List LinkedIn post immediately
 app.post('/api/linkedin/post-alist-post', async (req, res) => {
-  try {
-    const { text } = req.body;
-    if (!text) return res.status(400).json({ success: false, message: 'Post text is required.' });
-    await linkedinService.postToLinkedIn(text);
-    res.json({ success: true, message: 'A-List post published to LinkedIn.' });
-  } catch (err) {
-    console.error('❌ post-alist-post error:', err.message);
-    res.status(500).json({ success: false, message: err.message });
-  }
+  upload.single('media')(req, res, async (uploadErr) => {
+    if (uploadErr) return res.status(400).json({ success: false, message: uploadErr.message });
+    try {
+      const { text, mediaType } = req.body;
+      if (!text) return res.status(400).json({ success: false, message: 'Post text is required.' });
+      let result;
+      if (req.file) {
+        if (mediaType === 'video') {
+          result = await linkedinService.postWithVideo(text, req.file.buffer, req.file.mimetype, req.file.originalname);
+        } else {
+          result = await linkedinService.postWithImage(text, req.file.buffer, req.file.mimetype);
+        }
+      } else {
+        result = await linkedinService.postToLinkedIn(text);
+      }
+      res.json({ success: true, postId: result.id, message: 'A-List post published to LinkedIn.' });
+    } catch (err) {
+      console.error('❌ post-alist-post error:', err.message);
+      res.status(500).json({ success: false, message: err.message });
+    }
+  });
 });
 
 // POST /api/linkedin/schedule-alist-post - Schedule an A-List LinkedIn post

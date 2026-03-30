@@ -2541,25 +2541,27 @@
                                     <div id="cmStandaloneAILoading" style="display:none; margin-top:10px; color:rgba(255,255,255,0.6); font-size:13px;">Generating post...</div>
                                 </div>
 
-                                <!-- Image Upload -->
+                                <!-- Media Attachment -->
                                 <div style="margin-bottom:20px;">
-                                    <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:8px;">Attach Image <span style="font-weight:400; color:rgba(255,255,255,0.4);">(optional)</span></label>
-                                    <div id="cmStandaloneImageDrop" onclick="document.getElementById('cmStandaloneImageInput').click()"
+                                    <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:8px;">Attach Image or Video <span style="font-weight:400; color:rgba(255,255,255,0.4);">(optional)</span></label>
+                                    <div onclick="document.getElementById('cmStandaloneMediaInput').click()"
                                         style="border:2px dashed rgba(255,255,255,0.2); border-radius:10px; padding:20px; text-align:center; cursor:pointer; transition:all 0.2s; background:rgba(255,255,255,0.04);"
                                         ondragover="event.preventDefault(); this.style.borderColor='#0077b5';"
                                         ondragleave="this.style.borderColor='rgba(255,255,255,0.2)';"
-                                        ondrop="cmHandleStandaloneImageDrop(event)">
-                                        <div id="cmStandaloneImagePreviewWrap" style="display:none; margin-bottom:10px;">
-                                            <img id="cmStandaloneImagePreview" style="max-height:160px; max-width:100%; border-radius:8px; object-fit:cover;" />
+                                        ondrop="cmHandleMediaDrop(event,'cmStandaloneMedia')">
+                                        <div id="cmStandaloneMediaPreviewWrap" style="display:none; margin-bottom:10px;">
+                                            <img id="cmStandaloneMediaImgPreview" style="max-height:160px; max-width:100%; border-radius:8px; object-fit:cover; display:none;" />
+                                            <video id="cmStandaloneMediaVidPreview" style="max-height:160px; max-width:100%; border-radius:8px; display:none;" controls></video>
+                                            <div id="cmStandaloneMediaFileName" style="color:rgba(255,255,255,0.7); font-size:12px; margin-top:6px;"></div>
                                         </div>
-                                        <div id="cmStandaloneImagePlaceholder">
-                                            <div style="color:rgba(255,255,255,0.5); font-size:13px;">Click or drag an image here</div>
-                                            <div style="color:rgba(255,255,255,0.3); font-size:11px; margin-top:4px;">JPG, PNG, GIF &mdash; max 5 MB</div>
+                                        <div id="cmStandaloneMediaPlaceholder">
+                                            <div style="color:rgba(255,255,255,0.5); font-size:13px;">Click or drag image/video here</div>
+                                            <div style="color:rgba(255,255,255,0.3); font-size:11px; margin-top:4px;">Images: JPG, PNG, GIF &mdash; Videos: MP4, MOV &mdash; max 100 MB</div>
                                         </div>
                                     </div>
-                                    <input type="file" id="cmStandaloneImageInput" accept="image/*" style="display:none;" onchange="cmHandleStandaloneImageSelect(event)">
-                                    <div id="cmStandaloneImageClearWrap" style="display:none; margin-top:8px;">
-                                        <button onclick="cmClearStandaloneImage()" style="padding:4px 12px; background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.4); border-radius:5px; color:#e74c3c; cursor:pointer; font-size:12px;">Remove Image</button>
+                                    <input type="file" id="cmStandaloneMediaInput" accept="image/*,video/*" style="display:none;" onchange="cmHandleMediaSelect(event,'cmStandaloneMedia')">
+                                    <div id="cmStandaloneMediaClearWrap" style="display:none; margin-top:8px;">
+                                        <button onclick="cmClearMedia('cmStandaloneMedia')" style="padding:4px 12px; background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.4); border-radius:5px; color:#e74c3c; cursor:pointer; font-size:12px;">Remove Media</button>
                                     </div>
                                 </div>
 
@@ -2618,6 +2620,26 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <!-- Media Attachment -->
+                                    <div style="margin-bottom:20px;">
+                                        <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:8px;">Attach Image or Video <span style="font-weight:400; color:rgba(255,255,255,0.4);">(optional)</span></label>
+                                        <div id="cmJobSingleMediaDrop" onclick="document.getElementById('cmJobSingleMediaInput').click()"
+                                            style="border:2px dashed rgba(255,255,255,0.2); border-radius:10px; padding:16px; text-align:center; cursor:pointer; background:rgba(255,255,255,0.04);"
+                                            ondragover="event.preventDefault(); this.style.borderColor='#0077b5';"
+                                            ondragleave="this.style.borderColor='rgba(255,255,255,0.2)';"
+                                            ondrop="cmHandleMediaDrop(event,'cmJobSingleMedia')">
+                                            <div id="cmJobSingleMediaPreviewWrap" style="display:none; margin-bottom:8px;">
+                                                <img id="cmJobSingleMediaPreviewImg" style="max-height:120px; max-width:100%; border-radius:6px; object-fit:cover; display:none;" />
+                                                <video id="cmJobSingleMediaPreviewVid" style="max-height:120px; max-width:100%; border-radius:6px; display:none;" controls muted></video>
+                                            </div>
+                                            <div id="cmJobSingleMediaPlaceholder" style="color:rgba(255,255,255,0.5); font-size:13px;">Click or drag an image or video here<br><span style="font-size:11px; color:rgba(255,255,255,0.3);">JPG, PNG, GIF, MP4, MOV — max 100 MB</span></div>
+                                        </div>
+                                        <input type="file" id="cmJobSingleMediaInput" accept="image/*,video/*" style="display:none;" onchange="cmHandleMediaSelect(event,'cmJobSingleMedia')">
+                                        <div id="cmJobSingleMediaClearWrap" style="display:none; margin-top:8px;">
+                                            <button onclick="cmClearMedia('cmJobSingleMedia')" style="padding:4px 12px; background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.4); border-radius:5px; color:#e74c3c; cursor:pointer; font-size:12px;">Remove Media</button>
+                                        </div>
+                                    </div>
+
                                     <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                                         <button onclick="cmPostJobListing()" style="padding:10px 24px; background:#0077b5; border:none; border-radius:8px; color:white; cursor:pointer; font-size:14px; font-weight:700;">Post Job to LinkedIn</button>
                                         <button onclick="cmPreviewJobCard()" style="padding:10px 16px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; cursor:pointer; font-size:13px;">Preview Card</button>
@@ -2662,6 +2684,26 @@
                                         <textarea id="cmJobMultiPostText" rows="10" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;" oninput="document.getElementById('cmJobMultiCharCount').textContent=this.value.length+' characters'"></textarea>
                                         <div style="text-align:right; font-size:11px; color:rgba(255,255,255,0.35); margin-top:4px;" id="cmJobMultiCharCount">0 characters</div>
                                     </div>
+                                    <!-- Media Attachment -->
+                                    <div style="margin-bottom:20px;">
+                                        <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:8px;">Attach Image or Video <span style="font-weight:400; color:rgba(255,255,255,0.4);">(optional)</span></label>
+                                        <div id="cmJobMultiMediaDrop" onclick="document.getElementById('cmJobMultiMediaInput').click()"
+                                            style="border:2px dashed rgba(255,255,255,0.2); border-radius:10px; padding:16px; text-align:center; cursor:pointer; background:rgba(255,255,255,0.04);"
+                                            ondragover="event.preventDefault(); this.style.borderColor='#0077b5';"
+                                            ondragleave="this.style.borderColor='rgba(255,255,255,0.2)';"
+                                            ondrop="cmHandleMediaDrop(event,'cmJobMultiMedia')">
+                                            <div id="cmJobMultiMediaPreviewWrap" style="display:none; margin-bottom:8px;">
+                                                <img id="cmJobMultiMediaPreviewImg" style="max-height:120px; max-width:100%; border-radius:6px; object-fit:cover; display:none;" />
+                                                <video id="cmJobMultiMediaPreviewVid" style="max-height:120px; max-width:100%; border-radius:6px; display:none;" controls muted></video>
+                                            </div>
+                                            <div id="cmJobMultiMediaPlaceholder" style="color:rgba(255,255,255,0.5); font-size:13px;">Click or drag an image or video here<br><span style="font-size:11px; color:rgba(255,255,255,0.3);">JPG, PNG, GIF, MP4, MOV — max 100 MB</span></div>
+                                        </div>
+                                        <input type="file" id="cmJobMultiMediaInput" accept="image/*,video/*" style="display:none;" onchange="cmHandleMediaSelect(event,'cmJobMultiMedia')">
+                                        <div id="cmJobMultiMediaClearWrap" style="display:none; margin-top:8px;">
+                                            <button onclick="cmClearMedia('cmJobMultiMedia')" style="padding:4px 12px; background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.4); border-radius:5px; color:#e74c3c; cursor:pointer; font-size:12px;">Remove Media</button>
+                                        </div>
+                                    </div>
+
                                     <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                                         <button onclick="cmGenerateMultiJobPost()" id="cmJobMultiGenerateBtn" style="padding:10px 20px; background:linear-gradient(135deg,#0077b5,#005f8e); border:none; border-radius:8px; color:white; cursor:pointer; font-size:13px; font-weight:700;">Generate Post with AI</button>
                                         <button onclick="cmPostMultiJobListing()" id="cmJobMultiPostBtn" style="display:none; padding:10px 24px; background:#0077b5; border:none; border-radius:8px; color:white; cursor:pointer; font-size:14px; font-weight:700;">Post to LinkedIn</button>
@@ -2763,6 +2805,26 @@
                                         <button onclick="cmSetPollDuration('TWO_WEEKS', this)" class="poll-duration-btn" style="padding:8px 6px; border-radius:7px; border:2px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.7); cursor:pointer; font-size:12px; font-weight:600;">2 Weeks</button>
                                     </div>
                                 </div>
+                                <!-- Media Attachment -->
+                                <div style="margin-bottom:20px;">
+                                    <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:8px;">Attach Image or Video <span style="font-weight:400; color:rgba(255,255,255,0.4);">(optional)</span></label>
+                                    <div id="cmPollMediaDrop" onclick="document.getElementById('cmPollMediaInput').click()"
+                                        style="border:2px dashed rgba(255,255,255,0.2); border-radius:10px; padding:16px; text-align:center; cursor:pointer; background:rgba(255,255,255,0.04);"
+                                        ondragover="event.preventDefault(); this.style.borderColor='#0077b5';"
+                                        ondragleave="this.style.borderColor='rgba(255,255,255,0.2)';"
+                                        ondrop="cmHandleMediaDrop(event,'cmPollMedia')">
+                                        <div id="cmPollMediaPreviewWrap" style="display:none; margin-bottom:8px;">
+                                            <img id="cmPollMediaPreviewImg" style="max-height:120px; max-width:100%; border-radius:6px; object-fit:cover; display:none;" />
+                                            <video id="cmPollMediaPreviewVid" style="max-height:120px; max-width:100%; border-radius:6px; display:none;" controls muted></video>
+                                        </div>
+                                        <div id="cmPollMediaPlaceholder" style="color:rgba(255,255,255,0.5); font-size:13px;">Click or drag an image or video here<br><span style="font-size:11px; color:rgba(255,255,255,0.3);">JPG, PNG, GIF, MP4, MOV — max 100 MB</span></div>
+                                    </div>
+                                    <input type="file" id="cmPollMediaInput" accept="image/*,video/*" style="display:none;" onchange="cmHandleMediaSelect(event,'cmPollMedia')">
+                                    <div id="cmPollMediaClearWrap" style="display:none; margin-top:8px;">
+                                        <button onclick="cmClearMedia('cmPollMedia')" style="padding:4px 12px; background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.4); border-radius:5px; color:#e74c3c; cursor:pointer; font-size:12px;">Remove Media</button>
+                                    </div>
+                                </div>
+
                                 <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                                     <button onclick="cmPostPoll()" style="padding:10px 24px; background:#0077b5; border:none; border-radius:8px; color:white; cursor:pointer; font-size:14px; font-weight:700;">Post Poll to LinkedIn</button>
                                     <button onclick="cmShowPollScheduleRow()" id="btnSchedulePoll" style="padding:10px 18px; background:rgba(52,152,219,0.15); border:1px solid rgba(52,152,219,0.4); border-radius:8px; color:#5dade2; cursor:pointer; font-size:14px; font-weight:600;">Schedule Poll</button>
@@ -2823,6 +2885,26 @@
                                     <div style="text-align:right; font-size:11px; color:rgba(255,255,255,0.35); margin-top:4px;" id="cmArticlePostCharCount">0 characters</div>
                                 </div>
 
+                                <!-- Media Attachment -->
+                                <div style="margin-bottom:20px;">
+                                    <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:8px;">Attach Image or Video <span style="font-weight:400; color:rgba(255,255,255,0.4);">(optional)</span></label>
+                                    <div id="cmArticlePostMediaDrop" onclick="document.getElementById('cmArticlePostMediaInput').click()"
+                                        style="border:2px dashed rgba(255,255,255,0.2); border-radius:10px; padding:16px; text-align:center; cursor:pointer; background:rgba(255,255,255,0.04);"
+                                        ondragover="event.preventDefault(); this.style.borderColor='#0077b5';"
+                                        ondragleave="this.style.borderColor='rgba(255,255,255,0.2)';"
+                                        ondrop="cmHandleMediaDrop(event,'cmArticlePostMedia')">
+                                        <div id="cmArticlePostMediaPreviewWrap" style="display:none; margin-bottom:8px;">
+                                            <img id="cmArticlePostMediaPreviewImg" style="max-height:120px; max-width:100%; border-radius:6px; object-fit:cover; display:none;" />
+                                            <video id="cmArticlePostMediaPreviewVid" style="max-height:120px; max-width:100%; border-radius:6px; display:none;" controls muted></video>
+                                        </div>
+                                        <div id="cmArticlePostMediaPlaceholder" style="color:rgba(255,255,255,0.5); font-size:13px;">Click or drag an image or video here<br><span style="font-size:11px; color:rgba(255,255,255,0.3);">JPG, PNG, GIF, MP4, MOV — max 100 MB</span></div>
+                                    </div>
+                                    <input type="file" id="cmArticlePostMediaInput" accept="image/*,video/*" style="display:none;" onchange="cmHandleMediaSelect(event,'cmArticlePostMedia')">
+                                    <div id="cmArticlePostMediaClearWrap" style="display:none; margin-top:8px;">
+                                        <button onclick="cmClearMedia('cmArticlePostMedia')" style="padding:4px 12px; background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.4); border-radius:5px; color:#e74c3c; cursor:pointer; font-size:12px;">Remove Media</button>
+                                    </div>
+                                </div>
+
                                 <!-- Actions -->
                                 <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                                     <button onclick="cmPostArticlePostNow()" id="cmArticlePostNowBtn" style="padding:10px 24px; background:#0077b5; border:none; border-radius:8px; color:white; cursor:pointer; font-size:14px; font-weight:700;">Post to LinkedIn</button>
@@ -2878,6 +2960,26 @@
                                     </div>
                                     <textarea id="cmAListPostText" rows="10" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;" oninput="document.getElementById('cmAListPostCharCount').textContent=this.value.length+' characters'"></textarea>
                                     <div style="text-align:right; font-size:11px; color:rgba(255,255,255,0.35); margin-top:4px;" id="cmAListPostCharCount">0 characters</div>
+                                </div>
+
+                                <!-- Media Attachment -->
+                                <div style="margin-bottom:20px;">
+                                    <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:8px;">Attach Image or Video <span style="font-weight:400; color:rgba(255,255,255,0.4);">(optional)</span></label>
+                                    <div id="cmAListPostMediaDrop" onclick="document.getElementById('cmAListPostMediaInput').click()"
+                                        style="border:2px dashed rgba(255,255,255,0.2); border-radius:10px; padding:16px; text-align:center; cursor:pointer; background:rgba(255,255,255,0.04);"
+                                        ondragover="event.preventDefault(); this.style.borderColor='#0077b5';"
+                                        ondragleave="this.style.borderColor='rgba(255,255,255,0.2)';"
+                                        ondrop="cmHandleMediaDrop(event,'cmAListPostMedia')">
+                                        <div id="cmAListPostMediaPreviewWrap" style="display:none; margin-bottom:8px;">
+                                            <img id="cmAListPostMediaPreviewImg" style="max-height:120px; max-width:100%; border-radius:6px; object-fit:cover; display:none;" />
+                                            <video id="cmAListPostMediaPreviewVid" style="max-height:120px; max-width:100%; border-radius:6px; display:none;" controls muted></video>
+                                        </div>
+                                        <div id="cmAListPostMediaPlaceholder" style="color:rgba(255,255,255,0.5); font-size:13px;">Click or drag an image or video here<br><span style="font-size:11px; color:rgba(255,255,255,0.3);">JPG, PNG, GIF, MP4, MOV — max 100 MB</span></div>
+                                    </div>
+                                    <input type="file" id="cmAListPostMediaInput" accept="image/*,video/*" style="display:none;" onchange="cmHandleMediaSelect(event,'cmAListPostMedia')">
+                                    <div id="cmAListPostMediaClearWrap" style="display:none; margin-top:8px;">
+                                        <button onclick="cmClearMedia('cmAListPostMedia')" style="padding:4px 12px; background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.4); border-radius:5px; color:#e74c3c; cursor:pointer; font-size:12px;">Remove Media</button>
+                                    </div>
                                 </div>
 
                                 <!-- Actions -->
@@ -3169,11 +3271,8 @@
             if (!confirm('Post this jobs post to LinkedIn now?')) return;
             if (statusEl) statusEl.textContent = 'Posting...';
             try {
-                const res = await fetch('/api/linkedin/post', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text })
-                });
+                const fd = cmBuildPostFormData({ text }, 'cmJobMultiMedia');
+                const res = await fetch('/api/linkedin/post', { method: 'POST', body: fd });
                 const data = await res.json();
                 if (data.success) {
                     if (statusEl) { statusEl.textContent = 'Posted to LinkedIn!'; statusEl.style.color = '#27ae60'; }
@@ -4163,11 +4262,8 @@
             if (!confirm('Post this A-List post to LinkedIn now?')) return;
             if (statusEl) statusEl.textContent = 'Posting...';
             try {
-                const res = await fetch('/api/linkedin/post-alist-post', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text })
-                });
+                const fd = cmBuildPostFormData({ text }, 'cmAListMedia');
+                const res = await fetch('/api/linkedin/post-alist-post', { method: 'POST', body: fd });
                 const data = await res.json();
                 if (data.success) {
                     if (statusEl) statusEl.textContent = 'Posted to LinkedIn!';
@@ -4304,17 +4400,8 @@
             if (!text) { if (statusEl) statusEl.textContent = 'Please write a post first.'; return; }
             if (statusEl) { statusEl.textContent = 'Posting...'; statusEl.style.color = 'rgba(255,255,255,0.6)'; }
             try {
-                let endpoint = '/api/linkedin/post';
-                let body = { text };
-                if (cmStandaloneImageData) {
-                    endpoint = '/api/linkedin/post-image';
-                    body = { text, imageBase64: cmStandaloneImageData.base64, mimeType: cmStandaloneImageData.mimeType, imageTitle: cmStandaloneImageData.name };
-                }
-                const res = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                });
+                const fd = cmBuildPostFormData({ text }, 'cmStandaloneMedia');
+                const res = await fetch('/api/linkedin/post', { method: 'POST', body: fd });
                 const data = await res.json();
                 if (data.success) {
                     if (statusEl) { statusEl.textContent = 'Posted successfully!'; statusEl.style.color = '#27ae60'; }
@@ -4367,6 +4454,82 @@
             if (clearWrap) clearWrap.style.display = 'none';
         }
 
+        // ---- Shared media attachment helpers (image + video for all post types) ----
+        const cmMediaStore = {}; // keyed by prefix e.g. 'cmJobSingleMedia'
+
+        function cmHandleMediaSelect(event, prefix) {
+            const file = event.target.files[0];
+            if (file) cmLoadMedia(file, prefix);
+        }
+        function cmHandleMediaDrop(event, prefix) {
+            event.preventDefault();
+            const drop = document.getElementById(prefix + 'Drop');
+            if (drop) drop.style.borderColor = 'rgba(255,255,255,0.2)';
+            const file = event.dataTransfer.files[0];
+            if (file) cmLoadMedia(file, prefix);
+        }
+        function cmLoadMedia(file, prefix) {
+            const isVideo = file.type.startsWith('video/');
+            const isImage = file.type.startsWith('image/');
+            if (!isVideo && !isImage) { alert('Please select an image or video file.'); return; }
+            const maxSize = isVideo ? 100 * 1024 * 1024 : 5 * 1024 * 1024;
+            if (file.size > maxSize) { alert(isVideo ? 'Video must be under 100 MB.' : 'Image must be under 5 MB.'); return; }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                cmMediaStore[prefix] = { base64: e.target.result, mimeType: file.type, name: file.name, isVideo };
+                const previewWrap = document.getElementById(prefix + 'PreviewWrap');
+                const previewImg  = document.getElementById(prefix + 'PreviewImg');
+                const previewVid  = document.getElementById(prefix + 'PreviewVid');
+                const placeholder = document.getElementById(prefix + 'Placeholder');
+                const clearWrap   = document.getElementById(prefix + 'ClearWrap');
+                if (isVideo) {
+                    if (previewImg) previewImg.style.display = 'none';
+                    if (previewVid) { previewVid.src = e.target.result; previewVid.style.display = 'block'; }
+                } else {
+                    if (previewVid) previewVid.style.display = 'none';
+                    if (previewImg) { previewImg.src = e.target.result; previewImg.style.display = 'block'; }
+                }
+                if (previewWrap) previewWrap.style.display = 'block';
+                if (placeholder) placeholder.style.display = 'none';
+                if (clearWrap)   clearWrap.style.display   = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+        function cmClearMedia(prefix) {
+            delete cmMediaStore[prefix];
+            const inp = document.getElementById(prefix + 'Input');
+            if (inp) inp.value = '';
+            const previewWrap = document.getElementById(prefix + 'PreviewWrap');
+            const previewImg  = document.getElementById(prefix + 'PreviewImg');
+            const previewVid  = document.getElementById(prefix + 'PreviewVid');
+            const placeholder = document.getElementById(prefix + 'Placeholder');
+            const clearWrap   = document.getElementById(prefix + 'ClearWrap');
+            if (previewWrap) previewWrap.style.display = 'none';
+            if (previewImg)  { previewImg.src = ''; previewImg.style.display = 'none'; }
+            if (previewVid)  { previewVid.src = ''; previewVid.style.display = 'none'; }
+            if (placeholder) placeholder.style.display = 'block';
+            if (clearWrap)   clearWrap.style.display   = 'none';
+        }
+        // Helper: build FormData with optional media from cmMediaStore
+        function cmBuildPostFormData(fields, prefix) {
+            const fd = new FormData();
+            for (const [k, v] of Object.entries(fields)) {
+                if (v !== undefined && v !== null) fd.append(k, v);
+            }
+            const media = prefix ? cmMediaStore[prefix] : null;
+            if (media) {
+                // Convert base64 to Blob
+                const byteStr = atob(media.base64.split(',')[1]);
+                const ab = new ArrayBuffer(byteStr.length);
+                const ia = new Uint8Array(ab);
+                for (let i = 0; i < byteStr.length; i++) ia[i] = byteStr.charCodeAt(i);
+                const blob = new Blob([ab], { type: media.mimeType });
+                fd.append('media', blob, media.name);
+                fd.append('mediaType', media.isVideo ? 'video' : 'image');
+            }
+            return fd;
+        }
+
         // Job listing helpers
         function cmPreviewJobCard() {
             const title = (document.getElementById('cmJobTitle') || {}).value || '';
@@ -4391,11 +4554,8 @@
             if (!jobUrl.trim()) { if (statusEl) statusEl.textContent = 'Please enter a job URL.'; return; }
             if (statusEl) { statusEl.textContent = 'Posting...'; statusEl.style.color = 'rgba(255,255,255,0.6)'; }
             try {
-                const res = await fetch('/api/linkedin/post', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: text.trim(), jobUrl: jobUrl.trim(), jobTitle: jobTitle.trim() })
-                });
+                const fd = cmBuildPostFormData({ text: text.trim(), jobUrl: jobUrl.trim(), jobTitle: jobTitle.trim() }, 'cmJobSingleMedia');
+                const res = await fetch('/api/linkedin/post', { method: 'POST', body: fd });
                 const data = await res.json();
                 if (data.success) {
                     if (statusEl) { statusEl.textContent = 'Job post published!'; statusEl.style.color = '#27ae60'; }
@@ -4695,16 +4855,14 @@
             if (btn) { btn.disabled = true; btn.textContent = 'Posting...'; }
             if (statusEl) { statusEl.textContent = ''; }
             try {
-                const resp = await fetch('/api/linkedin/post-article-post', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        text: textarea.value.trim(),
-                        url: article ? article.url : undefined,
-                        title: article ? article.title : undefined,
-                        description: article ? (article.excerpt || '') : undefined
-                    })
-                });
+                const fields = {
+                    text: textarea.value.trim(),
+                    url: article ? article.url : undefined,
+                    title: article ? article.title : undefined,
+                    description: article ? (article.excerpt || '') : undefined
+                };
+                const fd = cmBuildPostFormData(fields, 'cmArticlePostMedia');
+                const resp = await fetch('/api/linkedin/post-article-post', { method: 'POST', body: fd });
                 const data = await resp.json();
                 if (!data.success) throw new Error(data.message || 'Post failed');
                 if (statusEl) { statusEl.textContent = 'Posted to LinkedIn!'; statusEl.style.color = '#2ecc71'; }
@@ -4892,11 +5050,8 @@
             if (options.length < 2) { if (statusEl) statusEl.textContent = 'Please fill in at least 2 options.'; return; }
             if (statusEl) { statusEl.textContent = 'Posting poll...'; statusEl.style.color = 'rgba(255,255,255,0.6)'; }
             try {
-                const res = await fetch('/api/linkedin/post-poll', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: text.trim(), question: question.trim(), options, duration: cmPollDuration })
-                });
+                const fd = cmBuildPostFormData({ text: text.trim(), question: question.trim(), options: JSON.stringify(options), duration: cmPollDuration }, 'cmPollMedia');
+                const res = await fetch('/api/linkedin/post-poll', { method: 'POST', body: fd });
                 const data = await res.json();
                 if (data.success) {
                     if (statusEl) { statusEl.textContent = 'Poll published to LinkedIn!'; statusEl.style.color = '#27ae60'; }
