@@ -2711,13 +2711,10 @@
                             <!-- ===== ARTICLE POST PANEL ===== -->
                             <div id="cmPanelArticlepost" style="display:none; padding:0 28px 28px;">
 
-                                <!-- Article Picker container -->
-                                <div style="margin-bottom:20px; padding:16px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:10px;">
-                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                                        <div>
-                                            <div style="color:white; font-size:13px; font-weight:700;">Select an Article</div>
-                                            <div style="color:rgba(255,255,255,0.45); font-size:11px; margin-top:2px;">Pick a live article from artisan.com.au to generate a post from</div>
-                                        </div>
+                                <!-- Article Picker -->
+                                <div style="margin-bottom:20px;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                        <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600;">Select an Article</label>
                                         <button onclick="cmLoadWpArticles()" style="padding:5px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:rgba(255,255,255,0.7); cursor:pointer; font-size:12px; font-weight:600;">Refresh</button>
                                     </div>
                                     <select id="cmArticlePicker" onchange="cmOnArticlePickerChange()" style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; box-sizing:border-box; cursor:pointer;">
@@ -2731,50 +2728,49 @@
                                         <div id="cmArticleSelectedTitle" style="color:white; font-weight:600; font-size:14px; margin-bottom:4px;"></div>
                                         <a id="cmArticleSelectedUrl" href="#" target="_blank" style="color:#3498db; font-size:12px;"></a>
                                     </div>
+                                </div>
 
-                                    <!-- Generate button -->
-                                    <div style="margin-top:14px;">
-                                        <button onclick="cmGeneratePostFromArticle()" id="cmGenerateArticlePostBtn" disabled
-                                            style="padding:10px 24px; background:linear-gradient(135deg,#3498db,#2980b9); border:none; border-radius:8px; color:white; cursor:pointer; font-size:13px; font-weight:700; opacity:0.5; transition:opacity 0.2s;">Generate LinkedIn Post with AI</button>
-                                        <div id="cmArticlePostLoading" style="display:none; margin-top:12px; align-items:center; gap:10px;">
-                                            <div style="width:16px; height:16px; border:3px solid rgba(255,255,255,0.2); border-top-color:#3498db; border-radius:50%; animation:spin 0.8s linear infinite; flex-shrink:0;"></div>
-                                            <span style="color:rgba(255,255,255,0.7); font-size:13px;">Generating post with AI...</span>
-                                        </div>
+                                <!-- Generate button -->
+                                <div style="margin-bottom:20px;">
+                                    <button onclick="cmGeneratePostFromArticle()" id="cmGenerateArticlePostBtn" disabled
+                                        style="padding:10px 24px; background:linear-gradient(135deg,#3498db,#2980b9); border:none; border-radius:8px; color:white; cursor:pointer; font-size:13px; font-weight:700; opacity:0.5; transition:opacity 0.2s;">Generate LinkedIn Post with AI</button>
+                                    <div id="cmArticlePostLoading" style="display:none; margin-top:12px; align-items:center; gap:10px;">
+                                        <div style="width:16px; height:16px; border:3px solid rgba(255,255,255,0.2); border-top-color:#3498db; border-radius:50%; animation:spin 0.8s linear infinite; flex-shrink:0;"></div>
+                                        <span style="color:rgba(255,255,255,0.7); font-size:13px;">Generating post with AI...</span>
                                     </div>
                                 </div>
 
                                 <!-- Editable post textarea -->
                                 <div id="cmArticlePostEditor" style="display:none; margin-bottom:20px;">
-                                    <div style="padding:16px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:10px;">
-                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                                            <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600;">LinkedIn Post Copy</label>
-                                            <button onclick="cmGeneratePostFromArticle()" style="padding:4px 12px; background:rgba(52,152,219,0.15); border:1px solid rgba(52,152,219,0.3); border-radius:5px; color:#3498db; cursor:pointer; font-size:12px; font-weight:600;">Regenerate</button>
-                                        </div>
-                                        <textarea id="cmArticlePostText" rows="10" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
-                                        <div style="text-align:right; font-size:11px; color:rgba(255,255,255,0.35); margin-top:4px;" id="cmArticlePostCharCount">0 characters</div>
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                        <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600;">LinkedIn Post Copy</label>
+                                        <button onclick="cmGeneratePostFromArticle()" style="padding:4px 12px; background:rgba(52,152,219,0.15); border:1px solid rgba(52,152,219,0.3); border-radius:5px; color:#3498db; cursor:pointer; font-size:12px; font-weight:600;">Regenerate</button>
+                                    </div>
+                                    <textarea id="cmArticlePostText" rows="10" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
+                                    <div style="text-align:right; font-size:11px; color:rgba(255,255,255,0.35); margin-top:4px;" id="cmArticlePostCharCount">0 characters</div>
+                                </div>
 
-                                        <!-- Actions row -->
-                                        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:14px;">
-                                            <button onclick="cmPostArticlePostNow()" id="cmArticlePostNowBtn" style="padding:10px 24px; background:#0077b5; border:none; border-radius:8px; color:white; cursor:pointer; font-size:14px; font-weight:700;">Post to LinkedIn</button>
-                                            <button onclick="cmToggleArticlePostSchedule()" id="cmArticlePostScheduleBtn" style="padding:10px 18px; background:rgba(52,152,219,0.15); border:1px solid rgba(52,152,219,0.35); border-radius:8px; color:#3498db; cursor:pointer; font-size:13px; font-weight:600;">Schedule Post</button>
-                                            <button onclick="cmCopyText('cmArticlePostText')" style="padding:10px 16px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; cursor:pointer; font-size:13px;">Copy</button>
-                                            <span id="cmArticlePostStatus" style="font-size:13px; color:rgba(255,255,255,0.6);"></span>
-                                        </div>
+                                <!-- Actions -->
+                                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                                    <button onclick="cmPostArticlePostNow()" id="cmArticlePostNowBtn" style="padding:10px 24px; background:#0077b5; border:none; border-radius:8px; color:white; cursor:pointer; font-size:14px; font-weight:700;">Post to LinkedIn</button>
+                                    <button onclick="cmToggleArticlePostSchedule()" id="cmArticlePostScheduleBtn" style="padding:10px 18px; background:rgba(52,152,219,0.15); border:1px solid rgba(52,152,219,0.35); border-radius:8px; color:#3498db; cursor:pointer; font-size:13px; font-weight:600;">Schedule Post</button>
+                                    <button onclick="cmCopyText('cmArticlePostText')" style="padding:10px 16px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; cursor:pointer; font-size:13px;">Copy</button>
+                                    <span id="cmArticlePostStatus" style="font-size:13px; color:rgba(255,255,255,0.6);"></span>
+                                </div>
 
-                                        <!-- Schedule row -->
-                                        <div id="cmArticlePostScheduleRow" style="display:none; margin-top:14px; padding:14px 16px; background:rgba(52,152,219,0.08); border:1px solid rgba(52,152,219,0.2); border-radius:8px;">
-                                            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                                                <label style="color:rgba(255,255,255,0.7); font-size:13px; font-weight:600; white-space:nowrap;">Schedule for:</label>
-                                                <input type="datetime-local" id="cmArticlePostScheduleDate" style="padding:8px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:7px; color:white; font-size:13px; flex:1; min-width:200px;">
-                                                <button onclick="cmConfirmArticlePostSchedule()" style="padding:8px 18px; background:#0077b5; border:none; border-radius:7px; color:white; cursor:pointer; font-size:13px; font-weight:600;">Confirm Schedule</button>
-                                                <button onclick="cmToggleArticlePostSchedule()" style="padding:8px 12px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:7px; color:rgba(255,255,255,0.6); cursor:pointer; font-size:12px;">Cancel</button>
-                                            </div>
-                                        </div>
-
-                                        <!-- Scheduled status box -->
-                                        <div id="cmArticlePostScheduledBox" style="display:none; margin-top:12px;"></div>
+                                <!-- Schedule row -->
+                                <div id="cmArticlePostScheduleRow" style="display:none; margin-top:14px; padding:14px 16px; background:rgba(52,152,219,0.08); border:1px solid rgba(52,152,219,0.2); border-radius:8px;">
+                                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                                        <label style="color:rgba(255,255,255,0.7); font-size:13px; font-weight:600; white-space:nowrap;">Schedule for:</label>
+                                        <input type="datetime-local" id="cmArticlePostScheduleDate" style="padding:8px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:7px; color:white; font-size:13px; flex:1; min-width:200px;">
+                                        <button onclick="cmConfirmArticlePostSchedule()" style="padding:8px 18px; background:#0077b5; border:none; border-radius:7px; color:white; cursor:pointer; font-size:13px; font-weight:600;">Confirm Schedule</button>
+                                        <button onclick="cmToggleArticlePostSchedule()" style="padding:8px 12px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:7px; color:rgba(255,255,255,0.6); cursor:pointer; font-size:12px;">Cancel</button>
                                     </div>
                                 </div>
+
+                                <!-- Scheduled status box -->
+                                <div id="cmArticlePostScheduledBox" style="display:none; margin-top:12px;"></div>
+
                             </div>
 
                     </div>
