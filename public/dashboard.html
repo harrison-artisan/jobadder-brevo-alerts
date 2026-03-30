@@ -2621,7 +2621,20 @@
                                     <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                                         <button onclick="cmPostJobListing()" style="padding:10px 24px; background:#0077b5; border:none; border-radius:8px; color:white; cursor:pointer; font-size:14px; font-weight:700;">Post Job to LinkedIn</button>
                                         <button onclick="cmPreviewJobCard()" style="padding:10px 16px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; cursor:pointer; font-size:13px;">Preview Card</button>
+                                        <button onclick="cmToggleJobSchedule('single')" style="padding:10px 16px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; cursor:pointer; font-size:13px;">Schedule Post</button>
                                         <span id="cmJobPostStatus" style="font-size:13px; color:rgba(255,255,255,0.6);"></span>
+                                    </div>
+                                    <div id="cmJobSingleScheduleRow" style="display:none; margin-top:14px; padding:14px 16px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px;">
+                                        <label style="color:rgba(255,255,255,0.7); font-size:13px; display:block; margin-bottom:8px;">Schedule for (Melbourne time)</label>
+                                        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                                            <input type="datetime-local" id="cmJobSingleScheduleAt" style="padding:8px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; cursor:pointer;">
+                                            <button onclick="cmConfirmJobSchedule('single')" style="padding:8px 18px; background:#0077b5; border:none; border-radius:8px; color:white; cursor:pointer; font-size:13px; font-weight:700;">Confirm Schedule</button>
+                                            <button onclick="cmToggleJobSchedule('single')" style="padding:8px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.6); cursor:pointer; font-size:12px;">Cancel</button>
+                                        </div>
+                                    </div>
+                                    <div id="cmJobSingleScheduledBox" style="display:none; margin-top:14px; padding:12px 16px; background:rgba(0,119,181,0.15); border:1px solid rgba(0,119,181,0.3); border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                                        <span id="cmJobSingleScheduledLabel" style="color:rgba(255,255,255,0.9); font-size:13px;"></span>
+                                        <button onclick="cmCancelJobSchedule('single')" style="padding:6px 14px; background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.4); border-radius:6px; color:#e74c3c; cursor:pointer; font-size:12px;">Cancel Schedule</button>
                                     </div>
                                 </div>
 
@@ -2652,12 +2665,25 @@
                                     <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                                         <button onclick="cmGenerateMultiJobPost()" id="cmJobMultiGenerateBtn" style="padding:10px 20px; background:linear-gradient(135deg,#0077b5,#005f8e); border:none; border-radius:8px; color:white; cursor:pointer; font-size:13px; font-weight:700;">Generate Post with AI</button>
                                         <button onclick="cmPostMultiJobListing()" id="cmJobMultiPostBtn" style="display:none; padding:10px 24px; background:#0077b5; border:none; border-radius:8px; color:white; cursor:pointer; font-size:14px; font-weight:700;">Post to LinkedIn</button>
+                                        <button onclick="cmToggleJobSchedule('multi')" id="cmJobMultiScheduleBtn" style="display:none; padding:10px 16px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; cursor:pointer; font-size:13px;">Schedule Post</button>
                                         <button onclick="cmCopyText('cmJobMultiPostText')" id="cmJobMultiCopyBtn" style="display:none; padding:10px 16px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; cursor:pointer; font-size:13px;">Copy</button>
                                         <span id="cmJobMultiStatus" style="font-size:13px; color:rgba(255,255,255,0.6);"></span>
                                     </div>
                                     <div id="cmJobMultiLoading" style="display:none; margin-top:12px; align-items:center; gap:10px;">
                                         <div style="width:16px; height:16px; border:3px solid rgba(255,255,255,0.2); border-top-color:#0077b5; border-radius:50%; animation:spin 0.8s linear infinite; flex-shrink:0;"></div>
                                         <span style="color:rgba(255,255,255,0.7); font-size:13px;">Generating post with AI...</span>
+                                    </div>
+                                    <div id="cmJobMultiScheduleRow" style="display:none; margin-top:14px; padding:14px 16px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px;">
+                                        <label style="color:rgba(255,255,255,0.7); font-size:13px; display:block; margin-bottom:8px;">Schedule for (Melbourne time)</label>
+                                        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                                            <input type="datetime-local" id="cmJobMultiScheduleAt" style="padding:8px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; cursor:pointer;">
+                                            <button onclick="cmConfirmJobSchedule('multi')" style="padding:8px 18px; background:#0077b5; border:none; border-radius:8px; color:white; cursor:pointer; font-size:13px; font-weight:700;">Confirm Schedule</button>
+                                            <button onclick="cmToggleJobSchedule('multi')" style="padding:8px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.6); cursor:pointer; font-size:12px;">Cancel</button>
+                                        </div>
+                                    </div>
+                                    <div id="cmJobMultiScheduledBox" style="display:none; margin-top:14px; padding:12px 16px; background:rgba(0,119,181,0.15); border:1px solid rgba(0,119,181,0.3); border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                                        <span id="cmJobMultiScheduledLabel" style="color:rgba(255,255,255,0.9); font-size:13px;"></span>
+                                        <button onclick="cmCancelJobSchedule('multi')" style="padding:6px 14px; background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.4); border-radius:6px; color:#e74c3c; cursor:pointer; font-size:12px;">Cancel Schedule</button>
                                     </div>
                                 </div>
 
@@ -2885,6 +2911,7 @@
                 cmLoadPollScheduleState();
                 cmLoadArticlePostScheduleState();
                 cmLoadAListPostScheduleState();
+                cmLoadJobScheduleState();
 
             }
         }
@@ -3157,6 +3184,87 @@
             } catch (err) {
                 if (statusEl) { statusEl.textContent = 'Error: ' + err.message; statusEl.style.color = '#e74c3c'; }
             }
+        }
+
+        function cmToggleJobSchedule(mode) {
+            const rowId = mode === 'single' ? 'cmJobSingleScheduleRow' : 'cmJobMultiScheduleRow';
+            const row = document.getElementById(rowId);
+            if (!row) return;
+            const isVisible = row.style.display !== 'none';
+            row.style.display = isVisible ? 'none' : 'block';
+            if (!isVisible) {
+                // Default to tomorrow 9am Melbourne
+                const inputId = mode === 'single' ? 'cmJobSingleScheduleAt' : 'cmJobMultiScheduleAt';
+                const inp = document.getElementById(inputId);
+                if (inp && !inp.value) {
+                    const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0);
+                    inp.value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + 'T09:00';
+                }
+            }
+        }
+
+        async function cmConfirmJobSchedule(mode) {
+            const inputId = mode === 'single' ? 'cmJobSingleScheduleAt' : 'cmJobMultiScheduleAt';
+            const textId = mode === 'single' ? 'cmJobPostText' : 'cmJobMultiPostText';
+            const rowId = mode === 'single' ? 'cmJobSingleScheduleRow' : 'cmJobMultiScheduleRow';
+            const boxId = mode === 'single' ? 'cmJobSingleScheduledBox' : 'cmJobMultiScheduledBox';
+            const labelId = mode === 'single' ? 'cmJobSingleScheduledLabel' : 'cmJobMultiScheduledLabel';
+            const inp = document.getElementById(inputId);
+            const textEl = document.getElementById(textId);
+            if (!inp || !inp.value) { alert('Please select a date and time.'); return; }
+            const text = textEl ? textEl.value.trim() : '';
+            if (!text) { alert('Please write or generate post copy first.'); return; }
+            // Convert Melbourne local time to UTC ISO
+            const localStr = inp.value; // e.g. "2026-04-01T09:00"
+            const melbOffset = 11; // AEDT UTC+11 (adjust for AEST +10 if needed)
+            const localDate = new Date(localStr);
+            const utcDate = new Date(localDate.getTime() - melbOffset * 60 * 60 * 1000);
+            const jobUrl = mode === 'single' ? (document.getElementById('cmJobUrl') || {}).value || '' : '';
+            const jobTitle = mode === 'single' ? (document.getElementById('cmJobTitle') || {}).value || '' : '';
+            const scheduledFor = localDate.toLocaleString('en-AU', { weekday:'long', year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit', hour12:true }) + ' (Melbourne time)';
+            if (!confirm(`Schedule this job post for ${scheduledFor}?`)) return;
+            try {
+                const res = await fetch('/api/linkedin/schedule-job-listing', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text, scheduledAt: utcDate.toISOString(), jobUrl, jobTitle })
+                });
+                const data = await res.json();
+                if (!data.success) { alert(data.message || 'Failed to schedule.'); return; }
+                const row = document.getElementById(rowId);
+                const box = document.getElementById(boxId);
+                const label = document.getElementById(labelId);
+                if (row) row.style.display = 'none';
+                if (label) label.textContent = 'Scheduled: ' + (data.scheduledFor || scheduledFor);
+                if (box) { box.style.display = 'flex'; }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function cmCancelJobSchedule(mode) {
+            const boxId = mode === 'single' ? 'cmJobSingleScheduledBox' : 'cmJobMultiScheduledBox';
+            if (!confirm('Cancel this scheduled job post?')) return;
+            try {
+                await fetch('/api/linkedin/cancel-job-listing-schedule', { method: 'POST' });
+                const box = document.getElementById(boxId);
+                if (box) box.style.display = 'none';
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function cmLoadJobScheduleState() {
+            try {
+                const res = await fetch('/api/linkedin/job-listing-schedule-state');
+                const data = await res.json();
+                if (data.scheduled && data.scheduledFor) {
+                    // Show in single mode box by default (we don't know which mode was used)
+                    const box = document.getElementById('cmJobSingleScheduledBox');
+                    const label = document.getElementById('cmJobSingleScheduledLabel');
+                    if (box && label) { label.textContent = 'Scheduled: ' + data.scheduledFor; box.style.display = 'flex'; }
+                }
+            } catch (e) { /* silent */ }
         }
 
         async function cmOnJobDropdownChange(sel) {

@@ -1121,6 +1121,86 @@ app.get('/api/linkedin/article-post-schedule-state', (req, res) => {
 });
 
 // ============================================================
+// LinkedIn Job Listing Schedule Routes
+// ============================================================
+const JOB_LISTING_SCHEDULE_FILE = require('path').join(__dirname, '.job-listing-schedule.json');
+let _jobListingScheduledTask = null;
+
+// POST /api/linkedin/schedule-job-listing - Schedule a job listing post (single or multi)
+app.post('/api/linkedin/schedule-job-listing', async (req, res) => {
+  const { text, scheduledAt, jobUrl, jobTitle } = req.body;
+  if (!text) return res.status(400).json({ success: false, message: 'Post text is required.' });
+  if (!scheduledAt) return res.status(400).json({ success: false, message: 'scheduledAt is required.' });
+  try {
+    const sendDate = new Date(scheduledAt);
+    if (isNaN(sendDate.getTime())) return res.status(400).json({ success: false, message: 'Invalid scheduledAt date.' });
+    if (sendDate <= new Date()) return res.status(400).json({ success: false, message: 'Scheduled time must be in the future.' });
+
+    const min = sendDate.getUTCMinutes();
+    const hr = sendDate.getUTCHours();
+    const dom = sendDate.getUTCDate();
+    const mon = sendDate.getUTCMonth() + 1;
+    const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
+    const scheduledFor = sendDate.toLocaleString('en-AU', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: true,
+      timeZone: 'Australia/Melbourne'
+    }) + ' (Melbourne time)';
+
+    if (_jobListingScheduledTask) { _jobListingScheduledTask.stop(); _jobListingScheduledTask = null; }
+    require('fs').writeFileSync(JOB_LISTING_SCHEDULE_FILE, JSON.stringify({
+      text, jobUrl: jobUrl || null, jobTitle: jobTitle || '', scheduledAt: sendDate.toISOString(), scheduledFor
+    }));
+
+    _jobListingScheduledTask = cron.schedule(cronExpr, async () => {
+      console.log('📅 Executing scheduled LinkedIn job listing post...');
+      try {
+        if (jobUrl) {
+          await linkedinService.postWithLinkPreview(text, jobUrl, jobTitle || '', '');
+        } else {
+          await linkedinService.postToLinkedIn(text);
+        }
+        console.log('✅ Scheduled job listing post published to LinkedIn.');
+      } catch (e) {
+        console.error('❌ Scheduled job listing post failed:', e.message);
+      }
+      if (require('fs').existsSync(JOB_LISTING_SCHEDULE_FILE)) require('fs').unlinkSync(JOB_LISTING_SCHEDULE_FILE);
+      if (_jobListingScheduledTask) { _jobListingScheduledTask.stop(); _jobListingScheduledTask = null; }
+    }, { timezone: 'UTC' });
+
+    console.log(`📅 LinkedIn job listing post scheduled for ${scheduledFor} (cron: ${cronExpr} UTC)`);
+    res.json({ success: true, scheduledFor, message: 'Job listing post scheduled successfully.' });
+  } catch (err) {
+    console.error('[LinkedIn] Schedule job listing error:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/linkedin/cancel-job-listing-schedule - Cancel a scheduled job listing post
+app.post('/api/linkedin/cancel-job-listing-schedule', (req, res) => {
+  try {
+    if (_jobListingScheduledTask) { _jobListingScheduledTask.stop(); _jobListingScheduledTask = null; }
+    if (require('fs').existsSync(JOB_LISTING_SCHEDULE_FILE)) require('fs').unlinkSync(JOB_LISTING_SCHEDULE_FILE);
+    res.json({ success: true, message: 'Job listing schedule cancelled.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/linkedin/job-listing-schedule-state - Get current job listing schedule state
+app.get('/api/linkedin/job-listing-schedule-state', (req, res) => {
+  try {
+    if (require('fs').existsSync(JOB_LISTING_SCHEDULE_FILE)) {
+      const saved = JSON.parse(require('fs').readFileSync(JOB_LISTING_SCHEDULE_FILE, 'utf8'));
+      return res.json({ success: true, scheduled: true, scheduledFor: saved.scheduledFor, scheduledAt: saved.scheduledAt });
+    }
+    res.json({ success: true, scheduled: false });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ============================================================
 // LinkedIn A-List Post Routes
 // ============================================================
 const ALIST_POST_SCHEDULE_FILE = require('path').join(__dirname, '.alist-post-schedule.json');
@@ -1458,6 +1538,43 @@ app.listen(PORT, () => {
       }
     } catch (e) {
       console.warn('⚠️  Could not restore LinkedIn A-List post schedule:', e.message);
+    }
+    try {
+      if (require('fs').existsSync(JOB_LISTING_SCHEDULE_FILE)) {
+        const saved = JSON.parse(require('fs').readFileSync(JOB_LISTING_SCHEDULE_FILE, 'utf8'));
+        if (saved && saved.scheduledAt) {
+          const sendDate = new Date(saved.scheduledAt);
+          if (sendDate <= new Date()) {
+            console.warn('⚠️  Job listing scheduled time has passed, clearing schedule');
+            require('fs').unlinkSync(JOB_LISTING_SCHEDULE_FILE);
+          } else {
+            const min = sendDate.getUTCMinutes();
+            const hr = sendDate.getUTCHours();
+            const dom = sendDate.getUTCDate();
+            const mon = sendDate.getUTCMonth() + 1;
+            const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
+            if (_jobListingScheduledTask) { _jobListingScheduledTask.stop(); _jobListingScheduledTask = null; }
+            _jobListingScheduledTask = cron.schedule(cronExpr, async () => {
+              console.log('📅 Executing restored LinkedIn job listing post...');
+              try {
+                if (saved.jobUrl) {
+                  await linkedinService.postWithLinkPreview(saved.text, saved.jobUrl, saved.jobTitle || '', '');
+                } else {
+                  await linkedinService.postToLinkedIn(saved.text);
+                }
+                console.log('✅ Restored job listing post published to LinkedIn.');
+              } catch (e) {
+                console.error('❌ Restored job listing post failed:', e.message);
+              }
+              if (require('fs').existsSync(JOB_LISTING_SCHEDULE_FILE)) require('fs').unlinkSync(JOB_LISTING_SCHEDULE_FILE);
+              if (_jobListingScheduledTask) { _jobListingScheduledTask.stop(); _jobListingScheduledTask = null; }
+            }, { timezone: 'UTC' });
+            console.log(`🔄 LinkedIn job listing post schedule restored for ${saved.scheduledFor}`);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('⚠️  Could not restore LinkedIn job listing post schedule:', e.message);
     }
   })();
 });
