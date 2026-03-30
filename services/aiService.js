@@ -143,6 +143,54 @@ class AIService {
   }
 
   /**
+   * Generate a LinkedIn post showcasing the current A-List candidates
+   */
+  async generateLinkedInPostFromAList(candidates) {
+    try {
+      const client = this.getClient();
+      if (!client) throw new Error('OpenAI API key not configured.');
+
+      console.log(`    🤖 Generating LinkedIn A-List post for ${candidates.length} candidates`);
+
+      // Build a candidate list for the prompt
+      const candidateLines = candidates.map((c, i) =>
+        `${i + 1}. ${c.title} — ${c.summary}`
+      ).join('\n');
+
+      const response = await client.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a social media copywriter for Artisan, a specialist Australian recruitment agency with 27 years of experience placing creative, digital, and marketing professionals. Write a compelling LinkedIn post that showcases Artisan's current A-List — a curated selection of exceptional candidates available for placement. The post should:
+- Open with a strong, attention-grabbing intro (no generic openers like "Excited to share...")
+- Briefly introduce the concept of the A-List (exceptional talent, ready now)
+- List each candidate with their job title only (no summaries — keep it clean and scannable)
+- End with a clear CTA directing hiring managers to https://artisan.com.au/looking-for-talent/ to find out more
+- Include 3-5 relevant hashtags at the end
+- Be professional, confident, and direct
+- No emojis in the body text
+- Between 150-250 words total`
+          },
+          {
+            role: 'user',
+            content: `Here are the ${candidates.length} candidates on this week's A-List:\n\n${candidateLines}\n\nWrite the LinkedIn post.`
+          }
+        ],
+        temperature: 0.75,
+        max_tokens: 450
+      });
+
+      const post = response.choices[0].message.content.trim();
+      console.log(`    ✅ A-List LinkedIn post generated (${post.length} chars)`);
+      return post;
+    } catch (error) {
+      console.error('❌ Error generating LinkedIn A-List post:', error.message);
+      throw error;
+    }
+  }
+
+  /**
    * Generate an anonymized, gender-neutral professional summary for a candidate using Manus API
    */
   async generateCandidateSummary(candidate) {

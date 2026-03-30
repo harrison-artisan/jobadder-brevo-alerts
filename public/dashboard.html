@@ -2485,7 +2485,7 @@
                             <!-- Post Type Selector -->
                             <div style="padding:20px 28px 0;">
                                 <p style="color:rgba(255,255,255,0.6); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:1px; margin:0 0 12px;">Post Type</p>
-                                <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; margin-bottom:24px;">
+                                <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr 1fr; gap:10px; margin-bottom:24px;">
                                     <button onclick="cmSetPostType('standard')" id="cmPostTypeStandard"
                                         style="padding:14px 10px; border-radius:10px; border:2px solid #0077b5; background:rgba(0,119,181,0.15); color:white; cursor:pointer; font-size:13px; font-weight:600; text-align:center; transition:all 0.2s;">
                                         <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:5px;">POST</div>
@@ -2509,6 +2509,12 @@
                                         <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:5px;">ARTICLE</div>
                                         <div>From Article</div>
                                         <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:3px;">Post from live article</div>
+                                    </button>
+                                    <button onclick="cmSetPostType('alistpost')" id="cmPostTypeAlistpost"
+                                        style="padding:14px 10px; border-radius:10px; border:2px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:white; cursor:pointer; font-size:13px; font-weight:600; text-align:center; transition:all 0.2s;">
+                                        <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:5px;">A-LIST</div>
+                                        <div>From A-List</div>
+                                        <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:3px;">Showcase top candidates</div>
                                     </button>
                                 </div>
                             </div>
@@ -2771,6 +2777,63 @@
 
                             </div>
 
+                            <!-- ===== A-LIST POST PANEL ===== -->
+                            <div id="cmPanelAlistpost" style="display:none; padding:0 28px 28px;">
+
+                                <!-- A-List status box -->
+                                <div style="margin-bottom:20px; padding:14px 16px; background:rgba(52,152,219,0.08); border:1px solid rgba(52,152,219,0.2); border-radius:10px;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <div>
+                                            <div style="color:white; font-size:13px; font-weight:700;">Current A-List</div>
+                                            <div style="color:rgba(255,255,255,0.45); font-size:11px; margin-top:2px;">Pulled from the A-List tab — generate your A-List there first</div>
+                                        </div>
+                                        <button onclick="cmGenerateAListPost()" id="cmGenerateAListPostBtn"
+                                            style="padding:9px 20px; background:linear-gradient(135deg,#3498db,#2980b9); border:none; border-radius:8px; color:white; cursor:pointer; font-size:13px; font-weight:700;">Generate LinkedIn Post with AI</button>
+                                    </div>
+                                    <!-- Candidate preview list -->
+                                    <div id="cmAListCandidatePreview" style="display:none; margin-top:14px; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px;">
+                                        <div style="font-size:11px; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:8px;">Candidates on this A-List</div>
+                                        <div id="cmAListCandidateList" style="display:flex; flex-direction:column; gap:6px;"></div>
+                                    </div>
+                                    <div id="cmAListPostLoading" style="display:none; margin-top:12px; align-items:center; gap:10px;">
+                                        <div style="width:16px; height:16px; border:3px solid rgba(255,255,255,0.2); border-top-color:#3498db; border-radius:50%; animation:spin 0.8s linear infinite; flex-shrink:0;"></div>
+                                        <span style="color:rgba(255,255,255,0.7); font-size:13px;">Generating post with AI...</span>
+                                    </div>
+                                </div>
+
+                                <!-- Editable post textarea -->
+                                <div id="cmAListPostEditor" style="display:none; margin-bottom:20px;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                        <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600;">LinkedIn Post Copy</label>
+                                        <button onclick="cmGenerateAListPost()" style="padding:4px 12px; background:rgba(52,152,219,0.15); border:1px solid rgba(52,152,219,0.3); border-radius:5px; color:#3498db; cursor:pointer; font-size:12px; font-weight:600;">Regenerate</button>
+                                    </div>
+                                    <textarea id="cmAListPostText" rows="10" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;" oninput="document.getElementById('cmAListPostCharCount').textContent=this.value.length+' characters'"></textarea>
+                                    <div style="text-align:right; font-size:11px; color:rgba(255,255,255,0.35); margin-top:4px;" id="cmAListPostCharCount">0 characters</div>
+                                </div>
+
+                                <!-- Actions -->
+                                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                                    <button onclick="cmPostAListNow()" id="cmAListPostNowBtn" style="padding:10px 24px; background:#0077b5; border:none; border-radius:8px; color:white; cursor:pointer; font-size:14px; font-weight:700;">Post to LinkedIn</button>
+                                    <button onclick="cmToggleAListPostSchedule()" id="cmAListPostScheduleBtn" style="padding:10px 18px; background:rgba(52,152,219,0.15); border:1px solid rgba(52,152,219,0.35); border-radius:8px; color:#3498db; cursor:pointer; font-size:13px; font-weight:600;">Schedule Post</button>
+                                    <button onclick="cmCopyText('cmAListPostText')" style="padding:10px 16px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; cursor:pointer; font-size:13px;">Copy</button>
+                                    <span id="cmAListPostStatus" style="font-size:13px; color:rgba(255,255,255,0.6);"></span>
+                                </div>
+
+                                <!-- Schedule row -->
+                                <div id="cmAListPostScheduleRow" style="display:none; margin-top:14px; padding:14px 16px; background:rgba(52,152,219,0.08); border:1px solid rgba(52,152,219,0.2); border-radius:8px;">
+                                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                                        <label style="color:rgba(255,255,255,0.7); font-size:13px; font-weight:600; white-space:nowrap;">Schedule for:</label>
+                                        <input type="datetime-local" id="cmAListPostScheduleDate" style="padding:8px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:7px; color:white; font-size:13px; flex:1; min-width:200px;">
+                                        <button onclick="cmConfirmAListPostSchedule()" style="padding:8px 18px; background:#0077b5; border:none; border-radius:7px; color:white; cursor:pointer; font-size:13px; font-weight:600;">Confirm Schedule</button>
+                                        <button onclick="cmToggleAListPostSchedule()" style="padding:8px 12px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:7px; color:rgba(255,255,255,0.6); cursor:pointer; font-size:12px;">Cancel</button>
+                                    </div>
+                                </div>
+
+                                <!-- Scheduled status box -->
+                                <div id="cmAListPostScheduledBox" style="display:none; margin-top:12px;"></div>
+
+                            </div>
+
                         </div>
                     </div>
                 `;
@@ -2778,6 +2841,7 @@
                 cmLoadState();
                 cmLoadPollScheduleState();
                 cmLoadArticlePostScheduleState();
+                cmLoadAListPostScheduleState();
 
             }
         }
@@ -3764,7 +3828,7 @@
 
         function cmSetPostType(type) {
             cmCurrentPostType = type;
-            ['Standard','Job','Poll','Articlepost'].forEach(p => {
+            ['Standard','Job','Poll','Articlepost','Alistpost'].forEach(p => {
                 const panel = document.getElementById('cmPanel' + p);
                 const btn = document.getElementById('cmPostType' + p);
                 if (p.toLowerCase() === type) {
@@ -3783,6 +3847,150 @@
             if (type === 'articlepost') {
                 cmLoadWpArticles();
             }
+        }
+
+        async function cmGenerateAListPost() {
+            const loadEl = document.getElementById('cmAListPostLoading');
+            const editorEl = document.getElementById('cmAListPostEditor');
+            const textEl = document.getElementById('cmAListPostText');
+            const previewEl = document.getElementById('cmAListCandidatePreview');
+            const listEl = document.getElementById('cmAListCandidateList');
+            const btn = document.getElementById('cmGenerateAListPostBtn');
+            if (loadEl) { loadEl.style.display = 'flex'; }
+            if (btn) btn.disabled = true;
+            try {
+                const res = await fetch('/api/linkedin/generate-alist-post', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+                const data = await res.json();
+                if (!data.success) { alert(data.message || 'Failed to generate post.'); return; }
+                if (textEl) {
+                    textEl.value = data.post || '';
+                    document.getElementById('cmAListPostCharCount').textContent = textEl.value.length + ' characters';
+                }
+                if (editorEl) editorEl.style.display = 'block';
+                // Show candidate preview
+                if (data.candidates && data.candidates.length > 0 && listEl) {
+                    listEl.innerHTML = data.candidates.map(c =>
+                        `<div style="display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+                            <span style="color:rgba(255,255,255,0.5); font-size:11px; min-width:16px;">${c.number}.</span>
+                            <span style="color:white; font-size:13px; font-weight:600;">${c.title}</span>
+                            <a href="${c.mailto_link}" style="margin-left:auto; font-size:11px; color:#3498db;">Enquire</a>
+                        </div>`
+                    ).join('');
+                    if (previewEl) previewEl.style.display = 'block';
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            } finally {
+                if (loadEl) loadEl.style.display = 'none';
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        async function cmPostAListNow() {
+            const textEl = document.getElementById('cmAListPostText');
+            const statusEl = document.getElementById('cmAListPostStatus');
+            const text = textEl ? textEl.value.trim() : '';
+            if (!text) { alert('Please generate a post first.'); return; }
+            if (!confirm('Post this A-List post to LinkedIn now?')) return;
+            if (statusEl) statusEl.textContent = 'Posting...';
+            try {
+                const res = await fetch('/api/linkedin/post-alist-post', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    if (statusEl) statusEl.textContent = 'Posted to LinkedIn!';
+                } else {
+                    if (statusEl) statusEl.textContent = 'Error: ' + data.message;
+                }
+            } catch (err) {
+                if (statusEl) statusEl.textContent = 'Error: ' + err.message;
+            }
+        }
+
+        function cmToggleAListPostSchedule() {
+            const row = document.getElementById('cmAListPostScheduleRow');
+            if (!row) return;
+            if (row.style.display === 'none' || !row.style.display) {
+                // Set default to tomorrow 9am Melbourne
+                const mel = new Date(new Date().toLocaleString('en-US', { timeZone: 'Australia/Melbourne' }));
+                mel.setDate(mel.getDate() + 1);
+                mel.setHours(9, 0, 0, 0);
+                const pad = n => String(n).padStart(2, '0');
+                const dt = `${mel.getFullYear()}-${pad(mel.getMonth()+1)}-${pad(mel.getDate())}T${pad(mel.getHours())}:${pad(mel.getMinutes())}`;
+                const inp = document.getElementById('cmAListPostScheduleDate');
+                if (inp) inp.value = dt;
+                row.style.display = 'block';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+
+        async function cmConfirmAListPostSchedule() {
+            const textEl = document.getElementById('cmAListPostText');
+            const dateEl = document.getElementById('cmAListPostScheduleDate');
+            const statusBox = document.getElementById('cmAListPostScheduledBox');
+            const text = textEl ? textEl.value.trim() : '';
+            if (!text) { alert('Please generate a post first.'); return; }
+            if (!dateEl || !dateEl.value) { alert('Please select a date and time.'); return; }
+            // Convert Melbourne local time to UTC ISO
+            const localStr = dateEl.value; // e.g. 2026-04-01T09:00
+            const melDate = new Date(localStr + ':00+11:00');
+            if (isNaN(melDate.getTime()) || melDate <= new Date()) { alert('Please select a future date and time.'); return; }
+            if (!confirm(`Schedule this A-List post for ${melDate.toLocaleString('en-AU', { timeZone: 'Australia/Melbourne', weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}?`)) return;
+            try {
+                const res = await fetch('/api/linkedin/schedule-alist-post', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text, scheduledAt: melDate.toISOString() })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('cmAListPostScheduleRow').style.display = 'none';
+                    if (statusBox) {
+                        statusBox.style.display = 'block';
+                        statusBox.innerHTML = `<div style="padding:12px 16px; background:rgba(52,152,219,0.12); border:1px solid rgba(52,152,219,0.3); border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                            <span style="color:#3498db; font-size:13px; font-weight:600;">A-List Post Scheduled: ${data.scheduledFor} (Melbourne time)</span>
+                            <button onclick="cmCancelAListPostSchedule()" style="padding:5px 12px; background:rgba(231,76,60,0.15); border:1px solid rgba(231,76,60,0.3); border-radius:6px; color:#e74c3c; cursor:pointer; font-size:12px; font-weight:600;">Cancel Schedule</button>
+                        </div>`;
+                    }
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function cmCancelAListPostSchedule() {
+            if (!confirm('Cancel the scheduled A-List post?')) return;
+            try {
+                const res = await fetch('/api/linkedin/cancel-alist-post-schedule', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    const statusBox = document.getElementById('cmAListPostScheduledBox');
+                    if (statusBox) statusBox.style.display = 'none';
+                }
+            } catch (err) { alert('Error: ' + err.message); }
+        }
+
+        async function cmLoadAListPostScheduleState() {
+            try {
+                const res = await fetch('/api/linkedin/alist-post-schedule-state');
+                const data = await res.json();
+                if (data.success && data.scheduled) {
+                    const statusBox = document.getElementById('cmAListPostScheduledBox');
+                    if (statusBox) {
+                        statusBox.style.display = 'block';
+                        statusBox.innerHTML = `<div style="padding:12px 16px; background:rgba(52,152,219,0.12); border:1px solid rgba(52,152,219,0.3); border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                            <span style="color:#3498db; font-size:13px; font-weight:600;">A-List Post Scheduled: ${data.scheduledFor} (Melbourne time)</span>
+                            <button onclick="cmCancelAListPostSchedule()" style="padding:5px 12px; background:rgba(231,76,60,0.15); border:1px solid rgba(231,76,60,0.3); border-radius:6px; color:#e74c3c; cursor:pointer; font-size:12px; font-weight:600;">Cancel Schedule</button>
+                        </div>`;
+                    }
+                }
+            } catch (e) { /* silent */ }
         }
 
         function cmAIWriteStandalone() {

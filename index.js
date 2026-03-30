@@ -1106,6 +1106,99 @@ app.get('/api/linkedin/article-post-schedule-state', (req, res) => {
 });
 
 // ============================================================
+// LinkedIn A-List Post Routes
+// ============================================================
+const ALIST_POST_SCHEDULE_FILE = require('path').join(__dirname, '.alist-post-schedule.json');
+let _alistPostScheduledTask = null;
+
+// POST /api/linkedin/generate-alist-post - Fetch current A-List state and generate LinkedIn post
+app.post('/api/linkedin/generate-alist-post', async (req, res) => {
+  try {
+    const state = candidateAlertsController.getState();
+    if (!state || !state.candidates || state.candidates.length === 0) {
+      return res.status(400).json({ success: false, message: 'No A-List generated yet. Please generate the A-List first from the A-List tab.' });
+    }
+    const post = await aiService.generateLinkedInPostFromAList(state.candidates);
+    res.json({ success: true, post, candidates: state.candidates });
+  } catch (err) {
+    console.error('❌ generate-alist-post error:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/linkedin/post-alist-post - Post A-List LinkedIn post immediately
+app.post('/api/linkedin/post-alist-post', async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) return res.status(400).json({ success: false, message: 'Post text is required.' });
+    await linkedinService.postToLinkedIn(text);
+    res.json({ success: true, message: 'A-List post published to LinkedIn.' });
+  } catch (err) {
+    console.error('❌ post-alist-post error:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/linkedin/schedule-alist-post - Schedule an A-List LinkedIn post
+app.post('/api/linkedin/schedule-alist-post', async (req, res) => {
+  try {
+    const { text, scheduledAt } = req.body;
+    if (!text) return res.status(400).json({ success: false, message: 'Post text is required.' });
+    const sendDate = new Date(scheduledAt);
+    if (isNaN(sendDate.getTime()) || sendDate <= new Date()) {
+      return res.status(400).json({ success: false, message: 'Invalid or past scheduled time.' });
+    }
+    const min = sendDate.getUTCMinutes();
+    const hr = sendDate.getUTCHours();
+    const dom = sendDate.getUTCDate();
+    const mon = sendDate.getUTCMonth() + 1;
+    const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
+    if (_alistPostScheduledTask) { _alistPostScheduledTask.stop(); _alistPostScheduledTask = null; }
+    const scheduledFor = sendDate.toLocaleString('en-AU', { timeZone: 'Australia/Melbourne', weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    require('fs').writeFileSync(ALIST_POST_SCHEDULE_FILE, JSON.stringify({ text, scheduledAt: sendDate.toISOString(), scheduledFor }));
+    _alistPostScheduledTask = cron.schedule(cronExpr, async () => {
+      console.log('📅 Executing scheduled LinkedIn A-List post...');
+      try {
+        await linkedinService.postToLinkedIn(text);
+        console.log('✅ Scheduled A-List post published to LinkedIn.');
+      } catch (e) {
+        console.error('❌ Scheduled A-List post failed:', e.message);
+      }
+      if (require('fs').existsSync(ALIST_POST_SCHEDULE_FILE)) require('fs').unlinkSync(ALIST_POST_SCHEDULE_FILE);
+      if (_alistPostScheduledTask) { _alistPostScheduledTask.stop(); _alistPostScheduledTask = null; }
+    }, { timezone: 'UTC' });
+    res.json({ success: true, message: `A-List post scheduled for ${scheduledFor}`, scheduledFor, scheduledAt: sendDate.toISOString() });
+  } catch (err) {
+    console.error('❌ schedule-alist-post error:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/linkedin/cancel-alist-post-schedule - Cancel a scheduled A-List post
+app.post('/api/linkedin/cancel-alist-post-schedule', (req, res) => {
+  try {
+    if (_alistPostScheduledTask) { _alistPostScheduledTask.stop(); _alistPostScheduledTask = null; }
+    if (require('fs').existsSync(ALIST_POST_SCHEDULE_FILE)) require('fs').unlinkSync(ALIST_POST_SCHEDULE_FILE);
+    res.json({ success: true, message: 'A-List post schedule cancelled.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/linkedin/alist-post-schedule-state - Get current A-List post schedule state
+app.get('/api/linkedin/alist-post-schedule-state', (req, res) => {
+  try {
+    if (require('fs').existsSync(ALIST_POST_SCHEDULE_FILE)) {
+      const saved = JSON.parse(require('fs').readFileSync(ALIST_POST_SCHEDULE_FILE, 'utf8'));
+      return res.json({ success: true, scheduled: true, scheduledFor: saved.scheduledFor, scheduledAt: saved.scheduledAt });
+    }
+    res.json({ success: true, scheduled: false });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ============================================================
 // Consultant Newsletter Routes
 // ============================================================
 
@@ -1317,6 +1410,39 @@ app.listen(PORT, () => {
       }
     } catch (e) {
       console.warn('⚠️  Could not restore LinkedIn poll schedule:', e.message);
+    }
+    try {
+      if (require('fs').existsSync(ALIST_POST_SCHEDULE_FILE)) {
+        const saved = JSON.parse(require('fs').readFileSync(ALIST_POST_SCHEDULE_FILE, 'utf8'));
+        if (saved && saved.scheduledAt) {
+          const sendDate = new Date(saved.scheduledAt);
+          if (sendDate <= new Date()) {
+            console.warn('⚠️  A-List post scheduled time has passed, clearing schedule');
+            require('fs').unlinkSync(ALIST_POST_SCHEDULE_FILE);
+          } else {
+            const min = sendDate.getUTCMinutes();
+            const hr = sendDate.getUTCHours();
+            const dom = sendDate.getUTCDate();
+            const mon = sendDate.getUTCMonth() + 1;
+            const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
+            if (_alistPostScheduledTask) { _alistPostScheduledTask.stop(); _alistPostScheduledTask = null; }
+            _alistPostScheduledTask = cron.schedule(cronExpr, async () => {
+              console.log('📅 Executing restored LinkedIn A-List post...');
+              try {
+                await linkedinService.postToLinkedIn(saved.text);
+                console.log('✅ Restored A-List post published to LinkedIn.');
+              } catch (e) {
+                console.error('❌ Restored A-List post failed:', e.message);
+              }
+              if (require('fs').existsSync(ALIST_POST_SCHEDULE_FILE)) require('fs').unlinkSync(ALIST_POST_SCHEDULE_FILE);
+              if (_alistPostScheduledTask) { _alistPostScheduledTask.stop(); _alistPostScheduledTask = null; }
+            }, { timezone: 'UTC' });
+            console.log(`🔄 LinkedIn A-List post schedule restored for ${saved.scheduledFor}`);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('⚠️  Could not restore LinkedIn A-List post schedule:', e.message);
     }
   })();
 });
