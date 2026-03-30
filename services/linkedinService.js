@@ -327,38 +327,50 @@ class LinkedInService {
     }
     const author = tokenStore.orgUrn || tokenStore.personUrn;
 
-    // Step 1: Try to fetch the OG image from the target URL
+    // Step 1: Fetch the OG image from the target URL and upload to LinkedIn
+    // Use a real browser User-Agent so WordPress/artisan.com.au serves the full HTML with OG tags
+    const BROWSER_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+    // Fallback: Artisan logo — ensures a thumbnail is always present even if OG fetch fails
+    const FALLBACK_IMAGE_URL = 'https://artisan.com.au/wp-content/uploads/2023/01/artisan-logo-og.png';
     let thumbnailUrn = null;
+    let ogImageUrl = null;
     try {
       const pageResp = await axios.get(url, {
-        timeout: 8000,
-        headers: { 'User-Agent': 'LinkedInBot/1.0' },
+        timeout: 10000,
+        headers: { 'User-Agent': BROWSER_UA },
         maxRedirects: 5,
       });
       const html = pageResp.data || '';
-      // Extract og:image meta tag
+      // Extract og:image meta tag (both attribute orders)
       const ogMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
                    || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
       if (ogMatch && ogMatch[1]) {
-        const imageUrl = ogMatch[1].startsWith('http') ? ogMatch[1] : new URL(ogMatch[1], url).href;
-        // Fetch the image binary
-        const imgResp = await axios.get(imageUrl, {
-          responseType: 'arraybuffer',
-          timeout: 10000,
-          headers: { 'User-Agent': 'LinkedInBot/1.0' },
-        });
-        const imageBuffer = Buffer.from(imgResp.data);
-        const contentType = imgResp.headers['content-type'] || 'image/jpeg';
-        const mimeType = contentType.split(';')[0].trim();
-        // Upload to LinkedIn Images API
-        const { uploadUrl, imageUrn } = await this.initializeImageUpload();
-        await this.uploadImageBinary(uploadUrl, imageBuffer, mimeType);
-        thumbnailUrn = imageUrn;
-        console.log(`[LinkedIn] Thumbnail uploaded for link preview. URN: ${thumbnailUrn}`);
+        ogImageUrl = ogMatch[1].startsWith('http') ? ogMatch[1] : new URL(ogMatch[1], url).href;
+        console.log(`[LinkedIn] OG image found: ${ogImageUrl}`);
+      } else {
+        console.warn(`[LinkedIn] No og:image found on ${url}, will use fallback.`);
       }
+    } catch (pageErr) {
+      console.warn(`[LinkedIn] Could not fetch page for OG image (${pageErr.message}), will use fallback.`);
+    }
+    // Use OG image if found, otherwise fall back to Artisan logo
+    const imageUrlToUpload = ogImageUrl || FALLBACK_IMAGE_URL;
+    try {
+      const imgResp = await axios.get(imageUrlToUpload, {
+        responseType: 'arraybuffer',
+        timeout: 12000,
+        headers: { 'User-Agent': BROWSER_UA },
+      });
+      const imageBuffer = Buffer.from(imgResp.data);
+      const contentType = imgResp.headers['content-type'] || 'image/jpeg';
+      const mimeType = contentType.split(';')[0].trim();
+      const { uploadUrl, imageUrn } = await this.initializeImageUpload();
+      await this.uploadImageBinary(uploadUrl, imageBuffer, mimeType);
+      thumbnailUrn = imageUrn;
+      console.log(`[LinkedIn] Thumbnail uploaded for link preview. URN: ${thumbnailUrn}`);
     } catch (thumbErr) {
-      // Non-fatal — post without thumbnail if OG image fetch fails
-      console.warn(`[LinkedIn] Could not fetch OG image for link preview (${thumbErr.message}). Posting without thumbnail.`);
+      // Still non-fatal — post without thumbnail as last resort
+      console.warn(`[LinkedIn] Could not upload thumbnail (${thumbErr.message}). Posting without thumbnail.`);
     }
 
     // Step 2: Build the article content block
