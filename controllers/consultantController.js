@@ -886,12 +886,329 @@ function restoreConsultantSchedule() {
     }
 }
 
+// ============================================================
+// CSV UPLOAD HELPERS
+// ============================================================
+
+/**
+ * Parse a CSV buffer in key,value format (one field per row).
+ * Handles quoted values, trims whitespace, ignores blank/comment rows.
+ */
+function parseCsvBuffer(buffer) {
+    const text = buffer.toString('utf8');
+    const lines = text.split(/\r?\n/);
+    const data = {};
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const commaIdx = trimmed.indexOf(',');
+        if (commaIdx === -1) continue;
+        const key = trimmed.slice(0, commaIdx).trim().toLowerCase().replace(/\s+/g, '_');
+        let val = trimmed.slice(commaIdx + 1).trim();
+        // Strip surrounding quotes
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+            val = val.slice(1, -1).replace(/""/g, '"');
+        }
+        if (key) data[key] = val;
+    }
+    return data;
+}
+
+/**
+ * Parse a human-readable date string into { day, month } for the email template.
+ * Accepts: "15 April 2026", "15/04/2026", "April 15 2026", "15-04-2026"
+ */
+function parseEventDate(dateStr) {
+    if (!dateStr || !dateStr.trim()) return null;
+    const s = dateStr.trim();
+    const MONTHS = {
+        january:'JAN', february:'FEB', march:'MAR', april:'APR', may:'MAY', june:'JUN',
+        july:'JUL', august:'AUG', september:'SEP', october:'OCT', november:'NOV', december:'DEC',
+        jan:'JAN', feb:'FEB', mar:'MAR', apr:'APR', jun:'JUN', jul:'JUL',
+        aug:'AUG', sep:'SEP', oct:'OCT', nov:'NOV', dec:'DEC'
+    };
+    // "15 April 2026" or "April 15 2026"
+    const wordMatch = s.match(/^(\d{1,2})\s+([A-Za-z]+)(?:\s+\d{2,4})?$/) ||
+                      s.match(/^([A-Za-z]+)\s+(\d{1,2})(?:\s+\d{2,4})?$/);
+    if (wordMatch) {
+        let day, monthWord;
+        if (/^\d/.test(wordMatch[1])) { day = wordMatch[1]; monthWord = wordMatch[2]; }
+        else { monthWord = wordMatch[1]; day = wordMatch[2]; }
+        const abbr = MONTHS[monthWord.toLowerCase()];
+        if (abbr) return { day: String(parseInt(day, 10)), month: abbr };
+    }
+    // "15/04/2026" or "15-04-2026"
+    const numMatch = s.match(/^(\d{1,2})[\/-](\d{1,2})(?:[\/-]\d{2,4})?$/);
+    if (numMatch) {
+        const day = numMatch[1];
+        const monthNum = parseInt(numMatch[2], 10);
+        const monthNames = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+        if (monthNum >= 1 && monthNum <= 12) return { day: String(parseInt(day, 10)), month: monthNames[monthNum - 1] };
+    }
+    return null;
+}
+
+/**
+ * Scrape og:title and og:description from a URL (for Worth Reading card).
+ */
+async function scrapePageMeta(url) {
+    return new Promise((resolve) => {
+        try {
+            const mod = url.startsWith('https') ? https : http;
+            const options = {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml',
+                    'Accept-Language': 'en-US,en;q=0.9'
+                }
+            };
+            const req = mod.get(url, options, (res) => {
+                if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                    return scrapePageMeta(res.headers.location).then(resolve).catch(() => resolve({ title: '', description: '' }));
+                }
+                let data = '';
+                res.on('data', chunk => { data += chunk; if (data.length > 200000) req.destroy(); });
+                res.on('end', () => {
+                    try {
+                        const decode = s => s ? s.replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>') : '';
+                        const ogTitle = (data.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i) ||
+                                         data.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i) || [])[1];
+                        const ogDesc  = (data.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i) ||
+                                         data.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:description["']/i) ||
+                                         data.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i) ||
+                                         data.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']description["']/i) || [])[1];
+                        const titleTag = (data.match(/<title[^>]*>([^<]+)<\/title>/i) || [])[1];
+                        const title = decode(ogTitle || titleTag || '');
+                        const description = decode(ogDesc || '');
+                        console.log(`✅ Scraped page meta: title="${title.slice(0,60)}"`);
+                        resolve({ title, description });
+                    } catch (e) { console.warn('⚠️  Page meta parse error:', e.message); resolve({ title: '', description: '' }); }
+                });
+            });
+            req.on('error', (e) => { console.warn('⚠️  Page meta fetch error:', e.message); resolve({ title: '', description: '' }); });
+            req.setTimeout(12000, () => { req.destroy(); console.warn('⚠️  Page meta fetch timed out'); resolve({ title: '', description: '' }); });
+        } catch (e) { console.warn('⚠️  scrapePageMeta error:', e.message); resolve({ title: '', description: '' }); }
+    });
+}
+
+/**
+ * Use OpenAI to polish text and auto-generate headings for Industry Insight and Personal Update.
+ */
+async function aiPolishAndGenerateHeadings(fields) {
+    try {
+        const aiService = require('../services/aiService');
+        const client = aiService.getClient();
+        if (!client) { console.warn('⚠️  OpenAI not available — skipping polish'); return fields; }
+        const prompt = `You are an editorial assistant for Artisan, a specialist Australian creative recruitment agency.
+Your tasks:
+1. Fix any spelling or grammar errors in the provided text fields. Use Australian English spelling throughout (e.g. specialise, recognise, organisation, colour).
+2. Generate a punchy, compelling heading (max 10 words) for the Industry Insight section based on its body text.
+3. Generate a warm, personal heading (max 10 words) for the Personal Update section based on its body text.
+
+Return ONLY valid JSON with these exact keys (no markdown, no extra text):
+{
+  "industry_insight_heading": "...",
+  "industry_insight_body": "...",
+  "life_update_heading": "...",
+  "life_update_body": "...",
+  "youtube_caption": "...",
+  "image_caption": "...",
+  "link_caption": "...",
+  "event_1_description": "...",
+  "event_2_description": "...",
+  "event_3_description": "..."
+}
+
+Input:
+- industry_insight_body: ${JSON.stringify(fields.industry_insight_body || '')}
+- life_update_body: ${JSON.stringify(fields.life_update_body || '')}
+- youtube_caption: ${JSON.stringify(fields.youtube_caption || '')}
+- image_caption: ${JSON.stringify(fields.image_caption || '')}
+- link_caption: ${JSON.stringify(fields.link_caption || '')}
+- event_1_description: ${JSON.stringify(fields.event_1_description || '')}
+- event_2_description: ${JSON.stringify(fields.event_2_description || '')}
+- event_3_description: ${JSON.stringify(fields.event_3_description || '')}`;
+
+        const response = await client.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.5,
+            max_tokens: 900
+        });
+        const raw = response.choices[0].message.content.trim();
+        const cleaned = raw.replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/```\s*$/i,'').trim();
+        const polished = JSON.parse(cleaned);
+        console.log('✅ OpenAI polish complete');
+        return {
+            ...fields,
+            industry_insight_heading: polished.industry_insight_heading || '',
+            industry_insight_body:    polished.industry_insight_body    || fields.industry_insight_body || '',
+            life_update_heading:      polished.life_update_heading      || '',
+            life_update_body:         polished.life_update_body         || fields.life_update_body || '',
+            youtube_caption:  polished.youtube_caption  !== undefined ? polished.youtube_caption  : (fields.youtube_caption  || ''),
+            image_caption:    polished.image_caption    !== undefined ? polished.image_caption    : (fields.image_caption    || ''),
+            link_caption:     polished.link_caption     !== undefined ? polished.link_caption     : (fields.link_caption     || ''),
+            event_1_description: polished.event_1_description !== undefined ? polished.event_1_description : (fields.event_1_description || ''),
+            event_2_description: polished.event_2_description !== undefined ? polished.event_2_description : (fields.event_2_description || ''),
+            event_3_description: polished.event_3_description !== undefined ? polished.event_3_description : (fields.event_3_description || '')
+        };
+    } catch (e) {
+        console.warn('⚠️  OpenAI polish failed:', e.message);
+        return fields;
+    }
+}
+
+// ============================================================
+// POST /api/consultant/parse-csv
+// Accepts multipart CSV file upload (field name: "csv").
+// Parses the CSV, enriches all fields, saves state.
+// ============================================================
+async function parseCsv(req, res) {
+    console.log('\n======== CONSULTANT: PARSE CSV ========');
+    try {
+        if (!req.file || !req.file.buffer) {
+            return res.status(400).json({ success: false, message: 'No CSV file uploaded. Attach a file with field name "csv".' });
+        }
+
+        // 1. Parse CSV
+        const raw = parseCsvBuffer(req.file.buffer);
+        console.log('📄 CSV fields parsed:', Object.keys(raw).join(', '));
+
+        // 2. Validate required fields
+        const consultantId = (raw.consultant || '').trim();
+        if (!consultantId) return res.status(400).json({ success: false, message: 'CSV missing required field: consultant' });
+        if (!raw.industry_insight_body && !raw.industry_insight) return res.status(400).json({ success: false, message: 'CSV missing required field: industry_insight_body' });
+        if (!raw.life_update_body && !raw.life_update) return res.status(400).json({ success: false, message: 'CSV missing required field: life_update_body' });
+        // Normalise alternate field names
+        if (!raw.industry_insight_body && raw.industry_insight) raw.industry_insight_body = raw.industry_insight;
+        if (!raw.life_update_body && raw.life_update) raw.life_update_body = raw.life_update;
+
+        // 3. Load consultant config
+        let consultants;
+        try { consultants = loadConsultants(); } catch (e) { return res.status(500).json({ success: false, message: e.message }); }
+        const consultantConfig = consultants[consultantId];
+        if (!consultantConfig) return res.status(400).json({ success: false, message: `Unknown consultant ID: "${consultantId}". Valid IDs: ${Object.keys(consultants).join(', ')}` });
+
+        // 4. OpenAI: polish text + generate headings
+        console.log('🤖 Running OpenAI polish and heading generation...');
+        const polished = await aiPolishAndGenerateHeadings(raw);
+
+        // 5. Scrape Worth Reading URL for title + snippet
+        let linkTitle = (polished.link_title || polished.link_caption || '').trim();
+        let linkDescription = (polished.link_description || '').trim();
+        if (polished.link_url && polished.link_url.startsWith('http')) {
+            console.log(`🔗 Scraping Worth Reading URL: ${polished.link_url}`);
+            const meta = await scrapePageMeta(polished.link_url);
+            if (!linkTitle && meta.title) linkTitle = meta.title;
+            if (!linkDescription && meta.description) linkDescription = meta.description;
+        }
+
+        // 6. Build media array
+        const mediaArray = [];
+        // YouTube
+        if (polished.youtube_url && polished.youtube_url.startsWith('http')) {
+            const ytItem = { type: 'youtube', url: polished.youtube_url, caption: polished.youtube_caption || '' };
+            const ytMatch = polished.youtube_url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)?([\w-]{11})/);
+            if (ytMatch) ytItem.thumbnail = `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`;
+            mediaArray.push(ytItem);
+        }
+        // Image
+        if (polished.image_url && polished.image_url.startsWith('http')) {
+            mediaArray.push({ type: 'image', url: polished.image_url, caption: polished.image_caption || '' });
+        }
+        // Instagram
+        if (polished.instagram_url && polished.instagram_url.startsWith('http')) {
+            const igItem = { type: 'instagram', url: polished.instagram_url, caption: '' };
+            console.log(`📸 Scraping Instagram post: ${polished.instagram_url}`);
+            const igData = await fetchInstagramPostData(polished.instagram_url);
+            if (igData.imageUrl) igItem.scraped_image = igData.imageUrl;
+            if (igData.caption)  igItem.caption = igData.caption;
+            if (igData.handle)   igItem.handle = igData.handle;
+            mediaArray.push(igItem);
+        }
+        // Worth Reading link card
+        if (polished.link_url && polished.link_url.startsWith('http')) {
+            mediaArray.push({
+                type: 'link',
+                url: polished.link_url,
+                title: linkTitle,
+                caption: linkDescription || linkTitle
+            });
+        }
+
+        // 7. Parse events
+        const events = [];
+        for (let i = 1; i <= 3; i++) {
+            const title = (polished[`event_${i}_title`] || '').trim();
+            if (!title) continue;
+            const parsed = parseEventDate(polished[`event_${i}_date`] || '');
+            events.push({
+                day:         parsed ? parsed.day   : '',
+                month:       parsed ? parsed.month : '',
+                title,
+                description: (polished[`event_${i}_description`] || '').trim(),
+                link:        (polished[`event_${i}_link`]        || '').trim()
+            });
+        }
+
+        // 8. Auto-fetch WordPress articles
+        console.log('📰 Fetching WordPress articles...');
+        const wpArticles = await fetchWordPressArticles();
+        const articles = [ wpArticles[0] || {}, wpArticles[1] || {}, wpArticles[2] || {} ];
+
+        // 9. A-List candidate
+        let alistCandidate = getAListCandidateFromState();
+        if (alistCandidate) { console.log(`✅ A-List candidate from state: ${alistCandidate.title}`); }
+        else { console.log('ℹ️  No A-List state — fetching live...'); alistCandidate = await fetchAListCandidateLive(); }
+
+        // 10. Live job
+        const liveJob = await fetchLiveJob();
+
+        // 11. Build parsedForTemplate (same shape as parseJSON uses)
+        const parsedForTemplate = {
+            consultant: consultantId,
+            preheader_text: `${polished.industry_insight_heading} — from ${consultantConfig.name} at Artisan`,
+            industry_insight: { heading: polished.industry_insight_heading, body: polished.industry_insight_body },
+            life_update:      { heading: polished.life_update_heading,      body: polished.life_update_body },
+            events
+        };
+
+        // 12. Build template params and save state
+        const templateParams = buildTemplateParams(consultantConfig, parsedForTemplate, mediaArray, articles, alistCandidate, liveJob);
+        const state = {
+            state: 'GENERATED',
+            generatedAt: new Date().toISOString(),
+            consultant: consultantConfig,
+            content: { industry_insight: parsedForTemplate.industry_insight, life_update: parsedForTemplate.life_update, events, media: mediaArray, articles, alist_candidate: alistCandidate },
+            templateParams
+        };
+        writeState(state);
+
+        console.log(`✅ CSV newsletter parsed for ${consultantConfig.name}`);
+        res.json({
+            success: true,
+            message: `Newsletter built for ${consultantConfig.name}. ${wpArticles.length} articles auto-fetched.${alistCandidate ? ' A-List candidate included.' : ''}${liveJob ? ` Live job: ${liveJob.title}.` : ''}`,
+            consultant: consultantConfig.name,
+            newsletter_name: consultantConfig.newsletter_name,
+            media_count: mediaArray.length,
+            articles_from_wp: wpArticles.length,
+            alist_candidate: !!alistCandidate,
+            live_job: !!liveJob,
+            state
+        });
+    } catch (error) {
+        console.error('❌ Error parsing CSV:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+}
+
 module.exports = {
     getState,
     getConsultantList,
     getProfile,
     saveProfile,
     parseJSON,
+    parseCsv,
     previewConsultant,
     sendTest,
     sendToAll,

@@ -1368,6 +1368,15 @@ app.post('/api/consultant/parse', (req, res) => {
   consultantController.parseJSON(req, res);
 });
 
+// POST /api/consultant/parse-csv - Parse uploaded CSV spreadsheet, enrich with AI, save state
+app.post('/api/consultant/parse-csv', upload.single('csv'), async (req, res) => {
+  try {
+    await consultantController.parseCsv(req, res);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // GET  /api/preview/consultant  - Render HTML preview of consultant newsletter
 app.get('/api/preview/consultant', async (req, res) => {
   try {

@@ -1851,41 +1851,46 @@
                 </div>
             </div>
 
-            <!-- Step 1: Gemini JSON Paste -->
+            <!-- Step 1: CSV Upload -->
             <div class="actions-card">
-                <h2>Step 1 — Paste Gemini Output</h2>
+                <h2>Step 1 — Upload Newsletter Spreadsheet</h2>
                 <p style="margin-bottom: 18px; color: rgba(255,255,255,0.8); line-height: 1.6; font-size: 14px;">
-                    Use the <strong style="color: white;">Artisan Consultant Newsletter Gem</strong> in Google Gemini to generate your newsletter content, then copy and paste the JSON output below.
+                    Fill in the <strong style="color: white;">Artisan Consultant Newsletter</strong> Google Sheet, download it as a CSV file, then upload it below. OpenAI will automatically generate headings, polish the copy, and pull in all media and article content.
                 </p>
 
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label style="color: white; font-weight: 600; margin-bottom: 10px; display: block; font-size: 14px;">Gemini JSON Output</label>
-                    <textarea
-                        id="consultantJsonInput"
-                        placeholder='Paste the JSON from Gemini here...&#10;&#10;Example:&#10;{&#10;  &quot;consultant&quot;: &quot;debbie-younger&quot;,&#10;  &quot;industry_insight&quot;: { &quot;heading&quot;: &quot;...&quot;, &quot;body&quot;: &quot;...&quot; },&#10;  &quot;life_update&quot;: { &quot;heading&quot;: &quot;...&quot;, &quot;body&quot;: &quot;...&quot; },&#10;  &quot;events&quot;: [],&#10;  &quot;media_url&quot;: null&#10;}'
-                        style="
-                            width: 100%;
-                            min-height: 220px;
-                            padding: 16px;
-                            background: rgba(255,255,255,0.08);
-                            border: 1.5px solid rgba(255,255,255,0.2);
-                            border-radius: 10px;
-                            color: white;
-                            font-family: 'Courier New', monospace;
-                            font-size: 13px;
-                            line-height: 1.6;
-                            resize: vertical;
-                            box-sizing: border-box;
-                            transition: border-color 0.2s;
-                        "
-                        oninput="onConsultantJsonInput()"
-                    ></textarea>
-                    <div id="consultantJsonError" style="display:none; margin-top: 8px; padding: 10px 14px; background: rgba(231,76,60,0.15); border: 1px solid rgba(231,76,60,0.4); border-radius: 6px; color: #ff8a80; font-size: 13px;"></div>
+                <!-- Download template link -->
+                <div style="margin-bottom: 20px; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 20px;">&#128196;</span>
+                    <div style="flex: 1;">
+                        <div style="color: white; font-weight: 600; font-size: 13px; margin-bottom: 3px;">Google Sheets Template</div>
+                        <div style="color: rgba(255,255,255,0.55); font-size: 12px;">Fill in your content, then File &rarr; Download &rarr; Comma Separated Values (.csv)</div>
+                    </div>
+                    <a href="/consultant-newsletter-template.csv" download="consultant-newsletter-template.csv"
+                       style="padding: 7px 16px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: white; font-size: 12px; font-weight: 600; text-decoration: none; white-space: nowrap;">
+                        Download Template
+                    </a>
                 </div>
 
+                <!-- File upload drop zone -->
+                <div id="csvDropZone"
+                     onclick="document.getElementById('csvFileInput').click()"
+                     ondragover="event.preventDefault(); this.style.borderColor='rgba(189,32,61,0.8)'; this.style.background='rgba(189,32,61,0.08)';"
+                     ondragleave="this.style.borderColor='rgba(255,255,255,0.2)'; this.style.background='rgba(255,255,255,0.04)';"
+                     ondrop="handleCsvDrop(event)"
+                     style="width:100%;box-sizing:border-box;min-height:120px;padding:28px 20px;background:rgba(255,255,255,0.04);border:2px dashed rgba(255,255,255,0.2);border-radius:10px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:14px;">
+                    <input type="file" id="csvFileInput" accept=".csv,text/csv" style="display:none" onchange="onCsvFileSelected(event)">
+                    <div id="csvDropZoneContent">
+                        <div style="font-size:32px;margin-bottom:8px;">&#128196;</div>
+                        <div style="color:white;font-weight:600;font-size:14px;margin-bottom:4px;">Click to upload or drag &amp; drop</div>
+                        <div style="color:rgba(255,255,255,0.5);font-size:12px;">CSV files only &mdash; exported from Google Sheets</div>
+                    </div>
+                </div>
+
+                <div id="consultantJsonError" style="display:none; margin-top: 8px; padding: 10px 14px; background: rgba(231,76,60,0.15); border: 1px solid rgba(231,76,60,0.4); border-radius: 6px; color: #ff8a80; font-size: 13px;"></div>
+
                 <div class="btn-group" style="display: flex; gap: 12px; margin-top: 12px;">
-                    <button class="btn btn-secondary" onclick="parseConsultantJSON()" id="btnParseConsultant">
-                        Parse &amp; Preview
+                    <button class="btn btn-secondary" onclick="uploadConsultantCsv()" id="btnParseConsultant" disabled>
+                        Build &amp; Preview
                     </button>
                     <button class="btn" style="background: rgba(231,76,60,0.3); color: white;" onclick="resetConsultantState()" id="btnResetConsultant">
                         Reset
@@ -7633,85 +7638,100 @@
             }
         }
 
-        // Called on every keystroke in the textarea — clears error styling
-        function onConsultantJsonInput() {
-            const errorDiv = document.getElementById('consultantJsonError');
-            errorDiv.style.display = 'none';
-            const ta = document.getElementById('consultantJsonInput');
-            ta.style.borderColor = 'rgba(255,255,255,0.2)';
+        // ---- CSV Upload helpers ----
+        let _csvFile = null;
+
+        function onCsvFileSelected(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            _csvFile = file;
+            updateCsvDropZone(file.name);
+            document.getElementById('btnParseConsultant').disabled = false;
+            document.getElementById('consultantJsonError').style.display = 'none';
         }
 
-        // Parse & Preview — sends JSON to backend, updates status cards, enables action buttons
-        async function parseConsultantJSON() {
-            const jsonText = document.getElementById('consultantJsonInput').value.trim();
-            const errorDiv = document.getElementById('consultantJsonError');
-            const ta = document.getElementById('consultantJsonInput');
-
-            if (!jsonText) {
-                errorDiv.textContent = 'Please paste the JSON output from Gemini first.';
-                errorDiv.style.display = 'block';
-                ta.style.borderColor = 'rgba(231,76,60,0.6)';
+        function handleCsvDrop(event) {
+            event.preventDefault();
+            const dz = document.getElementById('csvDropZone');
+            dz.style.borderColor = 'rgba(255,255,255,0.2)';
+            dz.style.background = 'rgba(255,255,255,0.04)';
+            const file = event.dataTransfer.files && event.dataTransfer.files[0];
+            if (!file) return;
+            if (!file.name.toLowerCase().endsWith('.csv')) {
+                document.getElementById('consultantJsonError').textContent = 'Please upload a CSV file.';
+                document.getElementById('consultantJsonError').style.display = 'block';
                 return;
             }
+            _csvFile = file;
+            updateCsvDropZone(file.name);
+            document.getElementById('btnParseConsultant').disabled = false;
+            document.getElementById('consultantJsonError').style.display = 'none';
+        }
 
+        function updateCsvDropZone(filename) {
+            document.getElementById('csvDropZoneContent').innerHTML = `
+                <div style="font-size:28px;margin-bottom:8px;">&#10003;</div>
+                <div style="color:#27ae60;font-weight:600;font-size:14px;margin-bottom:4px;">${filename}</div>
+                <div style="color:rgba(255,255,255,0.5);font-size:12px;">Click to choose a different file</div>`;
+            document.getElementById('csvDropZone').style.borderColor = 'rgba(39,174,96,0.6)';
+        }
+
+        // Upload CSV to backend, update status cards, load preview
+        async function uploadConsultantCsv() {
+            const errorDiv = document.getElementById('consultantJsonError');
+            if (!_csvFile) {
+                errorDiv.textContent = 'Please select a CSV file first.';
+                errorDiv.style.display = 'block';
+                return;
+            }
             const btn = document.getElementById('btnParseConsultant');
             btn.disabled = true;
-            btn.innerHTML = '<span class="loading"></span> Parsing...';
-
+            btn.innerHTML = '<span class="loading"></span> Building...';
+            errorDiv.style.display = 'none';
             try {
-                const response = await fetch('/api/consultant/parse', {
+                const formData = new FormData();
+                formData.append('csv', _csvFile);
+                const response = await fetch('/api/consultant/parse-csv', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ jsonText })
+                    body: formData
                 });
-
                 const data = await response.json();
-
                 if (!data.success) {
-                    const msg = data.errors ? data.errors.join('\n') : (data.message || 'Parse failed');
-                    errorDiv.textContent = msg;
+                    errorDiv.textContent = data.message || 'Build failed';
                     errorDiv.style.display = 'block';
-                    ta.style.borderColor = 'rgba(231,76,60,0.6)';
                     return;
                 }
-
-                // Success — update status cards
+                // Success
                 consultantParsed = true;
                 const s = data.state;
-
                 document.getElementById('consultantStateBadge').textContent = 'GENERATED';
                 document.getElementById('consultantStateBadge').className = 'status-badge GENERATED';
                 document.getElementById('consultantStateTimestamp').textContent =
-                    'Parsed ' + new Date(s.generatedAt).toLocaleString('en-AU');
+                    'Built ' + new Date(s.generatedAt).toLocaleString('en-AU');
                 document.getElementById('consultantNameDisplay').textContent =
                     s.consultant ? s.consultant.name : data.consultant;
                 document.getElementById('consultantTitleDisplay').textContent =
                     s.consultant ? s.consultant.title : '';
-
-                // Enable action buttons
                 document.getElementById('btnPreviewConsultant').disabled = false;
                 document.getElementById('btnTestConsultant').disabled = false;
-                // Enable schedule/send if recipient already confirmed
                 if (consultantSegment) {
                     document.getElementById('btnSendConsultant').disabled = false;
                     document.getElementById('btnScheduleConsultant').disabled = false;
                 }
-
-                // Load preview
                 loadPreview('/api/preview/consultant');
-
-                ta.style.borderColor = 'rgba(39,174,96,0.6)';
-                showToast('Newsletter content parsed for ' + data.consultant + '!', 'success');
-
+                showToast('Newsletter built for ' + data.consultant + '!', 'success');
             } catch (error) {
                 errorDiv.textContent = 'Error: ' + error.message;
                 errorDiv.style.display = 'block';
-                ta.style.borderColor = 'rgba(231,76,60,0.6)';
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = 'Parse &amp; Preview';
+                btn.innerHTML = 'Build &amp; Preview';
             }
         }
+
+        // Legacy stub — kept so any remaining references don’t throw
+        function onConsultantJsonInput() {}
+        async function parseConsultantJSON() { await uploadConsultantCsv(); }
 
         // Reset state
         async function resetConsultantState() {
@@ -7721,9 +7741,17 @@
                 consultantParsed = false;
                 consultantSegment = null;
 
-                document.getElementById('consultantJsonInput').value = '';
+                // Reset CSV drop zone
+                _csvFile = null;
+                document.getElementById('csvFileInput').value = '';
+                document.getElementById('csvDropZoneContent').innerHTML = `
+                    <div style="font-size:32px;margin-bottom:8px;">&#128196;</div>
+                    <div style="color:white;font-weight:600;font-size:14px;margin-bottom:4px;">Click to upload or drag &amp; drop</div>
+                    <div style="color:rgba(255,255,255,0.5);font-size:12px;">CSV files only &mdash; exported from Google Sheets</div>`;
+                document.getElementById('csvDropZone').style.borderColor = 'rgba(255,255,255,0.2)';
+                document.getElementById('csvDropZone').style.background = 'rgba(255,255,255,0.04)';
                 document.getElementById('consultantJsonError').style.display = 'none';
-                document.getElementById('consultantJsonInput').style.borderColor = 'rgba(255,255,255,0.2)';
+                document.getElementById('btnParseConsultant').disabled = true;
 
                 document.getElementById('consultantStateBadge').textContent = 'EMPTY';
                 document.getElementById('consultantStateBadge').className = 'status-badge EMPTY';
@@ -8009,8 +8037,14 @@
                     document.getElementById('consultantStateTimestamp').textContent = 'No content parsed yet';
                     document.getElementById('consultantNameDisplay').textContent = '-';
                     document.getElementById('consultantTitleDisplay').textContent = '-';
-                    document.getElementById('consultantJsonInput').value = '';
-                    document.getElementById('consultantJsonInput').style.borderColor = 'rgba(255,255,255,0.2)';
+                    // Reset CSV drop zone
+                    _csvFile = null;
+                    if (document.getElementById('csvFileInput')) document.getElementById('csvFileInput').value = '';
+                    const dzc = document.getElementById('csvDropZoneContent');
+                    if (dzc) dzc.innerHTML = '<div style="font-size:32px;margin-bottom:8px;">&#128196;</div><div style="color:white;font-weight:600;font-size:14px;margin-bottom:4px;">Click to upload or drag &amp; drop</div><div style="color:rgba(255,255,255,0.5);font-size:12px;">CSV files only &mdash; exported from Google Sheets</div>';
+                    const dz = document.getElementById('csvDropZone');
+                    if (dz) { dz.style.borderColor = 'rgba(255,255,255,0.2)'; dz.style.background = 'rgba(255,255,255,0.04)'; }
+                    document.getElementById('btnParseConsultant').disabled = true;
                     document.getElementById('btnPreviewConsultant').disabled = true;
                     document.getElementById('btnTestConsultant').disabled = true;
                     document.getElementById('btnSendConsultant').disabled = true;
