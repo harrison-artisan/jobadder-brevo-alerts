@@ -196,6 +196,53 @@ class AIService {
   }
 
   /**
+   * Generate a LinkedIn post showcasing one or multiple jobs from JobAdder
+   */
+  async generateLinkedInPostFromJobs(jobs) {
+    try {
+      const client = this.getClient();
+      if (!client) throw new Error('OpenAI API key not configured.');
+
+      console.log(`    🤖 Generating LinkedIn jobs post for ${jobs.length} job(s)`);
+
+      const jobLines = jobs.map((j, i) =>
+        `${i + 1}. ${j.title}${j.location ? ' — ' + j.location : ''}${j.workType ? ' (' + j.workType + ')' : ''}${j.jobUrl ? ' | ' + j.jobUrl : ''}`
+      ).join('\n');
+
+      const isMultiple = jobs.length > 1;
+
+      const response = await client.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a social media copywriter for Artisan, a specialist Australian recruitment agency with 27 years of experience placing creative, digital, and marketing professionals. Write a compelling LinkedIn post ${isMultiple ? 'showcasing multiple open roles' : 'promoting a single open role'} at Artisan. The post should:
+- Open with a strong, attention-grabbing hook (no generic openers like "Excited to share...")
+${isMultiple ? '- List each role with its title, location, and a punchy one-line sell (max 12 words) — make each role sound exciting and specific\n- End with a CTA encouraging people to apply or reach out via the links above' : '- Introduce the role compellingly — what makes it exciting, who it suits\n- Include the job URL naturally in the post\n- End with a clear CTA to apply or reach out'}
+- Be professional, direct, and energetic
+- No emojis in the body text
+- Include 3-5 relevant hashtags at the end
+- Between 150-250 words total`
+          },
+          {
+            role: 'user',
+            content: `Here ${isMultiple ? 'are the ' + jobs.length + ' roles' : 'is the role'} to post about:\n\n${jobLines}\n\nWrite the LinkedIn post.`
+          }
+        ],
+        temperature: 0.75,
+        max_tokens: 450
+      });
+
+      const post = response.choices[0].message.content.trim();
+      console.log(`    ✅ Jobs LinkedIn post generated (${post.length} chars)`);
+      return post;
+    } catch (error) {
+      console.error('❌ Error generating LinkedIn jobs post:', error.message);
+      throw error;
+    }
+  }
+
+  /**
    * Generate an anonymized, gender-neutral professional summary for a candidate using Manus API
    */
   async generateCandidateSummary(candidate) {

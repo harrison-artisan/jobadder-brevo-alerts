@@ -861,6 +861,21 @@ app.post('/api/linkedin/generate-job-post', async (req, res) => {
   }
 });
 
+// POST /api/linkedin/generate-jobs-post - AI-generate LinkedIn post for one or multiple jobs
+app.post('/api/linkedin/generate-jobs-post', async (req, res) => {
+  try {
+    const { jobs } = req.body;
+    if (!jobs || !Array.isArray(jobs) || jobs.length === 0) {
+      return res.status(400).json({ success: false, message: 'At least one job is required.' });
+    }
+    const post = await aiService.generateLinkedInPostFromJobs(jobs);
+    res.json({ success: true, post });
+  } catch (err) {
+    console.error('[AI] Generate jobs post error:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // GET /api/linkedin/recent-polls - Fetch recent polls from Artisan Company Page
 app.get('/api/linkedin/recent-polls', async (req, res) => {
   try {
