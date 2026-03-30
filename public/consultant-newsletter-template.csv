@@ -1,38 +1,14 @@
-# Artisan Consultant Newsletter Template
-# ---------------------------------------------------------------
-# HOW TO USE:
-#   1. Fill in the VALUE column for each field below
-#   2. Leave any optional field blank if you don't want that
-#      section to appear in the email
-#   3. File > Download > Comma Separated Values (.csv)
-#   4. Upload the CSV to the Artisan Dashboard
-#
-# OpenAI will automatically:
-#   - Generate your Industry Insight heading from your body text
-#   - Generate your Personal Update heading from your body text
-#   - Fix any spelling or grammar errors
-#   - Pull the title and snippet from your Worth Reading URL
-#   - Parse your event dates automatically
-# ---------------------------------------------------------------
-# REQUIRED FIELDS
+# Artisan Consultant Newsletter — fill in the VALUE column in Google Sheets
+# then File > Download > Comma Separated Values (.csv) and upload to the dashboard
 consultant,debbie-younger
-industry_insight_body,"Write your industry insight body text here. This can be multiple sentences. OpenAI will generate the heading automatically."
-life_update_body,"Write your personal update here. Share what you've been up to. OpenAI will generate the heading automatically."
-# ---------------------------------------------------------------
-# OPTIONAL FIELDS — leave blank to hide that section in the email
-# ---------------------------------------------------------------
-# YouTube video (paste the full YouTube URL)
+industry_insight_body,
+life_update_body,
 youtube_url,
 youtube_caption,
-# Image (paste a direct image URL)
 image_url,
 image_caption,
-# Instagram post (paste the full Instagram post URL — image and caption are scraped automatically)
 instagram_url,
-# Worth Reading article (paste the URL — title and snippet are scraped automatically)
 link_url,
-# Events — up to 3 events supported
-# Date formats accepted: "15 April 2026" or "15/04/2026" or "April 15 2026"
 event_1_date,
 event_1_title,
 event_1_description,

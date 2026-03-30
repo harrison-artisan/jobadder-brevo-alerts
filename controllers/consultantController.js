@@ -891,25 +891,171 @@ function restoreConsultantSchedule() {
 // ============================================================
 
 /**
- * Parse a CSV buffer in key,value format (one field per row).
- * Handles quoted values, trims whitespace, ignores blank/comment rows.
+ * Parse a CSV cell — handles quoted values with embedded commas and escaped quotes.
  */
+function parseCsvCell(raw) {
+    if (!raw) return '';
+    const s = raw.trim();
+    if (s.startsWith('"')) {
+        // RFC 4180 quoted field
+        const inner = s.slice(1, s.lastIndexOf('"'));
+        return inner.replace(/""/g, '"').trim();
+    }
+    return s;
+}
+
+/**
+ * Split a single CSV line into cells, respecting quoted fields.
+ */
+function splitCsvLine(line) {
+    const cells = [];
+    let inQuote = false, cur = '';
+    for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+            if (inQuote && line[i + 1] === '"') { cur += '"'; i++; }
+            else { inQuote = !inQuote; }
+        } else if (ch === ',' && !inQuote) {
+            cells.push(cur.trim()); cur = '';
+        } else {
+            cur += ch;
+        }
+    }
+    cells.push(cur.trim());
+    return cells;
+}
+
+/**
+ * Map a human-readable label from the Google Sheets template to a machine key.
+ * Also handles the old key,value format (where column A is already a machine key).
+ * Context-aware: tracks which section we're in to disambiguate repeated labels
+ * like "Body Text" and "Caption / Description".
+ */
+const LABEL_TO_KEY = {
+    // About You
+    'consultant':                   'consultant',
+    // Industry Insight
+    'industry insight body text':   'industry_insight_body',
+    'industry insight':             'industry_insight_body',
+    // Personal Update
+    'personal update body text':    'life_update_body',
+    'life update body text':        'life_update_body',
+    'personal update':              'life_update_body',
+    'life update':                  'life_update_body',
+    // YouTube
+    'youtube url':                  'youtube_url',
+    'youtube caption':              'youtube_caption',
+    // Image
+    'image url':                    'image_url',
+    'image caption':                'image_caption',
+    // Instagram
+    'instagram post url':           'instagram_url',
+    'instagram url':                'instagram_url',
+    // Worth Reading
+    'article url':                  'link_url',
+    'link url':                     'link_url',
+    'worth reading url':            'link_url',
+    // Events
+    'event 1 date':                 'event_1_date',
+    'event 1 title':                'event_1_title',
+    'event 1 description':          'event_1_description',
+    'event 1 link url':             'event_1_link',
+    'event 1 link':                 'event_1_link',
+    'event 2 date':                 'event_2_date',
+    'event 2 title':                'event_2_title',
+    'event 2 description':          'event_2_description',
+    'event 2 link url':             'event_2_link',
+    'event 2 link':                 'event_2_link',
+    'event 3 date':                 'event_3_date',
+    'event 3 title':                'event_3_title',
+    'event 3 description':          'event_3_description',
+    'event 3 link url':             'event_3_link',
+    'event 3 link':                 'event_3_link',
+};
+
+// Section context tracker — used to disambiguate repeated labels
+const SECTION_CONTEXTS = [
+    { pattern: /industry insight/i,   bodyKey: 'industry_insight_body', captionKey: null },
+    { pattern: /personal update|life update/i, bodyKey: 'life_update_body', captionKey: null },
+    { pattern: /youtube/i,            bodyKey: null, captionKey: 'youtube_caption' },
+    { pattern: /\bimage\b/i,          bodyKey: null, captionKey: 'image_caption' },
+    { pattern: /instagram/i,          bodyKey: null, captionKey: null },
+    { pattern: /worth reading/i,      bodyKey: null, captionKey: null },
+    { pattern: /events?/i,            bodyKey: null, captionKey: null },
+];
+
 function parseCsvBuffer(buffer) {
     const text = buffer.toString('utf8');
     const lines = text.split(/\r?\n/);
     const data = {};
+    let currentSection = null;  // tracks which section we're in
+
     for (const line of lines) {
         const trimmed = line.trim();
         if (!trimmed || trimmed.startsWith('#')) continue;
-        const commaIdx = trimmed.indexOf(',');
-        if (commaIdx === -1) continue;
-        const key = trimmed.slice(0, commaIdx).trim().toLowerCase().replace(/\s+/g, '_');
-        let val = trimmed.slice(commaIdx + 1).trim();
-        // Strip surrounding quotes
-        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
-            val = val.slice(1, -1).replace(/""/g, '"');
+
+        const cells = splitCsvLine(trimmed);
+        if (cells.length < 1) continue;
+
+        const rawLabel = cells[0].trim();
+        const rawValue = cells.length >= 2 ? cells.slice(1).join(',').trim() : '';
+        // Strip outer quotes from value
+        const value = parseCsvCell(rawValue.startsWith('"') ? rawValue : rawValue);
+
+        // Detect section header rows (no value, label looks like a section divider)
+        const cleanLabel = rawLabel
+            .replace(/^[\u2014\-\u2500\u2501\s]+|[\u2014\-\u2500\u2501\s]+$/g, '')  // strip dashes
+            .replace(/\s*\(optional.*?\)/gi, '')  // strip "(optional)"
+            .replace(/\s*\u2014.*$/, '')           // strip em-dash suffixes
+            .replace(/\s*up to \d+.*$/i, '')       // strip "up to 3"
+            .trim();
+
+        // Check if this is a section header (value is empty AND label looks like a header)
+        const isSectionHeader = !value && /^[\u2014\-\u2500\u2501]|section|insight|update|youtube|image|instagram|worth|event/i.test(rawLabel);
+        if (isSectionHeader) {
+            for (const ctx of SECTION_CONTEXTS) {
+                if (ctx.pattern.test(cleanLabel)) { currentSection = ctx; break; }
+            }
+            continue;
         }
-        if (key) data[key] = val;
+
+        // Normalise label for lookup
+        const normLabel = cleanLabel
+            .toLowerCase()
+            .replace(/[\u2605\u2714\u2713\*]+/g, '')  // strip stars/checkmarks
+            .replace(/required|optional/gi, '')
+            .replace(/[^a-z0-9\s]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        // Try direct lookup first
+        let key = LABEL_TO_KEY[normLabel];
+
+        // Context-aware disambiguation for repeated labels
+        if (!key && currentSection) {
+            if (/body text|body/i.test(normLabel) && currentSection.bodyKey) {
+                key = currentSection.bodyKey;
+            } else if (/caption|description/i.test(normLabel) && currentSection.captionKey) {
+                key = currentSection.captionKey;
+            }
+        }
+
+        // Fallback: if the label IS already a machine key (old format), use it directly
+        if (!key) {
+            const machineKey = rawLabel.trim().toLowerCase().replace(/\s+/g, '_');
+            const KNOWN_KEYS = ['consultant','industry_insight_body','life_update_body',
+                'youtube_url','youtube_caption','image_url','image_caption',
+                'instagram_url','link_url',
+                'event_1_date','event_1_title','event_1_description','event_1_link',
+                'event_2_date','event_2_title','event_2_description','event_2_link',
+                'event_3_date','event_3_title','event_3_description','event_3_link'];
+            if (KNOWN_KEYS.includes(machineKey)) key = machineKey;
+        }
+
+        if (key && value !== '') {
+            data[key] = value;
+            console.log(`  CSV: ${key} = "${value.slice(0,60)}${value.length > 60 ? '...' : ''}"`); 
+        }
     }
     return data;
 }
