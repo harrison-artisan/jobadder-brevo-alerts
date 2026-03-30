@@ -30,7 +30,7 @@ class AIService {
       console.log("    🤖 Generating 10 article ideas with OpenAI (gpt-4o-mini)...");
 
       const response = await client.chat.completions.create({
-        model: 'gemini-2.5-flash',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -155,7 +155,7 @@ OUTPUT ONLY THE SUMMARY - NO EXPLANATIONS OR EXTRA TEXT.`;
       console.log(`    🤖 Generating with OpenAI (gpt-4o-mini)...`);
       
       const response = await client.chat.completions.create({
-        model: 'gemini-2.5-flash',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -789,7 +789,7 @@ Generate exactly this JSON (no markdown fences):
 }`;
 
     const response = await client.chat.completions.create({
-      model: 'gemini-2.5-flash',
+      model: 'gpt-4o-mini',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.75,
       max_tokens: 800
@@ -844,7 +844,7 @@ Generate a LinkedIn poll for Artisan. Return ONLY valid JSON (no markdown fences
 You may include 3 or 4 options if the topic genuinely needs them. Never use emojis.`;
 
     const response = await client.chat.completions.create({
-      model: 'gemini-2.5-flash',
+      model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: systemMsg },
         { role: 'user', content: userMsg }
@@ -901,7 +901,7 @@ ${job.jobUrl ? `\nJob URL: ${job.jobUrl}` : ''}
 Return ONLY the post copy as plain text. No JSON, no markdown, no extra commentary.`;
 
     const response = await client.chat.completions.create({
-      model: 'gemini-2.5-flash',
+      model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: systemMsg },
         { role: 'user',   content: userMsg   }
