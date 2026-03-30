@@ -1053,7 +1053,7 @@ app.post('/api/linkedin/generate-post-from-article', async (req, res) => {
 
 // POST /api/linkedin/post-article-post - Post the article LinkedIn post immediately (supports optional media)
 app.post('/api/linkedin/post-article-post', upload.single('media'), async (req, res) => {
-  const { text, url, title, description, mediaType } = req.body;
+  const { text, url, title, description, mediaType, imageUrl } = req.body;
   if (!text) return res.status(400).json({ success: false, message: 'Post text is required.' });
   try {
     let result;
@@ -1064,7 +1064,8 @@ app.post('/api/linkedin/post-article-post', upload.single('media'), async (req, 
         result = await linkedinService.postWithImage(text, req.file.buffer, req.file.mimetype);
       }
     } else if (url) {
-      result = await linkedinService.postWithLinkPreview(text, url, title || '', description || '');
+      // imageUrl is the pre-fetched WordPress featured image URL (skips OG scraping)
+      result = await linkedinService.postWithLinkPreview(text, url, title || '', description || '', imageUrl || null);
     } else {
       result = await linkedinService.postToLinkedIn(text);
     }
@@ -1077,7 +1078,7 @@ app.post('/api/linkedin/post-article-post', upload.single('media'), async (req, 
 
 // POST /api/linkedin/schedule-article-post - Schedule an article LinkedIn post
 app.post('/api/linkedin/schedule-article-post', async (req, res) => {
-  const { text, scheduledAt, url, title, description } = req.body;
+  const { text, scheduledAt, url, title, description, imageUrl } = req.body;
   if (!text) return res.status(400).json({ success: false, message: 'Post text is required.' });
   if (!scheduledAt) return res.status(400).json({ success: false, message: 'scheduledAt is required.' });
   try {
@@ -1097,13 +1098,18 @@ app.post('/api/linkedin/schedule-article-post', async (req, res) => {
     }) + ' (Melbourne time)';
 
     if (_articlePostScheduledTask) { _articlePostScheduledTask.stop(); _articlePostScheduledTask = null; }
-    require('fs').writeFileSync(ARTICLE_POST_SCHEDULE_FILE, JSON.stringify({ text, url: url || null, title: title || '', description: description || '', scheduledAt: sendDate.toISOString(), scheduledFor }));
+    // Persist imageUrl so the scheduled task can use it at execution time
+    require('fs').writeFileSync(ARTICLE_POST_SCHEDULE_FILE, JSON.stringify({ text, url: url || null, title: title || '', description: description || '', imageUrl: imageUrl || null, scheduledAt: sendDate.toISOString(), scheduledFor }));
 
     _articlePostScheduledTask = cron.schedule(cronExpr, async () => {
       console.log('📅 Executing scheduled LinkedIn article post...');
       try {
+        // Re-read saved data in case imageUrl was persisted
+        let saved = {};
+        try { saved = JSON.parse(require('fs').readFileSync(ARTICLE_POST_SCHEDULE_FILE, 'utf8')); } catch {}
+        const savedImageUrl = saved.imageUrl || imageUrl || null;
         if (url) {
-          await linkedinService.postWithLinkPreview(text, url, title || '', description || '');
+          await linkedinService.postWithLinkPreview(text, url, title || '', description || '', savedImageUrl);
         } else {
           await linkedinService.postToLinkedIn(text);
         }

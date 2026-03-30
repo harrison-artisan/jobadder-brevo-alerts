@@ -77,6 +77,7 @@ class WordpressService {
                 params: {
                     categories: ARTICLE_CATEGORY_ID,
                     per_page: 100, // Fetch up to 100 articles for the list
+                    _embed: 'true', // Embed featured images so we can pass them to LinkedIn thumbnail
                 },
             });
             return response.data.map(post => ({
@@ -85,7 +86,8 @@ class WordpressService {
                 url: post.link || '',
                 excerpt: post.excerpt && post.excerpt.rendered
                     ? decodeHtmlEntities(post.excerpt.rendered.replace(/<[^>]+>/g, '').trim())
-                    : ''
+                    : '',
+                featuredImage: post._embedded?.['wp:featuredmedia']?.[0]?.source_url || null,
             }));
         } catch (error) {
             console.error("Error fetching all articles from WordPress:", error.message);

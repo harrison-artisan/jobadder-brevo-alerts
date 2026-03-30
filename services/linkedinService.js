@@ -310,70 +310,136 @@ class LinkedInService {
   }
 
   /**
+   * Poll the LinkedIn Images API until the image status is AVAILABLE or PROCESSING_FAILED.
+   * LinkedIn processes images asynchronously — the thumbnail won't render until AVAILABLE.
+   * @param {string} imageUrn - e.g. 'urn:li:image:C4E10AQFoyyAjHPMQuQ'
+   * @param {number} maxAttempts - Max poll attempts (default 10, ~20s total)
+   * @returns {boolean} true if AVAILABLE, false otherwise
+   */
+  async waitForImageAvailable(imageUrn, maxAttempts = 10) {
+    const encodedUrn = encodeURIComponent(imageUrn);
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2s between polls
+      try {
+        const resp = await axios.get(
+          `https://api.linkedin.com/rest/images/${encodedUrn}`,
+          { headers: this._postHeaders() }
+        );
+        const status = resp.data.status;
+        console.log(`[LinkedIn] Image status poll ${attempt}/${maxAttempts}: ${status} (${imageUrn})`);
+        if (status === 'AVAILABLE') return true;
+        if (status === 'PROCESSING_FAILED') {
+          console.warn(`[LinkedIn] Image processing failed: ${imageUrn}`);
+          return false;
+        }
+      } catch (pollErr) {
+        console.warn(`[LinkedIn] Image status poll error: ${pollErr.message}`);
+      }
+    }
+    console.warn(`[LinkedIn] Image did not reach AVAILABLE status after ${maxAttempts} attempts.`);
+    return false;
+  }
+
+  /**
    * Post a feed post with a URL link preview card (thumbnail + title + description).
-   * Fetches the Open Graph image from the target URL, uploads it to LinkedIn,
-   * then creates the post with content.article including the thumbnail URN.
-   * This produces a proper link preview card — not a native LinkedIn Article.
+   * Accepts an optional pre-fetched imageUrl (e.g. WordPress featured image) to skip OG scraping.
+   * Falls back to OG scraping, then to the Artisan logo if no image is available.
+   * Polls the LinkedIn Images API to ensure the thumbnail is AVAILABLE before posting.
    *
    * @param {string} text        - The post body text (commentary)
    * @param {string} url         - The URL to preview
    * @param {string} title       - Link card title (article/job title)
    * @param {string} description - Link card description (excerpt)
+   * @param {string} [imageUrl]  - Optional pre-fetched image URL (skips OG scraping)
    * @returns {object} { id }
    */
-  async postWithLinkPreview(text, url, title, description) {
+  async postWithLinkPreview(text, url, title, description, imageUrl = null) {
     if (!this.isConnected()) {
       throw new Error('LinkedIn is not connected. Please reconnect via the Social Media tab.');
     }
     const author = tokenStore.orgUrn || tokenStore.personUrn;
 
-    // Step 1: Fetch the OG image from the target URL and upload to LinkedIn
-    // Use a real browser User-Agent so WordPress/artisan.com.au serves the full HTML with OG tags
+    // Step 1: Determine the image URL to upload as thumbnail
     const BROWSER_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
-    // Fallback: Artisan logo — ensures a thumbnail is always present even if OG fetch fails
-    const FALLBACK_IMAGE_URL = 'https://artisan.com.au/wp-content/uploads/2023/01/artisan-logo-og.png';
-    let thumbnailUrn = null;
-    let ogImageUrl = null;
-    try {
-      const pageResp = await axios.get(url, {
-        timeout: 10000,
-        headers: { 'User-Agent': BROWSER_UA },
-        maxRedirects: 5,
-      });
-      const html = pageResp.data || '';
-      // Extract og:image meta tag (both attribute orders)
-      const ogMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
-                   || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
-      if (ogMatch && ogMatch[1]) {
-        ogImageUrl = ogMatch[1].startsWith('http') ? ogMatch[1] : new URL(ogMatch[1], url).href;
-        console.log(`[LinkedIn] OG image found: ${ogImageUrl}`);
-      } else {
-        console.warn(`[LinkedIn] No og:image found on ${url}, will use fallback.`);
+    // Fallback: Artisan logo — ensures a thumbnail is always present
+    const FALLBACK_IMAGE_URL = 'https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png';
+    let resolvedImageUrl = imageUrl || null;
+
+    // If no pre-fetched image, try to scrape OG image from the page
+    if (!resolvedImageUrl) {
+      try {
+        const pageResp = await axios.get(url, {
+          timeout: 10000,
+          headers: { 'User-Agent': BROWSER_UA },
+          maxRedirects: 5,
+        });
+        const html = pageResp.data || '';
+        // Extract og:image meta tag (both attribute orders)
+        const ogMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
+                     || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+        if (ogMatch && ogMatch[1]) {
+          resolvedImageUrl = ogMatch[1].startsWith('http') ? ogMatch[1] : new URL(ogMatch[1], url).href;
+          console.log(`[LinkedIn] OG image found: ${resolvedImageUrl}`);
+        } else {
+          console.warn(`[LinkedIn] No og:image found on ${url}, will use fallback.`);
+        }
+      } catch (pageErr) {
+        console.warn(`[LinkedIn] Could not fetch page for OG image (${pageErr.message}), will use fallback.`);
       }
-    } catch (pageErr) {
-      console.warn(`[LinkedIn] Could not fetch page for OG image (${pageErr.message}), will use fallback.`);
+    } else {
+      console.log(`[LinkedIn] Using pre-fetched image URL for thumbnail: ${resolvedImageUrl}`);
     }
-    // Use OG image if found, otherwise fall back to Artisan logo
-    const imageUrlToUpload = ogImageUrl || FALLBACK_IMAGE_URL;
+
+    // Use resolved image or fall back to Artisan logo
+    const imageUrlToUpload = resolvedImageUrl || FALLBACK_IMAGE_URL;
+
+    // Step 2: Download image and upload to LinkedIn Images API
+    let thumbnailUrn = null;
     try {
       const imgResp = await axios.get(imageUrlToUpload, {
         responseType: 'arraybuffer',
-        timeout: 12000,
+        timeout: 15000,
         headers: { 'User-Agent': BROWSER_UA },
       });
       const imageBuffer = Buffer.from(imgResp.data);
       const contentType = imgResp.headers['content-type'] || 'image/jpeg';
-      const mimeType = contentType.split(';')[0].trim();
-      const { uploadUrl, imageUrn } = await this.initializeImageUpload();
-      await this.uploadImageBinary(uploadUrl, imageBuffer, mimeType);
-      thumbnailUrn = imageUrn;
-      console.log(`[LinkedIn] Thumbnail uploaded for link preview. URN: ${thumbnailUrn}`);
+      let mimeType = contentType.split(';')[0].trim().toLowerCase();
+      // LinkedIn does not support WebP — skip if the image is WebP
+      if (mimeType === 'image/webp') {
+        console.warn(`[LinkedIn] WebP image not supported by LinkedIn. Trying fallback logo.`);
+        // Try fallback logo instead
+        const fallbackResp = await axios.get(FALLBACK_IMAGE_URL, {
+          responseType: 'arraybuffer',
+          timeout: 10000,
+          headers: { 'User-Agent': BROWSER_UA },
+        });
+        const fallbackBuffer = Buffer.from(fallbackResp.data);
+        const fallbackType = (fallbackResp.headers['content-type'] || 'image/png').split(';')[0].trim();
+        const { uploadUrl: fbUploadUrl, imageUrn: fbImageUrn } = await this.initializeImageUpload();
+        await this.uploadImageBinary(fbUploadUrl, fallbackBuffer, fallbackType);
+        const fbAvailable = await this.waitForImageAvailable(fbImageUrn);
+        if (fbAvailable) {
+          thumbnailUrn = fbImageUrn;
+          console.log(`[LinkedIn] Fallback thumbnail uploaded and available. URN: ${thumbnailUrn}`);
+        }
+      } else {
+        const { uploadUrl, imageUrn } = await this.initializeImageUpload();
+        await this.uploadImageBinary(uploadUrl, imageBuffer, mimeType);
+        // Poll until image is AVAILABLE (LinkedIn processes images asynchronously)
+        const isAvailable = await this.waitForImageAvailable(imageUrn);
+        if (isAvailable) {
+          thumbnailUrn = imageUrn;
+          console.log(`[LinkedIn] Thumbnail uploaded and available. URN: ${thumbnailUrn}`);
+        } else {
+          console.warn(`[LinkedIn] Thumbnail not available after polling. Posting without thumbnail.`);
+        }
+      }
     } catch (thumbErr) {
       // Still non-fatal — post without thumbnail as last resort
       console.warn(`[LinkedIn] Could not upload thumbnail (${thumbErr.message}). Posting without thumbnail.`);
     }
 
-    // Step 2: Build the article content block
+    // Step 3: Build the article content block
     const articleContent = {
       source: url,
       title: title || '',
@@ -383,7 +449,7 @@ class LinkedInService {
       articleContent.thumbnail = thumbnailUrn;
     }
 
-    // Step 3: Post to LinkedIn
+    // Step 4: Post to LinkedIn
     const payload = {
       author,
       commentary: text,

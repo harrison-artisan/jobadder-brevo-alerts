@@ -4859,7 +4859,9 @@
                     text: textarea.value.trim(),
                     url: article ? article.url : undefined,
                     title: article ? article.title : undefined,
-                    description: article ? (article.excerpt || '') : undefined
+                    description: article ? (article.excerpt || '') : undefined,
+                    // Pass the WordPress featured image URL directly — avoids OG scraping failure
+                    imageUrl: (article && article.featuredImage) ? article.featuredImage : undefined
                 };
                 const fd = cmBuildPostFormData(fields, 'cmArticlePostMedia');
                 const resp = await fetch('/api/linkedin/post-article-post', { method: 'POST', body: fd });
@@ -4920,7 +4922,9 @@
                         scheduledAt: utcIso,
                         url: article ? article.url : undefined,
                         title: article ? article.title : undefined,
-                        description: article ? (article.excerpt || '') : undefined
+                        description: article ? (article.excerpt || '') : undefined,
+                        // Pass the WordPress featured image URL directly — avoids OG scraping failure
+                        imageUrl: (article && article.featuredImage) ? article.featuredImage : undefined
                     })
                 });
                 const data = await resp.json();
