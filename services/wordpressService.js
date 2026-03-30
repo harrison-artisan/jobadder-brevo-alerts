@@ -81,7 +81,11 @@ class WordpressService {
             });
             return response.data.map(post => ({
                 id: post.id,
-                title: decodeHtmlEntities(post.title.rendered)
+                title: decodeHtmlEntities(post.title.rendered),
+                url: post.link || '',
+                excerpt: post.excerpt && post.excerpt.rendered
+                    ? decodeHtmlEntities(post.excerpt.rendered.replace(/<[^>]+>/g, '').trim())
+                    : ''
             }));
         } catch (error) {
             console.error("Error fetching all articles from WordPress:", error.message);

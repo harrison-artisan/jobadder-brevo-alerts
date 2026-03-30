@@ -96,6 +96,53 @@ class AIService {
   }
 
   /**
+   * Generate a LinkedIn post from an existing WordPress article.
+   * @param {string} title - Article title
+   * @param {string} excerpt - Article excerpt / short description
+   * @param {string} url - Article URL
+   * @returns {string} LinkedIn post copy
+   */
+  async generateLinkedInPostFromArticle(title, excerpt, url) {
+    try {
+      const client = this.getClient();
+      if (!client) throw new Error('OpenAI API key not configured.');
+
+      console.log(`    🤖 Generating LinkedIn post from article: "${title}"`);
+
+      const response = await client.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a social media copywriter for Artisan, a specialist Australian recruitment agency with 27 years of experience placing creative, digital, and marketing professionals. Write a compelling LinkedIn post that promotes an article from the Artisan Creative Community blog. The post should:
+- Open with a strong hook (no generic openers like "Excited to share...")
+- Summarise the key insight or takeaway from the article in 2-3 sentences
+- Include a call to action to read the article
+- End with 3-5 relevant hashtags
+- Be professional but conversational in tone
+- Be between 150-250 words
+- No emojis in the body text
+- Include the article URL at the end`
+          },
+          {
+            role: 'user',
+            content: `Article title: ${title}\nArticle excerpt: ${excerpt || 'No excerpt available.'}\nArticle URL: ${url}\n\nWrite a LinkedIn post to promote this article.`
+          }
+        ],
+        temperature: 0.75,
+        max_tokens: 400
+      });
+
+      const post = response.choices[0].message.content.trim();
+      console.log(`    ✅ LinkedIn post generated (${post.length} chars)`);
+      return post;
+    } catch (error) {
+      console.error('❌ Error generating LinkedIn post from article:', error.message);
+      throw error;
+    }
+  }
+
+  /**
    * Generate an anonymized, gender-neutral professional summary for a candidate using Manus API
    */
   async generateCandidateSummary(candidate) {

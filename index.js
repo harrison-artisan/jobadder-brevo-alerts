@@ -984,6 +984,118 @@ app.post('/api/linkedin/post-poll', async (req, res) => {
 });
 
 // ============================================================
+// LinkedIn Post from Existing Article Routes
+// ============================================================
+
+const ARTICLE_POST_SCHEDULE_FILE = path.join(__dirname, '.article-post-schedule.json');
+let _articlePostScheduledTask = null;
+
+// GET /api/linkedin/wp-articles - Fetch live WordPress articles for the picker
+app.get('/api/linkedin/wp-articles', async (req, res) => {
+  try {
+    const articles = await wordpressService.getAllArticles();
+    res.json({ success: true, articles });
+  } catch (err) {
+    console.error('[LinkedIn] WP articles fetch error:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/linkedin/generate-post-from-article - AI-generate LinkedIn post from a WP article
+app.post('/api/linkedin/generate-post-from-article', async (req, res) => {
+  const { title, excerpt, url } = req.body;
+  if (!title || !url) return res.status(400).json({ success: false, message: 'title and url are required.' });
+  try {
+    const post = await aiService.generateLinkedInPostFromArticle(title, excerpt || '', url);
+    res.json({ success: true, post });
+  } catch (err) {
+    console.error('[LinkedIn] Generate post from article error:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/linkedin/post-article-post - Post the article LinkedIn post immediately
+app.post('/api/linkedin/post-article-post', async (req, res) => {
+  const { text } = req.body;
+  if (!text) return res.status(400).json({ success: false, message: 'Post text is required.' });
+  try {
+    const result = await linkedinService.postText(text);
+    res.json({ success: true, postId: result.id, message: 'Post published to LinkedIn.' });
+  } catch (err) {
+    console.error('[LinkedIn] Article post error:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/linkedin/schedule-article-post - Schedule an article LinkedIn post
+app.post('/api/linkedin/schedule-article-post', async (req, res) => {
+  const { text, scheduledAt } = req.body;
+  if (!text) return res.status(400).json({ success: false, message: 'Post text is required.' });
+  if (!scheduledAt) return res.status(400).json({ success: false, message: 'scheduledAt is required.' });
+  try {
+    const sendDate = new Date(scheduledAt);
+    if (isNaN(sendDate.getTime())) return res.status(400).json({ success: false, message: 'Invalid scheduledAt date.' });
+    if (sendDate <= new Date()) return res.status(400).json({ success: false, message: 'Scheduled time must be in the future.' });
+
+    const min = sendDate.getUTCMinutes();
+    const hr = sendDate.getUTCHours();
+    const dom = sendDate.getUTCDate();
+    const mon = sendDate.getUTCMonth() + 1;
+    const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
+    const scheduledFor = sendDate.toLocaleString('en-AU', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: true,
+      timeZone: 'Australia/Melbourne'
+    }) + ' (Melbourne time)';
+
+    if (_articlePostScheduledTask) { _articlePostScheduledTask.stop(); _articlePostScheduledTask = null; }
+    require('fs').writeFileSync(ARTICLE_POST_SCHEDULE_FILE, JSON.stringify({ text, scheduledAt: sendDate.toISOString(), scheduledFor }));
+
+    _articlePostScheduledTask = cron.schedule(cronExpr, async () => {
+      console.log('📅 Executing scheduled LinkedIn article post...');
+      try {
+        await linkedinService.postText(text);
+        console.log('✅ Scheduled article post published to LinkedIn.');
+      } catch (e) {
+        console.error('❌ Scheduled article post failed:', e.message);
+      }
+      if (require('fs').existsSync(ARTICLE_POST_SCHEDULE_FILE)) require('fs').unlinkSync(ARTICLE_POST_SCHEDULE_FILE);
+      if (_articlePostScheduledTask) { _articlePostScheduledTask.stop(); _articlePostScheduledTask = null; }
+    }, { timezone: 'UTC' });
+
+    console.log(`📅 LinkedIn article post scheduled for ${scheduledFor} (cron: ${cronExpr} UTC)`);
+    res.json({ success: true, scheduledFor, message: 'Article post scheduled successfully.' });
+  } catch (err) {
+    console.error('[LinkedIn] Schedule article post error:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/linkedin/cancel-article-post-schedule - Cancel a scheduled article post
+app.post('/api/linkedin/cancel-article-post-schedule', (req, res) => {
+  try {
+    if (_articlePostScheduledTask) { _articlePostScheduledTask.stop(); _articlePostScheduledTask = null; }
+    if (require('fs').existsSync(ARTICLE_POST_SCHEDULE_FILE)) require('fs').unlinkSync(ARTICLE_POST_SCHEDULE_FILE);
+    res.json({ success: true, message: 'Article post schedule cancelled.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/linkedin/article-post-schedule-state - Get current article post schedule state
+app.get('/api/linkedin/article-post-schedule-state', (req, res) => {
+  try {
+    if (require('fs').existsSync(ARTICLE_POST_SCHEDULE_FILE)) {
+      const saved = JSON.parse(require('fs').readFileSync(ARTICLE_POST_SCHEDULE_FILE, 'utf8'));
+      return res.json({ success: true, scheduled: true, scheduledFor: saved.scheduledFor, scheduledAt: saved.scheduledAt });
+    }
+    res.json({ success: true, scheduled: false });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ============================================================
 // Consultant Newsletter Routes
 // ============================================================
 
@@ -1124,6 +1236,39 @@ app.listen(PORT, () => {
       console.log('🔄 Job Alerts single job schedule restore check complete');
     } catch (e) {
       console.warn('⚠️  Could not restore Job Alerts single job schedule:', e.message);
+    }
+    try {
+      if (require('fs').existsSync(ARTICLE_POST_SCHEDULE_FILE)) {
+        const saved = JSON.parse(require('fs').readFileSync(ARTICLE_POST_SCHEDULE_FILE, 'utf8'));
+        if (saved && saved.scheduledAt) {
+          const sendDate = new Date(saved.scheduledAt);
+          if (sendDate <= new Date()) {
+            console.warn('⚠️  Article post scheduled time has passed, clearing schedule');
+            require('fs').unlinkSync(ARTICLE_POST_SCHEDULE_FILE);
+          } else {
+            const min = sendDate.getUTCMinutes();
+            const hr = sendDate.getUTCHours();
+            const dom = sendDate.getUTCDate();
+            const mon = sendDate.getUTCMonth() + 1;
+            const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
+            if (_articlePostScheduledTask) { _articlePostScheduledTask.stop(); _articlePostScheduledTask = null; }
+            _articlePostScheduledTask = cron.schedule(cronExpr, async () => {
+              console.log('📅 Executing restored LinkedIn article post...');
+              try {
+                await linkedinService.postText(saved.text);
+                console.log('✅ Restored article post published to LinkedIn.');
+              } catch (e) {
+                console.error('❌ Restored article post failed:', e.message);
+              }
+              if (require('fs').existsSync(ARTICLE_POST_SCHEDULE_FILE)) require('fs').unlinkSync(ARTICLE_POST_SCHEDULE_FILE);
+              if (_articlePostScheduledTask) { _articlePostScheduledTask.stop(); _articlePostScheduledTask = null; }
+            }, { timezone: 'UTC' });
+            console.log(`🔄 LinkedIn article post schedule restored for ${saved.scheduledFor}`);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('⚠️  Could not restore LinkedIn article post schedule:', e.message);
     }
     try {
       if (require('fs').existsSync(POLL_SCHEDULE_FILE)) {

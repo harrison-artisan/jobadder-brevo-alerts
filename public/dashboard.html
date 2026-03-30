@@ -2701,11 +2701,89 @@
                             </div>
                         </div>
                     </div>
+
+                        <!-- ===== POST FROM EXISTING ARTICLE CARD ===== -->
+                        <div class="actions-card" id="cmArticlePostCard" style="padding:0; overflow:hidden; margin-top:24px;">
+                            <!-- Header -->
+                            <div style="padding:24px 28px 20px; border-bottom:1px solid rgba(255,255,255,0.08);">
+                                <div style="display:flex; align-items:center; gap:12px; margin-bottom:6px;">
+                                    <div style="background:#0077b5; border-radius:6px; padding:4px 12px; font-size:12px; font-weight:700; color:white; letter-spacing:0.5px;">in</div>
+                                    <h2 style="margin:0; font-size:18px; font-weight:700; color:white;">Post from Existing Article</h2>
+                                </div>
+                                <p style="color:rgba(255,255,255,0.5); font-size:13px; margin:0;">Pick a live article from the website, generate a LinkedIn post with AI, edit it, then post immediately or schedule it.</p>
+                            </div>
+
+                            <div style="padding:20px 28px 28px;">
+                                <!-- Step 1: Article Picker -->
+                                <div style="margin-bottom:20px;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                        <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600;">Select Article</label>
+                                        <button onclick="cmLoadWpArticles()" id="cmArticleRefreshBtn" style="padding:4px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:5px; color:rgba(255,255,255,0.7); cursor:pointer; font-size:12px;">Refresh</button>
+                                    </div>
+                                    <select id="cmArticlePicker" onchange="cmOnArticlePickerChange()" style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; box-sizing:border-box; cursor:pointer;">
+                                        <option value="">Loading articles...</option>
+                                    </select>
+                                    <div id="cmArticlePickerError" style="display:none; margin-top:6px; font-size:12px; color:#e74c3c;"></div>
+                                </div>
+
+                                <!-- Selected article preview -->
+                                <div id="cmArticleSelectedPreview" style="display:none; margin-bottom:20px; padding:12px 16px; background:rgba(52,152,219,0.08); border:1px solid rgba(52,152,219,0.2); border-radius:8px;">
+                                    <div style="font-size:11px; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:6px;">Selected Article</div>
+                                    <div id="cmArticleSelectedTitle" style="color:white; font-weight:600; font-size:14px; margin-bottom:4px;"></div>
+                                    <a id="cmArticleSelectedUrl" href="#" target="_blank" style="color:#3498db; font-size:12px;"></a>
+                                </div>
+
+                                <!-- Generate button -->
+                                <div style="margin-bottom:20px;">
+                                    <button onclick="cmGeneratePostFromArticle()" id="cmGenerateArticlePostBtn" disabled
+                                        style="padding:10px 24px; background:linear-gradient(135deg,#3498db,#2980b9); border:none; border-radius:8px; color:white; cursor:pointer; font-size:14px; font-weight:700; opacity:0.5; transition:opacity 0.2s;">Generate LinkedIn Post with AI</button>
+                                    <div id="cmArticlePostLoading" style="display:none; margin-top:12px; align-items:center; gap:10px;">
+                                        <div style="width:16px; height:16px; border:3px solid rgba(255,255,255,0.2); border-top-color:#3498db; border-radius:50%; animation:spin 0.8s linear infinite; flex-shrink:0;"></div>
+                                        <span style="color:rgba(255,255,255,0.7); font-size:13px;">Generating post with AI...</span>
+                                    </div>
+                                </div>
+
+                                <!-- Editable post textarea -->
+                                <div id="cmArticlePostEditor" style="display:none; margin-bottom:20px;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                        <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600;">LinkedIn Post Copy</label>
+                                        <button onclick="cmGeneratePostFromArticle()" style="padding:4px 12px; background:rgba(52,152,219,0.15); border:1px solid rgba(52,152,219,0.3); border-radius:5px; color:#3498db; cursor:pointer; font-size:12px; font-weight:600;">Regenerate</button>
+                                    </div>
+                                    <textarea id="cmArticlePostText" rows="10" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
+                                    <div style="text-align:right; font-size:11px; color:rgba(255,255,255,0.35); margin-top:4px;" id="cmArticlePostCharCount">0 characters</div>
+
+                                    <!-- Actions row -->
+                                    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:14px;">
+                                        <button onclick="cmPostArticlePostNow()" id="cmArticlePostNowBtn" style="padding:10px 24px; background:#0077b5; border:none; border-radius:8px; color:white; cursor:pointer; font-size:14px; font-weight:700;">Post to LinkedIn</button>
+                                        <button onclick="cmToggleArticlePostSchedule()" id="cmArticlePostScheduleBtn" style="padding:10px 18px; background:rgba(52,152,219,0.15); border:1px solid rgba(52,152,219,0.35); border-radius:8px; color:#3498db; cursor:pointer; font-size:13px; font-weight:600;">Schedule Post</button>
+                                        <button onclick="cmCopyText('cmArticlePostText')" style="padding:10px 16px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; cursor:pointer; font-size:13px;">Copy</button>
+                                        <span id="cmArticlePostStatus" style="font-size:13px; color:rgba(255,255,255,0.6);"></span>
+                                    </div>
+
+                                    <!-- Schedule row -->
+                                    <div id="cmArticlePostScheduleRow" style="display:none; margin-top:14px; padding:14px 16px; background:rgba(52,152,219,0.08); border:1px solid rgba(52,152,219,0.2); border-radius:8px;">
+                                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                                            <label style="color:rgba(255,255,255,0.7); font-size:13px; font-weight:600; white-space:nowrap;">Schedule for:</label>
+                                            <input type="datetime-local" id="cmArticlePostScheduleDate" style="padding:8px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:7px; color:white; font-size:13px; flex:1; min-width:200px;">
+                                            <button onclick="cmConfirmArticlePostSchedule()" style="padding:8px 18px; background:#0077b5; border:none; border-radius:7px; color:white; cursor:pointer; font-size:13px; font-weight:600;">Confirm Schedule</button>
+                                            <button onclick="cmToggleArticlePostSchedule()" style="padding:8px 12px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:7px; color:rgba(255,255,255,0.6); cursor:pointer; font-size:12px;">Cancel</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Scheduled status box -->
+                                    <div id="cmArticlePostScheduledBox" style="display:none; margin-top:12px;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
                 `;
                 // Load any existing state
                 cmLoadState();
                 cmLoadPollScheduleState();
+                cmLoadArticlePostScheduleState();
+                cmLoadWpArticles();
 
             }
         }
@@ -4027,6 +4105,210 @@
                 if (data.state && data.state.scheduledFor) {
                     box.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:12px; padding:12px 16px; background:rgba(52,152,219,0.12); border:1px solid rgba(52,152,219,0.3); border-radius:8px;';
                     box.innerHTML = `<span style="color:rgba(255,255,255,0.9); font-size:14px;">&#128197; <strong>Poll Scheduled:</strong> ${data.state.scheduledFor}</span><button onclick="cmCancelPollSchedule()" style="background:#e74c3c; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">Cancel Schedule</button>`;
+                } else {
+                    box.style.display = 'none';
+                    box.innerHTML = '';
+                }
+            } catch (e) {}
+        }
+
+        // ============================================================
+        // POST FROM EXISTING ARTICLE — JS Functions
+        // ============================================================
+
+        let _cmArticlePickerData = []; // cache of fetched articles
+
+        async function cmLoadWpArticles() {
+            const picker = document.getElementById('cmArticlePicker');
+            const errEl = document.getElementById('cmArticlePickerError');
+            if (!picker) return;
+            picker.innerHTML = '<option value="">Loading articles...</option>';
+            if (errEl) errEl.style.display = 'none';
+            try {
+                const resp = await fetch('/api/linkedin/wp-articles');
+                const data = await resp.json();
+                if (!data.success) throw new Error(data.message || 'Failed to load articles');
+                _cmArticlePickerData = data.articles || [];
+                picker.innerHTML = '<option value="">-- Select an article --</option>';
+                _cmArticlePickerData.forEach((a, i) => {
+                    const opt = document.createElement('option');
+                    opt.value = i;
+                    opt.textContent = a.title;
+                    picker.appendChild(opt);
+                });
+            } catch (e) {
+                picker.innerHTML = '<option value="">Failed to load articles</option>';
+                if (errEl) { errEl.textContent = e.message; errEl.style.display = 'block'; }
+            }
+        }
+
+        function cmOnArticlePickerChange() {
+            const picker = document.getElementById('cmArticlePicker');
+            const preview = document.getElementById('cmArticleSelectedPreview');
+            const titleEl = document.getElementById('cmArticleSelectedTitle');
+            const urlEl = document.getElementById('cmArticleSelectedUrl');
+            const genBtn = document.getElementById('cmGenerateArticlePostBtn');
+            const editor = document.getElementById('cmArticlePostEditor');
+            if (!picker) return;
+            const idx = picker.value;
+            if (idx === '' || idx === null) {
+                if (preview) preview.style.display = 'none';
+                if (genBtn) { genBtn.disabled = true; genBtn.style.opacity = '0.5'; }
+                return;
+            }
+            const article = _cmArticlePickerData[parseInt(idx)];
+            if (!article) return;
+            if (titleEl) titleEl.textContent = article.title;
+            if (urlEl) { urlEl.textContent = article.url; urlEl.href = article.url; }
+            if (preview) preview.style.display = 'block';
+            if (genBtn) { genBtn.disabled = false; genBtn.style.opacity = '1'; }
+            // Reset editor when a new article is picked
+            if (editor) editor.style.display = 'none';
+            const statusEl = document.getElementById('cmArticlePostStatus');
+            if (statusEl) statusEl.textContent = '';
+        }
+
+        async function cmGeneratePostFromArticle() {
+            const picker = document.getElementById('cmArticlePicker');
+            const loadingEl = document.getElementById('cmArticlePostLoading');
+            const editor = document.getElementById('cmArticlePostEditor');
+            const textarea = document.getElementById('cmArticlePostText');
+            const charCount = document.getElementById('cmArticlePostCharCount');
+            const genBtn = document.getElementById('cmGenerateArticlePostBtn');
+            const statusEl = document.getElementById('cmArticlePostStatus');
+            if (!picker || picker.value === '') return;
+            const article = _cmArticlePickerData[parseInt(picker.value)];
+            if (!article) return;
+            if (loadingEl) { loadingEl.style.display = 'flex'; }
+            if (genBtn) { genBtn.disabled = true; genBtn.style.opacity = '0.5'; }
+            if (statusEl) statusEl.textContent = '';
+            try {
+                const resp = await fetch('/api/linkedin/generate-post-from-article', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: article.title, excerpt: article.excerpt || '', url: article.url })
+                });
+                const data = await resp.json();
+                if (!data.success) throw new Error(data.message || 'Generation failed');
+                if (textarea) {
+                    textarea.value = data.post;
+                    if (charCount) charCount.textContent = data.post.length + ' characters';
+                    textarea.addEventListener('input', () => {
+                        if (charCount) charCount.textContent = textarea.value.length + ' characters';
+                    });
+                }
+                if (editor) editor.style.display = 'block';
+            } catch (e) {
+                if (statusEl) { statusEl.textContent = 'Error: ' + e.message; statusEl.style.color = '#e74c3c'; }
+            } finally {
+                if (loadingEl) loadingEl.style.display = 'none';
+                if (genBtn) { genBtn.disabled = false; genBtn.style.opacity = '1'; }
+            }
+        }
+
+        async function cmPostArticlePostNow() {
+            const textarea = document.getElementById('cmArticlePostText');
+            const statusEl = document.getElementById('cmArticlePostStatus');
+            const btn = document.getElementById('cmArticlePostNowBtn');
+            if (!textarea || !textarea.value.trim()) {
+                if (statusEl) { statusEl.textContent = 'Post text is empty.'; statusEl.style.color = '#e74c3c'; }
+                return;
+            }
+            if (btn) { btn.disabled = true; btn.textContent = 'Posting...'; }
+            if (statusEl) { statusEl.textContent = ''; }
+            try {
+                const resp = await fetch('/api/linkedin/post-article-post', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: textarea.value.trim() })
+                });
+                const data = await resp.json();
+                if (!data.success) throw new Error(data.message || 'Post failed');
+                if (statusEl) { statusEl.textContent = 'Posted to LinkedIn!'; statusEl.style.color = '#2ecc71'; }
+            } catch (e) {
+                if (statusEl) { statusEl.textContent = 'Error: ' + e.message; statusEl.style.color = '#e74c3c'; }
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = 'Post to LinkedIn'; }
+            }
+        }
+
+        function cmToggleArticlePostSchedule() {
+            const row = document.getElementById('cmArticlePostScheduleRow');
+            if (!row) return;
+            const isVisible = row.style.display !== 'none';
+            row.style.display = isVisible ? 'none' : 'block';
+            if (!isVisible) {
+                // Default to tomorrow 9am Melbourne
+                const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Australia/Melbourne' }));
+                now.setDate(now.getDate() + 1);
+                now.setHours(9, 0, 0, 0);
+                const pad = n => String(n).padStart(2, '0');
+                const local = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+                const dateEl = document.getElementById('cmArticlePostScheduleDate');
+                if (dateEl) dateEl.value = local;
+            }
+        }
+
+        async function cmConfirmArticlePostSchedule() {
+            const textarea = document.getElementById('cmArticlePostText');
+            const dateEl = document.getElementById('cmArticlePostScheduleDate');
+            const statusEl = document.getElementById('cmArticlePostStatus');
+            const box = document.getElementById('cmArticlePostScheduledBox');
+            const row = document.getElementById('cmArticlePostScheduleRow');
+            if (!textarea || !textarea.value.trim()) {
+                if (statusEl) { statusEl.textContent = 'Post text is empty.'; statusEl.style.color = '#e74c3c'; }
+                return;
+            }
+            if (!dateEl || !dateEl.value) {
+                alert('Please select a date and time.');
+                return;
+            }
+            // Convert local Melbourne datetime to UTC ISO string
+            const localStr = dateEl.value; // e.g. "2026-04-10T09:00"
+            const melbDate = new Date(localStr + ':00');
+            const utcIso = new Date(melbDate.getTime() - (melbDate.getTimezoneOffset() * 60000)).toISOString();
+            try {
+                const resp = await fetch('/api/linkedin/schedule-article-post', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: textarea.value.trim(), scheduledAt: utcIso })
+                });
+                const data = await resp.json();
+                if (!data.success) throw new Error(data.message || 'Schedule failed');
+                if (row) row.style.display = 'none';
+                if (box) {
+                    box.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:12px; padding:12px 16px; background:rgba(52,152,219,0.12); border:1px solid rgba(52,152,219,0.3); border-radius:8px;';
+                    box.innerHTML = `<span style="color:rgba(255,255,255,0.9); font-size:14px;">&#128197; <strong>Post Scheduled:</strong> ${data.scheduledFor}</span><button onclick="cmCancelArticlePostSchedule()" style="background:#e74c3c; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">Cancel Schedule</button>`;
+                }
+                if (statusEl) { statusEl.textContent = ''; }
+            } catch (e) {
+                if (statusEl) { statusEl.textContent = 'Error: ' + e.message; statusEl.style.color = '#e74c3c'; }
+            }
+        }
+
+        async function cmCancelArticlePostSchedule() {
+            const box = document.getElementById('cmArticlePostScheduledBox');
+            try {
+                const resp = await fetch('/api/linkedin/cancel-article-post-schedule', { method: 'POST' });
+                const data = await resp.json();
+                if (!data.success) throw new Error(data.message);
+                if (box) { box.style.display = 'none'; box.innerHTML = ''; }
+            } catch (e) {
+                alert('Could not cancel schedule: ' + e.message);
+            }
+        }
+
+        async function cmLoadArticlePostScheduleState() {
+            try {
+                const resp = await fetch('/api/linkedin/article-post-schedule-state');
+                const data = await resp.json();
+                const box = document.getElementById('cmArticlePostScheduledBox');
+                if (!box) return;
+                if (data.success && data.scheduled && data.scheduledFor) {
+                    const editor = document.getElementById('cmArticlePostEditor');
+                    if (editor) editor.style.display = 'block';
+                    box.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:12px; padding:12px 16px; background:rgba(52,152,219,0.12); border:1px solid rgba(52,152,219,0.3); border-radius:8px;';
+                    box.innerHTML = `<span style="color:rgba(255,255,255,0.9); font-size:14px;">&#128197; <strong>Post Scheduled:</strong> ${data.scheduledFor}</span><button onclick="cmCancelArticlePostSchedule()" style="background:#e74c3c; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap;">Cancel Schedule</button>`;
                 } else {
                     box.style.display = 'none';
                     box.innerHTML = '';
