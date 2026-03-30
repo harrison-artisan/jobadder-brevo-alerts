@@ -2140,12 +2140,31 @@
                             <div style="margin-bottom:16px;">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                                     <label style="display:block; color:white; font-weight:500; font-size:14px; margin:0;">Article Topic</label>
-                                    <button onclick="cmOpenPollPicker()" id="btnChoosePoll"
-                                        style="display:flex; align-items:center; gap:6px; padding:5px 12px; background:rgba(0,119,181,0.2); border:1px solid rgba(0,119,181,0.5); border-radius:6px; color:#5dade2; cursor:pointer; font-size:12px; font-weight:600; transition:all 0.2s;">
-Choose Recent Poll
-                                    </button>
+                                    <div style="display:flex; gap:8px; align-items:center;">
+                                        <button onclick="cmGenerateIdeas()" id="btnCmIdeas"
+                                            style="display:flex; align-items:center; gap:6px; padding:5px 12px; background:rgba(46,204,113,0.15); border:1px solid rgba(46,204,113,0.4); border-radius:6px; color:#2ecc71; cursor:pointer; font-size:12px; font-weight:600; transition:all 0.2s;">
+                                            Generate Ideas
+                                        </button>
+                                        <button onclick="cmOpenPollPicker()" id="btnChoosePoll"
+                                            style="display:flex; align-items:center; gap:6px; padding:5px 12px; background:rgba(0,119,181,0.2); border:1px solid rgba(0,119,181,0.5); border-radius:6px; color:#5dade2; cursor:pointer; font-size:12px; font-weight:600; transition:all 0.2s;">
+                                            Choose Recent Poll
+                                        </button>
+                                    </div>
                                 </div>
                                 <textarea id="cmTopic" rows="3" placeholder="e.g. How to attract top creative talent in Australia in 2025" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px; resize:vertical; box-sizing:border-box;"></textarea>
+                                <!-- Ideas loading spinner -->
+                                <div id="cmIdeasLoading" style="display:none; margin-top:12px; display:none; align-items:center; gap:10px;">
+                                    <div style="width:16px; height:16px; border:2px solid rgba(255,255,255,0.2); border-top-color:#2ecc71; border-radius:50%; animation:spin 0.8s linear infinite; flex-shrink:0;"></div>
+                                    <span style="color:rgba(255,255,255,0.7); font-size:13px;">Generating ideas with AI...</span>
+                                </div>
+                                <!-- Ideas panel -->
+                                <div id="cmIdeasPanel" style="display:none; margin-top:12px; padding:14px 16px; background:rgba(46,204,113,0.06); border:1px solid rgba(46,204,113,0.2); border-radius:8px;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                        <span style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600;">Click an idea to use it as your topic</span>
+                                        <button onclick="cmClearIdeas()" style="padding:3px 8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:5px; color:rgba(255,255,255,0.5); cursor:pointer; font-size:11px;">Clear</button>
+                                    </div>
+                                    <div id="cmIdeasList" style="display:flex; flex-direction:column; gap:6px;"></div>
+                                </div>
                                 <!-- Poll context badge (shown when a poll is selected) -->
                                 <div id="cmPollBadge" style="display:none; margin-top:8px; padding:10px 14px; background:rgba(0,119,181,0.12); border:1px solid rgba(0,119,181,0.3); border-radius:8px; display:none;">
                                     <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
@@ -3208,6 +3227,66 @@ Choose Recent Poll
                 }
             };
             reader.readAsDataURL(file);
+        }
+
+        // ---- STEP 1: Generate Ideas ----
+
+        async function cmGenerateIdeas() {
+            const btn = document.getElementById('btnCmIdeas');
+            const loading = document.getElementById('cmIdeasLoading');
+            const panel = document.getElementById('cmIdeasPanel');
+            const list = document.getElementById('cmIdeasList');
+
+            if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+            if (loading) { loading.style.display = 'flex'; }
+            if (panel) { panel.style.display = 'none'; }
+
+            try {
+                const resp = await fetch('/api/content/generate-ideas', { method: 'POST' });
+                const data = await resp.json();
+                if (!data.success || !data.ideas || !data.ideas.length) {
+                    throw new Error(data.message || 'No ideas returned.');
+                }
+
+                // Render each idea as a clickable row
+                list.innerHTML = data.ideas.map((idea, i) => `
+                    <button onclick="cmSelectIdea(this)" data-idea="${idea.replace(/"/g, '&quot;')}"
+                        style="text-align:left; width:100%; padding:9px 14px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:6px; color:rgba(255,255,255,0.85); font-size:13px; cursor:pointer; transition:background 0.15s; line-height:1.4;">
+                        <span style="color:rgba(46,204,113,0.7); font-weight:700; margin-right:8px;">${i + 1}.</span>${idea}
+                    </button>
+                `).join('');
+
+                if (panel) { panel.style.display = 'block'; }
+            } catch (err) {
+                cmShowMessage('Could not generate ideas: ' + err.message, 'error');
+            }
+
+            if (loading) { loading.style.display = 'none'; }
+            if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+        }
+
+        function cmSelectIdea(btn) {
+            const idea = btn.getAttribute('data-idea');
+            const topicEl = document.getElementById('cmTopic');
+            if (topicEl && idea) {
+                topicEl.value = idea;
+                // Highlight the selected idea
+                document.querySelectorAll('#cmIdeasList button').forEach(b => {
+                    b.style.background = 'rgba(255,255,255,0.05)';
+                    b.style.borderColor = 'rgba(255,255,255,0.1)';
+                    b.style.color = 'rgba(255,255,255,0.85)';
+                });
+                btn.style.background = 'rgba(46,204,113,0.15)';
+                btn.style.borderColor = 'rgba(46,204,113,0.4)';
+                btn.style.color = 'white';
+            }
+        }
+
+        function cmClearIdeas() {
+            const panel = document.getElementById('cmIdeasPanel');
+            const list = document.getElementById('cmIdeasList');
+            if (list) list.innerHTML = '';
+            if (panel) panel.style.display = 'none';
         }
 
         // ---- STEP 1: Generate Article ----
