@@ -152,10 +152,15 @@ class AIService {
 
       console.log(`    🤖 Generating LinkedIn A-List post for ${candidates.length} candidates`);
 
-      // Build a candidate list for the prompt
-      const candidateLines = candidates.map((c, i) =>
-        `${i + 1}. ${c.title} — ${c.summary}`
-      ).join('\n');
+      // Build a candidate list for the prompt — title + condensed punchy snippet from summary
+      const candidateLines = candidates.map((c, i) => {
+        // Trim summary to first ~120 chars at a word boundary for a punchy snippet
+        let snippet = (c.summary || '').trim();
+        if (snippet.length > 120) {
+          snippet = snippet.substring(0, 120).replace(/\s+\S*$/, '') + '...';
+        }
+        return `${i + 1}. ${c.title} — ${snippet}`;
+      }).join('\n');
 
       const response = await client.chat.completions.create({
         model: 'gpt-4o-mini',
@@ -165,20 +170,20 @@ class AIService {
             content: `You are a social media copywriter for Artisan, a specialist Australian recruitment agency with 27 years of experience placing creative, digital, and marketing professionals. Write a compelling LinkedIn post that showcases Artisan's current A-List — a curated selection of exceptional candidates available for placement. The post should:
 - Open with a strong, attention-grabbing intro (no generic openers like "Excited to share...")
 - Briefly introduce the concept of the A-List (exceptional talent, ready now)
-- List each candidate with their job title only (no summaries — keep it clean and scannable)
+- For each candidate, include their job title followed by a single punchy sentence (max 15 words) distilled from their description — make it sharp, specific, and compelling. No names.
 - End with a clear CTA directing hiring managers to https://artisan.com.au/looking-for-talent/ to find out more
 - Include 3-5 relevant hashtags at the end
 - Be professional, confident, and direct
 - No emojis in the body text
-- Between 150-250 words total`
+- Between 180-280 words total`
           },
           {
             role: 'user',
-            content: `Here are the ${candidates.length} candidates on this week's A-List:\n\n${candidateLines}\n\nWrite the LinkedIn post.`
+            content: `Here are the ${candidates.length} candidates on this week's A-List:\n\n${candidateLines}\n\nWrite the LinkedIn post, giving each candidate a job title + one punchy sentence.`
           }
         ],
         temperature: 0.75,
-        max_tokens: 450
+        max_tokens: 500
       });
 
       const post = response.choices[0].message.content.trim();
