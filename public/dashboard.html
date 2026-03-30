@@ -4216,13 +4216,21 @@
                 if (statusEl) { statusEl.textContent = 'Post text is empty.'; statusEl.style.color = '#e74c3c'; }
                 return;
             }
+            // Get article metadata for link preview
+            const picker = document.getElementById('cmArticlePicker');
+            const article = picker && picker.value !== '' ? _cmArticlePickerData[parseInt(picker.value)] : null;
             if (btn) { btn.disabled = true; btn.textContent = 'Posting...'; }
             if (statusEl) { statusEl.textContent = ''; }
             try {
                 const resp = await fetch('/api/linkedin/post-article-post', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: textarea.value.trim() })
+                    body: JSON.stringify({
+                        text: textarea.value.trim(),
+                        url: article ? article.url : undefined,
+                        title: article ? article.title : undefined,
+                        description: article ? (article.excerpt || '') : undefined
+                    })
                 });
                 const data = await resp.json();
                 if (!data.success) throw new Error(data.message || 'Post failed');
@@ -4269,11 +4277,20 @@
             const localStr = dateEl.value; // e.g. "2026-04-10T09:00"
             const melbDate = new Date(localStr + ':00');
             const utcIso = new Date(melbDate.getTime() - (melbDate.getTimezoneOffset() * 60000)).toISOString();
+            // Get article metadata for link preview
+            const picker = document.getElementById('cmArticlePicker');
+            const article = picker && picker.value !== '' ? _cmArticlePickerData[parseInt(picker.value)] : null;
             try {
                 const resp = await fetch('/api/linkedin/schedule-article-post', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: textarea.value.trim(), scheduledAt: utcIso })
+                    body: JSON.stringify({
+                        text: textarea.value.trim(),
+                        scheduledAt: utcIso,
+                        url: article ? article.url : undefined,
+                        title: article ? article.title : undefined,
+                        description: article ? (article.excerpt || '') : undefined
+                    })
                 });
                 const data = await resp.json();
                 if (!data.success) throw new Error(data.message || 'Schedule failed');

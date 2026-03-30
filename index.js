@@ -814,7 +814,7 @@ app.post('/api/linkedin/post', async (req, res) => {
   try {
     let result;
     if (resolvedUrl) {
-      result = await linkedinService.postArticleToLinkedIn(text, resolvedUrl, resolvedTitle, description || '');
+      result = await linkedinService.postWithLinkPreview(text, resolvedUrl, resolvedTitle, description || '');
     } else {
       result = await linkedinService.postToLinkedIn(text);
     }
@@ -1017,10 +1017,15 @@ app.post('/api/linkedin/generate-post-from-article', async (req, res) => {
 
 // POST /api/linkedin/post-article-post - Post the article LinkedIn post immediately
 app.post('/api/linkedin/post-article-post', async (req, res) => {
-  const { text } = req.body;
+  const { text, url, title, description } = req.body;
   if (!text) return res.status(400).json({ success: false, message: 'Post text is required.' });
   try {
-    const result = await linkedinService.postToLinkedIn(text);
+    let result;
+    if (url) {
+      result = await linkedinService.postWithLinkPreview(text, url, title || '', description || '');
+    } else {
+      result = await linkedinService.postToLinkedIn(text);
+    }
     res.json({ success: true, postId: result.id, message: 'Post published to LinkedIn.' });
   } catch (err) {
     console.error('[LinkedIn] Article post error:', err.message);
@@ -1030,7 +1035,7 @@ app.post('/api/linkedin/post-article-post', async (req, res) => {
 
 // POST /api/linkedin/schedule-article-post - Schedule an article LinkedIn post
 app.post('/api/linkedin/schedule-article-post', async (req, res) => {
-  const { text, scheduledAt } = req.body;
+  const { text, scheduledAt, url, title, description } = req.body;
   if (!text) return res.status(400).json({ success: false, message: 'Post text is required.' });
   if (!scheduledAt) return res.status(400).json({ success: false, message: 'scheduledAt is required.' });
   try {
@@ -1050,12 +1055,16 @@ app.post('/api/linkedin/schedule-article-post', async (req, res) => {
     }) + ' (Melbourne time)';
 
     if (_articlePostScheduledTask) { _articlePostScheduledTask.stop(); _articlePostScheduledTask = null; }
-    require('fs').writeFileSync(ARTICLE_POST_SCHEDULE_FILE, JSON.stringify({ text, scheduledAt: sendDate.toISOString(), scheduledFor }));
+    require('fs').writeFileSync(ARTICLE_POST_SCHEDULE_FILE, JSON.stringify({ text, url: url || null, title: title || '', description: description || '', scheduledAt: sendDate.toISOString(), scheduledFor }));
 
     _articlePostScheduledTask = cron.schedule(cronExpr, async () => {
       console.log('📅 Executing scheduled LinkedIn article post...');
       try {
-        await linkedinService.postToLinkedIn(text);
+        if (url) {
+          await linkedinService.postWithLinkPreview(text, url, title || '', description || '');
+        } else {
+          await linkedinService.postToLinkedIn(text);
+        }
         console.log('✅ Scheduled article post published to LinkedIn.');
       } catch (e) {
         console.error('❌ Scheduled article post failed:', e.message);
@@ -1256,7 +1265,11 @@ app.listen(PORT, () => {
             _articlePostScheduledTask = cron.schedule(cronExpr, async () => {
               console.log('📅 Executing restored LinkedIn article post...');
               try {
-                await linkedinService.postToLinkedIn(saved.text);
+                if (saved.url) {
+                  await linkedinService.postWithLinkPreview(saved.text, saved.url, saved.title || '', saved.description || '');
+                } else {
+                  await linkedinService.postToLinkedIn(saved.text);
+                }
                 console.log('✅ Restored article post published to LinkedIn.');
               } catch (e) {
                 console.error('❌ Restored article post failed:', e.message);

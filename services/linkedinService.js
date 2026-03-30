@@ -309,6 +309,88 @@ class LinkedInService {
     return { id: postId };
   }
 
+  /**
+   * Post a feed post with a URL link preview card (thumbnail + title + description).
+   * Fetches the Open Graph image from the target URL, uploads it to LinkedIn,
+   * then creates the post with content.article including the thumbnail URN.
+   * This produces a proper link preview card — not a native LinkedIn Article.
+   *
+   * @param {string} text        - The post body text (commentary)
+   * @param {string} url         - The URL to preview
+   * @param {string} title       - Link card title (article/job title)
+   * @param {string} description - Link card description (excerpt)
+   * @returns {object} { id }
+   */
+  async postWithLinkPreview(text, url, title, description) {
+    if (!this.isConnected()) {
+      throw new Error('LinkedIn is not connected. Please reconnect via the Social Media tab.');
+    }
+    const author = tokenStore.orgUrn || tokenStore.personUrn;
+
+    // Step 1: Try to fetch the OG image from the target URL
+    let thumbnailUrn = null;
+    try {
+      const pageResp = await axios.get(url, {
+        timeout: 8000,
+        headers: { 'User-Agent': 'LinkedInBot/1.0' },
+        maxRedirects: 5,
+      });
+      const html = pageResp.data || '';
+      // Extract og:image meta tag
+      const ogMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
+                   || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+      if (ogMatch && ogMatch[1]) {
+        const imageUrl = ogMatch[1].startsWith('http') ? ogMatch[1] : new URL(ogMatch[1], url).href;
+        // Fetch the image binary
+        const imgResp = await axios.get(imageUrl, {
+          responseType: 'arraybuffer',
+          timeout: 10000,
+          headers: { 'User-Agent': 'LinkedInBot/1.0' },
+        });
+        const imageBuffer = Buffer.from(imgResp.data);
+        const contentType = imgResp.headers['content-type'] || 'image/jpeg';
+        const mimeType = contentType.split(';')[0].trim();
+        // Upload to LinkedIn Images API
+        const { uploadUrl, imageUrn } = await this.initializeImageUpload();
+        await this.uploadImageBinary(uploadUrl, imageBuffer, mimeType);
+        thumbnailUrn = imageUrn;
+        console.log(`[LinkedIn] Thumbnail uploaded for link preview. URN: ${thumbnailUrn}`);
+      }
+    } catch (thumbErr) {
+      // Non-fatal — post without thumbnail if OG image fetch fails
+      console.warn(`[LinkedIn] Could not fetch OG image for link preview (${thumbErr.message}). Posting without thumbnail.`);
+    }
+
+    // Step 2: Build the article content block
+    const articleContent = {
+      source: url,
+      title: title || '',
+      description: description || '',
+    };
+    if (thumbnailUrn) {
+      articleContent.thumbnail = thumbnailUrn;
+    }
+
+    // Step 3: Post to LinkedIn
+    const payload = {
+      author,
+      commentary: text,
+      visibility: 'PUBLIC',
+      distribution: this._distribution(),
+      content: { article: articleContent },
+      lifecycleState: 'PUBLISHED',
+      isReshareDisabledByAuthor: false,
+    };
+    const response = await axios.post(
+      'https://api.linkedin.com/rest/posts',
+      payload,
+      { headers: this._postHeaders() }
+    );
+    const postId = response.headers['x-restli-id'] || response.data.id || null;
+    console.log(`[LinkedIn] Link preview post published. ID: ${postId}`);
+    return { id: postId };
+  }
+
   // ---- Fetch Recent Polls ----
 
   /**
