@@ -1,4 +1,5 @@
 require('dotenv').config();
+const path = require('path');
 const express = require('express');
 const cron = require('node-cron');
 const jobAlertsController = require('./controllers/jobAlertsController');
