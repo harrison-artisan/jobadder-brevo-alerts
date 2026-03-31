@@ -16,6 +16,12 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 100
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// ============================================================
+// Runtime Mode State  (test | live | offline)
+// Managed by modeService — always starts in 'test' on redeploy.
+// ============================================================
+const modeService = require('./services/modeService');
+
 // Middleware
 // Increased limit to 15mb to support base64 image uploads in Content Marketing
 app.use(express.json({ limit: '15mb' }));
@@ -30,18 +36,40 @@ app.get('/dashboard', (req, res) => {
 // Health check endpoint
 app.get('/', (req, res) => {
   const isAuthorized = jobadderService.isAuthorized();
-  const testMode = process.env.TEST_MODE === 'true';
-  const testEmail = process.env.TEST_EMAIL;
+  const testEmail = modeService.getTestEmail();
+  const mode = modeService.getMode();
+  const legacyTestMode = modeService.isTestMode(); // backwards-compat
   
   res.json({ 
     status: 'running',
     service: 'JobAdder to Brevo Job Alerts',
     version: '1.0.1',
-    test_mode: testMode,
-    test_email: testMode ? testEmail : null,
+    mode: mode,
+    test_mode: legacyTestMode,
+    test_email: testEmail || null,
     jobadder_authorized: isAuthorized,
-    message: isAuthorized ? (testMode ? `🧪 TEST MODE: Emails will only send to ${testEmail}` : 'Ready to send job alerts') : 'Please complete JobAdder authorization at /auth/jobadder'
+    message: isAuthorized ? (
+      mode === 'offline' ? '🔴 OFFLINE: All sends are blocked' :
+      mode === 'live'    ? '🟢 LIVE: Sends go to selected segment' :
+                          `🧪 TEST: Emails only send to ${testEmail}`
+    ) : 'Please complete JobAdder authorization at /auth/jobadder'
   });
+});
+
+// GET /api/mode  — return current runtime mode
+app.get('/api/mode', (req, res) => {
+  res.json({ mode: modeService.getMode(), test_email: modeService.getTestEmail() });
+});
+
+// POST /api/mode  — set runtime mode (requires confirmed:true for 'live')
+app.post('/api/mode', (req, res) => {
+  const { mode, confirmed } = req.body;
+  try {
+    modeService.setMode(mode, confirmed);
+    res.json({ success: true, mode });
+  } catch (e) {
+    res.status(400).json({ success: false, message: e.message });
+  }
 });
 
 // OAuth2 Authorization Flow
