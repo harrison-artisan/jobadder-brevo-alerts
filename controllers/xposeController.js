@@ -3,6 +3,7 @@ const path = require('path');
 const wordpressService = require('../services/wordpressService');
 const jobadderService = require('../services/jobadderService');
 const brevoService = require('../services/brevoService');
+const modeService = require('../services/modeService');
 
 const XPOSE_STATE_FILE = path.join(__dirname, '..', '.xpose-state.json');
 
@@ -87,13 +88,10 @@ class XposeController {
         }
 
         try {
-            const testEmail = process.env.TEST_EMAIL;
-            if (!testEmail) {
-                return res.status(400).json({ 
-                    success: false, 
-                    message: 'TEST_EMAIL environment variable is not set.' 
-                });
+            if (modeService.isOffline()) {
+                return res.status(503).json({ success: false, message: 'Platform is OFFLINE. Switch to Test or Live mode to send.' });
             }
+            const testEmail = modeService.getTestEmail();
 
             await brevoService.sendBatchEmail(
                 [{ email: testEmail, name: 'Test User' }],
@@ -156,9 +154,11 @@ class XposeController {
                 });
             }
 
-            const testMode = process.env.TEST_MODE === 'true';
-            const finalRecipients = testMode 
-                ? [{ email: process.env.TEST_EMAIL }] 
+            if (modeService.isOffline()) {
+                return res.status(503).json({ success: false, message: 'Platform is OFFLINE. Switch to Test or Live mode to send.' });
+            }
+            const finalRecipients = modeService.isTestMode()
+                ? [{ email: modeService.getTestEmail() }]
                 : recipients;
 
             await brevoService.sendBatchEmail(
@@ -168,7 +168,7 @@ class XposeController {
             );
 
             await this.saveState({ state: 'SENT', sentAt: new Date().toISOString() });
-            console.log(`✅ Xpose sent to ${finalRecipients.length} recipients.`);
+            console.log(`✅ Xpose sent to ${finalRecipients.length} recipients [mode: ${modeService.getMode()}].`);
             res.json({ 
                 success: true, 
                 message: `Newsletter sent to ${finalRecipients.length} recipients.` 
@@ -213,13 +213,10 @@ class XposeController {
                 });
             }
 
-            const testEmail = process.env.TEST_EMAIL;
-            if (!testEmail) {
-                return res.status(500).json({ 
-                    success: false, 
-                    message: 'TEST_EMAIL not configured.' 
-                });
+            if (modeService.isOffline()) {
+                return res.status(503).json({ success: false, message: 'Platform is OFFLINE. Switch to Test or Live mode to send.' });
             }
+            const testEmail = modeService.getTestEmail();
 
             await brevoService.sendBatchEmail(
                 [{ email: testEmail, name: 'Test User' }],
@@ -283,9 +280,11 @@ class XposeController {
                 });
             }
 
-            const testMode = process.env.TEST_MODE === 'true';
-            const finalRecipients = testMode 
-                ? [{ email: process.env.TEST_EMAIL }] 
+            if (modeService.isOffline()) {
+                return res.status(503).json({ success: false, message: 'Platform is OFFLINE. Switch to Test or Live mode to send.' });
+            }
+            const finalRecipients = modeService.isTestMode()
+                ? [{ email: modeService.getTestEmail() }]
                 : recipients;
 
             await brevoService.sendBatchEmail(
@@ -294,7 +293,7 @@ class XposeController {
                 { article }
             );
 
-            console.log(`✅ Single article ${articleId} sent to ${finalRecipients.length} recipients.`);
+            console.log(`✅ Single article ${articleId} sent to ${finalRecipients.length} recipients [mode: ${modeService.getMode()}].`);
             res.json({ 
                 success: true, 
                 message: `Article sent to ${finalRecipients.length} recipients.` 
