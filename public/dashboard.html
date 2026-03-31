@@ -408,6 +408,12 @@
             border: 1px solid rgba(39, 174, 96, 0.4);
         }
         
+        .badge.offline {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+            border: 1px solid rgba(231, 76, 60, 0.4);
+        }
+        
         /* A-List Specific */
         .status-badge {
             display: inline-block;
@@ -1098,12 +1104,18 @@
         
         <!-- Desktop: Global Status Cards - Always Visible -->
         <div class="global-status-grid">
-            <div class="status-card">
+            <div class="status-card" id="modeCard">
                 <h3>Mode</h3>
-                <div class="status-value" style="font-size: 16px;">
+                <div class="status-value" style="font-size: 16px; margin-bottom: 10px;">
                     <span class="badge test" id="modeBadge">Test Mode</span>
                 </div>
-                <div class="status-label" id="modeEmail">Loading...</div>
+                <div class="status-label" id="modeEmail" style="margin-bottom: 12px;">Loading...</div>
+                <!-- Mode selector buttons -->
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;">
+                    <button id="btnModeTest" onclick="setMode('test')" style="padding: 6px 12px; font-size: 11px; font-weight: 700; border-radius: 8px; border: 2px solid #f1c40f; background: rgba(241,196,15,0.15); color: #f1c40f; cursor: pointer; transition: all 0.2s;">TEST</button>
+                    <button id="btnModeLive" onclick="confirmGoLive()" style="padding: 6px 12px; font-size: 11px; font-weight: 700; border-radius: 8px; border: 2px solid #27ae60; background: rgba(39,174,96,0.1); color: #27ae60; cursor: pointer; transition: all 0.2s;">LIVE</button>
+                    <button id="btnModeOffline" onclick="setMode('offline')" style="padding: 6px 12px; font-size: 11px; font-weight: 700; border-radius: 8px; border: 2px solid #e74c3c; background: rgba(231,76,60,0.1); color: #e74c3c; cursor: pointer; transition: all 0.2s;">OFFLINE</button>
+                </div>
             </div>
             
             <div class="status-card">
@@ -1161,10 +1173,15 @@
             <div class="mobile-status-details" id="mobileStatusDetails">
                 <div class="mobile-status-item">
                     <h4>Mode</h4>
-                    <div class="status-value" style="font-size: 14px;">
+                    <div class="status-value" style="font-size: 14px; margin-bottom: 8px;">
                         <span class="badge test" id="modeBadgeMobile">Test Mode</span>
                     </div>
-                    <div class="status-label" id="modeEmailMobile">Loading...</div>
+                    <div class="status-label" id="modeEmailMobile" style="margin-bottom: 10px;">Loading...</div>
+                    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                        <button onclick="setMode('test')" style="padding: 5px 10px; font-size: 10px; font-weight: 700; border-radius: 6px; border: 2px solid #f1c40f; background: rgba(241,196,15,0.15); color: #f1c40f; cursor: pointer;">TEST</button>
+                        <button onclick="confirmGoLive()" style="padding: 5px 10px; font-size: 10px; font-weight: 700; border-radius: 6px; border: 2px solid #27ae60; background: rgba(39,174,96,0.1); color: #27ae60; cursor: pointer;">LIVE</button>
+                        <button onclick="setMode('offline')" style="padding: 5px 10px; font-size: 10px; font-weight: 700; border-radius: 6px; border: 2px solid #e74c3c; background: rgba(231,76,60,0.1); color: #e74c3c; cursor: pointer;">OFFLINE</button>
+                    </div>
                 </div>
                 <div class="mobile-status-item">
                     <h4>JobAdder</h4>
@@ -5281,6 +5298,116 @@
             }
         }
         
+        // ============================================================
+        // Mode Management Functions
+        // ============================================================
+        function updateModeUI(mode, testEmail) {
+            const modeBadge = document.getElementById('modeBadge');
+            const modeEmail = document.getElementById('modeEmail');
+            const modeBadgeMobile = document.getElementById('modeBadgeMobile');
+            const modeEmailMobile = document.getElementById('modeEmailMobile');
+            const systemStatus = document.getElementById('systemStatus');
+            const systemLabel = document.getElementById('systemLabel');
+            const systemStatusMobile = document.getElementById('systemStatusMobile');
+            const systemLabelMobile = document.getElementById('systemLabelMobile');
+            const btnTest = document.getElementById('btnModeTest');
+            const btnLive = document.getElementById('btnModeLive');
+            const btnOffline = document.getElementById('btnModeOffline');
+
+            // Reset button highlights
+            if (btnTest) btnTest.style.opacity = mode === 'test' ? '1' : '0.45';
+            if (btnLive) btnLive.style.opacity = mode === 'live' ? '1' : '0.45';
+            if (btnOffline) btnOffline.style.opacity = mode === 'offline' ? '1' : '0.45';
+
+            if (mode === 'live') {
+                modeBadge.textContent = 'Live';
+                modeBadge.className = 'badge prod';
+                modeEmail.textContent = 'Sending to selected segment';
+                modeBadgeMobile.textContent = 'Live';
+                modeBadgeMobile.className = 'badge prod';
+                modeEmailMobile.textContent = 'Sending to selected segment';
+                systemStatus.textContent = '●';
+                systemStatus.className = 'status-value success';
+                systemStatus.style.color = '';
+                systemLabel.textContent = '(Live)';
+                systemStatusMobile.textContent = '●';
+                systemStatusMobile.className = 'status-value success';
+                systemStatusMobile.style.color = '';
+                systemLabelMobile.textContent = '(Live)';
+            } else if (mode === 'offline') {
+                modeBadge.textContent = 'Offline';
+                modeBadge.className = 'badge offline';
+                modeEmail.textContent = 'All sends blocked';
+                modeBadgeMobile.textContent = 'Offline';
+                modeBadgeMobile.className = 'badge offline';
+                modeEmailMobile.textContent = 'All sends blocked';
+                systemStatus.textContent = '●';
+                systemStatus.className = 'status-value';
+                systemStatus.style.color = '#e74c3c';
+                systemLabel.textContent = '(Offline)';
+                systemStatusMobile.textContent = '●';
+                systemStatusMobile.className = 'status-value';
+                systemStatusMobile.style.color = '#e74c3c';
+                systemLabelMobile.textContent = '(Offline)';
+            } else {
+                // test mode
+                modeBadge.textContent = 'Test Mode';
+                modeBadge.className = 'badge test';
+                modeEmail.textContent = testEmail || 'harrison@artisan.com.au';
+                modeBadgeMobile.textContent = 'Test Mode';
+                modeBadgeMobile.className = 'badge test';
+                modeEmailMobile.textContent = testEmail || 'harrison@artisan.com.au';
+                systemStatus.textContent = '●';
+                systemStatus.className = 'status-value';
+                systemStatus.style.color = '#f39c12';
+                systemLabel.textContent = '(Test Mode)';
+                systemStatusMobile.textContent = '●';
+                systemStatusMobile.className = 'status-value';
+                systemStatusMobile.style.color = '#f39c12';
+                systemLabelMobile.textContent = '(Test Mode)';
+            }
+        }
+
+        async function setMode(mode) {
+            try {
+                const resp = await fetch('/api/mode', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mode, confirmed: true })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    const modeResp = await fetch('/api/mode');
+                    const modeData = await modeResp.json();
+                    updateModeUI(modeData.mode, modeData.test_email);
+                    const labels = { test: 'Test Mode', live: 'Live', offline: 'Offline' };
+                    showToast(`✅ Switched to ${labels[mode] || mode}`, 'success');
+                } else {
+                    showToast('❌ ' + (data.message || 'Failed to change mode'), 'error');
+                }
+            } catch (e) {
+                showToast('❌ Error changing mode: ' + e.message, 'error');
+            }
+        }
+
+        function confirmGoLive() {
+            const confirmed = confirm(
+                '⚠️ GO LIVE CONFIRMATION\n\n' +
+                'You are about to switch to LIVE mode.\n\n' +
+                'In Live mode, all sends will go to the REAL selected segment — not to the test email.\n\n' +
+                'Are you absolutely sure you want to go live?'
+            );
+            if (!confirmed) return;
+            // Second confirmation
+            const confirmed2 = confirm(
+                '🔴 FINAL CONFIRMATION\n\n' +
+                'This will send real emails to real contacts.\n\n' +
+                'Click OK to confirm LIVE mode.'
+            );
+            if (!confirmed2) return;
+            setMode('live');
+        }
+
         async function refreshStatus() {
             try {
                 const response = await fetch('/');
@@ -5289,52 +5416,9 @@
                 // Check OpenAI status
                 checkOpenAIStatus();
                 
-                // Update mode
-                const testMode = data.test_mode;
-                const modeBadge = document.getElementById('modeBadge');
-                const modeEmail = document.getElementById('modeEmail');
-                const modeBadgeMobile = document.getElementById('modeBadgeMobile');
-                const modeEmailMobile = document.getElementById('modeEmailMobile');
-                const systemStatus = document.getElementById('systemStatus');
-                const systemLabel = document.getElementById('systemLabel');
-                const systemStatusMobile = document.getElementById('systemStatusMobile');
-                const systemLabelMobile = document.getElementById('systemLabelMobile');
-                
-                if (testMode) {
-                    modeBadge.textContent = 'Test Mode';
-                    modeBadge.className = 'badge test';
-                    modeEmail.textContent = data.test_email || 'No test email set';
-                    modeBadgeMobile.textContent = 'Test Mode';
-                    modeBadgeMobile.className = 'badge test';
-                    modeEmailMobile.textContent = data.test_email || 'No test email set';
-                    
-                    // System status orange in test mode
-                    systemStatus.textContent = '●';
-                    systemStatus.className = 'status-value';
-                    systemStatus.style.color = '#f39c12';
-                    systemLabel.textContent = '(Test Mode)';
-                    systemStatusMobile.textContent = '●';
-                    systemStatusMobile.className = 'status-value';
-                    systemStatusMobile.style.color = '#f39c12';
-                    systemLabelMobile.textContent = '(Test Mode)';
-                } else {
-                    modeBadge.textContent = 'Production';
-                    modeBadge.className = 'badge prod';
-                    modeEmail.textContent = 'Sending to all contacts';
-                    modeBadgeMobile.textContent = 'Production';
-                    modeBadgeMobile.className = 'badge prod';
-                    modeEmailMobile.textContent = 'Sending to all contacts';
-                    
-                    // System status green in production
-                    systemStatus.textContent = '●';
-                    systemStatus.className = 'status-value success';
-                    systemStatus.style.color = '';
-                    systemLabel.textContent = '(Live)';
-                    systemStatusMobile.textContent = '●';
-                    systemStatusMobile.className = 'status-value success';
-                    systemStatusMobile.style.color = '';
-                    systemLabelMobile.textContent = '(Live)';
-                }
+                // Update mode (uses new data.mode: 'test' | 'live' | 'offline')
+                const mode = data.mode || (data.test_mode ? 'test' : 'live');
+                updateModeUI(mode, data.test_email);
                 
                 // Update JobAdder status
                 const jobadderStatus = document.getElementById('jobadderStatus');
