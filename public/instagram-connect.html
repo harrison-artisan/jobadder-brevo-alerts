@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connect Instagram — Artisan Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f1923;
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #1a2535;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+    }
+    .ig-logo {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 32px;
+    }
+    h1 { font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+    p { color: rgba(255,255,255,0.65); font-size: 14px; line-height: 1.7; margin-bottom: 24px; }
+    .steps {
+      text-align: left;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 28px;
+    }
+    .steps ol { padding-left: 20px; }
+    .steps li { color: rgba(255,255,255,0.8); font-size: 13px; line-height: 1.8; margin-bottom: 4px; }
+    .steps li strong { color: white; }
+    .btn-ig {
+      display: inline-block;
+      padding: 13px 32px;
+      background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+      color: white;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 12px;
+    }
+    .btn-ig:hover { opacity: 0.9; }
+    .btn-secondary {
+      display: inline-block;
+      padding: 11px 24px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.7);
+      border-radius: 10px;
+      font-size: 13px;
+      text-decoration: none;
+      cursor: pointer;
+      width: 100%;
+    }
+    .status-box {
+      display: none;
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    .status-box.success { background: rgba(39,174,96,0.15); border: 1px solid rgba(39,174,96,0.4); color: #2ecc71; }
+    .status-box.error { background: rgba(231,76,60,0.15); border: 1px solid rgba(231,76,60,0.4); color: #e74c3c; }
+    .status-box.info { background: rgba(52,152,219,0.15); border: 1px solid rgba(52,152,219,0.4); color: #3498db; }
+    #cookieForm { display: none; margin-top: 20px; text-align: left; }
+    #cookieForm label { display: block; color: rgba(255,255,255,0.7); font-size: 12px; font-weight: 600; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    #cookieForm input {
+      width: 100%;
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      color: white;
+      font-size: 13px;
+      margin-bottom: 14px;
+      font-family: monospace;
+    }
+    #cookieForm input::placeholder { color: rgba(255,255,255,0.3); }
+    .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
+    .divider hr { flex: 1; border: none; border-top: 1px solid rgba(255,255,255,0.1); }
+    .divider span { color: rgba(255,255,255,0.4); font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="ig-logo">📷</div>
+    <h1>Connect Instagram</h1>
+    <p>Log in to the Artisan Instagram account to allow the newsletter builder to automatically pull post images and captions.</p>
+
+    <div id="statusBox" class="status-box"></div>
+
+    <div class="steps">
+      <ol>
+        <li>Click <strong>"Open Instagram Login"</strong> below</li>
+        <li>Log in as the <strong>Artisan Instagram account</strong> in the new window</li>
+        <li>Once logged in, come back here and click <strong>"I'm logged in — Save Session"</strong></li>
+      </ol>
+    </div>
+
+    <button class="btn-ig" onclick="openInstagram()">Open Instagram Login</button>
+    <button class="btn-ig" id="saveBtn" onclick="saveSession()" style="display:none; background: linear-gradient(135deg,#27ae60,#2ecc71);">✓ I'm logged in — Save Session</button>
+
+    <div class="divider"><hr><span>OR paste cookies manually</span><hr></div>
+
+    <button class="btn-secondary" onclick="toggleManual()">Paste Session Cookies Manually</button>
+
+    <div id="cookieForm">
+      <br>
+      <label>sessionid</label>
+      <input type="text" id="sessionid" placeholder="e.g. 12345678%3AabcDEF..." />
+      <label>csrftoken</label>
+      <input type="text" id="csrftoken" placeholder="e.g. abc123xyz..." />
+      <label>ds_user_id (numeric user ID)</label>
+      <input type="text" id="ds_user_id" placeholder="e.g. 12345678" />
+      <label>Instagram Username (handle without @)</label>
+      <input type="text" id="ig_username" placeholder="e.g. get_artisan" />
+      <button class="btn-ig" onclick="saveCookiesManually()" style="margin-top:8px;">Save Cookies</button>
+    </div>
+
+    <br>
+    <a href="/dashboard" class="btn-secondary">← Back to Dashboard</a>
+  </div>
+
+  <script>
+    let igWindow = null;
+
+    function showStatus(msg, type) {
+      const box = document.getElementById('statusBox');
+      box.textContent = msg;
+      box.className = 'status-box ' + type;
+      box.style.display = 'block';
+    }
+
+    function openInstagram() {
+      igWindow = window.open('https://www.instagram.com/accounts/login/', 'instagram_login',
+        'width=480,height=640,scrollbars=yes,resizable=yes');
+      document.getElementById('saveBtn').style.display = 'block';
+      showStatus('Instagram login window opened. Log in as the Artisan account, then click "Save Session" above.', 'info');
+    }
+
+    async function saveSession() {
+      showStatus('Attempting to read session cookies...', 'info');
+      try {
+        // Try to read cookies from the Instagram window if same-origin (won't work cross-origin)
+        // Instead, we call our backend which will try to extract from any stored cookies
+        // The real approach: user logs in, we detect via polling or they click the button
+        const resp = await fetch('/api/instagram/check-session', { method: 'POST' });
+        const data = await resp.json();
+        if (data.success) {
+          showStatus('✓ Instagram session saved! Username: @' + (data.username || 'unknown'), 'success');
+          document.getElementById('saveBtn').style.display = 'none';
+          setTimeout(() => { window.location.href = '/dashboard?instagram=connected'; }, 2000);
+        } else {
+          showStatus('Could not detect session automatically. Please use the "Paste Cookies Manually" option below.', 'error');
+        }
+      } catch (e) {
+        showStatus('Error: ' + e.message + '. Please use the manual cookie option.', 'error');
+      }
+    }
+
+    function toggleManual() {
+      const form = document.getElementById('cookieForm');
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function saveCookiesManually() {
+      const sessionid = document.getElementById('sessionid').value.trim();
+      const csrftoken = document.getElementById('csrftoken').value.trim();
+      const ds_user_id = document.getElementById('ds_user_id').value.trim();
+      const username = document.getElementById('ig_username').value.trim();
+
+      if (!sessionid) {
+        showStatus('sessionid is required.', 'error');
+        return;
+      }
+
+      showStatus('Saving and verifying cookies...', 'info');
+      try {
+        const resp = await fetch('/api/instagram/save-cookies', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionid, csrftoken, ds_user_id, username })
+        });
+        const data = await resp.json();
+        if (data.success) {
+          showStatus('✓ Instagram connected! Username: @' + (data.username || username), 'success');
+          setTimeout(() => { window.location.href = '/dashboard?instagram=connected'; }, 2000);
+        } else {
+          showStatus('Failed: ' + (data.message || 'Unknown error'), 'error');
+        }
+      } catch (e) {
+        showStatus('Error: ' + e.message, 'error');
+      }
+    }
+  </script>
+</body>
+</html>
