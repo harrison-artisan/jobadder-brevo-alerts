@@ -1421,6 +1421,62 @@ app.post('/api/consultant/cancel-schedule', (req, res) => {
   consultantController.cancelConsultantSchedule(req, res);
 });
 
+// ============================================================
+// Instagram Session Routes
+// ============================================================
+const instagramService = require('./services/instagramService');
+
+// GET /instagram-connect - Serve the Instagram connect page
+app.get('/instagram-connect', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'instagram-connect.html'));
+});
+
+// GET /api/instagram/status - Return current session status
+app.get('/api/instagram/status', (req, res) => {
+  res.json(instagramService.getStatus());
+});
+
+// POST /api/instagram/save-cookies - Save Instagram session cookies
+app.post('/api/instagram/save-cookies', async (req, res) => {
+  try {
+    const { sessionid, csrftoken, ds_user_id, username } = req.body;
+    if (!sessionid) return res.status(400).json({ success: false, message: 'sessionid is required' });
+    // Save the session
+    const session = instagramService.saveSession({ sessionid, csrftoken, ds_user_id, username });
+    // Verify it works
+    const verify = await instagramService.verifySession(session);
+    if (verify.valid) {
+      // Update username if we got a better one from verification
+      if (verify.username && verify.username !== username) {
+        instagramService.saveSession({ sessionid, csrftoken, ds_user_id, username: verify.username });
+      }
+      console.log(`✅ Instagram session saved and verified: @${verify.username || username}`);
+      res.json({ success: true, username: verify.username || username });
+    } else {
+      // Save anyway — verification might fail due to endpoint changes but cookies could still work
+      console.log(`⚠️  Instagram session saved but could not verify. Cookies may still work for scraping.`);
+      res.json({ success: true, username: username || '', warning: 'Session saved but could not verify. It may still work for scraping.' });
+    }
+  } catch (e) {
+    console.error('[Instagram] Save cookies error:', e.message);
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+// POST /api/instagram/check-session - Try to auto-detect session (placeholder)
+app.post('/api/instagram/check-session', (req, res) => {
+  // This endpoint is called after the user logs in via the popup window.
+  // Since we can't read cross-origin cookies, we return a message to use manual entry.
+  res.json({ success: false, message: 'Please use the manual cookie entry option.' });
+});
+
+// POST /api/instagram/disconnect - Clear stored session
+app.post('/api/instagram/disconnect', (req, res) => {
+  instagramService.clearSession();
+  console.log('🔌 Instagram session disconnected');
+  res.json({ success: true });
+});
+
 // Start server
 app.listen(PORT, () => {
   const isAuthorized = jobadderService.isAuthorized();
