@@ -215,7 +215,7 @@
 
           <!-- ====== LIFE UPDATE ====== -->
           <tr>
-            <td style="padding:20px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
+            <td style="padding:28px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#f8faff 0%,#f0f4ff 100%);border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(27,51,77,0.06);">
                 <tr>
                   <td style="padding:32px 32px 28px 32px;">
@@ -234,7 +234,7 @@
 
           {% if item.type == 'image' %}
           <tr>
-            <td style="padding:20px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
+            <td style="padding:28px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;border:1px solid #e8e8e8;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.05);">
                 <tr>
                   <td style="padding:0;">
@@ -255,7 +255,7 @@
 
           {% if item.type == 'instagram' %}
           <tr>
-            <td style="padding:20px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
+            <td style="padding:28px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
               <!-- Instagram embed-style card -->
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;border:1px solid #dbdbdb;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.1);">
                 <!-- Instagram header bar -->
@@ -323,7 +323,7 @@
 
           {% if item.type == 'youtube' %}
           <tr>
-            <td style="padding:20px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
+            <td style="padding:28px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
               <!-- YouTube left-right layout: thumbnail left, text+button right -->
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#0d0d0d;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.25);">
                 <tr>
@@ -349,11 +349,11 @@
                   {% endif %}
                   <!-- Right: label, caption, button -->
                   <td valign="middle" style="padding:28px 28px 28px 24px;" class="yt-text-cell">
-                    <p style="margin:0 0 8px 0;font-size:10px;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:2px;text-transform:uppercase;">Now Playing</p>
+                    <p style="margin:0 0 8px 0;font-size:10px;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:2px;text-transform:uppercase;">What I'm Listening To</p>
                     {% if item.caption %}
                     <p style="margin:0 0 20px 0;font-size:15px;font-weight:600;color:#ffffff;line-height:1.6;">{{ item.caption }}</p>
                     {% endif %}
-                    <a href="{{ item.url }}" style="display:inline-block;background:linear-gradient(135deg,#ff0000 0%,#cc0000 100%);color:#ffffff;padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;letter-spacing:0.5px;box-shadow:0 4px 14px rgba(255,0,0,0.35);">&#9654; WATCH ON YOUTUBE</a>
+                    <a href="{{ item.url }}" style="display:inline-block;background:linear-gradient(135deg,#ff0000 0%,#cc0000 100%);color:#ffffff;padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;letter-spacing:0.5px;box-shadow:0 4px 14px rgba(255,0,0,0.35);">&#9654; LISTEN / WATCH</a>
                   </td>
                 </tr>
               </table>
@@ -363,18 +363,18 @@
 
           {% if item.type == 'link' %}
           <tr>
-            <td style="padding:20px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
+            <td style="padding:28px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#f0f4ff 0%,#e8eeff 100%);border:1px solid #d0d8ff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(27,51,77,0.07);">
                 <tr>
                   <!-- Left: article image -->
                   {% if item.image %}
-                  <td width="38%" style="padding:0;line-height:0;vertical-align:top;" class="wr-img-cell">
+                  <td width="38%" style="padding:0;line-height:0;" class="wr-img-cell">
                     <a href="{{ item.url }}" style="display:block;line-height:0;">
-                      <img src="{{ item.image }}" alt="{{ item.title }}" width="100%" style="display:block;border:0;width:100%;height:200px;object-fit:cover;border-radius:13px 0 0 13px;">
+                      <img src="{{ item.image }}" alt="{{ item.title }}" width="100%" style="display:block;border:0;width:100%;height:220px;object-fit:cover;border-radius:13px 0 0 13px;">
                     </a>
                   </td>
                   <!-- Right: label, title, description, button -->
-                  <td valign="middle" style="padding:24px 28px;" class="wr-text-cell">
+                  <td valign="middle" style="padding:24px 28px;min-height:220px;" class="wr-text-cell">
                   {% else %}
                   <td valign="middle" style="padding:24px 32px;text-align:center;" colspan="2">
                   {% endif %}
@@ -481,8 +481,12 @@
                 <tr>
                   <td width="72" valign="middle" align="center" style="padding:20px 0 20px 20px;" class="event-date-cell">
                     <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);border-radius:10px;width:56px;text-align:center;">
+                      {% if event.day %}
                       <tr><td style="padding:10px 8px 4px 8px;font-size:22px;font-weight:900;color:#ffffff;line-height:1;">{{ event.day }}</td></tr>
                       <tr><td style="padding:0 8px 10px 8px;font-size:9px;font-weight:700;color:rgba(255,255,255,0.85);letter-spacing:1px;text-transform:uppercase;">{{ event.month }}</td></tr>
+                      {% else %}
+                      <tr><td style="padding:10px 8px 10px 8px;font-size:13px;font-weight:900;color:#ffffff;line-height:1;text-align:center;">{{ event.month }}</td></tr>
+                      {% endif %}
                     </table>
                   </td>
                   <td valign="middle" style="padding:20px 24px;" class="event-content-cell">

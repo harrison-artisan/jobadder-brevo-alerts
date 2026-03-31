@@ -1222,15 +1222,23 @@ async function scrapeEventMeta(url) {
                     let dateStr = '';
                     try {
                         const decode = s => s ? s.replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>') : '';
-                        // 1. JSON-LD: look for startDate in Event schema
+                        // 1. JSON-LD: look for startDate (and endDate for multi-day) in Event schema
+                        let endDateStr = '';
                         const jsonLdMatches = data.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || [];
                         for (const block of jsonLdMatches) {
                             try {
                                 const json = JSON.parse(block.replace(/<script[^>]*>|<\/script>/gi, ''));
                                 const objs = Array.isArray(json) ? json : [json];
                                 for (const obj of objs) {
-                                    const sd = obj.startDate || (obj['@graph'] && obj['@graph'].find(o => o.startDate)?.startDate);
-                                    if (sd) { dateStr = sd; break; }
+                                    const candidates = obj['@graph'] ? obj['@graph'] : [obj];
+                                    for (const o of candidates) {
+                                        if (o.startDate) {
+                                            dateStr = o.startDate;
+                                            endDateStr = o.endDate || '';
+                                            break;
+                                        }
+                                    }
+                                    if (dateStr) break;
                                 }
                             } catch(e) {}
                             if (dateStr) break;
@@ -1257,15 +1265,23 @@ async function scrapeEventMeta(url) {
                             }
                         }
                         // If dateStr is ISO format (2026-04-15T...), convert to readable
+                        let multiDay = false;
                         if (dateStr && dateStr.includes('T')) {
                             try {
                                 const d = new Date(dateStr);
                                 const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+                                // Check if endDate is on a different day
+                                if (endDateStr) {
+                                    const dEnd = new Date(endDateStr);
+                                    if (dEnd.getDate() !== d.getDate() || dEnd.getMonth() !== d.getMonth()) {
+                                        multiDay = true;
+                                    }
+                                }
                                 dateStr = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
                             } catch(e) {}
                         }
-                        console.log(`✅ Scraped event meta: title="${(base.title||'').slice(0,40)}", date="${dateStr}"`);
-                        resolve({ title: base.title, description: base.description, image: base.image, date: decode(dateStr) });
+                        console.log(`✅ Scraped event meta: title="${(base.title||'').slice(0,40)}", date="${dateStr}", multiDay=${multiDay}`);
+                        resolve({ title: base.title, description: base.description, image: base.image, date: decode(dateStr), multiDay });
                     } catch(e) { resolve(base); }
                 });
             });
@@ -1496,6 +1512,7 @@ async function parseCsv(req, res) {
             const evLink = (polished[`event_${i}_link`] || '').trim();
             let evDate = (polished[`event_${i}_date`] || '').trim();
             // If URL provided, scrape the page for any missing fields (title, description, date)
+            let evMultiDay = false;
             if (evLink && evLink.startsWith('http') && (!evTitle || !evDate)) {
                 console.log(`📅 Scraping event URL for details: ${evLink}`);
                 try {
@@ -1503,12 +1520,13 @@ async function parseCsv(req, res) {
                     if (!evTitle && evMeta.title) evTitle = evMeta.title;
                     if (!evDescription && evMeta.description) evDescription = evMeta.description;
                     if (!evDate && evMeta.date) evDate = evMeta.date;
+                    if (evMeta.multiDay) evMultiDay = true;
                 } catch (e) { console.warn('⚠️  Event URL scrape failed:', e.message); }
             }
             if (!evTitle && !evLink) continue; // skip if nothing at all
             const parsedDate = parseEventDate(evDate);
             events.push({
-                day:         parsedDate ? parsedDate.day   : '',
+                day:         (parsedDate && !evMultiDay) ? parsedDate.day : '',
                 month:       parsedDate ? parsedDate.month : '',
                 title:       evTitle || evLink,
                 description: evDescription,
