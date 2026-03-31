@@ -2,6 +2,7 @@ const jobadderService = require('../services/jobadderService');
 const brevoService = require('../services/brevoService');
 const jobTrackingService = require('../services/jobTrackingService');
 const wordpressService = require('../services/wordpressService');
+const modeService = require('../services/modeService');
 
 class JobAlertsController {
   /**
@@ -100,9 +101,16 @@ class JobAlertsController {
       }
 
       // 7. Send batch email with job data array and articles
-      console.log(`📧 Sending daily roundup to ${recipients.length} recipients...`);
+      if (modeService.isOffline()) {
+        console.log('🔴 Platform is OFFLINE — daily roundup blocked.');
+        return { success: false, message: 'Platform is OFFLINE. Daily roundup blocked.' };
+      }
+      const finalRecipients = modeService.isTestMode()
+        ? [{ email: modeService.getTestEmail(), name: 'Test User' }]
+        : recipients;
+      console.log(`📧 Sending daily roundup to ${finalRecipients.length} recipients [mode: ${modeService.getMode()}]...`);
       await brevoService.sendBatchEmail(
-        recipients,
+        finalRecipients,
         process.env.DAILY_ROUNDUP_TEMPLATE_ID,
         { jobs: jobsData, job_count: jobsData.length, ...articleParams }
       );
@@ -113,7 +121,7 @@ class JobAlertsController {
       console.log('✅ Daily roundup completed successfully!\n');
       return { 
         success: true, 
-        message: `Sent ${recentJobs.length} jobs (${jobCheck.newJobIds.length} new) to ${recipients.length} recipients` 
+        message: `Sent ${recentJobs.length} jobs (${jobCheck.newJobIds.length} new) to ${finalRecipients.length} recipients [mode: ${modeService.getMode()}]` 
       };
     } catch (error) {
       console.error('❌ Error in daily roundup:', error);
@@ -160,9 +168,16 @@ class JobAlertsController {
       }
 
       // 5. Send single job alert with articles
-      console.log(`📧 Sending job alert to ${recipients.length} recipients...`);
+      if (modeService.isOffline()) {
+        console.log('🔴 Platform is OFFLINE — webhook job alert blocked.');
+        return res.status(503).json({ success: false, message: 'Platform is OFFLINE.' });
+      }
+      const finalRecipientsWebhook = modeService.isTestMode()
+        ? [{ email: modeService.getTestEmail(), name: 'Test User' }]
+        : recipients;
+      console.log(`📧 Sending job alert to ${finalRecipientsWebhook.length} recipients [mode: ${modeService.getMode()}]...`);
       await brevoService.sendSingleEmail(
-        recipients,
+        finalRecipientsWebhook,
         process.env.SINGLE_JOB_ALERT_TEMPLATE_ID,
         { ...formattedJob, ...articleParams }
       );
@@ -170,7 +185,7 @@ class JobAlertsController {
       console.log('✅ Job alert sent successfully!\n');
       return res.status(200).json({ 
         success: true, 
-        message: `Job alert sent to ${recipients.length} recipients` 
+        message: `Job alert sent to ${finalRecipientsWebhook.length} recipients [mode: ${modeService.getMode()}]` 
       });
     } catch (error) {
       console.error('❌ Error handling webhook:', error);
@@ -240,8 +255,14 @@ class JobAlertsController {
       }
 
       // 4. Send email with articles
+      if (modeService.isOffline()) {
+        return { success: false, message: 'Platform is OFFLINE. Switch to Test or Live mode to send.' };
+      }
+      const finalRecipientsSingle = modeService.isTestMode()
+        ? [{ email: modeService.getTestEmail(), name: 'Test User' }]
+        : recipients;
       await brevoService.sendSingleEmail(
-        recipients,
+        finalRecipientsSingle,
         process.env.SINGLE_JOB_ALERT_TEMPLATE_ID,
         { ...formattedJob, ...articleParams }
       );
@@ -249,7 +270,7 @@ class JobAlertsController {
       // 5. Record that this job was sent today
       jobTrackingService.recordSingleJobSent(parseInt(adId));
 
-      console.log('✅ Single job alert sent successfully!\n');
+      console.log(`✅ Single job alert sent to ${finalRecipientsSingle.length} recipients [mode: ${modeService.getMode()}]!\n`);
       return { 
         success: true, 
         message: `Job alert sent to ${recipients.length} recipients` 
