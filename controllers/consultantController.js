@@ -1514,7 +1514,7 @@ async function parseCsv(req, res) {
                 description: evDescription,
                 link:        evLink
             });
-        }}
+        }
         // 8. Auto-fetch WordPress articles
         console.log('📰 Fetching WordPress articles...');
         const wpArticles = await fetchWordPressArticles();
