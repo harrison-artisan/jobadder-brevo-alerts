@@ -195,28 +195,33 @@ async function fetchAListCandidateLive() {
 }
 
 async function fetchLiveJob() {
-    try {
-        console.log('📋 Fetching live job from JobAdder...');
-        const liveJobs = await jobadderService.getLiveJobs();
-        if (!liveJobs || liveJobs.length === 0) {
-            console.log('ℹ️  No live jobs found in JobAdder');
-            return null;
+    // Retry up to 2 times to handle transient JobAdder token/network issues
+    for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+            console.log(`📋 Fetching live job from JobAdder (attempt ${attempt})...`);
+            const liveJobs = await jobadderService.getLiveJobs();
+            if (!liveJobs || liveJobs.length === 0) {
+                console.log('ℹ️  No live jobs found in JobAdder');
+                return null;
+            }
+            // Pick the most recent job
+            const job = liveJobs[0];
+            const formatted = jobadderService.formatJobForEmail(job);
+            console.log(`✅ Live job fetched: ${formatted.job_title}`);
+            return {
+                title: formatted.job_title || '',
+                type: formatted.job_type || 'Full Time',
+                location: formatted.location || '',
+                description: formatted.job_description || '',
+                link: formatted.apply_url || 'https://clientapps.jobadder.com/67514/artisan'
+            };
+        } catch (e) {
+            console.warn(`⚠️  Live job fetch attempt ${attempt} failed: ${e.message}`);
+            if (attempt < 2) await new Promise(r => setTimeout(r, 2000)); // wait 2s before retry
         }
-        // Pick the most recent job
-        const job = liveJobs[0];
-        const formatted = jobadderService.formatJobForEmail(job);
-        console.log(`✅ Live job fetched: ${formatted.job_title}`);
-        return {
-            title: formatted.job_title || '',
-            type: formatted.job_type || 'Full Time',
-            location: formatted.location || '',
-            description: formatted.job_description || '',
-            link: formatted.apply_url || 'https://clientapps.jobadder.com/67514/artisan'
-        };
-    } catch (e) {
-        console.warn('⚠️  Live job fetch failed:', e.message);
-        return null;
     }
+    console.warn('⚠️  All job fetch attempts failed — no job will appear in newsletter');
+    return null;
 }
 
 const STATE_FILE = path.join(__dirname, '..', '.consultant-state.json');
@@ -1194,6 +1199,83 @@ function parseEventDate(dateStr) {
 }
 
 /**
+ * Scrape event-specific metadata: title, description, AND date from an event page.
+ * Tries JSON-LD structured data first, then og: tags, then text patterns.
+ */
+async function scrapeEventMeta(url) {
+    const base = await scrapePageMeta(url);
+    // base already has title, description, image — now also extract date
+    // We need the raw HTML for date extraction, so fetch again with a targeted parse
+    return new Promise((resolve) => {
+        try {
+            const mod = url.startsWith('https') ? https : http;
+            const options = { headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36', 'Accept': 'text/html' } };
+            const req = mod.get(url, options, (res) => {
+                if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                    return scrapeEventMeta(res.headers.location).then(resolve).catch(() => resolve(base));
+                }
+                const timer = setTimeout(() => { req.destroy(); resolve(base); }, 6000);
+                let data = '';
+                res.on('data', chunk => { clearTimeout(timer); data += chunk; if (data.length > 300000) req.destroy(); });
+                res.on('end', () => {
+                    clearTimeout(timer);
+                    let dateStr = '';
+                    try {
+                        const decode = s => s ? s.replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>') : '';
+                        // 1. JSON-LD: look for startDate in Event schema
+                        const jsonLdMatches = data.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || [];
+                        for (const block of jsonLdMatches) {
+                            try {
+                                const json = JSON.parse(block.replace(/<script[^>]*>|<\/script>/gi, ''));
+                                const objs = Array.isArray(json) ? json : [json];
+                                for (const obj of objs) {
+                                    const sd = obj.startDate || (obj['@graph'] && obj['@graph'].find(o => o.startDate)?.startDate);
+                                    if (sd) { dateStr = sd; break; }
+                                }
+                            } catch(e) {}
+                            if (dateStr) break;
+                        }
+                        // 2. og:event-start-time or article:published_time meta tag
+                        if (!dateStr) {
+                            const metaDate = (data.match(/<meta[^>]+property=["'](?:og:event-start-time|article:published_time)["'][^>]+content=["']([^"']+)["']/i) ||
+                                             data.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["'](?:og:event-start-time|article:published_time)["']/i) ||
+                                             data.match(/<meta[^>]+name=["']event-date["'][^>]+content=["']([^"']+)["']/i) || [])[1];
+                            if (metaDate) dateStr = metaDate;
+                        }
+                        // 3. Look for visible date patterns in the HTML body text
+                        if (!dateStr) {
+                            // Match patterns like "15 April 2026", "April 15, 2026", "15/04/2026"
+                            const bodyText = data.replace(/<[^>]+>/g, ' ');
+                            const datePatterns = [
+                                /(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(20\d{2})/i,
+                                /(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),?\s+(20\d{2})/i,
+                                /(\d{1,2})[\/\-](\d{1,2})[\/\-](20\d{2})/
+                            ];
+                            for (const pat of datePatterns) {
+                                const m = bodyText.match(pat);
+                                if (m) { dateStr = m[0].trim(); break; }
+                            }
+                        }
+                        // If dateStr is ISO format (2026-04-15T...), convert to readable
+                        if (dateStr && dateStr.includes('T')) {
+                            try {
+                                const d = new Date(dateStr);
+                                const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+                                dateStr = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+                            } catch(e) {}
+                        }
+                        console.log(`✅ Scraped event meta: title="${(base.title||'').slice(0,40)}", date="${dateStr}"`);
+                        resolve({ title: base.title, description: base.description, image: base.image, date: decode(dateStr) });
+                    } catch(e) { resolve(base); }
+                });
+            });
+            req.on('error', () => resolve(base));
+            req.setTimeout(8000, () => { req.destroy(); resolve(base); });
+        } catch(e) { resolve(base); }
+    });
+}
+
+/**
  * Scrape og:title and og:description from a URL (for Worth Reading card).
  */
 async function scrapePageMeta(url) {
@@ -1406,20 +1488,21 @@ async function parseCsv(req, res) {
             mediaArray.push(ytItem);
         }
 
-        // 7. Parse events — scrape URL if title/description missing
+        // 7. Parse events — scrape URL for title, description, AND date if consultant left them blank
         const events = [];
         for (let i = 1; i <= 3; i++) {
             let evTitle = (polished[`event_${i}_title`] || '').trim();
             let evDescription = (polished[`event_${i}_description`] || '').trim();
             const evLink = (polished[`event_${i}_link`] || '').trim();
-            const evDate = (polished[`event_${i}_date`] || '').trim();
-            // If URL provided but title missing, scrape the page for title/description
-            if (evLink && evLink.startsWith('http') && !evTitle) {
+            let evDate = (polished[`event_${i}_date`] || '').trim();
+            // If URL provided, scrape the page for any missing fields (title, description, date)
+            if (evLink && evLink.startsWith('http') && (!evTitle || !evDate)) {
                 console.log(`📅 Scraping event URL for details: ${evLink}`);
                 try {
-                    const evMeta = await scrapePageMeta(evLink);
-                    if (evMeta.title) evTitle = evMeta.title;
+                    const evMeta = await scrapeEventMeta(evLink);
+                    if (!evTitle && evMeta.title) evTitle = evMeta.title;
                     if (!evDescription && evMeta.description) evDescription = evMeta.description;
+                    if (!evDate && evMeta.date) evDate = evMeta.date;
                 } catch (e) { console.warn('⚠️  Event URL scrape failed:', e.message); }
             }
             if (!evTitle && !evLink) continue; // skip if nothing at all
@@ -1431,8 +1514,7 @@ async function parseCsv(req, res) {
                 description: evDescription,
                 link:        evLink
             });
-
-        }
+        }}
         // 8. Auto-fetch WordPress articles
         console.log('📰 Fetching WordPress articles...');
         const wpArticles = await fetchWordPressArticles();
