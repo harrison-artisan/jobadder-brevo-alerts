@@ -18,6 +18,7 @@ const path = require('path');
 const https = require('https');
 const http = require('http');
 const brevoService = require('../services/brevoService');
+const modeService = require('../services/modeService');
 const jobadderService = require('../services/jobadderService');
 const candidateService = require('../services/candidateService');
 
@@ -659,11 +660,17 @@ async function sendToAll(req, res) {
             return res.status(404).json({ success: false, message: 'No recipients found in the selected segment/list.' });
         }
 
-        const testMode = process.env.TEST_MODE === 'true';
-        const finalRecipients = testMode ? [{ email: process.env.TEST_EMAIL }] : recipients;
+        // Block send if platform is offline
+        if (modeService.isOffline()) {
+            return res.status(503).json({ success: false, message: 'Platform is OFFLINE. Switch to Test or Live mode to send.' });
+        }
+
+        const finalRecipients = modeService.isTestMode()
+            ? [{ email: modeService.getTestEmail() }]
+            : recipients;
 
         if (templateId) {
-            console.log(`📧 Sending via Brevo template #${templateId} for ${state.consultant.name}`);
+            console.log(`📧 Sending via Brevo template #${templateId} for ${state.consultant.name} [mode: ${modeService.getMode()}]`);
             await brevoService.sendBatchEmail(
                 finalRecipients,
                 parseInt(templateId),
@@ -685,7 +692,7 @@ async function sendToAll(req, res) {
         }
 
         writeState({ ...state, state: 'SENT', sentAt: new Date().toISOString() });
-        console.log(`✅ Consultant newsletter sent to ${finalRecipients.length} recipients.`);
+        console.log(`✅ Consultant newsletter sent to ${finalRecipients.length} recipients [mode: ${modeService.getMode()}].`);
         res.json({ success: true, message: `Newsletter sent to ${finalRecipients.length} recipients.` });
 
         setTimeout(() => writeState({ state: 'EMPTY' }), 2000);
@@ -726,8 +733,10 @@ async function sendToAllDirect(options = {}) {
         throw new Error('Invalid recipient type');
     }
     if (!recipients || recipients.length === 0) throw new Error('No recipients found');
-    const testMode = process.env.TEST_MODE === 'true';
-    const finalRecipients = testMode ? [{ email: process.env.TEST_EMAIL }] : recipients;
+    if (modeService.isOffline()) throw new Error('Platform is OFFLINE. Scheduled send blocked.');
+    const finalRecipients = modeService.isTestMode()
+        ? [{ email: modeService.getTestEmail() }]
+        : recipients;
     if (templateId) {
         await brevoService.sendBatchEmail(finalRecipients, parseInt(templateId), state.templateParams);
     } else {
@@ -743,7 +752,7 @@ async function sendToAllDirect(options = {}) {
         }
     }
     writeState({ ...state, state: 'SENT', sentAt: new Date().toISOString() });
-    console.log(`✅ Scheduled consultant newsletter sent to ${finalRecipients.length} recipients.`);
+    console.log(`✅ Scheduled consultant newsletter sent to ${finalRecipients.length} recipients [mode: ${modeService.getMode()}].`);
     setTimeout(() => writeState({ state: 'EMPTY' }), 2000);
     return { success: true, count: finalRecipients.length };
 }
