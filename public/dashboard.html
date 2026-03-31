@@ -1110,12 +1110,12 @@
                     <span class="badge test" id="modeBadge">Test Mode</span>
                 </div>
                 <div class="status-label" id="modeEmail" style="margin-bottom: 12px;">Loading...</div>
-                <!-- Mode selector buttons -->
-                <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;">
-                    <button id="btnModeTest" onclick="setMode('test')" style="padding: 6px 12px; font-size: 11px; font-weight: 700; border-radius: 8px; border: 2px solid #f1c40f; background: rgba(241,196,15,0.15); color: #f1c40f; cursor: pointer; transition: all 0.2s;">TEST</button>
-                    <button id="btnModeLive" onclick="confirmGoLive()" style="padding: 6px 12px; font-size: 11px; font-weight: 700; border-radius: 8px; border: 2px solid #27ae60; background: rgba(39,174,96,0.1); color: #27ae60; cursor: pointer; transition: all 0.2s;">LIVE</button>
-                    <button id="btnModeOffline" onclick="setMode('offline')" style="padding: 6px 12px; font-size: 11px; font-weight: 700; border-radius: 8px; border: 2px solid #e74c3c; background: rgba(231,76,60,0.1); color: #e74c3c; cursor: pointer; transition: all 0.2s;">OFFLINE</button>
-                </div>
+                <!-- Mode selector dropdown -->
+                <select id="modeSelect" onchange="handleModeSelect(this.value)" style="width: 100%; margin-top: 4px; padding: 7px 10px; font-size: 12px; font-weight: 600; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.07); color: white; cursor: pointer; outline: none;">
+                    <option value="test" style="background:#1a1a2e; color:#f1c40f;">🟡 Test Mode</option>
+                    <option value="live" style="background:#1a1a2e; color:#27ae60;">🟢 Live</option>
+                    <option value="offline" style="background:#1a1a2e; color:#e74c3c;">🔴 Offline</option>
+                </select>
             </div>
             
             <div class="status-card">
@@ -1177,11 +1177,11 @@
                         <span class="badge test" id="modeBadgeMobile">Test Mode</span>
                     </div>
                     <div class="status-label" id="modeEmailMobile" style="margin-bottom: 10px;">Loading...</div>
-                    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-                        <button onclick="setMode('test')" style="padding: 5px 10px; font-size: 10px; font-weight: 700; border-radius: 6px; border: 2px solid #f1c40f; background: rgba(241,196,15,0.15); color: #f1c40f; cursor: pointer;">TEST</button>
-                        <button onclick="confirmGoLive()" style="padding: 5px 10px; font-size: 10px; font-weight: 700; border-radius: 6px; border: 2px solid #27ae60; background: rgba(39,174,96,0.1); color: #27ae60; cursor: pointer;">LIVE</button>
-                        <button onclick="setMode('offline')" style="padding: 5px 10px; font-size: 10px; font-weight: 700; border-radius: 6px; border: 2px solid #e74c3c; background: rgba(231,76,60,0.1); color: #e74c3c; cursor: pointer;">OFFLINE</button>
-                    </div>
+                    <select onchange="handleModeSelect(this.value)" style="width: 100%; margin-top: 4px; padding: 6px 8px; font-size: 11px; font-weight: 600; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.07); color: white; cursor: pointer; outline: none;">
+                        <option value="test" style="background:#1a1a2e; color:#f1c40f;">🟡 Test Mode</option>
+                        <option value="live" style="background:#1a1a2e; color:#27ae60;">🟢 Live</option>
+                        <option value="offline" style="background:#1a1a2e; color:#e74c3c;">🔴 Offline</option>
+                    </select>
                 </div>
                 <div class="mobile-status-item">
                     <h4>JobAdder</h4>
@@ -5301,7 +5301,10 @@
         // ============================================================
         // Mode Management Functions
         // ============================================================
+        let currentMode = 'test'; // tracks current mode for dropdown reset on cancel
+
         function updateModeUI(mode, testEmail) {
+            currentMode = mode; // keep in sync
             const modeBadge = document.getElementById('modeBadge');
             const modeEmail = document.getElementById('modeEmail');
             const modeBadgeMobile = document.getElementById('modeBadgeMobile');
@@ -5310,14 +5313,9 @@
             const systemLabel = document.getElementById('systemLabel');
             const systemStatusMobile = document.getElementById('systemStatusMobile');
             const systemLabelMobile = document.getElementById('systemLabelMobile');
-            const btnTest = document.getElementById('btnModeTest');
-            const btnLive = document.getElementById('btnModeLive');
-            const btnOffline = document.getElementById('btnModeOffline');
-
-            // Reset button highlights
-            if (btnTest) btnTest.style.opacity = mode === 'test' ? '1' : '0.45';
-            if (btnLive) btnLive.style.opacity = mode === 'live' ? '1' : '0.45';
-            if (btnOffline) btnOffline.style.opacity = mode === 'offline' ? '1' : '0.45';
+            // Sync the dropdown to the current mode
+            const modeSelect = document.getElementById('modeSelect');
+            if (modeSelect) modeSelect.value = mode;
 
             if (mode === 'live') {
                 modeBadge.textContent = 'Live';
@@ -5368,6 +5366,35 @@
             }
         }
 
+        function handleModeSelect(mode) {
+            if (mode === 'live') {
+                // Two-step confirmation for Live
+                const confirmed = confirm(
+                    '⚠️ GO LIVE CONFIRMATION\n\n' +
+                    'You are about to switch to LIVE mode.\n\n' +
+                    'In Live mode, all sends will go to the REAL selected segment — not to the test email.\n\n' +
+                    'Are you absolutely sure you want to go live?'
+                );
+                if (!confirmed) {
+                    // Reset dropdown back to current mode
+                    const sel = document.getElementById('modeSelect');
+                    if (sel) sel.value = currentMode || 'test';
+                    return;
+                }
+                const confirmed2 = confirm(
+                    '🔴 FINAL CONFIRMATION\n\n' +
+                    'This will send real emails to real contacts.\n\n' +
+                    'Click OK to confirm LIVE mode.'
+                );
+                if (!confirmed2) {
+                    const sel = document.getElementById('modeSelect');
+                    if (sel) sel.value = currentMode || 'test';
+                    return;
+                }
+            }
+            setMode(mode);
+        }
+
         async function setMode(mode) {
             try {
                 const resp = await fetch('/api/mode', {
@@ -5384,28 +5411,13 @@
                     showToast(`✅ Switched to ${labels[mode] || mode}`, 'success');
                 } else {
                     showToast('❌ ' + (data.message || 'Failed to change mode'), 'error');
+                    // Reset dropdown on failure
+                    const sel = document.getElementById('modeSelect');
+                    if (sel) sel.value = currentMode || 'test';
                 }
             } catch (e) {
                 showToast('❌ Error changing mode: ' + e.message, 'error');
             }
-        }
-
-        function confirmGoLive() {
-            const confirmed = confirm(
-                '⚠️ GO LIVE CONFIRMATION\n\n' +
-                'You are about to switch to LIVE mode.\n\n' +
-                'In Live mode, all sends will go to the REAL selected segment — not to the test email.\n\n' +
-                'Are you absolutely sure you want to go live?'
-            );
-            if (!confirmed) return;
-            // Second confirmation
-            const confirmed2 = confirm(
-                '🔴 FINAL CONFIRMATION\n\n' +
-                'This will send real emails to real contacts.\n\n' +
-                'Click OK to confirm LIVE mode.'
-            );
-            if (!confirmed2) return;
-            setMode('live');
         }
 
         async function refreshStatus() {
