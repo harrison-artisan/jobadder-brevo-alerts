@@ -256,66 +256,138 @@
           {% if item.type == 'instagram' %}
           <tr>
             <td style="padding:28px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
-              <!-- Instagram embed-style card -->
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;border:1px solid #dbdbdb;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.1);">
-                <!-- Instagram header bar -->
+              <!-- Instagram post-style card -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;border:1px solid #dbdbdb;border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.12);max-width:480px;margin:0 auto;">
+
+                <!-- ── Top bar: Instagram wordmark + gradient icon ── -->
                 <tr>
-                  <td style="background:linear-gradient(90deg,#f09433 0%,#e6683c 20%,#dc2743 40%,#cc2366 70%,#bc1888 100%);padding:10px 16px;">
+                  <td style="padding:12px 16px;border-bottom:1px solid #efefef;">
                     <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
                       <tr>
+                        <!-- Left: gradient camera icon + wordmark -->
                         <td valign="middle">
                           <table cellpadding="0" cellspacing="0" border="0" role="presentation">
                             <tr>
-                              <td valign="middle" style="padding-right:10px;">
-                                <img src="https://cdn-icons-png.flaticon.com/512/174/174855.png" alt="Instagram" width="24" height="24" style="display:block;border:0;border-radius:50%;">
+                              <td valign="middle" style="padding-right:8px;">
+                                <!-- Instagram gradient icon (SVG as img) -->
+                                <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(45deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);border-radius:8px;width:28px;height:28px;">
+                                  <tr><td align="center" valign="middle" width="28" height="28" style="width:28px;height:28px;">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Instagram_logo_2022.svg/150px-Instagram_logo_2022.svg.png" alt="" width="16" height="16" style="display:block;border:0;filter:brightness(0) invert(1);">
+                                  </td></tr>
+                                </table>
                               </td>
                               <td valign="middle">
-                                <span style="font-size:13px;font-weight:700;color:#ffffff;">{{ item.handle or "artisan_creative" }}</span>
+                                <span style="font-size:16px;font-weight:700;color:#262626;font-family:'Source Sans Pro',Arial,sans-serif;letter-spacing:-0.3px;">Instagram</span>
                               </td>
                             </tr>
                           </table>
                         </td>
+                        <!-- Right: View Post link -->
                         <td align="right" valign="middle">
-                          <a href="{{ item.profile_url or item.url }}" style="font-size:11px;font-weight:700;color:#ffffff;text-decoration:none;background:rgba(255,255,255,0.25);padding:5px 12px;border-radius:20px;">View Profile &#8599;</a>
+                          <a href="{{ item.url }}" style="font-size:12px;font-weight:700;color:#0095f6;text-decoration:none;">View post &#8599;</a>
                         </td>
                       </tr>
                     </table>
                   </td>
                 </tr>
-                <!-- Post image (scraped) -->
+
+                <!-- ── Post header: avatar + username + follow ── -->
+                <tr>
+                  <td style="padding:10px 14px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+                      <tr>
+                        <!-- Avatar (consultant photo or gradient fallback) -->
+                        <td width="42" valign="middle" style="padding-right:10px;">
+                          <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(45deg,#f09433,#bc1888);border-radius:50%;padding:2px;width:42px;height:42px;">
+                            <tr><td align="center" valign="middle" style="background:#fff;border-radius:50%;padding:2px;">
+                              <img src="{{ params.consultant.photo }}" alt="{{ item.handle or params.consultant.name }}" width="34" height="34" style="display:block;border:0;border-radius:50%;width:34px;height:34px;object-fit:cover;">
+                            </td></tr>
+                          </table>
+                        </td>
+                        <!-- Username + location/subtitle -->
+                        <td valign="middle">
+                          <p style="margin:0;font-size:13px;font-weight:700;color:#262626;line-height:1.3;">{{ item.handle or "get_artisan" }}</p>
+                          <p style="margin:0;font-size:11px;color:#8e8e8e;line-height:1.3;">Artisan Recruitment</p>
+                        </td>
+                        <!-- Follow button -->
+                        <td align="right" valign="middle">
+                          <a href="{{ item.profile_url or item.url }}" style="display:inline-block;background:#0095f6;color:#ffffff;padding:6px 16px;border-radius:8px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.2px;">Follow</a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- ── Post image ── -->
                 {% if item.scraped_image %}
                 <tr>
                   <td style="padding:0;line-height:0;">
-                    <a href="{{ item.url }}">
-                      <img src="{{ item.scraped_image }}" alt="Instagram post" width="100%" style="display:block;border:0;width:100%;max-height:320px;object-fit:cover;">
+                    <a href="{{ item.url }}" style="display:block;line-height:0;">
+                      <img src="{{ item.scraped_image }}" alt="Instagram post" width="100%" style="display:block;border:0;width:100%;height:auto;max-height:400px;object-fit:cover;">
                     </a>
                   </td>
                 </tr>
                 {% endif %}
-                <!-- Post caption -->
+
+                <!-- ── Action icons row (heart, comment, share | bookmark) ── -->
                 <tr>
-                  <td style="background:#fafafa;padding:16px 20px;border-bottom:1px solid #efefef;">
+                  <td style="padding:10px 14px 6px 14px;">
                     <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
                       <tr>
-                        <td width="40" valign="top" style="padding-right:10px;">
-                          <img src="{{ params.consultant.photo }}" alt="{{ params.consultant.name }}" width="36" height="36" style="display:block;border:0;border-radius:50%;width:36px;height:36px;object-fit:cover;">
+                        <!-- Left: heart, comment, share -->
+                        <td valign="middle">
+                          <table cellpadding="0" cellspacing="0" border="0" role="presentation">
+                            <tr>
+                              <!-- Heart icon -->
+                              <td valign="middle" style="padding-right:14px;">
+                                <a href="{{ item.url }}" style="text-decoration:none;display:block;">
+                                  <img src="https://cdn-icons-png.flaticon.com/512/833/833472.png" alt="Like" width="22" height="22" style="display:block;border:0;opacity:0.85;">
+                                </a>
+                              </td>
+                              <!-- Comment icon -->
+                              <td valign="middle" style="padding-right:14px;">
+                                <a href="{{ item.url }}" style="text-decoration:none;display:block;">
+                                  <img src="https://cdn-icons-png.flaticon.com/512/1380/1380338.png" alt="Comment" width="22" height="22" style="display:block;border:0;opacity:0.85;">
+                                </a>
+                              </td>
+                              <!-- Share/DM icon -->
+                              <td valign="middle">
+                                <a href="{{ item.url }}" style="text-decoration:none;display:block;">
+                                  <img src="https://cdn-icons-png.flaticon.com/512/3106/3106673.png" alt="Share" width="22" height="22" style="display:block;border:0;opacity:0.85;">
+                                </a>
+                              </td>
+                            </tr>
+                          </table>
                         </td>
-                        <td valign="top">
-                          <p style="margin:0 0 2px 0;font-size:13px;font-weight:700;color:#262626;">{{ item.handle or "get_artisan" }}</p>
-                          {% if item.caption %}
-                          <p style="margin:0;font-size:13px;color:#262626;line-height:1.5;">{{ item.caption }}</p>
-                          {% endif %}
+                        <!-- Right: bookmark icon -->
+                        <td align="right" valign="middle">
+                          <a href="{{ item.url }}" style="text-decoration:none;display:block;">
+                            <img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" alt="Save" width="22" height="22" style="display:block;border:0;opacity:0.85;margin-left:auto;">
+                          </a>
                         </td>
                       </tr>
                     </table>
                   </td>
                 </tr>
-                <!-- View on Instagram CTA -->
+
+                <!-- ── Caption ── -->
+                {% if item.caption %}
                 <tr>
-                  <td style="padding:14px 24px;text-align:center;">
-                    <a href="{{ item.url }}" style="display:inline-block;background:linear-gradient(135deg,#f09433 0%,#e6683c 20%,#dc2743 40%,#cc2366 70%,#bc1888 100%);color:#ffffff;padding:11px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;letter-spacing:0.5px;box-shadow:0 4px 14px rgba(188,24,136,0.3);">VIEW ON INSTAGRAM &#8599;</a>
+                  <td style="padding:2px 14px 12px 14px;">
+                    <p style="margin:0;font-size:13px;color:#262626;line-height:1.55;">
+                      <span style="font-weight:700;">{{ item.handle or "get_artisan" }}</span>&nbsp;{{ item.caption }}
+                    </p>
                   </td>
                 </tr>
+                {% endif %}
+
+                <!-- ── View on Instagram footer ── -->
+                <tr>
+                  <td style="padding:10px 14px 14px 14px;border-top:1px solid #efefef;">
+                    <a href="{{ item.url }}" style="font-size:12px;color:#8e8e8e;text-decoration:none;font-weight:600;">View this post on Instagram &#8599;</a>
+                  </td>
+                </tr>
+
               </table>
             </td>
           </tr>
