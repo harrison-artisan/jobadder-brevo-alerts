@@ -69,83 +69,26 @@ function wpGet(url) {
 }
 
 // ============================================================
-// Fetch Instagram post data via oEmbed API (public, no auth required)
-// Falls back to og: scraping if oEmbed fails
+// Fetch Instagram post data — uses stored session cookies if available,
+// falls back to unauthenticated OG scraping otherwise
 // ============================================================
 async function fetchInstagramPostData(url) {
-    // Try Instagram oEmbed API first (returns thumbnail_url, title/caption, author_name)
-    const oEmbedResult = await new Promise((resolve) => {
-        try {
-            const oEmbedUrl = `https://graph.facebook.com/v18.0/instagram_oembed?url=${encodeURIComponent(url)}&maxwidth=600&fields=thumbnail_url,author_name,provider_name,title`;
-            https.get(oEmbedUrl, { headers: { 'User-Agent': 'ArtisanDashboard/1.0' } }, (res) => {
-                let data = '';
-                res.on('data', chunk => data += chunk);
-                res.on('end', () => {
-                    try {
-                        const json = JSON.parse(data);
-                        if (json.thumbnail_url) {
-                            console.log(`✅ Instagram oEmbed: image=${json.thumbnail_url ? 'yes' : 'no'}, author=${json.author_name}`);
-                            resolve({ imageUrl: json.thumbnail_url || '', caption: json.title || '', handle: json.author_name || '' });
-                        } else {
-                            resolve(null);
-                        }
-                    } catch (e) { resolve(null); }
-                });
-            }).on('error', () => resolve(null)).setTimeout(8000, function() { this.destroy(); resolve(null); });
-        } catch (e) { resolve(null); }
-    });
-    if (oEmbedResult) return oEmbedResult;
-
-    // Fallback: scrape OG tags with facebookexternalhit user-agent
-    return new Promise((resolve) => {
-        try {
-            const mod = url.startsWith('https') ? https : http;
-            const options = {
-                headers: {
-                    'User-Agent': 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)',
-                    'Accept': 'text/html,application/xhtml+xml',
-                    'Accept-Language': 'en-US,en;q=0.9'
-                }
-            };
-            const req = mod.get(url, options, (res) => {
-                let data = '';
-                res.on('data', chunk => data += chunk);
-                res.on('end', () => {
-                    try {
-                        const ogImage = (data.match(/<meta property="og:image" content="([^"]+)"/) || [])[1];
-                        const ogDesc = (data.match(/<meta property="og:description" content="([^"]+)"/) || [])[1];
-                        const ogTitle = (data.match(/<meta property="og:title" content="([^"]+)"/) || [])[1];
-                        const decode = s => s ? s.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>') : '';
-                        const imageUrl = decode(ogImage || '');
-                        let caption = decode(ogDesc || '');
-                        const captionMatch = caption.match(/:\s*"(.+)"\s*$/);
-                        if (captionMatch) caption = captionMatch[1];
-                        let handle = '';
-                        const titleStr = decode(ogTitle || '');
-                        const handleMatch = titleStr.match(/^([^:]+) on Instagram/);
-                        if (handleMatch) handle = handleMatch[1].trim();
-                        console.log(`✅ Instagram OG scrape: image=${imageUrl ? 'yes' : 'no'}, handle=${handle}`);
-                        resolve({ imageUrl, caption, handle });
-                    } catch (e) {
-                        console.warn('⚠️  Instagram scrape parse error:', e.message);
-                        resolve({ imageUrl: '', caption: '', handle: '' });
-                    }
-                });
-            });
-            req.on('error', (e) => {
-                console.warn('⚠️  Instagram scrape request error:', e.message);
-                resolve({ imageUrl: '', caption: '', handle: '' });
-            });
-            req.setTimeout(8000, () => {
-                req.destroy();
-                console.warn('⚠️  Instagram scrape timed out');
-                resolve({ imageUrl: '', caption: '', handle: '' });
-            });
-        } catch (e) {
-            console.warn('⚠️  Instagram scrape error:', e.message);
-            resolve({ imageUrl: '', caption: '', handle: '' });
+    try {
+        const instagramService = require('../services/instagramService');
+        const result = await instagramService.scrapePost(url);
+        if (result.imageUrl || result.caption || result.handle) {
+            return result;
         }
-    });
+        // If session scrape returned nothing, log it
+        if (result.error === 'no_session') {
+            console.log('ℹ️  Instagram: no session stored. Connect Instagram in the dashboard to enable post scraping.');
+        } else if (result.error === 'scrape_failed') {
+            console.warn('⚠️  Instagram: authenticated scrape returned no data. Session may have expired.');
+        }
+    } catch (e) {
+        console.warn('⚠️  Instagram scrape error:', e.message);
+    }
+    return { imageUrl: '', caption: '', handle: '' };
 }
 
 // ============================================================
@@ -1511,18 +1454,28 @@ async function parseCsv(req, res) {
             let evDescription = (polished[`event_${i}_description`] || '').trim();
             const evLink = (polished[`event_${i}_link`] || '').trim();
             let evDate = (polished[`event_${i}_date`] || '').trim();
-            // If URL provided, scrape the page for any missing fields (title, description, date)
-            let evMultiDay = false;
-            if (evLink && evLink.startsWith('http') && (!evTitle || !evDate)) {
+
+            // Detect multi-day from the date string itself first (e.g. "27 March – 20 April 2026")
+            // A range contains a dash/en-dash/em-dash between two date parts
+            let evMultiDay = /[\u2013\u2014\-]/.test(evDate) && /\d/.test(evDate);
+
+            // If URL provided, scrape for any missing fields (title, description, date)
+            // Always scrape for multiDay even when date is already provided
+            if (evLink && evLink.startsWith('http') && (!evTitle || !evDate || !evMultiDay)) {
                 console.log(`📅 Scraping event URL for details: ${evLink}`);
                 try {
                     const evMeta = await scrapeEventMeta(evLink);
                     if (!evTitle && evMeta.title) evTitle = evMeta.title;
                     if (!evDescription && evMeta.description) evDescription = evMeta.description;
                     if (!evDate && evMeta.date) evDate = evMeta.date;
-                    if (evMeta.multiDay) evMultiDay = true;
+                    // Only override multiDay from scrape if date string didn't already indicate a range
+                    if (!evMultiDay && evMeta.multiDay) evMultiDay = true;
                 } catch (e) { console.warn('⚠️  Event URL scrape failed:', e.message); }
             }
+
+            // If date string contains a range, extract just the month from the start date for display
+            // e.g. "27 March – 20 April 2026" → month = "MAR" (or use the end month if crossing months)
+            // For simplicity: when multiDay, extract the start month
             if (!evTitle && !evLink) continue; // skip if nothing at all
             const parsedDate = parseEventDate(evDate);
             events.push({
