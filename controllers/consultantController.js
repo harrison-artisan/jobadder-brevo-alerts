@@ -1203,11 +1203,14 @@ async function scrapePageMeta(url) {
                                          data.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:description["']/i) ||
                                          data.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i) ||
                                          data.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']description["']/i) || [])[1];
+                        const ogImage = (data.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
+                                         data.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i) || [])[1];
                         const titleTag = (data.match(/<title[^>]*>([^<]+)<\/title>/i) || [])[1];
                         const title = decode(ogTitle || titleTag || '');
                         const description = decode(ogDesc || '');
-                        console.log(`✅ Scraped page meta: title="${title.slice(0,60)}"`);
-                        resolve({ title, description });
+                        const image = decode(ogImage || '');
+                        console.log(`✅ Scraped page meta: title="${title.slice(0,60)}", image=${image ? 'yes' : 'no'}`);
+                        resolve({ title, description, image });
                     } catch (e) { console.warn('⚠️  Page meta parse error:', e.message); resolve({ title: '', description: '' }); }
                 });
             });
@@ -1334,32 +1337,29 @@ async function parseCsv(req, res) {
         console.log('🤖 Running OpenAI polish and heading generation...');
         const polished = await aiPolishAndGenerateHeadings(raw);
 
-        // 5. Scrape Worth Reading URL for title + snippet
+        // 5. Scrape Worth Reading URL for title + snippet + image
         let linkTitle = (polished.link_title || polished.link_caption || '').trim();
         let linkDescription = (polished.link_description || '').trim();
+        let linkImage = '';
         if (polished.link_url && polished.link_url.startsWith('http')) {
             console.log(`🔗 Scraping Worth Reading URL: ${polished.link_url}`);
             const meta = await scrapePageMeta(polished.link_url);
             if (!linkTitle && meta.title) linkTitle = meta.title;
             if (!linkDescription && meta.description) linkDescription = meta.description;
+            if (meta.image) linkImage = meta.image;
         }
 
-        // 6. Build media array
+        // 6. Build media array — order: Image → Instagram → Worth Reading → YouTube
         const mediaArray = [];
-        // YouTube
-        if (polished.youtube_url && polished.youtube_url.startsWith('http')) {
-            const ytItem = { type: 'youtube', url: polished.youtube_url, caption: polished.youtube_caption || '' };
-            const ytMatch = polished.youtube_url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)?([\w-]{11})/);
-            if (ytMatch) ytItem.thumbnail = `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`;
-            mediaArray.push(ytItem);
-        }
         // Image
         if (polished.image_url && polished.image_url.startsWith('http')) {
             mediaArray.push({ type: 'image', url: polished.image_url, caption: polished.image_caption || '' });
         }
         // Instagram
         if (polished.instagram_url && polished.instagram_url.startsWith('http')) {
-            const igItem = { type: 'instagram', url: polished.instagram_url, caption: '' };
+            const igItem = { type: 'instagram', url: polished.instagram_url, caption: '',
+                profile_url: consultantConfig.instagram || polished.instagram_url,
+                profile_photo: consultantConfig.photo_url || '' };
             console.log(`📸 Scraping Instagram post: ${polished.instagram_url}`);
             const igData = await fetchInstagramPostData(polished.instagram_url);
             if (igData.imageUrl) igItem.scraped_image = igData.imageUrl;
@@ -1373,25 +1373,45 @@ async function parseCsv(req, res) {
                 type: 'link',
                 url: polished.link_url,
                 title: linkTitle,
-                caption: linkDescription || linkTitle
+                caption: linkDescription || linkTitle,
+                image: linkImage
             });
         }
+        // YouTube (after Worth Reading)
+        if (polished.youtube_url && polished.youtube_url.startsWith('http')) {
+            const ytItem = { type: 'youtube', url: polished.youtube_url, caption: polished.youtube_caption || '' };
+            const ytMatch = polished.youtube_url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)?([\w-]{11})/);
+            if (ytMatch) ytItem.thumbnail = `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`;
+            mediaArray.push(ytItem);
+        }
 
-        // 7. Parse events
+        // 7. Parse events — scrape URL if title/description missing
         const events = [];
         for (let i = 1; i <= 3; i++) {
-            const title = (polished[`event_${i}_title`] || '').trim();
-            if (!title) continue;
-            const parsed = parseEventDate(polished[`event_${i}_date`] || '');
+            let evTitle = (polished[`event_${i}_title`] || '').trim();
+            let evDescription = (polished[`event_${i}_description`] || '').trim();
+            const evLink = (polished[`event_${i}_link`] || '').trim();
+            const evDate = (polished[`event_${i}_date`] || '').trim();
+            // If URL provided but title missing, scrape the page for title/description
+            if (evLink && evLink.startsWith('http') && !evTitle) {
+                console.log(`📅 Scraping event URL for details: ${evLink}`);
+                try {
+                    const evMeta = await scrapePageMeta(evLink);
+                    if (evMeta.title) evTitle = evMeta.title;
+                    if (!evDescription && evMeta.description) evDescription = evMeta.description;
+                } catch (e) { console.warn('⚠️  Event URL scrape failed:', e.message); }
+            }
+            if (!evTitle && !evLink) continue; // skip if nothing at all
+            const parsedDate = parseEventDate(evDate);
             events.push({
-                day:         parsed ? parsed.day   : '',
-                month:       parsed ? parsed.month : '',
-                title,
-                description: (polished[`event_${i}_description`] || '').trim(),
-                link:        (polished[`event_${i}_link`]        || '').trim()
+                day:         parsedDate ? parsedDate.day   : '',
+                month:       parsedDate ? parsedDate.month : '',
+                title:       evTitle || evLink,
+                description: evDescription,
+                link:        evLink
             });
-        }
 
+        }
         // 8. Auto-fetch WordPress articles
         console.log('📰 Fetching WordPress articles...');
         const wpArticles = await fetchWordPressArticles();
