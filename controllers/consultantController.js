@@ -69,10 +69,34 @@ function wpGet(url) {
 }
 
 // ============================================================
-// Scrape Instagram post data (image + caption) from public post URL
-// Uses Facebook crawler user-agent to get og:image / og:description
+// Fetch Instagram post data via oEmbed API (public, no auth required)
+// Falls back to og: scraping if oEmbed fails
 // ============================================================
 async function fetchInstagramPostData(url) {
+    // Try Instagram oEmbed API first (returns thumbnail_url, title/caption, author_name)
+    const oEmbedResult = await new Promise((resolve) => {
+        try {
+            const oEmbedUrl = `https://graph.facebook.com/v18.0/instagram_oembed?url=${encodeURIComponent(url)}&maxwidth=600&fields=thumbnail_url,author_name,provider_name,title`;
+            https.get(oEmbedUrl, { headers: { 'User-Agent': 'ArtisanDashboard/1.0' } }, (res) => {
+                let data = '';
+                res.on('data', chunk => data += chunk);
+                res.on('end', () => {
+                    try {
+                        const json = JSON.parse(data);
+                        if (json.thumbnail_url) {
+                            console.log(`✅ Instagram oEmbed: image=${json.thumbnail_url ? 'yes' : 'no'}, author=${json.author_name}`);
+                            resolve({ imageUrl: json.thumbnail_url || '', caption: json.title || '', handle: json.author_name || '' });
+                        } else {
+                            resolve(null);
+                        }
+                    } catch (e) { resolve(null); }
+                });
+            }).on('error', () => resolve(null)).setTimeout(8000, function() { this.destroy(); resolve(null); });
+        } catch (e) { resolve(null); }
+    });
+    if (oEmbedResult) return oEmbedResult;
+
+    // Fallback: scrape OG tags with facebookexternalhit user-agent
     return new Promise((resolve) => {
         try {
             const mod = url.startsWith('https') ? https : http;
@@ -91,19 +115,16 @@ async function fetchInstagramPostData(url) {
                         const ogImage = (data.match(/<meta property="og:image" content="([^"]+)"/) || [])[1];
                         const ogDesc = (data.match(/<meta property="og:description" content="([^"]+)"/) || [])[1];
                         const ogTitle = (data.match(/<meta property="og:title" content="([^"]+)"/) || [])[1];
-                        // Decode HTML entities
                         const decode = s => s ? s.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>') : '';
                         const imageUrl = decode(ogImage || '');
-                        // Extract caption from og:description (format: "X likes, Y comments - handle on date: \"caption\"")
                         let caption = decode(ogDesc || '');
                         const captionMatch = caption.match(/:\s*"(.+)"\s*$/);
                         if (captionMatch) caption = captionMatch[1];
-                        // Extract handle from og:title (format: "Name on Instagram: ...")
                         let handle = '';
                         const titleStr = decode(ogTitle || '');
                         const handleMatch = titleStr.match(/^([^:]+) on Instagram/);
                         if (handleMatch) handle = handleMatch[1].trim();
-                        console.log(`✅ Instagram post scraped: image=${imageUrl ? 'yes' : 'no'}, handle=${handle}`);
+                        console.log(`✅ Instagram OG scrape: image=${imageUrl ? 'yes' : 'no'}, handle=${handle}`);
                         resolve({ imageUrl, caption, handle });
                     } catch (e) {
                         console.warn('⚠️  Instagram scrape parse error:', e.message);
@@ -115,7 +136,7 @@ async function fetchInstagramPostData(url) {
                 console.warn('⚠️  Instagram scrape request error:', e.message);
                 resolve({ imageUrl: '', caption: '', handle: '' });
             });
-            req.setTimeout(10000, () => {
+            req.setTimeout(8000, () => {
                 req.destroy();
                 console.warn('⚠️  Instagram scrape timed out');
                 resolve({ imageUrl: '', caption: '', handle: '' });
@@ -542,7 +563,7 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
             title: job.title || '',
             type: job.type || 'Full Time',
             location: job.location || '',
-            description: job.description || '',
+            description: (() => { const d = (job.description || '').replace(/<[^>]+>/g, '').trim(); return d.length > 120 ? d.slice(0, 117) + '...' : d; })(),
             link: job.link || 'https://clientapps.jobadder.com/67514/artisan'
         },
 
@@ -1009,9 +1030,9 @@ function parseGoogleFormsCsv(lines) {
         const header = parseCsvCell(headerCells[i]).trim();
         const value = i < valueCells.length ? parseCsvCell(valueCells[i]).trim() : '';
         if (!header || !value) continue;
-        // Normalise the header column name
+        // Normalise the header column name — strip ALL parenthetical content (optional, e.g. hints, etc.)
         const normHeader = header
-            .replace(/\s*\(optional.*?\)/gi, '')
+            .replace(/\s*\([^)]*\)/gi, '')  // strip anything in parentheses
             .replace(/[^a-z0-9\s\-]/gi, ' ')
             .replace(/\s+/g, ' ')
             .trim()
@@ -1021,8 +1042,8 @@ function parseGoogleFormsCsv(lines) {
         if (!key) {
             // Try the full header with section prefix stripped
             const stripped = normHeader.replace(/^[\w\s]+ - /, '').trim();
-            // For event fields, need to preserve event number
-            const eventMatch = normHeader.match(/event (\d) - (date|title|description|url|link)/);
+            // For event fields, need to preserve event number — match with flexible separator
+            const eventMatch = normHeader.match(/event\s*(\d)[\s\-]+(date|title|description|url|link)/);
             if (eventMatch) {
                 const n = eventMatch[1];
                 const field = eventMatch[2] === 'url' ? 'link' : eventMatch[2];
