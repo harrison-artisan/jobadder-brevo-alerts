@@ -1,6 +1,7 @@
 const candidateService = require('../services/candidateService');
 const aiService = require('../services/aiService');
 const brevoService = require('../services/brevoService');
+const modeService = require('../services/modeService');
 const wordpressService = require('../services/wordpressService');
 const fs = require('fs');
 const path = require('path');
@@ -108,15 +109,12 @@ class CandidateAlertsController {
     }
     
     try {
-      // Get test recipient
-      const testEmail = process.env.TEST_EMAIL || process.env.test_email;
-      if (!testEmail) {
-        return {
-          success: false,
-          message: 'TEST_EMAIL not configured in environment variables',
-          data: state
-        };
+      // Block if offline
+      if (modeService.isOffline()) {
+        return { success: false, message: 'Platform is OFFLINE. Switch to Test or Live mode to send.', data: state };
       }
+      // Get test recipient (always goes to TEST_EMAIL regardless of mode)
+      const testEmail = modeService.getTestEmail();
       
       const testRecipient = [{
         email: testEmail,
@@ -212,13 +210,21 @@ class CandidateAlertsController {
         };
       }
       
-      console.log(`📧 Sending to ${recipients.length} recipients`);
+      // Block if offline
+      if (modeService.isOffline()) {
+        return { success: false, message: 'Platform is OFFLINE. Switch to Test or Live mode to send.', data: state };
+      }
+      const finalRecipients = modeService.isTestMode()
+        ? [{ email: modeService.getTestEmail(), name: 'Test User' }]
+        : recipients;
+
+      console.log(`📧 Sending to ${finalRecipients.length} recipients [mode: ${modeService.getMode()}]`);
       console.log(`📋 Template ID: ${process.env.A_LIST_TEMPLATE_ID}`);
       console.log(`👥 Candidates: ${state.candidates.length}`);
       
       // Send email via Brevo
       await brevoService.sendBatchEmail(
-        recipients,
+        finalRecipients,
         process.env.A_LIST_TEMPLATE_ID,
         { 
           candidates: state.candidates,
@@ -231,7 +237,7 @@ class CandidateAlertsController {
       state.sentAt = new Date().toISOString();
       this.saveState(state);
       
-      console.log('✅ A-List sent to all recipients!');
+      console.log(`✅ A-List sent to ${finalRecipients.length} recipients [mode: ${modeService.getMode()}]!`);
       console.log('=================================================\n');
       
       // Reset state after successful send (delayed)
