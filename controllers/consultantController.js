@@ -1190,9 +1190,11 @@ async function scrapePageMeta(url) {
                 if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
                     return scrapePageMeta(res.headers.location).then(resolve).catch(() => resolve({ title: '', description: '' }));
                 }
+                // If server connects but never sends data (e.g. BBC), abort after 6s
+                const responseTimer = setTimeout(() => { req.destroy(); console.warn('⚠️  Page meta response stalled'); resolve({ title: '', description: '' }); }, 6000);
                 let data = '';
-                res.on('data', chunk => { data += chunk; if (data.length > 200000) req.destroy(); });
-                res.on('end', () => {
+                res.on('data', chunk => { clearTimeout(responseTimer); data += chunk; if (data.length > 200000) req.destroy(); });
+                res.on('end', () => { clearTimeout(responseTimer);
                     try {
                         const decode = s => s ? s.replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>') : '';
                         const ogTitle = (data.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i) ||
@@ -1210,7 +1212,7 @@ async function scrapePageMeta(url) {
                 });
             });
             req.on('error', (e) => { console.warn('⚠️  Page meta fetch error:', e.message); resolve({ title: '', description: '' }); });
-            req.setTimeout(12000, () => { req.destroy(); console.warn('⚠️  Page meta fetch timed out'); resolve({ title: '', description: '' }); });
+            req.setTimeout(8000, () => { req.destroy(); console.warn('⚠️  Page meta fetch timed out'); resolve({ title: '', description: '' }); });
         } catch (e) { console.warn('⚠️  scrapePageMeta error:', e.message); resolve({ title: '', description: '' }); }
     });
 }
