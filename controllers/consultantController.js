@@ -984,9 +984,87 @@ const SECTION_CONTEXTS = [
     { pattern: /events?/i,            bodyKey: null, captionKey: null },
 ];
 
+/**
+ * Detect and parse Google Forms CSV export format.
+ * Google Forms exports: row 1 = column headers (first col is "Timestamp"), row 2+ = responses.
+ * Uses the LAST response row (most recent submission).
+ */
+function parseGoogleFormsCsv(lines) {
+    const nonEmpty = lines.filter(l => l.trim());
+    if (nonEmpty.length < 2) return null;
+    const headerCells = splitCsvLine(nonEmpty[0]);
+    const firstHeader = parseCsvCell(headerCells[0]).trim().toLowerCase();
+    if (firstHeader !== 'timestamp') return null;  // Not a Google Forms export
+    // Use the last response row (most recent submission)
+    const lastRow = nonEmpty[nonEmpty.length - 1];
+    const valueCells = splitCsvLine(lastRow);
+    const data = {};
+    const KNOWN_KEYS = ['consultant','industry_insight_body','life_update_body',
+        'youtube_url','youtube_caption','image_url','image_caption',
+        'instagram_url','link_url',
+        'event_1_date','event_1_title','event_1_description','event_1_link',
+        'event_2_date','event_2_title','event_2_description','event_2_link',
+        'event_3_date','event_3_title','event_3_description','event_3_link'];
+    for (let i = 1; i < headerCells.length; i++) {
+        const header = parseCsvCell(headerCells[i]).trim();
+        const value = i < valueCells.length ? parseCsvCell(valueCells[i]).trim() : '';
+        if (!header || !value) continue;
+        // Normalise the header column name
+        const normHeader = header
+            .replace(/\s*\(optional.*?\)/gi, '')
+            .replace(/[^a-z0-9\s\-]/gi, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .toLowerCase();
+        let key = LABEL_TO_KEY[normHeader];
+        // Try stripping section prefix: "event 1 - date" -> try full, then "date" with event context
+        if (!key) {
+            // Try the full header with section prefix stripped
+            const stripped = normHeader.replace(/^[\w\s]+ - /, '').trim();
+            // For event fields, need to preserve event number
+            const eventMatch = normHeader.match(/event (\d) - (date|title|description|url|link)/);
+            if (eventMatch) {
+                const n = eventMatch[1];
+                const field = eventMatch[2] === 'url' ? 'link' : eventMatch[2];
+                key = `event_${n}_${field}`;
+            } else {
+                key = LABEL_TO_KEY[stripped];
+            }
+        }
+        // Context-aware: industry insight / personal update body text
+        if (!key) {
+            if (/industry insight.*body/i.test(header)) key = 'industry_insight_body';
+            else if (/personal update.*body/i.test(header)) key = 'life_update_body';
+            else if (/youtube.*url/i.test(header)) key = 'youtube_url';
+            else if (/youtube.*caption/i.test(header)) key = 'youtube_caption';
+            else if (/image.*url/i.test(header)) key = 'image_url';
+            else if (/image.*caption/i.test(header)) key = 'image_caption';
+            else if (/instagram/i.test(header)) key = 'instagram_url';
+            else if (/worth reading/i.test(header)) key = 'link_url';
+            else if (/your name/i.test(header)) key = 'consultant';
+        }
+        // Direct machine key fallback
+        if (!key) {
+            const machineKey = normHeader.replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+            if (KNOWN_KEYS.includes(machineKey)) key = machineKey;
+        }
+        if (key) {
+            data[key] = value;
+            console.log(`  GForms: ${key} = "${value.slice(0,60)}${value.length > 60 ? '...' : ''}"`); 
+        }
+    }
+    return Object.keys(data).length > 0 ? data : null;
+}
+
 function parseCsvBuffer(buffer) {
     const text = buffer.toString('utf8');
     const lines = text.split(/\r?\n/);
+    // Detect Google Forms export format first (Timestamp header in first column)
+    const gFormsData = parseGoogleFormsCsv(lines);
+    if (gFormsData) {
+        console.log('  Detected Google Forms CSV export format');
+        return gFormsData;
+    }
     const data = {};
     let currentSection = null;  // tracks which section we're in
 
@@ -1221,7 +1299,7 @@ async function parseCsv(req, res) {
         console.log('📄 CSV fields parsed:', Object.keys(raw).join(', '));
 
         // 2. Validate required fields
-        const consultantId = (raw.consultant || '').trim();
+        let consultantId = (raw.consultant || '').trim();
         if (!consultantId) return res.status(400).json({ success: false, message: 'CSV missing required field: consultant' });
         if (!raw.industry_insight_body && !raw.industry_insight) return res.status(400).json({ success: false, message: 'CSV missing required field: industry_insight_body' });
         if (!raw.life_update_body && !raw.life_update) return res.status(400).json({ success: false, message: 'CSV missing required field: life_update_body' });
@@ -1232,6 +1310,21 @@ async function parseCsv(req, res) {
         // 3. Load consultant config
         let consultants;
         try { consultants = loadConsultants(); } catch (e) { return res.status(500).json({ success: false, message: e.message }); }
+        // If consultantId is a display name (e.g. "Debbie Younger"), convert to machine ID
+        if (!consultants[consultantId]) {
+            const displayNameToId = {};
+            Object.entries(consultants).forEach(([id, cfg]) => {
+                if (cfg.name) displayNameToId[cfg.name.toLowerCase().trim()] = id;
+                // Also try slug: "Debbie Younger" -> "debbie-younger"
+                displayNameToId[id.replace(/-/g, ' ').toLowerCase()] = id;
+            });
+            const mapped = displayNameToId[consultantId.toLowerCase().trim()];
+            if (mapped) {
+                console.log(`  Mapped display name "${consultantId}" -> ID "${mapped}"`);
+                consultantId = mapped;
+                raw.consultant = mapped;
+            }
+        }
         const consultantConfig = consultants[consultantId];
         if (!consultantConfig) return res.status(400).json({ success: false, message: `Unknown consultant ID: "${consultantId}". Valid IDs: ${Object.keys(consultants).join(', ')}` });
 
