@@ -1993,6 +1993,8 @@
             loadDailyAlertsStatus();
             loadRoundupScheduleState();
             loadSingleJobScheduleState();
+            // Check Instagram connection status on page load
+            if (typeof igCheckStatus === 'function') igCheckStatus();
 
             // A-List button bindings — must be inside DOMContentLoaded so elements exist
             const btnGenerate = document.getElementById('btnGenerate');
@@ -2414,6 +2416,28 @@
                             </div>
                             <div id="liExpiryWarning" style="display:none; margin-top:14px; padding:10px 14px; background:rgba(230,126,34,0.15); border:1px solid rgba(230,126,34,0.35); border-radius:8px;">
                                 <p id="liExpiryMsg" style="margin:0; color:#e67e22; font-size:13px;"></p>
+                            </div>
+                        </div>
+
+                        <!-- ---- Instagram Connection Card ---- -->
+                        <div class="actions-card" style="margin-bottom:24px;">
+                            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+                                <div style="display:flex; align-items:center; gap:14px;">
+                                    <div style="background:linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); width:42px; height:42px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;">&#128247;</div>
+                                    <div>
+                                        <div style="color:white; font-weight:600; font-size:15px; margin-bottom:2px;">Instagram</div>
+                                        <div id="igStatusText" style="font-size:13px; color:rgba(255,255,255,0.6);">Checking connection...</div>
+                                    </div>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                                    <span id="igStatusBadge" style="padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; display:none;"></span>
+                                    <a id="igConnectBtn" href="/instagram-connect" style="display:none; padding:8px 18px; background:linear-gradient(135deg,#f09433,#bc1888); color:white; border-radius:6px; font-size:13px; font-weight:600; text-decoration:none;">Connect Instagram</a>
+                                    <a id="igReconnectBtn" href="/instagram-connect" style="display:none; padding:8px 18px; background:#e67e22; color:white; border-radius:6px; font-size:13px; font-weight:600; text-decoration:none;">Reconnect</a>
+                                    <button id="igDisconnectBtn" onclick="igDisconnect()" style="display:none; padding:8px 18px; background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.4); color:#e74c3c; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer;">Disconnect</button>
+                                </div>
+                            </div>
+                            <div id="igExpiryWarning" style="display:none; margin-top:14px; padding:10px 14px; background:rgba(230,126,34,0.15); border:1px solid rgba(230,126,34,0.35); border-radius:8px;">
+                                <p id="igExpiryMsg" style="margin:0; color:#e67e22; font-size:13px;"></p>
                             </div>
                         </div>
 
@@ -4006,8 +4030,9 @@
                     if (socialContentEl) socialContentEl.style.display = 'none';
                     if (socialRefEl) socialRefEl.style.display = 'none';
                 }
-                // Always check LinkedIn status when social tab opens
+                // Always check LinkedIn and Instagram status when social tab opens
                 cmLinkedInCheckStatus();
+                igCheckStatus();
             }
         }
         // ---- LinkedIn Connection ----
@@ -4064,6 +4089,54 @@
             if (!confirm('Disconnect LinkedIn? You will need to reconnect to post.')) return;
             await fetch('/api/linkedin/disconnect', { method: 'POST' });
             cmLinkedInCheckStatus();
+        }
+        // ---- Instagram Connection ----
+        async function igCheckStatus() {
+            const badge = document.getElementById('igStatusBadge');
+            const statusText = document.getElementById('igStatusText');
+            const connectBtn = document.getElementById('igConnectBtn');
+            const reconnectBtn = document.getElementById('igReconnectBtn');
+            const disconnectBtn = document.getElementById('igDisconnectBtn');
+            const expiryWarning = document.getElementById('igExpiryWarning');
+            const expiryMsg = document.getElementById('igExpiryMsg');
+            if (!badge) return;
+            try {
+                const res = await fetch('/api/instagram/status');
+                const data = await res.json();
+                [connectBtn, reconnectBtn, disconnectBtn, expiryWarning].forEach(el => { if (el) el.style.display = 'none'; });
+                badge.style.display = 'inline-block';
+                if (data.status === 'connected') {
+                    badge.textContent = 'Connected';
+                    badge.style.cssText = 'padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; background:rgba(39,174,96,0.2); border:1px solid rgba(39,174,96,0.4); color:#27ae60; display:inline-block;';
+                    statusText.textContent = `Connected as @${data.username || 'unknown'} (${data.age_days || 0} days old)`;
+                    if (disconnectBtn) disconnectBtn.style.display = 'inline-block';
+                } else if (data.status === 'expiring') {
+                    badge.textContent = 'Expiring Soon';
+                    badge.style.cssText = 'padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; background:rgba(230,126,34,0.2); border:1px solid rgba(230,126,34,0.4); color:#e67e22; display:inline-block;';
+                    statusText.textContent = `Connected as @${data.username || 'unknown'} — session expiring soon`;
+                    if (reconnectBtn) reconnectBtn.style.display = 'inline-block';
+                    if (disconnectBtn) disconnectBtn.style.display = 'inline-block';
+                    if (expiryWarning) expiryWarning.style.display = 'block';
+                    if (expiryMsg) expiryMsg.textContent = 'Your Instagram session is over 75 days old and may expire soon. Reconnect to avoid interruption.';
+                } else if (data.status === 'expired') {
+                    badge.textContent = 'Session Expired';
+                    badge.style.cssText = 'padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.4); color:#e74c3c; display:inline-block;';
+                    statusText.textContent = 'Session expired — please reconnect Instagram.';
+                    if (reconnectBtn) reconnectBtn.style.display = 'inline-block';
+                } else {
+                    badge.textContent = 'Not Connected';
+                    badge.style.cssText = 'padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.5); display:inline-block;';
+                    statusText.textContent = 'Connect the Artisan Instagram account to auto-pull post images and captions.';
+                    if (connectBtn) connectBtn.style.display = 'inline-block';
+                }
+            } catch (e) {
+                if (statusText) statusText.textContent = 'Could not check Instagram status.';
+            }
+        }
+        async function igDisconnect() {
+            if (!confirm('Disconnect Instagram? Post images and captions will no longer be auto-pulled.')) return;
+            await fetch('/api/instagram/disconnect', { method: 'POST' });
+            igCheckStatus();
         }
         async function cmPostToLinkedIn() {
             const text = (document.getElementById('cmLinkedin') || {}).value;
