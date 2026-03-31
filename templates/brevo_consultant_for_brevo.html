@@ -160,7 +160,7 @@
           <!-- ====== CONSULTANT HERO ====== -->
           <tr>
             <td style="padding:20px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#1b334d 0%,#0f1f30 100%);border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(27,51,77,0.25);">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#f8faff 0%,#eef2f9 100%);border:1px solid #d4dce8;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(27,51,77,0.10);">
                 <tr>
                   <!-- Photo -->
                   <td width="160" valign="middle" align="center" style="padding:22px 0 22px 36px;" class="hero-photo-cell">
@@ -178,17 +178,17 @@
                   </td>
                   <!-- Details -->
                   <td valign="middle" style="padding:22px 36px 22px 24px;" class="hero-content-cell">
-                    <h1 style="margin:0 0 6px 0;font-size:24px;font-weight:900;color:#ffffff;line-height:1.2;">{{ params.consultant.name }}</h1>
+                    <h1 style="margin:0 0 6px 0;font-size:24px;font-weight:900;color:#1b334d;line-height:1.2;">{{ params.consultant.name }}</h1>
                     <p style="margin:0 0 18px 0;font-size:13px;font-weight:600;color:#bd203d;letter-spacing:0.3px;">{{ params.consultant.title }}</p>
                     <table cellpadding="0" cellspacing="0" border="0" role="presentation">
                       <tr>
                         <td style="padding-bottom:8px;">
-                          <a href="mailto:{{ params.consultant.email }}" style="text-decoration:none;color:rgba(255,255,255,0.75);font-size:13px;">&#9993; {{ params.consultant.email }}</a>
+                          <a href="mailto:{{ params.consultant.email }}" style="text-decoration:none;color:#1b334d;font-size:13px;">&#9993; {{ params.consultant.email }}</a>
                         </td>
                       </tr>
                       <tr>
                         <td>
-                          <a href="tel:{{ params.consultant.phone }}" style="text-decoration:none;color:rgba(255,255,255,0.75);font-size:13px;">&#9742; {{ params.consultant.phone }}</a>
+                          <a href="tel:{{ params.consultant.phone }}" style="text-decoration:none;color:#1b334d;font-size:13px;">&#9742; {{ params.consultant.phone }}</a>
                         </td>
                       </tr>
                     </table>
@@ -368,9 +368,9 @@
                 <tr>
                   <!-- Left: article image -->
                   {% if item.image %}
-                  <td width="38%" style="padding:0;line-height:0;" class="wr-img-cell">
+                  <td width="38%" style="padding:0;line-height:0;vertical-align:top;" class="wr-img-cell">
                     <a href="{{ item.url }}" style="display:block;line-height:0;">
-                      <img src="{{ item.image }}" alt="{{ item.title }}" width="100%" style="display:block;border:0;width:100%;height:100%;min-height:180px;object-fit:cover;border-radius:13px 0 0 13px;">
+                      <img src="{{ item.image }}" alt="{{ item.title }}" width="100%" style="display:block;border:0;width:100%;height:200px;object-fit:cover;border-radius:13px 0 0 13px;">
                     </a>
                   </td>
                   <!-- Right: label, title, description, button -->
