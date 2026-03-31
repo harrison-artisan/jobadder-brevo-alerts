@@ -1173,7 +1173,28 @@ async function scrapeEventMeta(url) {
                     clearTimeout(timer);
                     let dateStr = '';
                     try {
-                        const decode = s => s ? s.replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>') : '';
+                        const decode = s => {
+                            if (!s) return '';
+                            const named = {
+                                'amp':'&','quot':'"','apos':"'",'lt':'<','gt':'>',
+                                'nbsp':' ','ndash':'\u2013','mdash':'\u2014',
+                                'lsquo':'\u2018','rsquo':'\u2019','ldquo':'\u201C','rdquo':'\u201D',
+                                'hellip':'\u2026','bull':'\u2022','trade':'\u2122','reg':'\u00AE',
+                                'copy':'\u00A9','euro':'\u20AC','pound':'\u00A3','yen':'\u00A5',
+                                'cent':'\u00A2','laquo':'\u00AB','raquo':'\u00BB',
+                                'times':'\u00D7','divide':'\u00F7','plusmn':'\u00B1',
+                                'frac12':'\u00BD','frac14':'\u00BC','frac34':'\u00BE',
+                                'Agrave':'\u00C0','Aacute':'\u00C1','Acirc':'\u00C2','Atilde':'\u00C3','Auml':'\u00C4','Aring':'\u00C5','AElig':'\u00C6',
+                                'agrave':'\u00E0','aacute':'\u00E1','acirc':'\u00E2','atilde':'\u00E3','auml':'\u00E4','aring':'\u00E5','aelig':'\u00E6',
+                                'Egrave':'\u00C8','Eacute':'\u00C9','Ecirc':'\u00CA','Euml':'\u00CB',
+                                'egrave':'\u00E8','eacute':'\u00E9','ecirc':'\u00EA','euml':'\u00EB',
+                                'Ntilde':'\u00D1','ntilde':'\u00F1','szlig':'\u00DF','ccedil':'\u00E7','Ccedil':'\u00C7'
+                            };
+                            return s
+                                .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+                                .replace(/&#([0-9]+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10)))
+                                .replace(/&([a-zA-Z]+);/g, (m, n) => named[n] || m);
+                        };
                         // 1. JSON-LD: look for startDate (and endDate for multi-day) in Event schema
                         let endDateStr = '';
                         const jsonLdMatches = data.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || [];
@@ -1267,7 +1288,28 @@ async function scrapePageMeta(url) {
                 res.on('data', chunk => { clearTimeout(responseTimer); data += chunk; if (data.length > 200000) req.destroy(); });
                 res.on('end', () => { clearTimeout(responseTimer);
                     try {
-                        const decode = s => s ? s.replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>') : '';
+                        const decode = s => {
+                            if (!s) return '';
+                            const named = {
+                                'amp':'&','quot':'"','apos':"'",'lt':'<','gt':'>',
+                                'nbsp':' ','ndash':'\u2013','mdash':'\u2014',
+                                'lsquo':'\u2018','rsquo':'\u2019','ldquo':'\u201C','rdquo':'\u201D',
+                                'hellip':'\u2026','bull':'\u2022','trade':'\u2122','reg':'\u00AE',
+                                'copy':'\u00A9','euro':'\u20AC','pound':'\u00A3','yen':'\u00A5',
+                                'cent':'\u00A2','laquo':'\u00AB','raquo':'\u00BB',
+                                'times':'\u00D7','divide':'\u00F7','plusmn':'\u00B1',
+                                'frac12':'\u00BD','frac14':'\u00BC','frac34':'\u00BE',
+                                'Agrave':'\u00C0','Aacute':'\u00C1','Acirc':'\u00C2','Atilde':'\u00C3','Auml':'\u00C4','Aring':'\u00C5','AElig':'\u00C6',
+                                'agrave':'\u00E0','aacute':'\u00E1','acirc':'\u00E2','atilde':'\u00E3','auml':'\u00E4','aring':'\u00E5','aelig':'\u00E6',
+                                'Egrave':'\u00C8','Eacute':'\u00C9','Ecirc':'\u00CA','Euml':'\u00CB',
+                                'egrave':'\u00E8','eacute':'\u00E9','ecirc':'\u00EA','euml':'\u00EB',
+                                'Ntilde':'\u00D1','ntilde':'\u00F1','szlig':'\u00DF','ccedil':'\u00E7','Ccedil':'\u00C7'
+                            };
+                            return s
+                                .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+                                .replace(/&#([0-9]+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10)))
+                                .replace(/&([a-zA-Z]+);/g, (m, n) => named[n] || m);
+                        };
                         const ogTitle = (data.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i) ||
                                          data.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i) || [])[1];
                         const ogDesc  = (data.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i) ||
