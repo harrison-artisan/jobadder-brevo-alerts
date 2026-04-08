@@ -869,6 +869,45 @@ function restoreConsultantSchedule() {
 // ============================================================
 
 /**
+ * Split raw CSV text into logical rows, correctly handling quoted fields that
+ * contain embedded newlines (e.g. multi-line Google Forms answers).
+ * A naive text.split(/\r?\n/) would break these fields — this function walks
+ * the text character-by-character and only splits on newlines that are outside
+ * of a quoted field.
+ */
+function splitCsvIntoLogicalRows(text) {
+    const rows = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (ch === '"') {
+            // Handle escaped double-quotes ("")
+            if (inQuotes && text[i + 1] === '"') {
+                current += '""';
+                i++;
+            } else {
+                inQuotes = !inQuotes;
+                current += ch;
+            }
+        } else if (ch === '\r' && text[i + 1] === '\n' && !inQuotes) {
+            // Windows-style CRLF row terminator outside quotes
+            rows.push(current);
+            current = '';
+            i++; // skip the \n
+        } else if (ch === '\n' && !inQuotes) {
+            // Unix-style LF row terminator outside quotes
+            rows.push(current);
+            current = '';
+        } else {
+            current += ch;
+        }
+    }
+    if (current.trim()) rows.push(current);
+    return rows;
+}
+
+/**
  * Parse a CSV cell — handles quoted values with embedded commas and escaped quotes.
  */
 function parseCsvCell(raw) {
@@ -1036,7 +1075,10 @@ function parseGoogleFormsCsv(lines) {
 
 function parseCsvBuffer(buffer) {
     const text = buffer.toString('utf8');
-    const lines = text.split(/\r?\n/);
+    // ✅ Use logical-row splitter so quoted multi-line fields (e.g. Google Forms
+    // answers with embedded newlines) are kept intact as a single row, rather
+    // than being broken apart by a naive text.split(/\r?\n/).
+    const lines = splitCsvIntoLogicalRows(text);
     // Detect Google Forms export format first (Timestamp header in first column)
     const gFormsData = parseGoogleFormsCsv(lines);
     if (gFormsData) {
