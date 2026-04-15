@@ -360,20 +360,26 @@ class JobAdderService {
     // 1. Check for Job Ad Portal fields (Dynamic)
     if (ad.portal && ad.portal.fields) {
       const fields = ad.portal.fields;
-      const locationField = fields.find(f => f.fieldName === 'Location');
-      const workTypeField = fields.find(f => f.fieldName === 'Work Type');
+      const locationField = fields.find(f => f.fieldName === 'Location' || f.name === 'Location');
+      const workTypeField = fields.find(f => f.fieldName === 'Work Type' || f.name === 'Work Type');
       
-      if (locationField && locationField.value) location = locationField.value;
-      if (workTypeField && workTypeField.value) jobType = this.mapWorkType(workTypeField.value);
+      if (locationField && (locationField.value || locationField.text)) {
+        location = locationField.value || locationField.text;
+      }
+      if (workTypeField && (workTypeField.value || workTypeField.text)) {
+        jobType = this.mapWorkType(workTypeField.value || workTypeField.text);
+      }
     }
 
     // 2. If still not found, check Enriched Job Details (Internal Job Record)
     if (ad.jobDetails && (location === 'Location TBD' || !jobType)) {
       if (location === 'Location TBD') {
-        location = ad.jobDetails.location?.name || ad.jobDetails.location || location;
+        const dLoc = ad.jobDetails.location;
+        location = (dLoc && typeof dLoc === 'object') ? (dLoc.name || dLoc.city || dLoc.text || location) : (dLoc || location);
       }
       if (!jobType) {
-        const rawWorkType = ad.jobDetails.workType?.name || ad.jobDetails.workType || '';
+        const dWT = ad.jobDetails.workType;
+        const rawWorkType = (dWT && typeof dWT === 'object') ? (dWT.name || dWT.text || '') : (dWT || '');
         if (rawWorkType) jobType = this.mapWorkType(rawWorkType);
       }
     }
@@ -522,4 +528,3 @@ class JobAdderService {
 }
 
 module.exports = new JobAdderService();
-
