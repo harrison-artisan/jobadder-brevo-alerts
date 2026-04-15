@@ -190,12 +190,13 @@ class EmailPreviewService {
                     link: article.link,
                     featuredImage: article.image || article.featuredImage
                 })),
+                // Fix mapping to match brevo_template_161_xpose_newsletter.html expectations
                 jobs: (state.jobs || []).slice(0, 5).map(job => ({
-                    title: job.title,
-                    location: job.location,
-                    type: job.workType || job.type,
-                    summary: job.summary || job.description || '',
-                    url: job.link || job.url || '#'
+                    job_title: job.job_title || job.title || 'Untitled Position',
+                    location: job.location || 'Location TBD',
+                    job_type: job.job_type || job.workType || job.type || '',
+                    job_description: job.job_description || job.summary || job.description || '',
+                    apply_url: job.apply_url || job.link || job.url || '#'
                 }))
             },
             unsubscribe: 'https://artisan.com.au/unsubscribe'
@@ -301,3 +302,4 @@ class EmailPreviewService {
 }
 
 module.exports = new EmailPreviewService();
+
