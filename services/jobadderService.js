@@ -350,24 +350,39 @@ class JobAdderService {
    * Format job ad data for email template
    */
   formatJobForEmail(ad) {
-    // ad contains: title, summary, bulletPoints, reference, adId, links
+    // ad contains: title, summary, bulletPoints, reference, adId, links, portal
     // ad.jobDetails contains: location, workType, category, etc. (if enriched)
     
     // Get location and work type from job details if available
     let location = 'Location TBD';
     let jobType = '';
     
-    if (ad.jobDetails) {
-      // Use structured data from job details
-      location = ad.jobDetails.location?.name || ad.jobDetails.location || this.extractLocation(ad.summary, ad.bulletPoints);
-      // Map workType from JobAdder — if not found, fall back to text extraction
-      const rawWorkType = ad.jobDetails.workType?.name || ad.jobDetails.workType || '';
-      jobType = rawWorkType
-        ? this.mapWorkType(rawWorkType)
-        : this.extractJobType(ad.summary, ad.bulletPoints);
-    } else {
-      // Fallback to extraction from text
+    // 1. Check for Job Ad Portal fields (Dynamic)
+    if (ad.portal && ad.portal.fields) {
+      const fields = ad.portal.fields;
+      const locationField = fields.find(f => f.fieldName === 'Location');
+      const workTypeField = fields.find(f => f.fieldName === 'Work Type');
+      
+      if (locationField && locationField.value) location = locationField.value;
+      if (workTypeField && workTypeField.value) jobType = this.mapWorkType(workTypeField.value);
+    }
+
+    // 2. If still not found, check Enriched Job Details (Internal Job Record)
+    if (ad.jobDetails && (location === 'Location TBD' || !jobType)) {
+      if (location === 'Location TBD') {
+        location = ad.jobDetails.location?.name || ad.jobDetails.location || location;
+      }
+      if (!jobType) {
+        const rawWorkType = ad.jobDetails.workType?.name || ad.jobDetails.workType || '';
+        if (rawWorkType) jobType = this.mapWorkType(rawWorkType);
+      }
+    }
+
+    // 3. Final fallback: Text extraction from summary/bullets
+    if (location === 'Location TBD') {
       location = this.extractLocation(ad.summary, ad.bulletPoints);
+    }
+    if (!jobType) {
       jobType = this.extractJobType(ad.summary, ad.bulletPoints);
     }
     
@@ -507,3 +522,4 @@ class JobAdderService {
 }
 
 module.exports = new JobAdderService();
+
