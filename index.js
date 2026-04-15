@@ -135,37 +135,25 @@ app.get('/api/jobs/for-post', async (req, res) => {
       return res.status(401).json({ success: false, message: 'JobAdder is not connected.' });
     }
     const jobs = await jobadderService.getLiveJobs();
-    // Build a richer object for each job
+    // Build a richer object for each job using the centralized formatting logic
     const jobList = jobs.map(job => {
+      const formatted = jobadderService.formatJobForEmail(job);
       const d = job.jobDetails || {};
-      // Job URL: prefer links.ui.self (the real clientapps URL from the JobAdder API),
-      // then fall back to a correctly constructed clientapps URL
-      const jobUrl = job.links?.ui?.self ||
-        (job.adId ? `https://clientapps.jobadder.com/67514/artisan/${job.adId}` : null);
-      // Location
-      const location = d.location
-        ? (d.location.name || d.location.city || d.location.state || '')
-        : (job.location || '');
-      // Work type
-      const workType = d.workType
-        ? (d.workType.name || d.workType)
-        : (job.workType || '');
-      // Salary
+      
+      // Salary calculation (specific to this endpoint)
       const salary = d.salary
         ? [d.salary.rateLow, d.salary.rateHigh].filter(Boolean).join(' - ') + (d.salary.ratePer ? ' per ' + d.salary.ratePer : '')
         : '';
-      // Short description — strip HTML tags
-      const rawDesc = d.description || job.description || '';
-      const description = rawDesc.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 300);
+
       return {
         adId: job.adId,
-        title: d.title || job.title || '',
-        reference: job.reference || '',
-        location,
-        workType,
+        title: formatted.job_title,
+        reference: formatted.reference,
+        location: formatted.location,
+        workType: formatted.job_type,
         salary,
-        description,
-        jobUrl,
+        description: formatted.job_description,
+        jobUrl: formatted.apply_url,
       };
     });
     res.json({ success: true, jobs: jobList });
@@ -1724,4 +1712,6 @@ process.on('SIGTERM', () => {
   console.log('SIGTERM signal received: closing HTTP server');
   process.exit(0);
 });
+
+
 
