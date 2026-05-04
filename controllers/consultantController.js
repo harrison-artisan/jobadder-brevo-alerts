@@ -789,18 +789,27 @@ async function sendToAllDirect(options = {}) {
 }
 
 // ============================================================
-// POST /api/consultant/schedule
+// MULTI-CONSULTANT SCHEDULING
 // ============================================================
-let _consultantScheduledTask = null;
+const _consultantScheduledTasks = {};
+
+function getScheduleFilePath(consultantId) {
+    return path.join(__dirname, '..', `.consultant-schedule-${consultantId}.json`);
+}
 
 async function scheduleConsultant(req, res) {
     const cron = require('node-cron');
     try {
         const { recipientType, recipientId, scheduledAt } = req.body;
         const state = readState();
-        if (!['GENERATED', 'TESTED'].includes(state.state) || !state.templateParams) {
+        
+        if (!['GENERATED', 'TESTED', 'SCHEDULED'].includes(state.state) || !state.templateParams) {
             return res.status(400).json({ success: false, message: 'Please parse the Gemini JSON first.' });
         }
+        
+        const consultantId = state.templateParams.consultant.id;
+        if (!consultantId) return res.status(400).json({ success: false, message: 'Consultant ID not found in state' });
+
         if (!scheduledAt) return res.status(400).json({ success: false, message: 'scheduledAt is required' });
         const sendDate = new Date(scheduledAt);
         if (isNaN(sendDate.getTime())) return res.status(400).json({ success: false, message: 'Invalid scheduledAt date' });
@@ -817,81 +826,153 @@ async function scheduleConsultant(req, res) {
             timeZone: 'Australia/Melbourne'
         }) + ' (Melbourne time)';
 
-        if (_consultantScheduledTask) { _consultantScheduledTask.stop(); _consultantScheduledTask = null; }
-        _consultantScheduledTask = cron.schedule(cronExpr, async () => {
-            console.log('📅 Executing scheduled consultant newsletter send...');
-            const s = readState();
-            if (s.state === 'SCHEDULED') writeState({ ...s, state: 'TESTED' });
+        const scheduleFile = getScheduleFilePath(consultantId);
+
+        // Cancel existing if any
+        if (_consultantScheduledTasks[consultantId]) {
+            _consultantScheduledTasks[consultantId].stop();
+            delete _consultantScheduledTasks[consultantId];
+        }
+
+        // Store schedule data including current template params
+        const scheduleData = {
+            consultantId,
+            consultantName: state.templateParams.consultant.name,
+            scheduledAt: sendDate.toISOString(),
+            scheduledFor,
+            options: { recipientType, recipientId },
+            templateParams: state.templateParams
+        };
+
+        _consultantScheduledTasks[consultantId] = cron.schedule(cronExpr, async () => {
+            console.log(`📅 Executing scheduled newsletter for ${scheduleData.consultantName}...`);
             try {
-                await sendToAllDirect({ recipientType, recipientId });
+                // Use the saved template params for the send
+                await sendToAllDirect({ 
+                    recipientType, 
+                    recipientId, 
+                    templateParams: scheduleData.templateParams 
+                });
+                console.log(`✅ Scheduled newsletter sent for ${scheduleData.consultantName}`);
             } catch (e) {
-                console.error('❌ Scheduled consultant send failed:', e.message);
+                console.error(`❌ Scheduled send failed for ${scheduleData.consultantName}:`, e.message);
             }
-            if (_consultantScheduledTask) { _consultantScheduledTask.stop(); _consultantScheduledTask = null; }
+            // Cleanup
+            if (fs.existsSync(scheduleFile)) fs.unlinkSync(scheduleFile);
+            if (_consultantScheduledTasks[consultantId]) {
+                _consultantScheduledTasks[consultantId].stop();
+                delete _consultantScheduledTasks[consultantId];
+            }
         }, { timezone: 'UTC' });
 
+        fs.writeFileSync(scheduleFile, JSON.stringify(scheduleData, null, 2));
+        
+        // Also update the main state to reflect this consultant is scheduled
         writeState({ ...state, state: 'SCHEDULED', scheduledAt: sendDate.toISOString(), scheduledFor, scheduledOptions: { recipientType, recipientId } });
-        console.log(`📅 Consultant newsletter scheduled for ${scheduledFor} (cron: ${cronExpr} UTC)`);
-        res.json({ success: true, scheduledFor, message: 'Consultant newsletter scheduled successfully' });
+
+        console.log(`📅 Newsletter for ${scheduleData.consultantName} scheduled for ${scheduledFor}`);
+        res.json({ success: true, scheduledFor, message: `Newsletter for ${scheduleData.consultantName} scheduled successfully` });
     } catch (error) {
         console.error('❌ Error scheduling consultant newsletter:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 }
 
-// ============================================================
-// POST /api/consultant/cancel-schedule
-// ============================================================
 function cancelConsultantSchedule(req, res) {
     try {
-        if (_consultantScheduledTask) { _consultantScheduledTask.stop(); _consultantScheduledTask = null; }
-        const state = readState();
-        if (state.state === 'SCHEDULED') {
-            const { scheduledAt, scheduledFor, scheduledOptions, ...rest } = state;
-            writeState({ ...rest, state: 'TESTED' });
+        const { consultantId } = req.body;
+        if (!consultantId) return res.status(400).json({ success: false, message: 'consultantId is required' });
+
+        const scheduleFile = getScheduleFilePath(consultantId);
+        
+        if (_consultantScheduledTasks[consultantId]) {
+            _consultantScheduledTasks[consultantId].stop();
+            delete _consultantScheduledTasks[consultantId];
         }
+        
+        if (fs.existsSync(scheduleFile)) fs.unlinkSync(scheduleFile);
+
+        // If the cancelled schedule matches the current state consultant, update state
+        const state = readState();
+        if (state.templateParams && state.templateParams.consultant.id === consultantId) {
+            if (state.state === 'SCHEDULED') {
+                const { scheduledAt, scheduledFor, scheduledOptions, ...rest } = state;
+                writeState({ ...rest, state: 'TESTED' });
+            }
+        }
+
         res.json({ success: true, message: 'Schedule cancelled' });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
 }
 
-// ============================================================
-// Restore scheduled cron on server startup
-// ============================================================
 function restoreConsultantSchedule() {
     const cron = require('node-cron');
     try {
-        const state = readState();
-        if (state.state !== 'SCHEDULED' || !state.scheduledAt) return;
-        const sendDate = new Date(state.scheduledAt);
-        if (sendDate <= new Date()) {
-            console.warn('⚠️  Consultant scheduled time has passed, clearing schedule');
-            const { scheduledAt, scheduledFor, scheduledOptions, ...rest } = state;
-            writeState({ ...rest, state: 'TESTED' });
-            return;
-        }
-        const { recipientType, recipientId } = state.scheduledOptions || {};
-        const min = sendDate.getUTCMinutes();
-        const hr = sendDate.getUTCHours();
-        const dom = sendDate.getUTCDate();
-        const mon = sendDate.getUTCMonth() + 1;
-        const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
-        if (_consultantScheduledTask) { _consultantScheduledTask.stop(); _consultantScheduledTask = null; }
-        _consultantScheduledTask = cron.schedule(cronExpr, async () => {
-            console.log('📅 Executing restored consultant newsletter send...');
-            const s = readState();
-            if (s.state === 'SCHEDULED') writeState({ ...s, state: 'TESTED' });
+        const files = fs.readdirSync(path.join(__dirname, '..')).filter(f => f.startsWith('.consultant-schedule-') && f.endsWith('.json'));
+        
+        for (const file of files) {
             try {
-                await sendToAllDirect({ recipientType, recipientId });
-            } catch (e) {
-                console.error('❌ Restored consultant send failed:', e.message);
+                const scheduleFile = path.join(__dirname, '..', file);
+                const saved = JSON.parse(fs.readFileSync(scheduleFile, 'utf8'));
+                if (!saved || !saved.scheduledAt) continue;
+
+                const sendDate = new Date(saved.scheduledAt);
+                if (sendDate <= new Date()) {
+                    console.warn(`⚠️  Scheduled time for ${saved.consultantName} has passed, clearing.`);
+                    fs.unlinkSync(scheduleFile);
+                    continue;
+                }
+
+                const { recipientType, recipientId } = saved.options || {};
+                const consultantId = saved.consultantId;
+                const min = sendDate.getUTCMinutes();
+                const hr = sendDate.getUTCHours();
+                const dom = sendDate.getUTCDate();
+                const mon = sendDate.getUTCMonth() + 1;
+                const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
+
+                if (_consultantScheduledTasks[consultantId]) {
+                    _consultantScheduledTasks[consultantId].stop();
+                }
+
+                _consultantScheduledTasks[consultantId] = cron.schedule(cronExpr, async () => {
+                    console.log(`📅 Executing restored newsletter for ${saved.consultantName}...`);
+                    try {
+                        await sendToAllDirect({ 
+                            recipientType, 
+                            recipientId, 
+                            templateParams: saved.templateParams 
+                        });
+                    } catch (e) {
+                        console.error(`❌ Restored send failed for ${saved.consultantName}:`, e.message);
+                    }
+                    if (fs.existsSync(scheduleFile)) fs.unlinkSync(scheduleFile);
+                    delete _consultantScheduledTasks[consultantId];
+                }, { timezone: 'UTC' });
+
+                console.log(`📅 Restored schedule for ${saved.consultantName} at ${saved.scheduledFor}`);
+            } catch (err) {
+                console.error(`❌ Failed to restore schedule file ${file}:`, err.message);
             }
-            if (_consultantScheduledTask) { _consultantScheduledTask.stop(); _consultantScheduledTask = null; }
-        }, { timezone: 'UTC' });
-        console.log(`📅 Consultant schedule restored for ${state.scheduledFor}`);
+        }
     } catch (error) {
-        console.error('❌ Error restoring consultant schedule:', error.message);
+        console.error('❌ Error restoring consultant schedules:', error.message);
+    }
+}
+
+function getActiveSchedules(req, res) {
+    try {
+        const files = fs.readdirSync(path.join(__dirname, '..')).filter(f => f.startsWith('.consultant-schedule-') && f.endsWith('.json'));
+        const schedules = files.map(file => {
+            try {
+                return JSON.parse(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'));
+            } catch (e) { return null; }
+        }).filter(Boolean);
+        res.json({ success: true, schedules });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
     }
 }
 
@@ -1827,5 +1908,6 @@ module.exports = {
     cancelConsultantSchedule,
     restoreConsultantSchedule,
     updateSections,
-    batchSchedule
+    batchSchedule,
+    getActiveSchedules
 };

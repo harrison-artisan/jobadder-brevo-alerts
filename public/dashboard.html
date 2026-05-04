@@ -8115,6 +8115,125 @@
         function onConsultantJsonInput() {}
         async function parseConsultantJSON() { await uploadConsultantCsv(); }
 
+        async function openConsultantBatchScheduleModal() {
+            const modal = document.getElementById('consultantBatchScheduleModal');
+            const list = document.getElementById('batchConsultantItems');
+            list.innerHTML = '<div style="padding:20px; text-align:center; color:rgba(255,255,255,0.5);">Loading consultants...</div>';
+            modal.style.display = 'flex';
+
+            try {
+                const [consultantsRes, schedulesRes] = await Promise.all([
+                    fetch('/api/consultant/list'),
+                    fetch('/api/consultant/active-schedules')
+                ]);
+                const consultants = await consultantsRes.json();
+                const schedulesData = await schedulesRes.json();
+                const activeSchedules = schedulesData.schedules || [];
+                
+                list.innerHTML = '';
+                Object.entries(consultants).forEach(([id, c]) => {
+                    const schedule = activeSchedules.find(s => s.consultantId === id);
+                    const item = document.createElement('div');
+                    item.style.cssText = 'padding:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between;';
+                    
+                    let scheduleInfo = '';
+                    if (schedule) {
+                        scheduleInfo = `<div style="color:#2ecc71; font-size:10px; margin-top:2px;">📅 Scheduled: ${schedule.scheduledFor}</div>`;
+                    }
+
+                    item.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <img src="${c.photo_url}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">
+                            <div>
+                                <div style="color:white; font-size:13px; font-weight:600;">${c.name}</div>
+                                <div style="color:rgba(255,255,255,0.5); font-size:11px;">${c.title}</div>
+                                ${scheduleInfo}
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            ${schedule ? `<button onclick="cancelConsultantScheduleNow('${id}')" style="background:rgba(231,76,60,0.2); color:#e74c3c; border:1px solid rgba(231,76,60,0.3); border-radius:4px; padding:4px 8px; font-size:10px; cursor:pointer;">Cancel</button>` : ''}
+                            <input type="checkbox" class="batch-consultant-checkbox" value="${id}" ${schedule ? '' : 'checked'} style="width:18px; height:18px; cursor:pointer;">
+                        </div>
+                    `;
+                    list.appendChild(item);
+                });
+                
+                // Set default time to next Monday 9am if empty
+                const timeInput = document.getElementById('batchScheduleDate');
+                if (!timeInput.value) {
+                    const now = new Date();
+                    const day = now.getDay();
+                    const daysUntilMonday = (1 - day + 7) % 7 || 7;
+                    const nextMonday = new Date(now);
+                    nextMonday.setDate(now.getDate() + daysUntilMonday);
+                    nextMonday.setHours(9, 0, 0, 0);
+                    const pad = n => String(n).padStart(2, '0');
+                    timeInput.value = `${nextMonday.getFullYear()}-${pad(nextMonday.getMonth()+1)}-${pad(nextMonday.getDate())}T09:00`;
+                }
+            } catch (e) {
+                list.innerHTML = '<div style="padding:20px; text-align:center; color:#e74c3c;">Failed to load consultants</div>';
+            }
+        }
+
+        function closeConsultantBatchScheduleModal() {
+            document.getElementById('consultantBatchScheduleModal').style.display = 'none';
+        }
+
+        async function confirmBatchSchedule() {
+            const timeInput = document.getElementById('batchScheduleDate');
+            if (!timeInput.value) {
+                showToast('Please select a date and time.', 'error');
+                return;
+            }
+
+            const checkboxes = document.querySelectorAll('.batch-consultant-checkbox:checked');
+            const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+            
+            if (selectedIds.length === 0) {
+                showToast('Please select at least one consultant.', 'error');
+                return;
+            }
+
+            if (!confirm(`Schedule this newsletter for ${selectedIds.length} consultants?`)) return;
+
+            const btn = document.querySelector('#consultantBatchScheduleModal .btn-confirm') || { disabled: false };
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/consultant/batch-schedule', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        consultantIds: selectedIds,
+                        scheduledAt: new Date(timeInput.value).toISOString()
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    showToast(result.message, 'success');
+                    closeConsultantBatchScheduleModal();
+                    // Update state badge if current consultant was scheduled
+                    refreshStatus(); 
+                    // Update scheduled box
+                    const stateRes = await fetch('/api/consultant/state');
+                    const state = await stateRes.json();
+                    if (state.templateParams && state.templateParams.consultant) {
+                        const mySched = (result.schedules || []).find(s => s.consultantId === state.templateParams.consultant.id);
+                        if (mySched) {
+                            updateConsultantScheduledBox(mySched.scheduledFor);
+                        }
+                    }
+                } else {
+                    showToast('Batch scheduling failed: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
         // Reset state
         async function resetConsultantState() {
             if (!confirm('Reset the consultant newsletter? This will clear the current content.')) return;
@@ -8357,16 +8476,45 @@
             }
         }
 
-        async function cancelConsultantScheduleNow() {
+        async function cancelConsultantScheduleNow(consultantId) {
             try {
-                const response = await fetch('/api/consultant/cancel-schedule', { method: 'POST' });
+                // If no ID passed, try to get from current state
+                if (!consultantId) {
+                    const stateRes = await fetch('/api/consultant/state');
+                    const state = await stateRes.json();
+                    if (state.templateParams && state.templateParams.consultant) {
+                        consultantId = state.templateParams.consultant.id;
+                    }
+                }
+                
+                if (!consultantId) {
+                    showToast('Could not identify consultant to cancel schedule.', 'error');
+                    return;
+                }
+
+                const response = await fetch('/api/consultant/cancel-schedule', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ consultantId })
+                });
                 const result = await response.json();
                 if (result.success) {
                     showToast('Schedule cancelled.', 'success');
-                    document.getElementById('consultantStateBadge').textContent = 'TESTED';
-                    document.getElementById('consultantStateBadge').className = 'status-badge TESTED';
-                    document.getElementById('consultantStateTimestamp').textContent = 'Schedule cancelled';
-                    updateConsultantScheduledBox(null);
+                    
+                    // Update UI if the cancelled one is the current one
+                    const stateRes = await fetch('/api/consultant/state');
+                    const state = await stateRes.json();
+                    if (state.templateParams && state.templateParams.consultant.id === consultantId) {
+                        document.getElementById('consultantStateBadge').textContent = 'TESTED';
+                        document.getElementById('consultantStateBadge').className = 'status-badge TESTED';
+                        document.getElementById('consultantStateTimestamp').textContent = 'Schedule cancelled';
+                        updateConsultantScheduledBox(null);
+                    }
+                    
+                    // Refresh the batch schedule list if modal is open
+                    if (document.getElementById('consultantBatchScheduleModal').style.display === 'flex') {
+                        openConsultantBatchScheduleModal();
+                    }
                 } else {
                     showToast('Could not cancel: ' + result.message, 'error');
                 }

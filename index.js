@@ -1447,6 +1447,10 @@ app.post('/api/consultant/batch-schedule', (req, res) => {
   consultantController.batchSchedule(req, res);
 });
 
+app.get('/api/consultant/active-schedules', (req, res) => {
+  consultantController.getActiveSchedules(req, res);
+});
+
 // ============================================================
 // Instagram Session Routes
 // ============================================================
