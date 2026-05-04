@@ -8041,6 +8041,14 @@
                     document.getElementById('editLifeUpdateBody').value = s.content.editable.life_update_body || '';
                 }
 
+                // Populate events and media editors
+                if (s.content && s.content.events) {
+                    populateEventsEditor(s.content.events);
+                }
+                if (s.content && s.content.media) {
+                    populateMediaEditor(s.content.media);
+                }
+
                 showConsultantEditPanel();
                 loadPreview('/api/preview/consultant');
                 showToast('Newsletter built for ' + data.consultant + '!', 'success');
@@ -8049,7 +8057,7 @@
                 errorDiv.style.display = 'block';
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = 'Build &amp; Preview';
+                btn.innerHTML = 'Build &amp; Edit';}
             }
         }
 
