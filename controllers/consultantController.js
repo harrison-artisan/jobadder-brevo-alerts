@@ -1812,8 +1812,7 @@ function getConsultantListInternal() {
     return JSON.parse(fs.readFileSync(consultantsPath, 'utf8'));
 }
 
-// Update exports
-const exports = {
+module.exports = {
     getState,
     getConsultantList,
     getProfile,
@@ -1830,5 +1829,3 @@ const exports = {
     updateSections,
     batchSchedule
 };
-
-module.exports = exports;
