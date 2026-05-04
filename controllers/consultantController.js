@@ -1759,22 +1759,19 @@ async function parseCsv(req, res) {
 // POST /api/consultant/update-sections
 // Update section visibility and Instagram grid after CSV parse
 // ============================================================
-function updateSections(req, res) {
+async function updateSections(req, res) {
     try {
-        const { sections, instagram_grid, editable } = req.body;
+        const { sections, instagram_grid, editable, lifeUpdateImages, events, media } = req.body;
         const state = readState();
-        if (state.state === 'EMPTY') {
-            return res.status(400).json({ success: false, message: 'No newsletter parsed yet' });
+        if (state.state === "EMPTY") {
+            return res.status(400).json({ success: false, message: "No newsletter parsed yet" });
         }
-        // Update section flags
+
+        // Update sections visibility
         if (sections) {
             state.templateParams.content.sections = { ...state.templateParams.content.sections, ...sections };
         }
-        // Update Instagram grid if provided
-        if (instagram_grid) {
-            state.templateParams.instagram_grid = instagram_grid;
-        }
-        // Update editable content
+        // Update editable fields
         if (editable) {
             state.content.editable = { ...state.content.editable, ...editable };
             // Also sync back to templateParams
@@ -1783,11 +1780,28 @@ function updateSections(req, res) {
             if (editable.life_update_heading) state.templateParams.life_update.heading = editable.life_update_heading;
             if (editable.life_update_body) state.templateParams.life_update.body = editable.life_update_body;
         }
+        // Update Instagram grid
+        if (instagram_grid) {
+            state.templateParams.instagram_grid = instagram_grid;
+        }
+        // Update Personal Update Images
+        if (lifeUpdateImages) {
+            state.templateParams.life_update.images = lifeUpdateImages;
+        }
+        // Update Events
+        if (events) {
+            state.templateParams.events = events;
+        }
+        // Update Media
+        if (media) {
+            state.templateParams.media = media;
+        }
+
         writeState(state);
-        console.log('✅ Section visibility and content updated');
-        res.json({ success: true, message: 'Sections updated', state });
+        console.log("✅ Section visibility and content updated");
+        res.json({ success: true, message: "Sections updated successfully", state });
     } catch (error) {
-        console.error('❌ Error updating sections:', error.message);
+        console.error("❌ Error updating sections:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 }

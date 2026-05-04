@@ -199,7 +199,6 @@
           </tr>
 
           <!-- ====== INDUSTRY INSIGHT ====== -->
-          {% if params.content.sections.industry_insight %}
           <tr>
             <td style="padding:40px 45px 0 45px;" class="mobile-pad">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#fff8f8 0%,#fff0f0 100%);border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(189,32,61,0.07);">
@@ -213,10 +212,8 @@
               </table>
             </td>
           </tr>
-          {% endif %}
 
           <!-- ====== LIFE UPDATE ====== -->
-          {% if params.content.sections.life_update %}
           <tr>
             <td style="padding:28px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#f8faff 0%,#f0f4ff 100%);border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(27,51,77,0.06);">
@@ -224,139 +221,28 @@
                   <td style="padding:32px 32px 28px 32px;">
                     <p style="margin:0 0 10px 0;font-size:10px;font-weight:700;color:#1b334d;letter-spacing:2.5px;text-transform:uppercase;">From {{ params.consultant.name }}</p>
                     <h2 style="margin:0 0 16px 0;font-size:22px;font-weight:900;color:#1b334d;line-height:1.3;">{{ params.content.life_update_heading }}</h2>
-                    <p style="margin:0;font-size:14px;line-height:1.8;color:#444444;">{{ params.content.life_update_body }}</p>
+                    <p style="margin:0;font-size:14px;line-height:1.8;color:#444444;">{{ params.content.life_update.body }}</p>
+
+                    {% if params.content.life_update.images and params.content.life_update.images.length > 0 %}
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-top:20px;">
+                      <tr>
+                        {% for image in params.content.life_update.images %}
+                        <td width="{{ 100 / params.content.life_update.images.length }}%" style="padding:0 5px;">
+                          <img src="{{ image }}" alt="Personal Update" width="100%" style="display:block;width:100%;height:auto;border-radius:8px;object-fit:cover;">
+                        </td>
+                        {% endfor %}
+                      </tr>
+                    </table>
+                    {% endif %}
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
-          {% endif %}
-
-          <!-- ====== INSTAGRAM GRID (4-tile layout) ====== -->
-          {% if params.content.sections.instagram_grid and params.instagram_grid.has_grid %}
-          <tr>
-            <td style="padding:28px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
-              <!-- Instagram grid header -->
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom:16px;">
-                <tr>
-                  <td style="padding:0 0 12px 0;">
-                    <table cellpadding="0" cellspacing="0" border="0" role="presentation">
-                      <tr>
-                        <td valign="middle" style="padding-right:8px;">
-                          <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(45deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);border-radius:8px;width:24px;height:24px;">
-                            <tr><td align="center" valign="middle" width="24" height="24" style="width:24px;height:24px;">
-                              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Instagram_logo_2022.svg/150px-Instagram_logo_2022.svg.png" alt="" width="14" height="14" style="display:block;border:0;filter:brightness(0) invert(1);">
-                            </td></tr>
-                          </table>
-                        </td>
-                        <td valign="middle">
-                          <span style="font-size:14px;font-weight:700;color:#262626;font-family:'Source Sans Pro',Arial,sans-serif;">Instagram Gallery</span>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- 2x2 Grid Layout -->
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;border:1px solid #e8e8e8;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
-                <tr>
-                  <!-- Top Left -->
-                  <td width="50%" style="padding:0;border-right:1px solid #e8e8e8;border-bottom:1px solid #e8e8e8;" valign="top">
-                    {% if params.instagram_grid.images[0] %}
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                      <tr>
-                        <td style="padding:0;line-height:0;">
-                          <a href="{{ params.instagram_grid.images[0].link or params.instagram_grid.profile_url }}" style="display:block;line-height:0;">
-                            <img src="{{ params.instagram_grid.images[0].url }}" alt="Instagram" width="100%" style="display:block;width:100%;height:auto;aspect-ratio:1;object-fit:cover;border:0;">
-                          </a>
-                        </td>
-                      </tr>
-                      {% if params.instagram_grid.images[0].caption %}
-                      <tr>
-                        <td style="padding:10px 12px;font-size:11px;color:#666666;line-height:1.4;text-align:center;border-top:1px solid #f0f0f0;">{{ params.instagram_grid.images[0].caption }}</td>
-                      </tr>
-                      {% endif %}
-                    </table>
-                    {% endif %}
-                  </td>
-                  <!-- Top Right -->
-                  <td width="50%" style="padding:0;border-bottom:1px solid #e8e8e8;" valign="top">
-                    {% if params.instagram_grid.images[1] %}
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                      <tr>
-                        <td style="padding:0;line-height:0;">
-                          <a href="{{ params.instagram_grid.images[1].link or params.instagram_grid.profile_url }}" style="display:block;line-height:0;">
-                            <img src="{{ params.instagram_grid.images[1].url }}" alt="Instagram" width="100%" style="display:block;width:100%;height:auto;aspect-ratio:1;object-fit:cover;border:0;">
-                          </a>
-                        </td>
-                      </tr>
-                      {% if params.instagram_grid.images[1].caption %}
-                      <tr>
-                        <td style="padding:10px 12px;font-size:11px;color:#666666;line-height:1.4;text-align:center;border-top:1px solid #f0f0f0;">{{ params.instagram_grid.images[1].caption }}</td>
-                      </tr>
-                      {% endif %}
-                    </table>
-                    {% endif %}
-                  </td>
-                </tr>
-                <tr>
-                  <!-- Bottom Left -->
-                  <td width="50%" style="padding:0;border-right:1px solid #e8e8e8;" valign="top">
-                    {% if params.instagram_grid.images[2] %}
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                      <tr>
-                        <td style="padding:0;line-height:0;">
-                          <a href="{{ params.instagram_grid.images[2].link or params.instagram_grid.profile_url }}" style="display:block;line-height:0;">
-                            <img src="{{ params.instagram_grid.images[2].url }}" alt="Instagram" width="100%" style="display:block;width:100%;height:auto;aspect-ratio:1;object-fit:cover;border:0;">
-                          </a>
-                        </td>
-                      </tr>
-                      {% if params.instagram_grid.images[2].caption %}
-                      <tr>
-                        <td style="padding:10px 12px;font-size:11px;color:#666666;line-height:1.4;text-align:center;border-top:1px solid #f0f0f0;">{{ params.instagram_grid.images[2].caption }}</td>
-                      </tr>
-                      {% endif %}
-                    </table>
-                    {% endif %}
-                  </td>
-                  <!-- Bottom Right -->
-                  <td width="50%" style="padding:0;" valign="top">
-                    {% if params.instagram_grid.images[3] %}
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                      <tr>
-                        <td style="padding:0;line-height:0;">
-                          <a href="{{ params.instagram_grid.images[3].link or params.instagram_grid.profile_url }}" style="display:block;line-height:0;">
-                            <img src="{{ params.instagram_grid.images[3].url }}" alt="Instagram" width="100%" style="display:block;width:100%;height:auto;aspect-ratio:1;object-fit:cover;border:0;">
-                          </a>
-                        </td>
-                      </tr>
-                      {% if params.instagram_grid.images[3].caption %}
-                      <tr>
-                        <td style="padding:10px 12px;font-size:11px;color:#666666;line-height:1.4;text-align:center;border-top:1px solid #f0f0f0;">{{ params.instagram_grid.images[3].caption }}</td>
-                      </tr>
-                      {% endif %}
-                    </table>
-                    {% endif %}
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Footer: View on Instagram -->
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-top:12px;">
-                <tr>
-                  <td align="center">
-                    <a href="{{ params.instagram_grid.profile_url }}" style="font-size:12px;color:#0095f6;font-weight:700;text-decoration:none;">Follow @{{ params.instagram_grid.handle }} &#8599;</a>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          {% endif %}
 
           <!-- ====== PERSONAL MEDIA (array — one block per item) ====== -->
-          {% if params.media.has_media %}
-          {% for item in params.media.items %}
+          {% if params.content.sections.media and params.content.media and params.content.media.length > 0 %}
+          {% for item in params.content.media %}
 
           {% if item.type == 'image' %}
           <tr>
@@ -379,11 +265,10 @@
           </tr>
           {% endif %}
 
-          <!-- Instagram item from media array (legacy single post) - now hidden by grid above -->
-          {% if item.type == 'instagram' and false %}
+          {% if item.type == 'instagram' %}
           <tr>
             <td style="padding:28px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
-              <!-- Instagram post-style card (DEPRECATED - use grid instead) -->
+              <!-- Instagram post-style card -->
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;border:1px solid #dbdbdb;border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.12);max-width:480px;margin:0 auto;">
 
                 <!-- ── Top bar: Instagram wordmark + gradient icon ── -->
@@ -669,13 +554,13 @@
           </tr>
 
           <!-- ====== EVENTS (conditional) — shown ABOVE Creative Community ====== -->
-          {% if params.events and params.content.sections.events %}
+          {% if params.content.sections.events and params.content.events and params.content.events.length > 0 %}
           <!-- Gradient rule -->
           <tr><td style="padding:40px 45px 0 45px;"><div style="height:3px;background:linear-gradient(90deg,#1b334d 0%,#bd203d 100%);border-radius:2px;"></div></td></tr>
           <tr>
             <td style="padding:40px 45px;" class="mobile-pad">
               <h2 style="margin:0 0 24px 0;font-size:18px;font-weight:900;color:#1b334d;text-align:center;text-transform:uppercase;letter-spacing:0.5px;">What's On</h2>
-              {% for event in params.events %}
+              {% for event in params.content.events %}
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;border:1px solid #e8e8e8;border-radius:12px;margin-bottom:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
                 <tr>
                   <td width="72" valign="middle" align="center" style="padding:20px 0 20px 20px;" class="event-date-cell">
@@ -706,7 +591,6 @@
           <tr><td style="padding:0 45px;"><div style="height:3px;background:linear-gradient(90deg,#bd203d 0%,#1b334d 100%);border-radius:2px;"></div></td></tr>
 
           <!-- ====== CREATIVE COMMUNITY ARTICLES ====== -->
-          {% if params.content.sections.articles %}
           <tr>
             <td style="padding:40px 45px;" class="mobile-pad">
               <h2 style="margin:0 0 6px 0;font-size:18px;font-weight:900;color:#1b334d;text-align:center;text-transform:uppercase;letter-spacing:0.5px;">From the Creative Community</h2>
@@ -735,7 +619,6 @@
               </table>
             </td>
           </tr>
-          {% endif %}
 
           <!-- Gradient rule -->
           <tr><td style="padding:0 45px;"><div style="height:3px;background:linear-gradient(90deg,#bd203d 0%,#1b334d 100%);border-radius:2px;"></div></td></tr>
