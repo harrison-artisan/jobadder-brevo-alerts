@@ -1638,7 +1638,20 @@ async function parseCsv(req, res) {
             state: 'GENERATED',
             generatedAt: new Date().toISOString(),
             consultant: consultantConfig,
-            content: { industry_insight: parsedForTemplate.industry_insight, life_update: parsedForTemplate.life_update, events, media: mediaArray, articles, alist_candidate: alistCandidate },
+            content: { 
+                industry_insight: parsedForTemplate.industry_insight, 
+                life_update: parsedForTemplate.life_update, 
+                events, 
+                media: mediaArray, 
+                articles, 
+                alist_candidate: alistCandidate,
+                editable: {
+                    industry_insight_heading: parsedForTemplate.industry_insight.heading,
+                    industry_insight_body: parsedForTemplate.industry_insight.body,
+                    life_update_heading: parsedForTemplate.life_update.heading,
+                    life_update_body: parsedForTemplate.life_update.body
+                }
+            },
             templateParams
         };
         writeState(state);
@@ -1667,7 +1680,7 @@ async function parseCsv(req, res) {
 // ============================================================
 function updateSections(req, res) {
     try {
-        const { sections, instagram_grid } = req.body;
+        const { sections, instagram_grid, editable } = req.body;
         const state = readState();
         if (state.state === 'EMPTY') {
             return res.status(400).json({ success: false, message: 'No newsletter parsed yet' });
@@ -1680,13 +1693,123 @@ function updateSections(req, res) {
         if (instagram_grid) {
             state.templateParams.instagram_grid = instagram_grid;
         }
+        // Update editable content
+        if (editable) {
+            state.content.editable = { ...state.content.editable, ...editable };
+            // Also sync back to templateParams
+            if (editable.industry_insight_heading) state.templateParams.industry_insight.heading = editable.industry_insight_heading;
+            if (editable.industry_insight_body) state.templateParams.industry_insight.body = editable.industry_insight_body;
+            if (editable.life_update_heading) state.templateParams.life_update.heading = editable.life_update_heading;
+            if (editable.life_update_body) state.templateParams.life_update.body = editable.life_update_body;
+        }
         writeState(state);
-        console.log('✅ Section visibility updated');
+        console.log('✅ Section visibility and content updated');
         res.json({ success: true, message: 'Sections updated', state });
     } catch (error) {
         console.error('❌ Error updating sections:', error.message);
         res.status(500).json({ success: false, message: error.message });
     }
+}
+
+// ============================================================
+// POST /api/consultant/batch-schedule
+// Schedule the current newsletter for ALL consultants
+// ============================================================
+async function batchSchedule(req, res) {
+    const cron = require('node-cron');
+    try {
+        const { scheduledAt } = req.body;
+        const state = readState();
+        if (!['GENERATED', 'TESTED'].includes(state.state) || !state.templateParams) {
+            return res.status(400).json({ success: false, message: 'No newsletter content parsed yet.' });
+        }
+        if (!scheduledAt) return res.status(400).json({ success: false, message: 'scheduledAt is required' });
+        
+        const sendDate = new Date(scheduledAt);
+        if (isNaN(sendDate.getTime())) return res.status(400).json({ success: false, message: 'Invalid scheduledAt date' });
+        if (sendDate <= new Date()) return res.status(400).json({ success: false, message: 'Scheduled time must be in the future' });
+
+        const consultants = getConsultantListInternal();
+        const results = [];
+        
+        // Load all segments to match keywords
+        const segments = await brevoService.getSegments();
+        
+        for (const [id, config] of Object.entries(consultants)) {
+            // Find matching segment by keyword
+            const keyword = config.segment_keyword;
+            const segment = segments.find(s => s.segmentName.toLowerCase().includes(keyword.toLowerCase()));
+            
+            if (!segment) {
+                console.warn(`⚠️ No segment found for consultant ${config.name} (keyword: ${keyword})`);
+                continue;
+            }
+
+            // Create a custom templateParams for THIS consultant
+            // We clone the base templateParams but update the consultant identity
+            const consultantParams = JSON.parse(JSON.stringify(state.templateParams));
+            consultantParams.consultant = {
+                newsletter_name: config.newsletter_name || config.name,
+                name: config.name,
+                title: config.title,
+                email: config.email,
+                phone: config.phone,
+                linkedin: config.linkedin,
+                photo: config.photo_url,
+                calendar_link: config.calendar_link || 'https://artisan.com.au/contact'
+            };
+
+            // Setup the cron task
+            const min = sendDate.getUTCMinutes();
+            const hr = sendDate.getUTCHours();
+            const dom = sendDate.getUTCDate();
+            const mon = sendDate.getUTCMonth() + 1;
+            const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
+
+            cron.schedule(cronExpr, async () => {
+                console.log(`📅 Executing batch scheduled send for ${config.name}...`);
+                try {
+                    const recipients = await brevoService.getSegmentContacts(segment.id);
+                    const finalRecipients = modeService.isTestMode() ? [{ email: modeService.getTestEmail() }] : recipients;
+                    
+                    if (config.brevo_template_id) {
+                        await brevoService.sendBatchEmail(finalRecipients, parseInt(config.brevo_template_id), consultantParams);
+                    } else {
+                        // Fallback to HTML send if no template ID
+                        const emailPreviewService = require('../services/emailPreviewService');
+                        const htmlContent = await renderConsultantTemplate(consultantParams, emailPreviewService);
+                        const subject = `${consultantParams.consultant.newsletter_name} — Artisan`;
+                        for (const recipient of finalRecipients) {
+                            await brevoService.sendEmailWithHtml({
+                                to: { email: recipient.email, name: recipient.name || recipient.email },
+                                subject,
+                                htmlContent
+                            });
+                        }
+                    }
+                } catch (e) {
+                    console.error(`❌ Batch send failed for ${config.name}:`, e.message);
+                }
+            }, { timezone: 'UTC' });
+
+            results.push(config.name);
+        }
+
+        res.json({ 
+            success: true, 
+            message: `Batch schedule created for ${results.length} consultants`,
+            consultants: results
+        });
+    } catch (error) {
+        console.error('❌ Error in batch scheduling:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+}
+
+// Internal helper to get consultant list
+function getConsultantListInternal() {
+    const consultantsPath = path.join(__dirname, '../config/consultants.json');
+    return JSON.parse(fs.readFileSync(consultantsPath, 'utf8'));
 }
 
 // Update exports
@@ -1704,7 +1827,8 @@ const exports = {
     scheduleConsultant,
     cancelConsultantSchedule,
     restoreConsultantSchedule,
-    updateSections
+    updateSections,
+    batchSchedule
 };
 
 module.exports = exports;

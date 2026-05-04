@@ -1919,7 +1919,7 @@
                     <h3 style="margin:0 0 16px 0; color:white; font-size:15px;">Edit Sections</h3>
                     
                     <!-- Section Toggles -->
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:20px;">
                         <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:rgba(255,255,255,0.8); font-size:13px;">
                             <input type="checkbox" id="toggleIndustryInsight" checked style="cursor:pointer;" onchange="updateConsultantSectionVisibility()">
                             <span>Industry Insight</span>
@@ -1936,6 +1936,30 @@
                             <input type="checkbox" id="toggleMedia" style="cursor:pointer;" onchange="updateConsultantSectionVisibility()">
                             <span>Media</span>
                         </label>
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:rgba(255,255,255,0.8); font-size:13px;">
+                            <input type="checkbox" id="toggleEvents" checked style="cursor:pointer;" onchange="updateConsultantSectionVisibility()">
+                            <span>Events</span>
+                        </label>
+                    </div>
+
+                    <!-- Editable Content Blocks -->
+                    <div style="margin-bottom:20px;">
+                        <div style="margin-bottom:12px;">
+                            <label style="display:block; color:rgba(255,255,255,0.5); font-size:11px; margin-bottom:4px; text-transform:uppercase;">Industry Insight Heading</label>
+                            <input type="text" id="editIndustryInsightHeading" style="width:100%; padding:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:13px; box-sizing:border-box;" onchange="updateConsultantSectionVisibility()">
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <label style="display:block; color:rgba(255,255,255,0.5); font-size:11px; margin-bottom:4px; text-transform:uppercase;">Industry Insight Body</label>
+                            <textarea id="editIndustryInsightBody" rows="3" style="width:100%; padding:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:13px; box-sizing:border-box; resize:vertical;" onchange="updateConsultantSectionVisibility()"></textarea>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <label style="display:block; color:rgba(255,255,255,0.5); font-size:11px; margin-bottom:4px; text-transform:uppercase;">Personal Update Heading</label>
+                            <input type="text" id="editLifeUpdateHeading" style="width:100%; padding:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:13px; box-sizing:border-box;" onchange="updateConsultantSectionVisibility()">
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <label style="display:block; color:rgba(255,255,255,0.5); font-size:11px; margin-bottom:4px; text-transform:uppercase;">Personal Update Body</label>
+                            <textarea id="editLifeUpdateBody" rows="3" style="width:100%; padding:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:13px; box-sizing:border-box; resize:vertical;" onchange="updateConsultantSectionVisibility()"></textarea>
+                        </div>
                     </div>
 
                     <!-- Instagram Grid Uploader -->
@@ -2021,6 +2045,9 @@
                     <button class="btn btn-success" onclick="sendConsultantNow()" id="btnSendConsultant" disabled>
                         Send Now
                     </button>
+                    <button class="btn" style="background: linear-gradient(135deg, #bd203d 0%, #1b334d 100%); color: white; width: 100%; margin-top: 8px;" onclick="openConsultantBatchSchedule()" id="btnBatchScheduleConsultant" disabled>
+                        Batch Schedule (All Consultants)
+                    </button>
                 </div>
 
                 <!-- Schedule date/time picker row -->
@@ -2050,6 +2077,38 @@
         </div>
         <!-- End Main Content -->
     
+    <!-- Consultant Batch Schedule Modal -->
+    <div id="consultantBatchScheduleModal" class="modal" style="display:none; position:fixed; z-index:10000; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgba(0,0,0,0.8); backdrop-filter:blur(8px);">
+        <div class="modal-content" style="background:rgba(25,25,35,0.95); margin:5% auto; padding:30px; border:1px solid rgba(255,255,255,0.1); width:600px; border-radius:20px; box-shadow:0 20px 50px rgba(0,0,0,0.5); color:white;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                <h2 style="margin:0; font-size:20px; font-weight:700;">Batch Schedule (All Consultants)</h2>
+                <span onclick="closeConsultantBatchScheduleModal()" style="cursor:pointer; font-size:24px; color:rgba(255,255,255,0.5);">&times;</span>
+            </div>
+            
+            <p style="color:rgba(255,255,255,0.7); font-size:14px; margin-bottom:24px; line-height:1.6;">
+                This will schedule the current newsletter content for all active consultants. Each consultant will receive their own personalized version using their unique Brevo template and matching recipient segment.
+            </p>
+
+            <div style="margin-bottom:24px;">
+                <label style="display:block; font-size:12px; color:rgba(255,255,255,0.5); margin-bottom:8px; text-transform:uppercase;">Select Send Date & Time (Melbourne)</label>
+                <input type="datetime-local" id="batchScheduleDate" style="width:100%; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:10px; color:white; padding:12px; font-size:16px; box-sizing:border-box;">
+            </div>
+
+            <div id="batchConsultantList" style="background:rgba(255,255,255,0.03); border-radius:12px; padding:16px; margin-bottom:24px; max-height:200px; overflow-y:auto; border:1px solid rgba(255,255,255,0.05);">
+                <div style="font-size:12px; color:rgba(255,255,255,0.4); margin-bottom:12px; display:flex; justify-content:space-between;">
+                    <span>Consultant</span>
+                    <span>Segment Matching</span>
+                </div>
+                <div id="batchConsultantItems"></div>
+            </div>
+
+            <div style="display:flex; gap:12px;">
+                <button onclick="closeConsultantBatchScheduleModal()" class="btn" style="flex:1; background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.1);">Cancel</button>
+                <button onclick="confirmBatchSchedule()" class="btn" style="flex:2; background:linear-gradient(135deg, #bd203d 0%, #1b334d 100%); color:white; font-weight:700;">Confirm Batch Schedule</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let alistState = null;
         
@@ -7939,6 +7998,14 @@
                     document.getElementById('btnSendConsultant').disabled = false;
                     document.getElementById('btnScheduleConsultant').disabled = false;
                 }
+                // Populate editable fields
+                if (s.content && s.content.editable) {
+                    document.getElementById('editIndustryInsightHeading').value = s.content.editable.industry_insight_heading || '';
+                    document.getElementById('editIndustryInsightBody').value = s.content.editable.industry_insight_body || '';
+                    document.getElementById('editLifeUpdateHeading').value = s.content.editable.life_update_heading || '';
+                    document.getElementById('editLifeUpdateBody').value = s.content.editable.life_update_body || '';
+                }
+
                 showConsultantEditPanel();
                 loadPreview('/api/preview/consultant');
                 showToast('Newsletter built for ' + data.consultant + '!', 'success');
@@ -7985,7 +8052,15 @@
                     industry_insight: document.getElementById('toggleIndustryInsight').checked,
                     life_update: document.getElementById('toggleLifeUpdate').checked,
                     articles: document.getElementById('toggleArticles').checked,
-                    media: document.getElementById('toggleMedia').checked
+                    media: document.getElementById('toggleMedia').checked,
+                    events: document.getElementById('toggleEvents').checked
+                };
+
+                const editable = {
+                    industry_insight_heading: document.getElementById('editIndustryInsightHeading').value,
+                    industry_insight_body: document.getElementById('editIndustryInsightBody').value,
+                    life_update_heading: document.getElementById('editLifeUpdateHeading').value,
+                    life_update_body: document.getElementById('editLifeUpdateBody').value
                 };
 
                 // Build Instagram grid from uploaded images
@@ -8021,7 +8096,7 @@
                 const response = await fetch('/api/consultant/update-sections', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sections, instagram_grid })
+                    body: JSON.stringify({ sections, instagram_grid, editable })
                 });
 
                 const data = await response.json();

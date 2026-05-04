@@ -1443,6 +1443,10 @@ app.post('/api/consultant/update-sections', (req, res) => {
   consultantController.updateSections(req, res);
 });
 
+app.post('/api/consultant/batch-schedule', (req, res) => {
+  consultantController.batchSchedule(req, res);
+});
+
 // ============================================================
 // Instagram Session Routes
 // ============================================================
