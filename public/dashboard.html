@@ -8080,6 +8080,89 @@
             }
         }
 
+        // Preview Personal Update Image
+        function previewLifeUpdateImage(index) {
+            const input = document.getElementById(`lifeUpdateImage${index}`);
+            const preview = document.getElementById(`lifeUpdatePreview${index}`);
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.style.backgroundImage = `url('${e.target.result}')`;
+                    preview.style.backgroundSize = 'cover';
+                    preview.style.backgroundPosition = 'center';
+                    preview.textContent = '';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Populate Events Container with editable fields
+        function populateEventsEditor(events) {
+            const container = document.getElementById('eventsEditContainer');
+            container.innerHTML = '';
+            
+            if (!events || events.length === 0) {
+                container.innerHTML = '<div style="color:rgba(255,255,255,0.5); font-size:12px;">No events in CSV</div>';
+                return;
+            }
+
+            events.forEach((event, idx) => {
+                const eventBox = document.createElement('div');
+                eventBox.style.cssText = 'padding:12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:6px; margin-bottom:8px;';
+                eventBox.innerHTML = `
+                    <div style="margin-bottom:8px;">
+                        <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">Event Title</label>
+                        <input type="text" class="eventTitle" value="${event.title || ''}" style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;" onchange="updateConsultantSectionVisibility()">
+                    </div>
+                    <div style="margin-bottom:8px;">
+                        <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">Date</label>
+                        <input type="text" class="eventDate" value="${event.date || ''}" placeholder="e.g. 15 May 2026" style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;" onchange="updateConsultantSectionVisibility()">
+                    </div>
+                    <div>
+                        <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">URL (Optional)</label>
+                        <input type="text" class="eventUrl" value="${event.url || ''}" placeholder="https://..." style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;" onchange="updateConsultantSectionVisibility()">
+                    </div>
+                `;
+                container.appendChild(eventBox);
+            });
+        }
+
+        // Populate Media Container with editable fields
+        function populateMediaEditor(media) {
+            const container = document.getElementById('mediaEditContainer');
+            container.innerHTML = '';
+            
+            if (!media || media.length === 0) {
+                container.innerHTML = '<div style="color:rgba(255,255,255,0.5); font-size:12px;">No media in CSV</div>';
+                return;
+            }
+
+            media.forEach((item, idx) => {
+                const mediaBox = document.createElement('div');
+                mediaBox.style.cssText = 'padding:12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:6px; margin-bottom:8px;';
+                
+                let typeLabel = 'Link';
+                if (item.type === 'youtube') typeLabel = 'YouTube';
+                else if (item.type === 'instagram') typeLabel = 'Instagram';
+                
+                mediaBox.innerHTML = `
+                    <div style="margin-bottom:8px;">
+                        <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">Type: ${typeLabel}</label>
+                    </div>
+                    <div style="margin-bottom:8px;">
+                        <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">Title</label>
+                        <input type="text" class="mediaTitle" value="${item.title || ''}" style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;" onchange="updateConsultantSectionVisibility()">
+                    </div>
+                    <div>
+                        <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">URL</label>
+                        <input type="text" class="mediaUrl" value="${item.url || ''}" style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;" onchange="updateConsultantSectionVisibility()">
+                    </div>
+                `;
+                container.appendChild(mediaBox);
+            });
+        }
+
         // Update section visibility and send to backend
         async function updateConsultantSectionVisibility() {
             try {
