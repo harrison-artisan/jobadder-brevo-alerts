@@ -8189,28 +8189,43 @@
                     life_update_body: document.getElementById('editLifeUpdateBody').value
                 };
 
-                // Build Instagram grid from uploaded images
+                // Collect personal update images
+                const lifeUpdateImages = [];
+                for (let i = 1; i <= 3; i++) {
+                    const input = document.getElementById(`lifeUpdateImage${i}`);
+                    if (input.files && input.files[0]) {
+                        const reader = new FileReader();
+                        await new Promise((resolve) => {
+                            reader.onload = (e) => {
+                                lifeUpdateImages.push(e.target.result);
+                                resolve();
+                            };
+                            reader.readAsDataURL(input.files[0]);
+                        });
+                    }
+                }
+
+                // Build Instagram grid from uploaded images (single caption for all)
                 const instagram_grid = {
                     has_grid: false,
-                    images: []
+                    images: [],
+                    caption: document.getElementById('igCaption').value
                 };
 
                 // Check if any images are uploaded
                 let hasImages = false;
                 for (let i = 1; i <= 4; i++) {
                     const input = document.getElementById(`igImage${i}`);
-                    const caption = document.getElementById(`igCaption${i}`).value;
                     if (input.files && input.files[0]) {
                         hasImages = true;
                         const reader = new FileReader();
-                        reader.onload = (e) => {
-                            instagram_grid.images.push({
-                                url: e.target.result,
-                                caption: caption,
-                                link: ''
-                            });
-                        };
-                        reader.readAsDataURL(input.files[0]);
+                        await new Promise((resolve) => {
+                            reader.onload = (e) => {
+                                instagram_grid.images.push(e.target.result);
+                                resolve();
+                            };
+                            reader.readAsDataURL(input.files[0]);
+                        });
                     }
                 }
 
@@ -8218,11 +8233,17 @@
                     instagram_grid.has_grid = true;
                 }
 
+                // Collect event edits
+                const events = collectEventEdits();
+
+                // Collect media edits
+                const media = collectMediaEdits();
+
                 // Send update to backend
                 const response = await fetch('/api/consultant/update-sections', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sections, instagram_grid, editable })
+                    body: JSON.stringify({ sections, instagram_grid, editable, lifeUpdateImages, events, media })
                 });
 
                 const data = await response.json();
