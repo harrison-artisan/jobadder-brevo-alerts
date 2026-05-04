@@ -1916,77 +1916,112 @@
 
                 <!-- Edit Sections Panel (shown after CSV parse) -->
                 <div id="consultantEditSectionsPanel" style="display:none; margin-top:20px; padding:20px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:10px;">
-                    <h3 style="margin:0 0 16px 0; color:white; font-size:15px;">Edit Sections</h3>
+                    <h3 style="margin:0 0 20px 0; color:white; font-size:16px; font-weight:700;">Edit & Customize Newsletter</h3>
                     
-                    <!-- Section Toggles -->
-                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:20px;">
-                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:rgba(255,255,255,0.8); font-size:13px;">
-                            <input type="checkbox" id="toggleIndustryInsight" checked style="cursor:pointer;" onchange="updateConsultantSectionVisibility()">
+                    <!-- INDUSTRY INSIGHT SECTION -->
+                    <div style="margin-bottom:24px; padding:16px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:8px;">
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:rgba(255,255,255,0.9); font-size:13px; font-weight:600; margin-bottom:12px;">
+                            <input type="checkbox" id="toggleIndustryInsight" checked style="cursor:pointer; width:18px; height:18px;" onchange="updateConsultantSectionVisibility()">
                             <span>Industry Insight</span>
                         </label>
-                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:rgba(255,255,255,0.8); font-size:13px;">
-                            <input type="checkbox" id="toggleLifeUpdate" checked style="cursor:pointer;" onchange="updateConsultantSectionVisibility()">
-                            <span>Personal Update</span>
-                        </label>
-                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:rgba(255,255,255,0.8); font-size:13px;">
-                            <input type="checkbox" id="toggleArticles" checked style="cursor:pointer;" onchange="updateConsultantSectionVisibility()">
-                            <span>Articles</span>
-                        </label>
-                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:rgba(255,255,255,0.8); font-size:13px;">
-                            <input type="checkbox" id="toggleMedia" style="cursor:pointer;" onchange="updateConsultantSectionVisibility()">
-                            <span>Media</span>
-                        </label>
-                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:rgba(255,255,255,0.8); font-size:13px;">
-                            <input type="checkbox" id="toggleEvents" checked style="cursor:pointer;" onchange="updateConsultantSectionVisibility()">
-                            <span>Events</span>
-                        </label>
-                    </div>
-
-                    <!-- Editable Content Blocks -->
-                    <div style="margin-bottom:20px;">
-                        <div style="margin-bottom:12px;">
-                            <label style="display:block; color:rgba(255,255,255,0.5); font-size:11px; margin-bottom:4px; text-transform:uppercase;">Industry Insight Heading</label>
+                        <div style="margin-bottom:10px;">
+                            <label style="display:block; color:rgba(255,255,255,0.5); font-size:11px; margin-bottom:4px; text-transform:uppercase;">Heading</label>
                             <input type="text" id="editIndustryInsightHeading" style="width:100%; padding:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:13px; box-sizing:border-box;" onchange="updateConsultantSectionVisibility()">
                         </div>
-                        <div style="margin-bottom:12px;">
-                            <label style="display:block; color:rgba(255,255,255,0.5); font-size:11px; margin-bottom:4px; text-transform:uppercase;">Industry Insight Body</label>
+                        <div>
+                            <label style="display:block; color:rgba(255,255,255,0.5); font-size:11px; margin-bottom:4px; text-transform:uppercase;">Content</label>
                             <textarea id="editIndustryInsightBody" rows="3" style="width:100%; padding:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:13px; box-sizing:border-box; resize:vertical;" onchange="updateConsultantSectionVisibility()"></textarea>
-                        </div>
-                        <div style="margin-bottom:12px;">
-                            <label style="display:block; color:rgba(255,255,255,0.5); font-size:11px; margin-bottom:4px; text-transform:uppercase;">Personal Update Heading</label>
-                            <input type="text" id="editLifeUpdateHeading" style="width:100%; padding:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:13px; box-sizing:border-box;" onchange="updateConsultantSectionVisibility()">
-                        </div>
-                        <div style="margin-bottom:12px;">
-                            <label style="display:block; color:rgba(255,255,255,0.5); font-size:11px; margin-bottom:4px; text-transform:uppercase;">Personal Update Body</label>
-                            <textarea id="editLifeUpdateBody" rows="3" style="width:100%; padding:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:13px; box-sizing:border-box; resize:vertical;" onchange="updateConsultantSectionVisibility()"></textarea>
                         </div>
                     </div>
 
-                    <!-- Instagram Grid Uploader -->
-                    <div style="margin-bottom:20px; padding:16px; background:rgba(189,32,61,0.1); border:1px solid rgba(189,32,61,0.3); border-radius:8px;">
-                        <h4 style="margin:0 0 12px 0; color:white; font-size:13px;">Instagram Grid (4 Images)</h4>
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <!-- PERSONAL UPDATE SECTION -->
+                    <div style="margin-bottom:24px; padding:16px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:8px;">
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:rgba(255,255,255,0.9); font-size:13px; font-weight:600; margin-bottom:12px;">
+                            <input type="checkbox" id="toggleLifeUpdate" checked style="cursor:pointer; width:18px; height:18px;" onchange="updateConsultantSectionVisibility()">
+                            <span>Personal Update</span>
+                        </label>
+                        <div style="margin-bottom:10px;">
+                            <label style="display:block; color:rgba(255,255,255,0.5); font-size:11px; margin-bottom:4px; text-transform:uppercase;">Heading</label>
+                            <input type="text" id="editLifeUpdateHeading" style="width:100%; padding:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:13px; box-sizing:border-box;" onchange="updateConsultantSectionVisibility()">
+                        </div>
+                        <div style="margin-bottom:10px;">
+                            <label style="display:block; color:rgba(255,255,255,0.5); font-size:11px; margin-bottom:4px; text-transform:uppercase;">Content</label>
+                            <textarea id="editLifeUpdateBody" rows="3" style="width:100%; padding:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:13px; box-sizing:border-box; resize:vertical;" onchange="updateConsultantSectionVisibility()"></textarea>
+                        </div>
+                        <div>
+                            <label style="display:block; color:rgba(255,255,255,0.5); font-size:11px; margin-bottom:8px; text-transform:uppercase;">Add Photos (Optional)</label>
+                            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
+                                <div style="text-align:center;">
+                                    <input type="file" id="lifeUpdateImage1" accept="image/*" style="display:none;" onchange="previewLifeUpdateImage(1)">
+                                    <div id="lifeUpdatePreview1" onclick="document.getElementById('lifeUpdateImage1').click();" style="width:100%; aspect-ratio:1; background:rgba(255,255,255,0.08); border:2px dashed rgba(255,255,255,0.2); border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:24px; color:rgba(255,255,255,0.3);">+</div>
+                                </div>
+                                <div style="text-align:center;">
+                                    <input type="file" id="lifeUpdateImage2" accept="image/*" style="display:none;" onchange="previewLifeUpdateImage(2)">
+                                    <div id="lifeUpdatePreview2" onclick="document.getElementById('lifeUpdateImage2').click();" style="width:100%; aspect-ratio:1; background:rgba(255,255,255,0.08); border:2px dashed rgba(255,255,255,0.2); border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:24px; color:rgba(255,255,255,0.3);">+</div>
+                                </div>
+                                <div style="text-align:center;">
+                                    <input type="file" id="lifeUpdateImage3" accept="image/*" style="display:none;" onchange="previewLifeUpdateImage(3)">
+                                    <div id="lifeUpdatePreview3" onclick="document.getElementById('lifeUpdateImage3').click();" style="width:100%; aspect-ratio:1; background:rgba(255,255,255,0.08); border:2px dashed rgba(255,255,255,0.2); border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:24px; color:rgba(255,255,255,0.3);">+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- INSTAGRAM SECTION -->
+                    <div style="margin-bottom:24px; padding:16px; background:rgba(189,32,61,0.1); border:1px solid rgba(189,32,61,0.3); border-radius:8px;">
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:rgba(255,255,255,0.9); font-size:13px; font-weight:600; margin-bottom:12px;">
+                            <input type="checkbox" id="toggleInstagram" style="cursor:pointer; width:18px; height:18px;" onchange="updateConsultantSectionVisibility()">
+                            <span>Instagram Grid</span>
+                        </label>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
                             <div style="text-align:center;">
                                 <input type="file" id="igImage1" accept="image/*" style="display:none;" onchange="previewInstagramImage(1)">
-                                <div id="igPreview1" onclick="document.getElementById('igImage1').click();" style="width:100%; aspect-ratio:1; background:rgba(255,255,255,0.08); border:2px dashed rgba(255,255,255,0.2); border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:28px; color:rgba(255,255,255,0.3);">+</div>
-                                <input type="text" id="igCaption1" placeholder="Caption" style="width:100%; margin-top:8px; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:12px; box-sizing:border-box;">
+                                <div id="igPreview1" onclick="document.getElementById('igImage1').click();" style="width:100%; aspect-ratio:1; background:rgba(255,255,255,0.08); border:2px dashed rgba(255,255,255,0.2); border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:24px; color:rgba(255,255,255,0.3);">+</div>
                             </div>
                             <div style="text-align:center;">
                                 <input type="file" id="igImage2" accept="image/*" style="display:none;" onchange="previewInstagramImage(2)">
-                                <div id="igPreview2" onclick="document.getElementById('igImage2').click();" style="width:100%; aspect-ratio:1; background:rgba(255,255,255,0.08); border:2px dashed rgba(255,255,255,0.2); border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:28px; color:rgba(255,255,255,0.3);">+</div>
-                                <input type="text" id="igCaption2" placeholder="Caption" style="width:100%; margin-top:8px; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:12px; box-sizing:border-box;">
+                                <div id="igPreview2" onclick="document.getElementById('igImage2').click();" style="width:100%; aspect-ratio:1; background:rgba(255,255,255,0.08); border:2px dashed rgba(255,255,255,0.2); border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:24px; color:rgba(255,255,255,0.3);">+</div>
                             </div>
                             <div style="text-align:center;">
                                 <input type="file" id="igImage3" accept="image/*" style="display:none;" onchange="previewInstagramImage(3)">
-                                <div id="igPreview3" onclick="document.getElementById('igImage3').click();" style="width:100%; aspect-ratio:1; background:rgba(255,255,255,0.08); border:2px dashed rgba(255,255,255,0.2); border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:28px; color:rgba(255,255,255,0.3);">+</div>
-                                <input type="text" id="igCaption3" placeholder="Caption" style="width:100%; margin-top:8px; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:12px; box-sizing:border-box;">
+                                <div id="igPreview3" onclick="document.getElementById('igImage3').click();" style="width:100%; aspect-ratio:1; background:rgba(255,255,255,0.08); border:2px dashed rgba(255,255,255,0.2); border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:24px; color:rgba(255,255,255,0.3);">+</div>
                             </div>
                             <div style="text-align:center;">
                                 <input type="file" id="igImage4" accept="image/*" style="display:none;" onchange="previewInstagramImage(4)">
-                                <div id="igPreview4" onclick="document.getElementById('igImage4').click();" style="width:100%; aspect-ratio:1; background:rgba(255,255,255,0.08); border:2px dashed rgba(255,255,255,0.2); border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:28px; color:rgba(255,255,255,0.3);">+</div>
-                                <input type="text" id="igCaption4" placeholder="Caption" style="width:100%; margin-top:8px; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:12px; box-sizing:border-box;">
+                                <div id="igPreview4" onclick="document.getElementById('igImage4').click();" style="width:100%; aspect-ratio:1; background:rgba(255,255,255,0.08); border:2px dashed rgba(255,255,255,0.2); border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:24px; color:rgba(255,255,255,0.3);">+</div>
                             </div>
                         </div>
+                        <div>
+                            <label style="display:block; color:rgba(255,255,255,0.5); font-size:11px; margin-bottom:4px; text-transform:uppercase;">Caption (All 4 Images)</label>
+                            <input type="text" id="igCaption" placeholder="Add a caption for the Instagram grid" style="width:100%; padding:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:13px; box-sizing:border-box;" onchange="updateConsultantSectionVisibility()">
+                        </div>
+                    </div>
+
+                    <!-- ARTICLES SECTION -->
+                    <div style="margin-bottom:24px; padding:16px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:8px;">
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:rgba(255,255,255,0.9); font-size:13px; font-weight:600; margin-bottom:12px;">
+                            <input type="checkbox" id="toggleArticles" checked style="cursor:pointer; width:18px; height:18px;" onchange="updateConsultantSectionVisibility()">
+                            <span>Articles</span>
+                        </label>
+                        <div id="articlesEditContainer" style="color:rgba(255,255,255,0.6); font-size:12px;">Articles will be auto-populated from CSV</div>
+                    </div>
+
+                    <!-- EVENTS SECTION -->
+                    <div style="margin-bottom:24px; padding:16px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:8px;">
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:rgba(255,255,255,0.9); font-size:13px; font-weight:600; margin-bottom:12px;">
+                            <input type="checkbox" id="toggleEvents" checked style="cursor:pointer; width:18px; height:18px;" onchange="updateConsultantSectionVisibility()">
+                            <span>Events</span>
+                        </label>
+                        <div id="eventsEditContainer" style="display:grid; gap:10px;"></div>
+                    </div>
+
+                    <!-- MEDIA SECTION -->
+                    <div style="margin-bottom:24px; padding:16px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:8px;">
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:rgba(255,255,255,0.9); font-size:13px; font-weight:600; margin-bottom:12px;">
+                            <input type="checkbox" id="toggleMedia" style="cursor:pointer; width:18px; height:18px;" onchange="updateConsultantSectionVisibility()">
+                            <span>Media (YouTube, Links, etc.)</span>
+                        </label>
+                        <div id="mediaEditContainer" style="color:rgba(255,255,255,0.6); font-size:12px;">Media will be auto-populated from CSV</div>
                     </div>
                 </div>
             </div>
