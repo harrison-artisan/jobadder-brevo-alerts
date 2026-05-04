@@ -1913,58 +1913,6 @@
                         Reset
                     </button>
                 </div>
-
-                <!-- Edit Sections Panel (shown after CSV parse) -->
-                <div id="consultantEditSectionsPanel" style="display:none; margin-top:20px; padding:20px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:10px;">
-                    <h3 style="margin:0 0 16px 0; color:white; font-size:15px;">Edit Sections</h3>
-                    
-                    <!-- Section Toggles -->
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px;">
-                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:rgba(255,255,255,0.8); font-size:13px;">
-                            <input type="checkbox" id="toggleIndustryInsight" checked style="cursor:pointer;" onchange="updateConsultantSectionVisibility()">
-                            <span>Industry Insight</span>
-                        </label>
-                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:rgba(255,255,255,0.8); font-size:13px;">
-                            <input type="checkbox" id="toggleLifeUpdate" checked style="cursor:pointer;" onchange="updateConsultantSectionVisibility()">
-                            <span>Personal Update</span>
-                        </label>
-                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:rgba(255,255,255,0.8); font-size:13px;">
-                            <input type="checkbox" id="toggleArticles" checked style="cursor:pointer;" onchange="updateConsultantSectionVisibility()">
-                            <span>Articles</span>
-                        </label>
-                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:rgba(255,255,255,0.8); font-size:13px;">
-                            <input type="checkbox" id="toggleMedia" style="cursor:pointer;" onchange="updateConsultantSectionVisibility()">
-                            <span>Media</span>
-                        </label>
-                    </div>
-
-                    <!-- Instagram Grid Uploader -->
-                    <div style="margin-bottom:20px; padding:16px; background:rgba(189,32,61,0.1); border:1px solid rgba(189,32,61,0.3); border-radius:8px;">
-                        <h4 style="margin:0 0 12px 0; color:white; font-size:13px;">Instagram Grid (4 Images)</h4>
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                            <div style="text-align:center;">
-                                <input type="file" id="igImage1" accept="image/*" style="display:none;" onchange="previewInstagramImage(1)">
-                                <div id="igPreview1" onclick="document.getElementById('igImage1').click();" style="width:100%; aspect-ratio:1; background:rgba(255,255,255,0.08); border:2px dashed rgba(255,255,255,0.2); border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:28px; color:rgba(255,255,255,0.3);">+</div>
-                                <input type="text" id="igCaption1" placeholder="Caption" style="width:100%; margin-top:8px; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:12px; box-sizing:border-box;">
-                            </div>
-                            <div style="text-align:center;">
-                                <input type="file" id="igImage2" accept="image/*" style="display:none;" onchange="previewInstagramImage(2)">
-                                <div id="igPreview2" onclick="document.getElementById('igImage2').click();" style="width:100%; aspect-ratio:1; background:rgba(255,255,255,0.08); border:2px dashed rgba(255,255,255,0.2); border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:28px; color:rgba(255,255,255,0.3);">+</div>
-                                <input type="text" id="igCaption2" placeholder="Caption" style="width:100%; margin-top:8px; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:12px; box-sizing:border-box;">
-                            </div>
-                            <div style="text-align:center;">
-                                <input type="file" id="igImage3" accept="image/*" style="display:none;" onchange="previewInstagramImage(3)">
-                                <div id="igPreview3" onclick="document.getElementById('igImage3').click();" style="width:100%; aspect-ratio:1; background:rgba(255,255,255,0.08); border:2px dashed rgba(255,255,255,0.2); border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:28px; color:rgba(255,255,255,0.3);">+</div>
-                                <input type="text" id="igCaption3" placeholder="Caption" style="width:100%; margin-top:8px; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:12px; box-sizing:border-box;">
-                            </div>
-                            <div style="text-align:center;">
-                                <input type="file" id="igImage4" accept="image/*" style="display:none;" onchange="previewInstagramImage(4)">
-                                <div id="igPreview4" onclick="document.getElementById('igImage4').click();" style="width:100%; aspect-ratio:1; background:rgba(255,255,255,0.08); border:2px dashed rgba(255,255,255,0.2); border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:28px; color:rgba(255,255,255,0.3);">+</div>
-                                <input type="text" id="igCaption4" placeholder="Caption" style="width:100%; margin-top:8px; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:12px; box-sizing:border-box;">
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- Step 2: Recipient Selector + Actions -->
@@ -7939,7 +7887,6 @@
                     document.getElementById('btnSendConsultant').disabled = false;
                     document.getElementById('btnScheduleConsultant').disabled = false;
                 }
-                showConsultantEditPanel();
                 loadPreview('/api/preview/consultant');
                 showToast('Newsletter built for ' + data.consultant + '!', 'success');
             } catch (error) {
@@ -7951,92 +7898,7 @@
             }
         }
 
-        // Show/hide the edit sections panel after CSV parse
-        function showConsultantEditPanel() {
-            document.getElementById('consultantEditSectionsPanel').style.display = 'block';
-        }
-
-        // Hide the edit sections panel
-        function hideConsultantEditPanel() {
-            document.getElementById('consultantEditSectionsPanel').style.display = 'none';
-        }
-
-        // Preview Instagram image in the grid
-        function previewInstagramImage(index) {
-            const input = document.getElementById(`igImage${index}`);
-            const preview = document.getElementById(`igPreview${index}`);
-            
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    preview.style.backgroundImage = `url('${e.target.result}')`;
-                    preview.style.backgroundSize = 'cover';
-                    preview.style.backgroundPosition = 'center';
-                    preview.textContent = '';
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        // Update section visibility and send to backend
-        async function updateConsultantSectionVisibility() {
-            try {
-                const sections = {
-                    industry_insight: document.getElementById('toggleIndustryInsight').checked,
-                    life_update: document.getElementById('toggleLifeUpdate').checked,
-                    articles: document.getElementById('toggleArticles').checked,
-                    media: document.getElementById('toggleMedia').checked
-                };
-
-                // Build Instagram grid from uploaded images
-                const instagram_grid = {
-                    has_grid: false,
-                    images: []
-                };
-
-                // Check if any images are uploaded
-                let hasImages = false;
-                for (let i = 1; i <= 4; i++) {
-                    const input = document.getElementById(`igImage${i}`);
-                    const caption = document.getElementById(`igCaption${i}`).value;
-                    if (input.files && input.files[0]) {
-                        hasImages = true;
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            instagram_grid.images.push({
-                                url: e.target.result,
-                                caption: caption,
-                                link: ''
-                            });
-                        };
-                        reader.readAsDataURL(input.files[0]);
-                    }
-                }
-
-                if (hasImages) {
-                    instagram_grid.has_grid = true;
-                }
-
-                // Send update to backend
-                const response = await fetch('/api/consultant/update-sections', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sections, instagram_grid })
-                });
-
-                const data = await response.json();
-                if (data.success) {
-                    console.log('✅ Sections updated');
-                    loadPreview('/api/preview/consultant');
-                } else {
-                    showToast('Failed to update sections: ' + data.message, 'error');
-                }
-            } catch (error) {
-                showToast('Error updating sections: ' + error.message, 'error');
-            }
-        }
-
-        // Legacy stub — kept so any remaining references don't throw
+        // Legacy stub — kept so any remaining references don’t throw
         function onConsultantJsonInput() {}
         async function parseConsultantJSON() { await uploadConsultantCsv(); }
 
@@ -8077,8 +7939,6 @@
                 document.getElementById('btnRemoveConsultantRecipient').style.display = 'none';
                 // Clear scheduled box
                 updateConsultantScheduledBox(null);
-                // Hide edit panel
-                hideConsultantEditPanel();
                 // Clear preview
                 loadPreview(null);
                 showToast('Consultant state reset.', 'info');

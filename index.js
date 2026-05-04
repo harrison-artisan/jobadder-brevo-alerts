@@ -1438,6 +1438,11 @@ app.post('/api/consultant/cancel-schedule', (req, res) => {
   consultantController.cancelConsultantSchedule(req, res);
 });
 
+// POST /api/consultant/update-sections - Update section visibility and Instagram grid
+app.post('/api/consultant/update-sections', (req, res) => {
+  consultantController.updateSections(req, res);
+});
+
 // ============================================================
 // Instagram Session Routes
 // ============================================================
