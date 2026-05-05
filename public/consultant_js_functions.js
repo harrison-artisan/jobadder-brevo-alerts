@@ -95,10 +95,11 @@
                 if (item.type === 'youtube') typeLabel = 'YouTube Video';
                 else if (item.type === 'instagram') typeLabel = 'Instagram Post';
                 
-                mediaBox.innerHTML = `
-                    <div style="margin-bottom:8px;">
-                        <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">Type: ${typeLabel}</label>
-                    </div>
+	                mediaBox.innerHTML = `
+	                    <div style="margin-bottom:8px;">
+	                        <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">Type: ${typeLabel}</label>
+	                        <input type="hidden" class="mediaType" value="${item.type || 'link'}">
+	                    </div>
                     <div style="margin-bottom:8px;">
                         <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">Title</label>
                         <input type="text" class="mediaTitle" value="${item.title || ''}" style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;" onchange="updateConsultantSectionVisibility()">
@@ -185,15 +186,16 @@
                     });
                 });
 
-                // 6. Media
-                const media = [];
-                const mediaBoxes = document.querySelectorAll('#mediaEditContainer > div');
-                mediaBoxes.forEach(box => {
-                    media.push({
-                        title: box.querySelector('.mediaTitle')?.value || '',
-                        url: box.querySelector('.mediaUrl')?.value || ''
-                    });
-                });
+	                // 6. Media
+	                const media = [];
+	                const mediaBoxes = document.querySelectorAll('#mediaEditContainer > div');
+	                mediaBoxes.forEach(box => {
+	                    media.push({
+	                        title: box.querySelector('.mediaTitle')?.value || '',
+	                        url: box.querySelector('.mediaUrl')?.value || '',
+	                        type: box.querySelector('.mediaType')?.value || 'link'
+	                    });
+	                });
 
                 // Send update to backend
                 const payload = { 
