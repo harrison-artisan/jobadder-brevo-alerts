@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>{{ params.consultant.newsletter_name }} — Artisan</title>
+  
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;900&display=swap" rel="stylesheet">
   <style type="text/css">
     /* ===== MOBILE RESPONSIVE ===== */
@@ -106,7 +106,7 @@
 <body style="margin:0;padding:0;font-family:Arial,sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background-color:#f5f5f5;-webkit-font-smoothing:antialiased;">
 
   <!-- Preheader -->
-  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">{{ params.content.preheader_text }}</div>
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">{{params.content.preheader_text}}</div>
 
   <!-- Outer wrapper -->
   <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" class="outer-wrapper" style="background-color:#f5f5f5;padding:40px 20px;">
@@ -129,8 +129,8 @@
                     <p style="margin:0 0 14px 0;font-size:12px;color:rgba(255,255,255,0.5);font-weight:600;letter-spacing:0.3px;line-height:1.5;">Creative, Digital and Marketing Recruitment</p>
                     <!-- Newsletter name -->
                     <div style="margin:0;">
-                      <span style="font-size:22px;font-weight:900;color:#ffffff;letter-spacing:0.2px;line-height:1.2;">{{ params.consultant.newsletter_name }}</span><br>
-                      <span style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.5);">by <span style="color:#e05070;">{{ params.consultant.name }}</span></span>
+                      <span style="font-size:22px;font-weight:900;color:#ffffff;letter-spacing:0.2px;line-height:1.2;">{{params.consultant.newsletter_name}}</span><br>
+                      <span style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.5);">by <span style="color:#e05070;">{{params.consultant.name}}</span></span>
                     </div>
                   </td>
                   <!-- Right: Book a meeting card -->
@@ -143,7 +143,7 @@
                           <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
                             <tr>
                               <td>
-                                <a href="{{ params.consultant.calendar_link }}?utm_source=brevo&utm_campaign=CONSULTANT NEWSLETTER - MATHEW HEHIR&utm_medium=email" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:11px 20px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 4px 14px rgba(189,32,61,0.4);">BOOK NOW &#8594;</a>
+                                <a href="{{params.consultant.calendar_link}}?utm_source=brevo&utm_campaign=CONSULTANT NEWSLETTER - MATHEW HEHIR&utm_medium=email" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:11px 20px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 4px 14px rgba(189,32,61,0.4);">BOOK NOW &#8594;</a>
                               </td>
                             </tr>
                           </table>
@@ -164,11 +164,11 @@
                 <tr>
                   <!-- Photo -->
                   <td width="160" valign="middle" align="center" style="padding:22px 0 22px 36px;" class="hero-photo-cell">
-                    <img src="{{ params.consultant.photo }}" alt="{{ params.consultant.name }}" width="120" height="120" style="display:block;border:0;border-radius:50%;width:120px;height:120px;object-fit:cover;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
+                    <img src="{{params.consultant.photo}}" alt="{{params.consultant.name}}" width="120" height="120" style="display:block;border:0;border-radius:50%;width:120px;height:120px;object-fit:cover;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
                     <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" style="margin-top:14px;">
                       <tr>
                         <td>
-                          <a href="{{ params.consultant.linkedin }}?utm_source=brevo&utm_campaign=CONSULTANT NEWSLETTER - MATHEW HEHIR&utm_medium=email" style="display:inline-block;background-color:#0077b5;color:#ffffff;padding:9px 20px;border-radius:20px;text-decoration:none;font-weight:700;font-size:11px;letter-spacing:0.5px;line-height:1;min-width:110px;text-align:center;">
+                          <a href="{{params.consultant.linkedin}}?utm_source=brevo&utm_campaign=CONSULTANT NEWSLETTER - MATHEW HEHIR&utm_medium=email" style="display:inline-block;background-color:#0077b5;color:#ffffff;padding:9px 20px;border-radius:20px;text-decoration:none;font-weight:700;font-size:11px;letter-spacing:0.5px;line-height:1;min-width:110px;text-align:center;">
                             <img src="https://upload.wikimedia.org/wikipedia/commons/c/ca/LinkedIn_logo_initials.png" alt="in" width="14" height="14" style="display:inline-block;border:0;vertical-align:middle;margin-right:7px;border-radius:2px;">
                             <span style="vertical-align:middle;">LINKEDIN</span>
                           </a>
@@ -178,12 +178,12 @@
                   </td>
                   <!-- Details -->
                   <td valign="middle" style="padding:22px 36px 22px 24px;" class="hero-content-cell">
-                    <h1 style="margin:0 0 6px 0;font-size:24px;font-weight:900;color:#1b334d;line-height:1.2;">{{ params.consultant.name }}</h1>
-                    <p style="margin:0 0 18px 0;font-size:13px;font-weight:600;color:#bd203d;letter-spacing:0.3px;">{{ params.consultant.title }}</p>
+                    <h1 style="margin:0 0 6px 0;font-size:24px;font-weight:900;color:#1b334d;line-height:1.2;">{{params.consultant.name}}</h1>
+                    <p style="margin:0 0 18px 0;font-size:13px;font-weight:600;color:#bd203d;letter-spacing:0.3px;">{{params.consultant.title}}</p>
                     <table cellpadding="0" cellspacing="0" border="0" role="presentation">
                       <tr>
                         <td style="padding-bottom:8px;">
-                          <a href="mailto:{{ params.consultant.email }}" style="text-decoration:none;color:#1b334d;font-size:13px;">&#9993; {{ params.consultant.email }}</a>
+                          <a href="mailto:{{params.consultant.email}}" style="text-decoration:none;color:#1b334d;font-size:13px;">&#9993; {{params.consultant.email}}</a>
                         </td>
                       </tr>
                       <tr>
@@ -193,7 +193,7 @@
                       </tr>
                       <tr>
                         <td>
-                          <a href="{{ params.consultant.calendar_link }}?utm_source=brevo&utm_campaign=CONSULTANT NEWSLETTER - MATHEW HEHIR&utm_medium=email" style="text-decoration:none;color:#1b334d;font-size:13px;">&#128197; Book a Meeting</a>
+                          <a href="{{params.consultant.calendar_link}}?utm_source=brevo&utm_campaign=CONSULTANT NEWSLETTER - MATHEW HEHIR&utm_medium=email" style="text-decoration:none;color:#1b334d;font-size:13px;">&#128197; Book a Meeting</a>
                         </td>
                       </tr>
                     </table>
@@ -224,9 +224,9 @@
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#f8faff 0%,#f0f4ff 100%);border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(27,51,77,0.06);">
                 <tr>
                   <td style="padding:32px 32px 28px 32px;">
-                    <p style="margin:0 0 10px 0;font-size:10px;font-weight:700;color:#1b334d;letter-spacing:2.5px;text-transform:uppercase;">From {{ params.consultant.name }}</p>
-                    <h2 style="margin:0 0 16px 0;font-size:22px;font-weight:900;color:#1b334d;line-height:1.3;">{{ params.content.life_update_heading }}</h2>
-                    <p style="margin:0;font-size:14px;line-height:1.8;color:#444444;">{{ params.content.life_update_body }}</p>
+                    <p style="margin:0 0 10px 0;font-size:10px;font-weight:700;color:#1b334d;letter-spacing:2.5px;text-transform:uppercase;">From {{params.consultant.name}}</p>
+                    <h2 style="margin:0 0 16px 0;font-size:22px;font-weight:900;color:#1b334d;line-height:1.3;">{{params.content.life_update_heading}}</h2>
+                    <p style="margin:0;font-size:14px;line-height:1.8;color:#444444;">{{params.content.life_update_body}}</p>
                   </td>
                 </tr>
               </table>
@@ -305,7 +305,7 @@
                         <td width="42" valign="middle" style="padding-right:10px;">
                           <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(45deg,#f09433,#bc1888);border-radius:50%;padding:2px;width:42px;height:42px;">
                             <tr><td align="center" valign="middle" style="background:#fff;border-radius:50%;padding:2px;">
-                              <img src="{{ params.consultant.photo }}" alt="{{ item.handle or params.consultant.name }}" width="34" height="34" style="display:block;border:0;border-radius:50%;width:34px;height:34px;object-fit:cover;">
+                              <img src="{{params.consultant.photo}}" alt="{{ item.handle or params.consultant.name }}" width="34" height="34" style="display:block;border:0;border-radius:50%;width:34px;height:34px;object-fit:cover;">
                             </td></tr>
                           </table>
                         </td>
@@ -635,11 +635,11 @@
                         </td>
                         <td valign="middle" class="cal-text-cell">
                           <p style="margin:0 0 4px 0;font-size:10px;font-weight:700;color:#bd203d;letter-spacing:2px;text-transform:uppercase;">Let&apos;s Connect</p>
-                          <h2 style="margin:0 0 4px 0;font-size:18px;font-weight:900;color:#1b334d;line-height:1.2;">Book a Meeting with {{ params.consultant.name }}</h2>
+                          <h2 style="margin:0 0 4px 0;font-size:18px;font-weight:900;color:#1b334d;line-height:1.2;">Book a Meeting with {{params.consultant.name}}</h2>
                           <p style="margin:0;font-size:13px;color:#666666;line-height:1.5;">Got a role to fill, a career move in mind, or just want to catch up?</p>
                         </td>
                         <td width="150" valign="middle" align="right" style="padding-left:16px;" class="cal-btn-cell">
-                          <a href="{{ params.consultant.calendar_link }}?utm_source=brevo&utm_campaign=CONSULTANT NEWSLETTER - MATHEW HEHIR&utm_medium=email" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:13px 22px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 4px 14px rgba(189,32,61,0.3);white-space:nowrap;">BOOK NOW &#8594;</a>
+                          <a href="{{params.consultant.calendar_link}}?utm_source=brevo&utm_campaign=CONSULTANT NEWSLETTER - MATHEW HEHIR&utm_medium=email" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:13px 22px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 4px 14px rgba(189,32,61,0.3);white-space:nowrap;">BOOK NOW &#8594;</a>
                           <p style="margin:8px 0 0 0;font-size:11px;color:#aaaaaa;text-align:center;font-style:italic;">Or reply to this email</p>
                         </td>
                       </tr>
