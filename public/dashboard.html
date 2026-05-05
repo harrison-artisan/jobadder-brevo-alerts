@@ -7673,9 +7673,6 @@
         // ========== CONSULTANT NEWSLETTER FUNCTIONS (Gemini JSON Paste Workflow) ==========
 
         // Global variables moved to the top of the script block
-        selectedConsultantId = null; // currently selected consultant ID
-        currentProfile = null; // loaded profile from config
-        profileEditOpen = false;
 
         // Segment keyword map — used for auto-selecting the right Brevo segment
         const SEGMENT_KEYWORDS = {
@@ -7832,7 +7829,6 @@
         }
 
         // ---- CSV Upload helpers ----
-        let _csvFile = null;
 
         function onCsvFileSelected(event) {
             const file = event.target.files && event.target.files[0];
