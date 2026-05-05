@@ -1628,7 +1628,7 @@ async function parseCsv(req, res) {
                     life_update_heading: polished.life_update_heading || "",
                     life_update_body: polished.life_update_body || "",
                     life_update_images: [], // Initialize as empty array
-                    instagram_caption: row["Instagram Caption"] || "", // Initialize
+                    instagram_caption: polished.instagram_caption || "",
                     articles: articles.map(a => ({ title: a.title || "", link: a.link || "" })),
                     events: events.map(e => ({ title: e.title || "", url: e.link || "", date: e.date || "" })),
                     media: mediaArray.map(m => ({ type: m.type || "", url: m.url || "", caption: m.caption || "" }))
