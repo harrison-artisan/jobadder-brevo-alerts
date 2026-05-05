@@ -211,6 +211,14 @@
                     body: JSON.stringify(payload)
                 });
 
+                // Safety check for non-JSON response (which causes "Unexpected token <" error)
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    const text = await response.text();
+                    console.error('Server returned non-JSON response:', text);
+                    throw new Error('Server returned an error page. Please check the logs.');
+                }
+
                 const data = await response.json();
                 if (data.success) {
                     console.log('✅ Dashboard state updated');

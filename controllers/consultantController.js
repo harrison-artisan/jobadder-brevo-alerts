@@ -472,11 +472,21 @@ async function parseJSON(req, res) {
 // Brevo's Nunjucks engine requires nested objects (not flat strings)
 // for {{ params.xxx }} substitution to work correctly.
 // ============================================================
-function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCandidate, liveJob) {
+function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCandidate, liveJob, sections = null, instagramGrid = null) {
     // liveJob is pre-fetched from JobAdder (or from Gemini JSON if provided)
     const job = liveJob || parsed.job || {};
     const fallbackImg = 'https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png';
     const fallbackArticleLink = 'https://artisan.com.au/creative-community/';
+
+    // If sections not provided, default to all true (initial build)
+    const activeSections = sections || {
+        industry_insight: true,
+        life_update: true,
+        instagram: true,
+        events: true,
+        media: true,
+        articles: true
+    };
 
     return {
         // Consultant identity — nested object
@@ -493,16 +503,17 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
 
         // Email content — nested object
         content: {
-            preheader_text: parsed.preheader_text || `${parsed.industry_insight.heading} — from ${consultant.name} at Artisan`,
-            industry_insight_heading: parsed.industry_insight.heading,
-            industry_insight_body: parsed.industry_insight.body,
-            life_update_heading: parsed.life_update.heading,
-            life_update_body: parsed.life_update.body
+            preheader_text: parsed.preheader_text || (parsed.industry_insight ? `${parsed.industry_insight.heading} — from ${consultant.name} at Artisan` : ''),
+            industry_insight_heading: parsed.industry_insight ? parsed.industry_insight.heading : '',
+            industry_insight_body: parsed.industry_insight ? parsed.industry_insight.body : '',
+            life_update_heading: parsed.life_update ? parsed.life_update.heading : '',
+            life_update_body: parsed.life_update ? parsed.life_update.body : '',
+            life_update_images: Array.isArray(mediaArray) ? mediaArray.filter(m => m.type === 'life_update_image').map(m => m.url) : []
         },
 
         // Personal media — nested object with items array
         media: {
-            has_media: Array.isArray(mediaArray) && mediaArray.length > 0,
+            has_media: activeSections.media && Array.isArray(mediaArray) && mediaArray.length > 0,
             items: Array.isArray(mediaArray) ? mediaArray : []
         },
 
@@ -525,14 +536,20 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
         },
 
         // Creative Community articles — array of objects (iterated with {% for %})
-        articles: (articles || []).slice(0, 3).map(a => ({
+        articles: activeSections.articles ? (articles || []).slice(0, 3).map(a => ({
             title: a.title || '',
             image: a.image || fallbackImg,
             link: a.link || fallbackArticleLink
-        })),
+        })) : [],
 
         // Events — array of objects
-        events: Array.isArray(parsed.events) ? parsed.events : []
+        events: activeSections.events ? (Array.isArray(parsed.events) ? parsed.events : []) : [],
+        
+        // Sections visibility flags
+        sections: activeSections,
+        
+        // Instagram grid
+        instagram_grid: instagramGrid
     };
 }
 
@@ -1656,6 +1673,99 @@ async function parseCsv(req, res) {
     }
 }
 
+async function updateSections(req, res) {
+    try {
+        const { sections, industry_insight_content, life_update_content, instagram_grid, events, media } = req.body;
+        const state = readState();
+        if (state.state === 'EMPTY') {
+            return res.status(400).json({ success: false, message: 'No newsletter parsed yet' });
+        }
+
+        // Update sections visibility
+        if (sections) {
+            state.content.sections = { ...state.content.sections, ...sections };
+        }
+
+        // Update Industry Insight
+        if (industry_insight_content) {
+            state.content.industry_insight = {
+                heading: industry_insight_content.heading || state.content.industry_insight.heading,
+                body: industry_insight_content.body || state.content.industry_insight.body
+            };
+        }
+
+        // Update Life Update
+        if (life_update_content) {
+            state.content.life_update = {
+                heading: life_update_content.heading || state.content.life_update.heading,
+                body: life_update_content.body || state.content.life_update.body
+            };
+            if (life_update_content.images && life_update_content.images.length > 0) {
+                state.content.life_update_images = life_update_content.images;
+            }
+        }
+
+        // Update Instagram grid
+        if (instagram_grid) {
+            state.content.instagram_grid = instagram_grid;
+        }
+
+        // Update Events
+        if (events) {
+            state.content.events = events.map(e => ({
+                title: e.title,
+                date: e.date,
+                link: e.url,
+                // preserve day/month parsing if date changed
+                ...(e.date ? parseEventDate(e.date) : {})
+            }));
+        }
+
+        // Update Media
+        if (media) {
+            state.content.media = media.map(m => ({
+                title: m.title,
+                url: m.url,
+                type: m.type || 'link'
+            }));
+        }
+
+        // Rebuild template params for preview/send
+        const consultantConfig = state.consultant;
+        const articles = state.content.articles;
+        const alistCandidate = state.content.alist_candidate;
+        const liveJob = state.content.live_job;
+
+        const parsedForTemplate = {
+            consultant: consultantConfig.id,
+            preheader_text: `${state.content.industry_insight.heading} — from ${consultantConfig.name} at Artisan`,
+            industry_insight: state.content.industry_insight,
+            life_update: state.content.life_update,
+            events: state.content.events,
+            media: state.content.media
+        };
+
+        state.templateParams = buildTemplateParams(
+            consultantConfig, 
+            parsedForTemplate, 
+            state.content.life_update_images || [], 
+            articles, 
+            alistCandidate, 
+            liveJob
+        );
+        
+        // Ensure templateParams sections are updated
+        state.templateParams.sections = state.content.sections;
+        if (instagram_grid) state.templateParams.instagram_grid = instagram_grid;
+
+        writeState(state);
+        res.json({ success: true, message: 'Sections updated successfully', state });
+    } catch (error) {
+        console.error('❌ Error updating sections:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+}
+
 module.exports = {
     getState,
     getConsultantList,
@@ -1669,5 +1779,6 @@ module.exports = {
     resetState,
     scheduleConsultant,
     cancelConsultantSchedule,
-    restoreConsultantSchedule
+    restoreConsultantSchedule,
+    updateSections
 };

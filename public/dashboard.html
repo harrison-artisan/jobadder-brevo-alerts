@@ -1915,7 +1915,10 @@
                 </div>
 
                 <div id="consultantEditSectionsPanel" style="display:none; margin-top:20px; padding:20px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:10px;">
-                    <h3 style="margin:0 0 20px 0; color:white; font-size:16px; font-weight:700;">Edit & Customize Newsletter</h3>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                        <h3 style="margin:0; color:white; font-size:16px; font-weight:700;">Edit & Customize Newsletter</h3>
+                        <button onclick="updateConsultantSectionVisibility()" class="btn btn-success" style="padding:6px 15px; font-size:12px; min-width:auto;">Save Edits</button>
+                    </div>
                     
                     <!-- INDUSTRY INSIGHT SECTION -->
                     <div style="margin-bottom:24px; padding:16px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:8px;">
@@ -8026,27 +8029,20 @@
                 // Show the edit panel first so elements exist
                 if (typeof showConsultantEditPanel === 'function') showConsultantEditPanel();
 
-                // Populate editable fields from the parsed state
-                if (s) {
+                //                // Populate editable fields from the parsed state
+                if (s && s.content) {
+                    const content = s.content;
                     // Populate Industry Insight
-                    if (s.industry_insight_content) {
-                        const h = document.getElementById('editIndustryInsightHeading');
-                        const b = document.getElementById('editIndustryInsightBody');
-                        if (h) h.value = s.industry_insight_content.heading || '';
-                        if (b) b.value = s.industry_insight_content.body || '';
-                    }
+                    const ih = document.getElementById('editIndustryInsightHeading');
+                    const ib = document.getElementById('editIndustryInsightBody');
+                    if (ih) ih.value = (content.industry_insight && content.industry_insight.heading) || '';
+                    if (ib) ib.value = (content.industry_insight && content.industry_insight.body) || '';
                     
                     // Populate Life Update
-                    if (s.life_update_content) {
-                        const h = document.getElementById('editLifeUpdateHeading');
-                        const b = document.getElementById('editLifeUpdateBody');
-                        if (h) h.value = s.life_update_content.heading || '';
-                        if (b) b.value = s.life_update_content.body || '';
-                    }
-                    
-                    // Populate Events and Media
-                    if (typeof populateEventsEditor === 'function') populateEventsEditor(s.events || []);
-                    if (typeof populateMediaEditor === 'function') populateMediaEditor(s.media || []);
+                    const lh = document.getElementById('editLifeUpdateHeading');
+                    const lb = document.getElementById('editLifeUpdateBody');
+                    if (lh) lh.value = (content.life_update && content.life_update.heading) || '';
+                    if (lb) lb.value = (content.life_update && content.life_update.body) || '';
                     
                     // Set toggles
                     if (s.sections) {
@@ -8058,10 +8054,14 @@
                         
                         if (tII) tII.checked = s.sections.industry_insight !== false;
                         if (tLU) tLU.checked = s.sections.life_update !== false;
-                        if (tIG) tIG.checked = !!s.sections.instagram;
+                        if (tIG) tIG.checked = s.sections.instagram !== false;
                         if (tEV) tEV.checked = s.sections.events !== false;
-                        if (tME) tME.checked = !!s.sections.media;
+                        if (tME) tME.checked = s.sections.media !== false;
                     }
+                    
+                    // Populate Events & Media lists
+                    if (typeof populateEventsEditor === 'function') populateEventsEditor(content.events || []);
+                    if (typeof populateMediaEditor === 'function') populateMediaEditor(content.media || []);
                 }
             } catch (error) {
                 errorDiv.textContent = 'Error: ' + error.message;
