@@ -61,15 +61,15 @@
                 eventBox.innerHTML = `
                     <div style="margin-bottom:8px;">
                         <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">Event Title</label>
-                        <input type="text" class="eventTitle" value="${event.title || ''}" style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;" onchange="updateConsultantSectionVisibility()">
+                        <input type="text" class="eventTitle" value="${event.title || ''}" style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;">
                     </div>
                     <div style="margin-bottom:8px;">
                         <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">Date</label>
-                        <input type="text" class="eventDate" value="${event.date || ''}" placeholder="e.g. 15 May 2026" style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;" onchange="updateConsultantSectionVisibility()">
+                        <input type="text" class="eventDate" value="${event.date || ''}" placeholder="e.g. 15 May 2026" style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;">
                     </div>
                     <div>
                         <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">URL (Optional)</label>
-                        <input type="text" class="eventUrl" value="${event.url || ''}" placeholder="https://..." style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;" onchange="updateConsultantSectionVisibility()">
+                        <input type="text" class="eventUrl" value="${event.url || ''}" placeholder="https://..." style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;">
                     </div>
                 `;
                 container.appendChild(eventBox);
@@ -102,11 +102,11 @@
 	                    </div>
                     <div style="margin-bottom:8px;">
                         <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">Title</label>
-                        <input type="text" class="mediaTitle" value="${item.title || ''}" style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;" onchange="updateConsultantSectionVisibility()">
+                        <input type="text" class="mediaTitle" value="${item.title || ''}" style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;">
                     </div>
                     <div>
                         <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">URL</label>
-                        <input type="text" class="mediaUrl" value="${item.url || ''}" style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;" onchange="updateConsultantSectionVisibility()">
+                        <input type="text" class="mediaUrl" value="${item.url || ''}" style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;">
                     </div>
                 `;
                 container.appendChild(mediaBox);
