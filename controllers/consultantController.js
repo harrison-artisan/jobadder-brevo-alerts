@@ -1677,8 +1677,10 @@ async function updateSections(req, res) {
     try {
         const { sections, industry_insight_content, life_update_content, instagram_grid, events, media } = req.body;
         const state = readState();
+        // Allow updating even if state is GENERATED or SENT
         if (state.state === 'EMPTY') {
-            return res.status(400).json({ success: false, message: 'No newsletter parsed yet' });
+            console.log('⚠️ Attempted update on EMPTY state');
+            return res.status(400).json({ success: false, message: 'No newsletter parsed yet. Please upload a CSV first.' });
         }
 
         // Initialize content if missing

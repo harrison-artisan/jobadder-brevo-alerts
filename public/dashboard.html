@@ -1917,7 +1917,6 @@
                 <div id="consultantEditSectionsPanel" style="display:none; margin-top:20px; padding:20px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:10px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                         <h3 style="margin:0; color:white; font-size:16px; font-weight:700;">Edit & Customize Newsletter</h3>
-                        <button onclick="updateConsultantSectionVisibility()" class="btn btn-success" style="padding:6px 15px; font-size:12px; min-width:auto;">Save Edits</button>
                     </div>
                     
                     <!-- INDUSTRY INSIGHT SECTION -->
@@ -2017,15 +2016,22 @@
                         <div id="eventsEditContainer" style="display:grid; gap:10px;"></div>
                     </div>
 
-                    <!-- WORTH READING / MEDIA SECTION -->
+                      <!-- MEDIA SECTION (WORTH READING) -->
                     <div style="margin-bottom:24px; padding:16px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:8px;">
                         <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:rgba(255,255,255,0.9); font-size:13px; font-weight:600; margin-bottom:12px;">
-                            <input type="checkbox" id="toggleMedia" style="cursor:pointer; width:18px; height:18px;" onchange="updateConsultantSectionVisibility()">
+                            <input type="checkbox" id="toggleMedia" checked style="cursor:pointer; width:18px; height:18px;" onchange="updateConsultantSectionVisibility()">
                             <span>Worth Reading / Media</span>
                         </label>
-                        <div id="mediaEditContainer" style="color:rgba(255,255,255,0.6); font-size:12px;">Media will be auto-populated from CSV</div>
+                        <div id="mediaEditContainer">
+                            <!-- Populated by JS -->
+                        </div>
                     </div>
-                </div>
+
+                    <!-- SAVE BUTTON AT BOTTOM -->
+                    <div style="margin-top:20px; border-top:1px solid rgba(255,255,255,0.1); padding-top:20px; text-align:right;">
+                        <button onclick="updateConsultantSectionVisibility()" class="btn btn-success" style="padding:10px 24px; font-size:14px; font-weight:700; box-shadow:0 4px 12px rgba(46,204,113,0.3);">Save All Changes</button>
+                    </div>
+                </div>v>
             </div>
 
             <!-- Articles Section Hidden (Kept for legacy function compatibility) -->
