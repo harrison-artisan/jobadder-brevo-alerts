@@ -452,6 +452,16 @@ app.post('/api/alist/reset', async (req, res) => {
   }
 });
 
+app.post('/api/alist/update-candidates', async (req, res) => {
+  try {
+    const { candidates } = req.body;
+    const result = await candidateAlertsController.updateCandidates(candidates);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // ===============================================
 // XPOSE NEWSLETTER API ENDPOINTS
 // ===============================================

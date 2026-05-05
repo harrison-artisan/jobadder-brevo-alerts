@@ -270,6 +270,36 @@ class CandidateAlertsController {
   }
 
   /**
+   * Update candidate details (title and summary)
+   */
+  async updateCandidates(candidates) {
+    console.log('📝 Updating A-List candidate edits...');
+    try {
+      const state = this.loadState();
+      if (!state || !state.candidates) {
+        throw new Error('No A-List data found to update');
+      }
+
+      // Update the candidates in the state
+      // We expect an array of { index, title, summary }
+      candidates.forEach(edit => {
+        const idx = edit.index - 1; // index is 1-based from frontend
+        if (state.candidates[idx]) {
+          if (edit.title !== undefined) state.candidates[idx].title = edit.title;
+          if (edit.summary !== undefined) state.candidates[idx].summary = edit.summary;
+        }
+      });
+
+      this.saveState(state);
+      console.log('✅ A-List candidate edits saved');
+      return { success: true, message: 'Edits saved successfully', data: state };
+    } catch (error) {
+      console.error('❌ Error updating A-List candidates:', error);
+      return { success: false, message: error.message };
+    }
+  }
+
+  /**
    * Reset state
    */
   resetState() {

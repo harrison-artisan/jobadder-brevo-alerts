@@ -6230,23 +6230,77 @@
 
         function renderCandidates(candidates) {
             const preview = document.getElementById('candidatesPreview');
-            preview.innerHTML = '<div class="candidates-grid">' + 
-                candidates.map((c, i) => `
-                    <div class="candidate-card">
-                        <div class="candidate-header">
-                            <div>
-                                <div class="candidate-number">#${i + 1}</div>
+            preview.innerHTML = `
+                <div class="candidates-grid">
+                    ${candidates.map((c, i) => `
+                        <div class="candidate-card" data-index="${i + 1}">
+                            <div class="candidate-header">
+                                <div>
+                                    <div class="candidate-number">#${i + 1}</div>
+                                </div>
+                                <div style="flex: 1; margin-left: 20px;">
+                                    <div class="candidate-name">${c.name}</div>
+                                    <div style="margin-top: 8px;">
+                                        <label style="font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase;">Job Title</label>
+                                        <input type="text" class="candidate-title-input" value="${c.title}" 
+                                            style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: white; padding: 6px 8px; margin-top: 2px;">
+                                    </div>
+                                    <div class="candidate-experience" style="margin-top: 4px;">${c.experience}</div>
+                                </div>
                             </div>
-                            <div style="flex: 1; margin-left: 20px;">
-                                <div class="candidate-name">${c.name}</div>
-                                <div class="candidate-title">${c.title}</div>
-                                <div class="candidate-experience">${c.experience}</div>
+                            <div style="margin-top: 15px;">
+                                <label style="font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase;">Description</label>
+                                <textarea class="candidate-summary-input" 
+                                    style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: white; padding: 8px; margin-top: 2px; min-height: 100px; resize: vertical; line-height: 1.5;">${c.summary}</textarea>
                             </div>
                         </div>
-                        <div class="candidate-summary">${c.summary}</div>
-                    </div>
-                `).join('') + 
-            '</div>';
+                    `).join('')}
+                </div>
+                <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: flex-end;">
+                    <button class="btn btn-success" id="btnSaveAlistEdits" onclick="saveAlistEdits()">
+                        Save All Changes
+                    </button>
+                </div>
+            `;
+        }
+
+        async function saveAlistEdits() {
+            const btn = document.getElementById('btnSaveAlistEdits');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+
+            const candidateCards = document.querySelectorAll('.candidate-card');
+            const candidates = Array.from(candidateCards).map(card => {
+                return {
+                    index: parseInt(card.getAttribute('data-index')),
+                    title: card.querySelector('.candidate-title-input').value,
+                    summary: card.querySelector('.candidate-summary-input').value
+                };
+            });
+
+            try {
+                const response = await fetch('/api/alist/update-candidates', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ candidates })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('✅ A-List edits saved successfully!', 'success');
+                    showMessage('Edits saved! Preview or send to see changes.', 'success');
+                    // Reload state to ensure everything is synced
+                    await loadAListState();
+                } else {
+                    showToast('❌ Error: ' + (data.message || 'Failed to save edits'), 'error');
+                }
+            } catch (error) {
+                showToast('❌ Error: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
         }
 
         async function generateAList() {
