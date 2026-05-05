@@ -96,16 +96,18 @@ function populateEventsEditor(events) {
     if (events && events.length > 0) {
         events.forEach(event => addEventBox(event));
     } else {
+        // Show 3 empty slots by default
         for(let i=0; i<3; i++) addEventBox();
     }
 
-    if (!document.getElementById('btnAddEvent')) {
-        const addBtn = document.createElement('button');
+    let addBtn = document.getElementById('btnAddEvent');
+    if (!addBtn) {
+        addBtn = document.createElement('button');
         addBtn.id = 'btnAddEvent';
         addBtn.textContent = '+ Add Event';
         addBtn.style.cssText = 'width:100%; padding:10px; background:rgba(255,255,255,0.05); border:1px dashed rgba(255,255,255,0.2); border-radius:8px; color:rgba(255,255,255,0.6); font-size:12px; cursor:pointer; margin-top:5px;';
         addBtn.onclick = () => addEventBox();
-        container.parentElement.appendChild(addBtn);
+        container.insertAdjacentElement('afterend', addBtn);
     }
 }
 
@@ -148,16 +150,19 @@ function populateMediaEditor(mediaItems) {
     if (mediaItems && mediaItems.length > 0) {
         mediaItems.forEach(item => addMediaBox(item));
     } else {
+        // Show 1 empty box by default if none in CSV
         addMediaBox();
     }
 
-    if (!document.getElementById('btnAddMedia')) {
-        const addBtn = document.createElement('button');
+    // Ensure button is always there and correctly placed
+    let addBtn = document.getElementById('btnAddMedia');
+    if (!addBtn) {
+        addBtn = document.createElement('button');
         addBtn.id = 'btnAddMedia';
         addBtn.textContent = '+ Add Worth Reading / Media Item';
         addBtn.style.cssText = 'width:100%; padding:10px; background:rgba(255,255,255,0.05); border:1px dashed rgba(255,255,255,0.2); border-radius:8px; color:rgba(255,255,255,0.6); font-size:12px; cursor:pointer; margin-top:5px;';
         addBtn.onclick = () => addMediaBox();
-        container.parentElement.appendChild(addBtn);
+        container.insertAdjacentElement('afterend', addBtn);
     }
 }
 

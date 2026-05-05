@@ -2032,13 +2032,14 @@
                      <button onclick="updateConsultantSectionVisibility()" class="btn btn-success" style="padding:10px 24px; font-size:14px; font-weight:700; box-shadow:0 4px 12px rgba(46,204,113,0.3);">Save All Changes</button>
                     </div>
                 </div>
-            </div>           <!-- Articles Section Hidden (Kept for legacy function compatibility) -->
+            </div>
+            <!-- Articles Section Hidden (Kept for legacy function compatibility) -->
             <div id="articlesSection" style="display:none;">
                 <div id="articlesEditContainerLegacy"></div>
             </div>
-            <div class="actions-card" id="articlesSection" style="display:none;">
+            <div class="actions-card" id="articlesSectionLegacy" style="display:none;">
                 <h2>Creative Community Articles</h2>
-                <div id="articlesEditContainer"></div>
+                <div id="articlesEditContainerLegacy2"></div>
                 <button class="btn btn-info" onclick="addArticleField()" style="margin-top:15px;">Add Article</button>
             </div>
 
@@ -6241,14 +6242,15 @@
                                     <div style="margin-top: 8px;">
                                         <label style="font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase;">Job Title</label>
                                         <input type="text" class="candidate-title-input" value="${c.title}" 
-                                            style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: color: #1a1a1a; font-weight: 600; padding: 6px 8px; margin-top: 2px; background: white; border: 1px solid #ccc;">                                  </div>
+                                            style="width: 100%; border-radius: 4px; color: #1a1a1a; font-weight: 600; padding: 6px 8px; margin-top: 2px; background: white; border: 1px solid #ccc; box-sizing: border-box;">
+                                    </div>
                                     <div class="candidate-experience" style="margin-top: 4px;">${c.experience}</div>
                                 </div>
                             </div>
                             <div style="margin-top: 15px;">
                                 <label style="font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase;">Description</label>
                                 <textarea class="candidate-summary-input" 
-                                    style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #1a1a1a; font-weight: 400; padding: 8px; margin-top: 2px; min-height: 100px; resize: vertical; line-height: 1.5; background: white; border: 1px solid #ccc;">${c.summary}</textarea>
+                                    style="width: 100%; border-radius: 4px; color: #1a1a1a; font-weight: 400; padding: 8px; margin-top: 2px; min-height: 100px; resize: vertical; line-height: 1.5; background: white; border: 1px solid #ccc; box-sizing: border-box;">${c.summary}</textarea>
                             </div>
                         </div>
                     `).join('')}
@@ -8086,65 +8088,50 @@
                 // Show the edit panel first so elements exist
                 if (typeof showConsultantEditPanel === 'function') showConsultantEditPanel();
 
-                // Populate editable fields from the parsed state (s.state contains the data)
-                const stateObj = s.state || s; 
+                // Use data.state which is the full parsed object
+                const stateObj = data.state;
                 if (stateObj && stateObj.content) {
                     const content = stateObj.content;
-                    // Populate Industry Insight
+                    
+                    // Populate text fields
                     const ih = document.getElementById('editIndustryInsightHeading');
                     const ib = document.getElementById('editIndustryInsightBody');
                     if (ih) ih.value = (content.industry_insight && content.industry_insight.heading) || '';
                     if (ib) ib.value = (content.industry_insight && content.industry_insight.body) || '';
                     
-                    // Populate Life Update
                     const lh = document.getElementById('editLifeUpdateHeading');
                     const lb = document.getElementById('editLifeUpdateBody');
                     if (lh) lh.value = (content.life_update && content.life_update.heading) || '';
                     if (lb) lb.value = (content.life_update && content.life_update.body) || '';
                     
+                    const igCap = document.getElementById('igCaption');
+                    if (igCap) igCap.value = (content.instagram_grid && content.instagram_grid.caption) || '';
+                    
                     // Set toggles
                     const sections = content.sections || {};
-                    const tII = document.getElementById('toggleIndustryInsight');
-                    const tLU = document.getElementById('toggleLifeUpdate');
-                    const tIG = document.getElementById('toggleInstagram');
-                    const tEV = document.getElementById('toggleEvents');
-                    const tME = document.getElementById('toggleMedia');
+                    if (document.getElementById('toggleIndustryInsight')) document.getElementById('toggleIndustryInsight').checked = sections.industry_insight !== false;
+                    if (document.getElementById('toggleLifeUpdate')) document.getElementById('toggleLifeUpdate').checked = sections.life_update !== false;
+                    if (document.getElementById('toggleInstagram')) document.getElementById('toggleInstagram').checked = sections.instagram_grid !== false;
+                    if (document.getElementById('toggleEvents')) document.getElementById('toggleEvents').checked = sections.events !== false;
+                    if (document.getElementById('toggleMedia')) document.getElementById('toggleMedia').checked = sections.media !== false;
                     
-                    if (tII) tII.checked = sections.industry_insight !== false;
-                    if (tLU) tLU.checked = sections.life_update !== false;
-                    if (tIG) tIG.checked = sections.instagram_grid !== false;
-                    if (tEV) tEV.checked = sections.events !== false;
-                    if (tME) tME.checked = sections.media !== false;
-                    
-                    // Populate Events & Media lists
-                    let editorEvents = (content.events || []).map(e => ({
-                        title: e.title || '',
-                        date: (e.day && e.month) ? `${e.day} ${e.month}` : (e.date || ''),
-                        url: e.link || e.url || ''
-                    }));
-                    
-                    // Ensure at least 3 event slots are shown
-                    if (editorEvents.length === 0) {
-                        editorEvents = [
-                            { title: '', date: '', url: '' },
-                            { title: '', date: '', url: '' },
-                            { title: '', date: '', url: '' }
-                        ];
+                    // Populate Lists
+                    if (typeof populateEventsEditor === 'function') {
+                        const evs = content.events || [];
+                        populateEventsEditor(evs.map(e => ({
+                            title: e.title || '',
+                            date: (e.day && e.month) ? `${e.day} ${e.month}` : (e.date || ''),
+                            url: e.link || e.url || ''
+                        })));
                     }
-                    
-                    let editorMedia = (content.media || []).map(m => ({
-                        title: m.title || m.caption || '',
-                        url: m.url || '',
-                        type: m.type || 'link'
-                    }));
-
-                    // Ensure at least 1 media slot is shown
-                    if (editorMedia.length === 0) {
-                        editorMedia = [{ title: '', url: '', type: 'link' }];
+                    if (typeof populateMediaEditor === 'function') {
+                        const meds = content.media || [];
+                        populateMediaEditor(meds.map(m => ({
+                            title: m.title || m.caption || '',
+                            url: m.url || '',
+                            type: m.type || 'link'
+                        })));
                     }
-
-                    if (typeof populateEventsEditor === 'function') populateEventsEditor(editorEvents);
-                    if (typeof populateMediaEditor === 'function') populateMediaEditor(editorMedia);
                     
                     showToast('Edit suite populated with CSV data.', 'info');
                 }
