@@ -223,23 +223,25 @@
                 const events = [];
                 const eventBoxes = document.querySelectorAll('#eventsEditContainer > div');
                 eventBoxes.forEach(box => {
-                    events.push({
-                        title: box.querySelector('.eventTitle')?.value || '',
-                        date: box.querySelector('.eventDate')?.value || '',
-                        url: box.querySelector('.eventUrl')?.value || ''
-                    });
+	                    const title = box.querySelector('.eventTitle')?.value || '';
+	                    const date = box.querySelector('.eventDate')?.value || '';
+	                    const url = box.querySelector('.eventUrl')?.value || '';
+	                    if (title || date || url) {
+	                        events.push({ title, date, url });
+	                    }
                 });
 
 	                // 6. Media
 	                const media = [];
 	                const mediaBoxes = document.querySelectorAll('#mediaEditContainer > div');
-	                mediaBoxes.forEach(box => {
-	                    media.push({
-	                        title: box.querySelector('.mediaTitle')?.value || '',
-	                        url: box.querySelector('.mediaUrl')?.value || '',
-	                        type: box.querySelector('.mediaType')?.value || 'link'
-	                    });
-	                });
+		                mediaBoxes.forEach(box => {
+		                    const title = box.querySelector('.mediaTitle')?.value || '';
+		                    const url = box.querySelector('.mediaUrl')?.value || '';
+		                    const type = box.querySelector('.mediaType')?.value || 'link';
+		                    if (title || url) {
+		                        media.push({ title, url, type });
+		                    }
+		                });
 
                 // Send update to backend
                 const payload = { 
@@ -268,6 +270,7 @@
                 const data = await response.json();
                 if (data.success) {
                     console.log('✅ Dashboard state updated');
+                    if (typeof showToast === 'function') showToast('Changes saved and preview updated!', 'success');
                     if (typeof loadPreview === 'function') {
                         loadPreview('/api/preview/consultant');
                     }

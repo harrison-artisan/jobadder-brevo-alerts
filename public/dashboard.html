@@ -8123,19 +8123,28 @@
                     let editorEvents = (content.events || []).map(e => ({
                         title: e.title || '',
                         date: (e.day && e.month) ? `${e.day} ${e.month}` : (e.date || ''),
-                        url: e.link || ''
+                        url: e.link || e.url || ''
                     }));
                     
                     // Ensure at least 3 event slots are shown
-                    while (editorEvents.length < 3) {
-                        editorEvents.push({ title: '', date: '', url: '' });
+                    if (editorEvents.length === 0) {
+                        editorEvents = [
+                            { title: '', date: '', url: '' },
+                            { title: '', date: '', url: '' },
+                            { title: '', date: '', url: '' }
+                        ];
                     }
                     
-                    const editorMedia = (content.media || []).map(m => ({
+                    let editorMedia = (content.media || []).map(m => ({
                         title: m.title || m.caption || '',
                         url: m.url || '',
                         type: m.type || 'link'
                     }));
+
+                    // Ensure at least 1 media slot is shown
+                    if (editorMedia.length === 0) {
+                        editorMedia = [{ title: '', url: '', type: 'link' }];
+                    }
 
                     if (typeof populateEventsEditor === 'function') populateEventsEditor(editorEvents);
                     if (typeof populateMediaEditor === 'function') populateMediaEditor(editorMedia);
