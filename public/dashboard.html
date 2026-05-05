@@ -1915,6 +1915,13 @@
                 </div>
             </div>
 
+            <!-- Articles Edit Container -->
+            <div class="actions-card" id="articlesSection" style="display:none;">
+                <h2>Creative Community Articles</h2>
+                <div id="articlesEditContainer"></div>
+                <button class="btn btn-info" onclick="addArticleField()" style="margin-top:15px;">Add Article</button>
+            </div>
+
             <!-- Step 2: Recipient Selector + Actions -->
             <div class="actions-card" id="consultantActionsSection">
                 <h2>Step 2 — Send Newsletter</h2>
@@ -7888,7 +7895,12 @@
                     document.getElementById('btnScheduleConsultant').disabled = false;
                 }
                 loadPreview('/api/preview/consultant');
-                populateArticlesEditor(s.content.editable.articles);
+                if (s.content.editable.articles && s.content.editable.articles.length > 0) {
+                    document.getElementById('articlesSection').style.display = 'block';
+                    populateArticlesEditor(s.content.editable.articles);
+                } else {
+                    document.getElementById('articlesSection').style.display = 'none';
+                }
                 showToast('Newsletter built for ' + data.consultant + '!', 'success');
             } catch (error) {
                 errorDiv.textContent = 'Error: ' + error.message;
