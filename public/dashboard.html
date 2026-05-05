@@ -8205,6 +8205,46 @@
             loadPreview('/api/preview/consultant');
         }
 
+        // Image upload handlers for Life Update
+        function previewLifeUpdateImage(index) {
+            const fileInput = document.getElementById('lifeUpdateImage' + index);
+            if (!fileInput || !fileInput.files || !fileInput.files[0]) return;
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const previewElement = document.getElementById('lifeUpdatePreview' + index);
+                if (previewElement) {
+                    previewElement.style.backgroundImage = 'url(' + e.target.result + ')';
+                    previewElement.style.backgroundSize = 'cover';
+                    previewElement.style.backgroundPosition = 'center';
+                }
+            };
+            
+            reader.readAsDataURL(file);
+        }
+
+        // Image upload handlers for Instagram Grid
+        function previewInstagramImage(index) {
+            const fileInput = document.getElementById('igImage' + index);
+            if (!fileInput || !fileInput.files || !fileInput.files[0]) return;
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const previewElement = document.getElementById('igPreview' + index);
+                if (previewElement) {
+                    previewElement.style.backgroundImage = 'url(' + e.target.result + ')';
+                    previewElement.style.backgroundSize = 'cover';
+                    previewElement.style.backgroundPosition = 'center';
+                }
+            };
+            
+            reader.readAsDataURL(file);
+        }
+
         // Load consultant recipients — delegates to generic loader (handles segmentName correctly)
         async function loadConsultantRecipients() {
             await loadRecipientsGeneric('consultantRecipientType', 'consultantRecipientSelector', 'consultantRecipientPreview');
