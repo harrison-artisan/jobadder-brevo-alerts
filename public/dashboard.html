@@ -1906,13 +1906,13 @@
                 <div id="consultantJsonError" style="display:none; margin-top: 8px; padding: 10px 14px; background: rgba(231,76,60,0.15); border: 1px solid rgba(231,76,60,0.4); border-radius: 6px; color: #ff8a80; font-size: 13px;"></div>
 
                 <div class="btn-group" style="display: flex; gap: 12px; margin-top: 12px;">
-                    <button class="btn btn-secondary" onclick="uploadConsultantCsv()" id="btnParseConsultant" disabled>
-                        Build &amp; Preview
-                    </button>
-                    <button class="btn" style="background: rgba(231,76,60,0.3); color: white;" onclick="resetConsultantState()" id="btnResetConsultant">
-                        Reset
-                    </button>
-                </div>
+	                    <button class="btn btn-secondary" onclick="uploadConsultantCsv()" id="btnParseConsultant" disabled>
+	                        Build &amp; Edit
+	                    </button>
+	                    <button class="btn" style="background: rgba(231,76,60,0.3); color: white;" onclick="resetConsultantState()" id="btnResetConsultant">
+	                        Reset
+	                    </button>
+	                </div>
 
                 <!-- Edit Sections Panel (shown after CSV parse) -->
                 <div id="consultantEditSectionsPanel" style="display:none; margin-top:20px; padding:20px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:10px;">
@@ -2080,9 +2080,9 @@
                     <button class="btn btn-success" onclick="sendConsultantNow()" id="btnSendConsultant" disabled>
                         Send Now
                     </button>
-                    <button class="btn" style="background: linear-gradient(135deg, #bd203d 0%, #1b334d 100%); color: white; width: 100%; margin-top: 8px;" onclick="openConsultantBatchSchedule()" id="btnBatchScheduleConsultant" disabled>
-                        Batch Schedule (All Consultants)
-                    </button>
+                    <button class="btn" style="background: linear-gradient(135deg, #bd203d 0%, #1b334d 100%); color: white; width: 100%; margin-top: 8px;" onclick="openConsultantBatchScheduleModal()" id="btnBatchScheduleConsultant" disabled>
+	                        Batch Schedule (All Consultants)
+	                    </button>
                 </div>
 
                 <!-- Schedule date/time picker row -->
@@ -8057,7 +8057,7 @@
                 errorDiv.style.display = 'block';
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = 'Build &amp; Edit';}
+                btn.innerHTML = 'Build &amp; Edit';
             }
         }
 
@@ -8169,6 +8169,39 @@
                 `;
                 container.appendChild(mediaBox);
             });
+        }
+
+        function collectEventEdits() {
+            const container = document.getElementById('eventsEditContainer');
+            const events = [];
+            const boxes = container.querySelectorAll('div[style*="padding:12px"]');
+            boxes.forEach(box => {
+                events.push({
+                    title: box.querySelector('.eventTitle').value,
+                    date: box.querySelector('.eventDate').value,
+                    url: box.querySelector('.eventUrl').value
+                });
+            });
+            return events;
+        }
+
+        function collectMediaEdits() {
+            const container = document.getElementById('mediaEditContainer');
+            const media = [];
+            const boxes = container.querySelectorAll('div[style*="padding:12px"]');
+            boxes.forEach(box => {
+                const typeLabel = box.querySelector('label').textContent;
+                let type = 'link';
+                if (typeLabel.includes('YouTube')) type = 'youtube';
+                else if (typeLabel.includes('Instagram')) type = 'instagram';
+                
+                media.push({
+                    type: type,
+                    title: box.querySelector('.mediaTitle').value,
+                    url: box.querySelector('.mediaUrl').value
+                });
+            });
+            return media;
         }
 
         // Update section visibility and send to backend
