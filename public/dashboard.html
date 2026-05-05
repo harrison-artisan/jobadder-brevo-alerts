@@ -1915,13 +1915,6 @@
                 </div>
             </div>
 
-            <!-- Articles Edit Container -->
-            <div class="actions-card" id="articlesSection" style="display:none;">
-                <h2>Creative Community Articles</h2>
-                <div id="articlesEditContainer"></div>
-                <button class="btn btn-info" onclick="addArticleField()" style="margin-top:15px;">Add Article</button>
-            </div>
-
             <!-- Step 2: Recipient Selector + Actions -->
             <div class="actions-card" id="consultantActionsSection">
                 <h2>Step 2 — Send Newsletter</h2>
@@ -2005,8 +1998,13 @@
         </div>
         <!-- End Main Content -->
     
+    <script src="/consultant_js_functions.js"></script>
     <script>
-        let alistState = null;
+        // Global State
+        let _csvFile = null;
+        let consultantParsed = false;
+        let consultantSegment = null;
+        let consultantState = null;
         
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
@@ -7654,8 +7652,6 @@
 
         // ========== CONSULTANT NEWSLETTER FUNCTIONS (Gemini JSON Paste Workflow) ==========
 
-        let consultantParsed = false; // true once JSON has been successfully parsed
-        let consultantSegment = null; // { type, id, name } once confirmed
         let selectedConsultantId = null; // currently selected consultant ID
         let currentProfile = null; // loaded profile from config
         let profileEditOpen = false;
@@ -7880,6 +7876,7 @@
                 // Success
                 consultantParsed = true;
                 const s = data.state;
+                consultantState = s;
                 document.getElementById('consultantStateBadge').textContent = 'GENERATED';
                 document.getElementById('consultantStateBadge').className = 'status-badge GENERATED';
                 document.getElementById('consultantStateTimestamp').textContent =
@@ -7895,13 +7892,48 @@
                     document.getElementById('btnScheduleConsultant').disabled = false;
                 }
                 loadPreview('/api/preview/consultant');
-                if (s.content.editable.articles && s.content.editable.articles.length > 0) {
-                    document.getElementById('articlesSection').style.display = 'block';
-                    populateArticlesEditor(s.content.editable.articles);
-                } else {
-                    document.getElementById('articlesSection').style.display = 'none';
-                }
                 showToast('Newsletter built for ' + data.consultant + '!', 'success');
+
+                // Populate editable fields from the parsed state
+                if (s) {
+                    // Populate Industry Insight
+                    if (s.industry_insight_content) {
+                        const h = document.getElementById('editIndustryInsightHeading');
+                        const b = document.getElementById('editIndustryInsightBody');
+                        if (h) h.value = s.industry_insight_content.heading || '';
+                        if (b) b.value = s.industry_insight_content.body || '';
+                    }
+                    
+                    // Populate Life Update
+                    if (s.life_update_content) {
+                        const h = document.getElementById('editLifeUpdateHeading');
+                        const b = document.getElementById('editLifeUpdateBody');
+                        if (h) h.value = s.life_update_content.heading || '';
+                        if (b) b.value = s.life_update_content.body || '';
+                    }
+                    
+                    // Populate Events and Media
+                    if (typeof populateEventsEditor === 'function') populateEventsEditor(s.events || []);
+                    if (typeof populateMediaEditor === 'function') populateMediaEditor(s.media || []);
+                    
+                    // Set toggles
+                    if (s.sections) {
+                        const tII = document.getElementById('toggleIndustryInsight');
+                        const tLU = document.getElementById('toggleLifeUpdate');
+                        const tIG = document.getElementById('toggleInstagram');
+                        const tEV = document.getElementById('toggleEvents');
+                        const tME = document.getElementById('toggleMedia');
+                        
+                        if (tII) tII.checked = s.sections.industry_insight !== false;
+                        if (tLU) tLU.checked = s.sections.life_update !== false;
+                        if (tIG) tIG.checked = !!s.sections.instagram;
+                        if (tEV) tEV.checked = s.sections.events !== false;
+                        if (tME) tME.checked = !!s.sections.media;
+                    }
+                }
+                
+                // Show the edit panel
+                if (typeof showConsultantEditPanel === 'function') showConsultantEditPanel();
             } catch (error) {
                 errorDiv.textContent = 'Error: ' + error.message;
                 errorDiv.style.display = 'block';
@@ -7954,6 +7986,8 @@
                 updateConsultantScheduledBox(null);
                 // Clear preview
                 loadPreview(null);
+                // Hide edit panel
+                if (typeof hideConsultantEditPanel === 'function') hideConsultantEditPanel();
                 showToast('Consultant state reset.', 'info');
             } catch (e) {
                 showToast('Reset failed: ' + e.message, 'error');
@@ -8174,6 +8208,8 @@
         }
         // ===== END CONSULTANT SCHEDULE FUNCTIONS =====
 
+
+
         // Send now
         async function sendConsultantNow() {
             if (!consultantParsed) {
@@ -8244,53 +8280,6 @@
                 btn.innerHTML = 'Send Now';
             }
         }
-
-        // Add new article field
-        function addArticleField(title = '', link = '') {
-            const container = document.getElementById('articlesEditContainer');
-            const articleBox = document.createElement('div');
-            articleBox.style.cssText = 'padding:12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:6px; margin-bottom: 10px;';
-            articleBox.innerHTML = `
-                <div style="margin-bottom:8px;">
-                    <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">Article Title</label>
-                    <input type="text" class="articleTitle" value="${title}" style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;" onchange="updateConsultantSectionVisibility()">
-                </div>
-                <div>
-                    <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">Article Link</label>
-                    <input type="text" class="articleLink" value="${link}" placeholder="https://..." style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;" onchange="updateConsultantSectionVisibility()">
-                </div>
-            `;
-            container.appendChild(articleBox);
-        }
-
-        // Populate Articles Container with editable fields
-        function populateArticlesEditor(articles) {
-            const container = document.getElementById('articlesEditContainer');
-            container.innerHTML = '';
-            
-            if (!articles || articles.length === 0) {
-                container.innerHTML = '<div style="color:rgba(255,255,255,0.5); font-size:12px;">No articles in CSV</div>';
-                return;
-            }
-
-            articles.forEach(article => {
-                addArticleField(article.title, article.link);
-            });
-        }
-
-        // Collect Article Edits
-        function collectArticleEdits() {
-            const articles = [];
-            const articleBoxes = document.querySelectorAll('#articlesEditContainer > div');
-            articleBoxes.forEach((box) => {
-                articles.push({
-                    title: box.querySelector('.articleTitle').value,
-                    link: box.querySelector('.articleLink').value
-                });
-            });
-            return articles;
-        }
-
     </script>
 </body>
 </html>
