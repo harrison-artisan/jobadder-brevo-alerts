@@ -2013,6 +2013,9 @@
         let consultantSegment = null;
         let consultantState = null;
         let alistState = null;
+        let selectedConsultantId = null;
+        let currentProfile = null;
+        let profileEditOpen = false;
         
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
@@ -7669,11 +7672,10 @@
 
         // ========== CONSULTANT NEWSLETTER FUNCTIONS (Gemini JSON Paste Workflow) ==========
 
-        let consultantParsed = false; // true once JSON has been successfully parsed
-        let consultantSegment = null; // { type, id, name } once confirmed
-        let selectedConsultantId = null; // currently selected consultant ID
-        let currentProfile = null; // loaded profile from config
-        let profileEditOpen = false;
+        // Global variables moved to the top of the script block
+        selectedConsultantId = null; // currently selected consultant ID
+        currentProfile = null; // loaded profile from config
+        profileEditOpen = false;
 
         // Segment keyword map — used for auto-selecting the right Brevo segment
         const SEGMENT_KEYWORDS = {
