@@ -478,23 +478,6 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
     const fallbackImg = 'https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png';
     const fallbackArticleLink = 'https://artisan.com.au/creative-community/';
 
-    // Build Instagram grid from mediaArray if present
-    let instagramGrid = { has_grid: false, images: [] };
-    const igItems = mediaArray.filter(m => m.type === 'instagram');
-    if (igItems.length > 0) {
-        // If there's an Instagram item, use it as the base for the grid
-        const igBase = igItems[0];
-        instagramGrid = {
-            has_grid: true,
-            profile_url: igBase.profile_url || '',
-            profile_photo: igBase.profile_photo || '',
-            handle: igBase.handle || 'get_artisan',
-            images: [
-                { url: igBase.scraped_image || '', caption: igBase.caption || '', link: igBase.url || '' }
-            ]
-        };
-    }
-
     return {
         // Consultant identity — nested object
         consultant: {
@@ -514,18 +497,7 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
             industry_insight_heading: parsed.industry_insight.heading,
             industry_insight_body: parsed.industry_insight.body,
             life_update_heading: parsed.life_update.heading,
-            life_update_body: parsed.life_update.body,
-            // Section visibility flags
-            sections: {
-                industry_insight: true,
-                life_update: true,
-                media: Array.isArray(mediaArray) && mediaArray.length > 0,
-                instagram_grid: instagramGrid.has_grid,
-                events: Array.isArray(parsed.events) && parsed.events.length > 0,
-                articles: true,
-                job: !!(job.title),
-                alist: !!alistCandidate
-            }
+            life_update_body: parsed.life_update.body
         },
 
         // Personal media — nested object with items array
@@ -533,9 +505,6 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
             has_media: Array.isArray(mediaArray) && mediaArray.length > 0,
             items: Array.isArray(mediaArray) ? mediaArray : []
         },
-
-        // Instagram grid — new structure for 4-image layout
-        instagram_grid: instagramGrid,
 
         // Featured job — nested object
         job: {
@@ -789,27 +758,18 @@ async function sendToAllDirect(options = {}) {
 }
 
 // ============================================================
-// MULTI-CONSULTANT SCHEDULING
+// POST /api/consultant/schedule
 // ============================================================
-const _consultantScheduledTasks = {};
-
-function getScheduleFilePath(consultantId) {
-    return path.join(__dirname, '..', `.consultant-schedule-${consultantId}.json`);
-}
+let _consultantScheduledTask = null;
 
 async function scheduleConsultant(req, res) {
     const cron = require('node-cron');
     try {
         const { recipientType, recipientId, scheduledAt } = req.body;
         const state = readState();
-        
-        if (!['GENERATED', 'TESTED', 'SCHEDULED'].includes(state.state) || !state.templateParams) {
+        if (!['GENERATED', 'TESTED'].includes(state.state) || !state.templateParams) {
             return res.status(400).json({ success: false, message: 'Please parse the Gemini JSON first.' });
         }
-        
-        const consultantId = state.templateParams.consultant.id;
-        if (!consultantId) return res.status(400).json({ success: false, message: 'Consultant ID not found in state' });
-
         if (!scheduledAt) return res.status(400).json({ success: false, message: 'scheduledAt is required' });
         const sendDate = new Date(scheduledAt);
         if (isNaN(sendDate.getTime())) return res.status(400).json({ success: false, message: 'Invalid scheduledAt date' });
@@ -826,153 +786,81 @@ async function scheduleConsultant(req, res) {
             timeZone: 'Australia/Melbourne'
         }) + ' (Melbourne time)';
 
-        const scheduleFile = getScheduleFilePath(consultantId);
-
-        // Cancel existing if any
-        if (_consultantScheduledTasks[consultantId]) {
-            _consultantScheduledTasks[consultantId].stop();
-            delete _consultantScheduledTasks[consultantId];
-        }
-
-        // Store schedule data including current template params
-        const scheduleData = {
-            consultantId,
-            consultantName: state.templateParams.consultant.name,
-            scheduledAt: sendDate.toISOString(),
-            scheduledFor,
-            options: { recipientType, recipientId },
-            templateParams: state.templateParams
-        };
-
-        _consultantScheduledTasks[consultantId] = cron.schedule(cronExpr, async () => {
-            console.log(`📅 Executing scheduled newsletter for ${scheduleData.consultantName}...`);
+        if (_consultantScheduledTask) { _consultantScheduledTask.stop(); _consultantScheduledTask = null; }
+        _consultantScheduledTask = cron.schedule(cronExpr, async () => {
+            console.log('📅 Executing scheduled consultant newsletter send...');
+            const s = readState();
+            if (s.state === 'SCHEDULED') writeState({ ...s, state: 'TESTED' });
             try {
-                // Use the saved template params for the send
-                await sendToAllDirect({ 
-                    recipientType, 
-                    recipientId, 
-                    templateParams: scheduleData.templateParams 
-                });
-                console.log(`✅ Scheduled newsletter sent for ${scheduleData.consultantName}`);
+                await sendToAllDirect({ recipientType, recipientId });
             } catch (e) {
-                console.error(`❌ Scheduled send failed for ${scheduleData.consultantName}:`, e.message);
+                console.error('❌ Scheduled consultant send failed:', e.message);
             }
-            // Cleanup
-            if (fs.existsSync(scheduleFile)) fs.unlinkSync(scheduleFile);
-            if (_consultantScheduledTasks[consultantId]) {
-                _consultantScheduledTasks[consultantId].stop();
-                delete _consultantScheduledTasks[consultantId];
-            }
+            if (_consultantScheduledTask) { _consultantScheduledTask.stop(); _consultantScheduledTask = null; }
         }, { timezone: 'UTC' });
 
-        fs.writeFileSync(scheduleFile, JSON.stringify(scheduleData, null, 2));
-        
-        // Also update the main state to reflect this consultant is scheduled
         writeState({ ...state, state: 'SCHEDULED', scheduledAt: sendDate.toISOString(), scheduledFor, scheduledOptions: { recipientType, recipientId } });
-
-        console.log(`📅 Newsletter for ${scheduleData.consultantName} scheduled for ${scheduledFor}`);
-        res.json({ success: true, scheduledFor, message: `Newsletter for ${scheduleData.consultantName} scheduled successfully` });
+        console.log(`📅 Consultant newsletter scheduled for ${scheduledFor} (cron: ${cronExpr} UTC)`);
+        res.json({ success: true, scheduledFor, message: 'Consultant newsletter scheduled successfully' });
     } catch (error) {
         console.error('❌ Error scheduling consultant newsletter:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 }
 
+// ============================================================
+// POST /api/consultant/cancel-schedule
+// ============================================================
 function cancelConsultantSchedule(req, res) {
     try {
-        const { consultantId } = req.body;
-        if (!consultantId) return res.status(400).json({ success: false, message: 'consultantId is required' });
-
-        const scheduleFile = getScheduleFilePath(consultantId);
-        
-        if (_consultantScheduledTasks[consultantId]) {
-            _consultantScheduledTasks[consultantId].stop();
-            delete _consultantScheduledTasks[consultantId];
-        }
-        
-        if (fs.existsSync(scheduleFile)) fs.unlinkSync(scheduleFile);
-
-        // If the cancelled schedule matches the current state consultant, update state
+        if (_consultantScheduledTask) { _consultantScheduledTask.stop(); _consultantScheduledTask = null; }
         const state = readState();
-        if (state.templateParams && state.templateParams.consultant.id === consultantId) {
-            if (state.state === 'SCHEDULED') {
-                const { scheduledAt, scheduledFor, scheduledOptions, ...rest } = state;
-                writeState({ ...rest, state: 'TESTED' });
-            }
+        if (state.state === 'SCHEDULED') {
+            const { scheduledAt, scheduledFor, scheduledOptions, ...rest } = state;
+            writeState({ ...rest, state: 'TESTED' });
         }
-
         res.json({ success: true, message: 'Schedule cancelled' });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
 }
 
+// ============================================================
+// Restore scheduled cron on server startup
+// ============================================================
 function restoreConsultantSchedule() {
     const cron = require('node-cron');
     try {
-        const files = fs.readdirSync(path.join(__dirname, '..')).filter(f => f.startsWith('.consultant-schedule-') && f.endsWith('.json'));
-        
-        for (const file of files) {
-            try {
-                const scheduleFile = path.join(__dirname, '..', file);
-                const saved = JSON.parse(fs.readFileSync(scheduleFile, 'utf8'));
-                if (!saved || !saved.scheduledAt) continue;
-
-                const sendDate = new Date(saved.scheduledAt);
-                if (sendDate <= new Date()) {
-                    console.warn(`⚠️  Scheduled time for ${saved.consultantName} has passed, clearing.`);
-                    fs.unlinkSync(scheduleFile);
-                    continue;
-                }
-
-                const { recipientType, recipientId } = saved.options || {};
-                const consultantId = saved.consultantId;
-                const min = sendDate.getUTCMinutes();
-                const hr = sendDate.getUTCHours();
-                const dom = sendDate.getUTCDate();
-                const mon = sendDate.getUTCMonth() + 1;
-                const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
-
-                if (_consultantScheduledTasks[consultantId]) {
-                    _consultantScheduledTasks[consultantId].stop();
-                }
-
-                _consultantScheduledTasks[consultantId] = cron.schedule(cronExpr, async () => {
-                    console.log(`📅 Executing restored newsletter for ${saved.consultantName}...`);
-                    try {
-                        await sendToAllDirect({ 
-                            recipientType, 
-                            recipientId, 
-                            templateParams: saved.templateParams 
-                        });
-                    } catch (e) {
-                        console.error(`❌ Restored send failed for ${saved.consultantName}:`, e.message);
-                    }
-                    if (fs.existsSync(scheduleFile)) fs.unlinkSync(scheduleFile);
-                    delete _consultantScheduledTasks[consultantId];
-                }, { timezone: 'UTC' });
-
-                console.log(`📅 Restored schedule for ${saved.consultantName} at ${saved.scheduledFor}`);
-            } catch (err) {
-                console.error(`❌ Failed to restore schedule file ${file}:`, err.message);
-            }
+        const state = readState();
+        if (state.state !== 'SCHEDULED' || !state.scheduledAt) return;
+        const sendDate = new Date(state.scheduledAt);
+        if (sendDate <= new Date()) {
+            console.warn('⚠️  Consultant scheduled time has passed, clearing schedule');
+            const { scheduledAt, scheduledFor, scheduledOptions, ...rest } = state;
+            writeState({ ...rest, state: 'TESTED' });
+            return;
         }
-    } catch (error) {
-        console.error('❌ Error restoring consultant schedules:', error.message);
-    }
-}
-
-function getActiveSchedules(req, res) {
-    try {
-        const files = fs.readdirSync(path.join(__dirname, '..')).filter(f => f.startsWith('.consultant-schedule-') && f.endsWith('.json'));
-        const schedules = files.map(file => {
+        const { recipientType, recipientId } = state.scheduledOptions || {};
+        const min = sendDate.getUTCMinutes();
+        const hr = sendDate.getUTCHours();
+        const dom = sendDate.getUTCDate();
+        const mon = sendDate.getUTCMonth() + 1;
+        const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
+        if (_consultantScheduledTask) { _consultantScheduledTask.stop(); _consultantScheduledTask = null; }
+        _consultantScheduledTask = cron.schedule(cronExpr, async () => {
+            console.log('📅 Executing restored consultant newsletter send...');
+            const s = readState();
+            if (s.state === 'SCHEDULED') writeState({ ...s, state: 'TESTED' });
             try {
-                return JSON.parse(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'));
-            } catch (e) { return null; }
-        }).filter(Boolean);
-        res.json({ success: true, schedules });
+                await sendToAllDirect({ recipientType, recipientId });
+            } catch (e) {
+                console.error('❌ Restored consultant send failed:', e.message);
+            }
+            if (_consultantScheduledTask) { _consultantScheduledTask.stop(); _consultantScheduledTask = null; }
+        }, { timezone: 'UTC' });
+        console.log(`📅 Consultant schedule restored for ${state.scheduledFor}`);
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        console.error('❌ Error restoring consultant schedule:', error.message);
     }
 }
 
@@ -1694,7 +1582,7 @@ async function parseCsv(req, res) {
         // 8. Auto-fetch WordPress articles
         console.log('📰 Fetching WordPress articles...');
         const wpArticles = await fetchWordPressArticles();
-        const articles = [ wpArticles[0] || {}, wpArticles[1] || {}, wpArticles[2] || {} ];
+        const articles = wpArticles.slice(0, 3);
 
         // 9. A-List candidate
         let alistCandidate = getAListCandidateFromState();
@@ -1719,18 +1607,31 @@ async function parseCsv(req, res) {
             state: 'GENERATED',
             generatedAt: new Date().toISOString(),
             consultant: consultantConfig,
-            content: { 
-                industry_insight: parsedForTemplate.industry_insight, 
-                life_update: parsedForTemplate.life_update, 
-                events, 
-                media: mediaArray, 
-                articles, 
-                alist_candidate: alistCandidate,
+            content: {
+                industry_insight: parsedForTemplate.industry_insight || { heading: "", body: "" },
+                life_update: parsedForTemplate.life_update || { heading: "", body: "" },
+                events: events || [],
+                media: mediaArray || [],
+                articles: articles || [],
+                alist_candidate: alistCandidate || null,
+                sections: {
+                    industry_insight: true,
+                    life_update: true,
+                    instagram_grid: mediaArray.some(m => m.type === 'instagram'),
+                    articles: articles.length > 0,
+                    events: events.length > 0,
+                    media: mediaArray.length > 0
+                },
                 editable: {
-                    industry_insight_heading: parsedForTemplate.industry_insight.heading,
-                    industry_insight_body: parsedForTemplate.industry_insight.body,
-                    life_update_heading: parsedForTemplate.life_update.heading,
-                    life_update_body: parsedForTemplate.life_update.body
+                    industry_insight_heading: polished.industry_insight_heading || "",
+                    industry_insight_body: polished.industry_insight_body || "",
+                    life_update_heading: polished.life_update_heading || "",
+                    life_update_body: polished.life_update_body || "",
+                    life_update_images: [], // Initialize as empty array
+                    instagram_caption: row["Instagram Caption"] || "", // Initialize
+                    articles: articles.map(a => ({ title: a.title || "", link: a.link || "" })),
+                    events: events.map(e => ({ title: e.title || "", url: e.link || "", date: e.date || "" })),
+                    media: mediaArray.map(m => ({ type: m.type || "", url: m.url || "", caption: m.caption || "" }))
                 }
             },
             templateParams
@@ -1755,158 +1656,6 @@ async function parseCsv(req, res) {
     }
 }
 
-// ============================================================
-// POST /api/consultant/update-sections
-// Update section visibility and Instagram grid after CSV parse
-// ============================================================
-async function updateSections(req, res) {
-    try {
-        const { sections, instagram_grid, editable, lifeUpdateImages, events, media } = req.body;
-        const state = readState();
-        if (state.state === "EMPTY") {
-            return res.status(400).json({ success: false, message: "No newsletter parsed yet" });
-        }
-
-        // Update sections visibility
-        if (sections) {
-            state.templateParams.content.sections = { ...state.templateParams.content.sections, ...sections };
-        }
-        // Update editable fields
-        if (editable) {
-            state.content.editable = { ...state.content.editable, ...editable };
-            // Also sync back to templateParams
-            if (editable.industry_insight_heading) state.templateParams.industry_insight.heading = editable.industry_insight_heading;
-            if (editable.industry_insight_body) state.templateParams.industry_insight.body = editable.industry_insight_body;
-            if (editable.life_update_heading) state.templateParams.life_update.heading = editable.life_update_heading;
-            if (editable.life_update_body) state.templateParams.life_update.body = editable.life_update_body;
-        }
-        // Update Instagram grid
-        if (instagram_grid) {
-            state.templateParams.instagram_grid = instagram_grid;
-        }
-        // Update Personal Update Images
-        if (lifeUpdateImages) {
-            state.templateParams.life_update.images = lifeUpdateImages;
-        }
-        // Update Events
-        if (events) {
-            state.templateParams.events = events;
-        }
-        // Update Media
-        if (media) {
-            state.templateParams.media = media;
-        }
-
-        writeState(state);
-        console.log("✅ Section visibility and content updated");
-        res.json({ success: true, message: "Sections updated successfully", state });
-    } catch (error) {
-        console.error("❌ Error updating sections:", error);
-        res.status(500).json({ success: false, message: error.message });
-    }
-}
-
-// ============================================================
-// POST /api/consultant/batch-schedule
-// Schedule the current newsletter for ALL consultants
-// ============================================================
-async function batchSchedule(req, res) {
-    const cron = require('node-cron');
-    try {
-        const { scheduledAt } = req.body;
-        const state = readState();
-        if (!['GENERATED', 'TESTED'].includes(state.state) || !state.templateParams) {
-            return res.status(400).json({ success: false, message: 'No newsletter content parsed yet.' });
-        }
-        if (!scheduledAt) return res.status(400).json({ success: false, message: 'scheduledAt is required' });
-        
-        const sendDate = new Date(scheduledAt);
-        if (isNaN(sendDate.getTime())) return res.status(400).json({ success: false, message: 'Invalid scheduledAt date' });
-        if (sendDate <= new Date()) return res.status(400).json({ success: false, message: 'Scheduled time must be in the future' });
-
-        const consultants = getConsultantListInternal();
-        const results = [];
-        
-        // Load all segments to match keywords
-        const segments = await brevoService.getSegments();
-        
-        for (const [id, config] of Object.entries(consultants)) {
-            // Find matching segment by keyword
-            const keyword = config.segment_keyword;
-            const segment = segments.find(s => s.segmentName.toLowerCase().includes(keyword.toLowerCase()));
-            
-            if (!segment) {
-                console.warn(`⚠️ No segment found for consultant ${config.name} (keyword: ${keyword})`);
-                continue;
-            }
-
-            // Create a custom templateParams for THIS consultant
-            // We clone the base templateParams but update the consultant identity
-            const consultantParams = JSON.parse(JSON.stringify(state.templateParams));
-            consultantParams.consultant = {
-                newsletter_name: config.newsletter_name || config.name,
-                name: config.name,
-                title: config.title,
-                email: config.email,
-                phone: config.phone,
-                linkedin: config.linkedin,
-                photo: config.photo_url,
-                calendar_link: config.calendar_link || 'https://artisan.com.au/contact'
-            };
-
-            // Setup the cron task
-            const min = sendDate.getUTCMinutes();
-            const hr = sendDate.getUTCHours();
-            const dom = sendDate.getUTCDate();
-            const mon = sendDate.getUTCMonth() + 1;
-            const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
-
-            cron.schedule(cronExpr, async () => {
-                console.log(`📅 Executing batch scheduled send for ${config.name}...`);
-                try {
-                    const recipients = await brevoService.getSegmentContacts(segment.id);
-                    const finalRecipients = modeService.isTestMode() ? [{ email: modeService.getTestEmail() }] : recipients;
-                    
-                    if (config.brevo_template_id) {
-                        await brevoService.sendBatchEmail(finalRecipients, parseInt(config.brevo_template_id), consultantParams);
-                    } else {
-                        // Fallback to HTML send if no template ID
-                        const emailPreviewService = require('../services/emailPreviewService');
-                        const htmlContent = await renderConsultantTemplate(consultantParams, emailPreviewService);
-                        const subject = `${consultantParams.consultant.newsletter_name} — Artisan`;
-                        for (const recipient of finalRecipients) {
-                            await brevoService.sendEmailWithHtml({
-                                to: { email: recipient.email, name: recipient.name || recipient.email },
-                                subject,
-                                htmlContent
-                            });
-                        }
-                    }
-                } catch (e) {
-                    console.error(`❌ Batch send failed for ${config.name}:`, e.message);
-                }
-            }, { timezone: 'UTC' });
-
-            results.push(config.name);
-        }
-
-        res.json({ 
-            success: true, 
-            message: `Batch schedule created for ${results.length} consultants`,
-            consultants: results
-        });
-    } catch (error) {
-        console.error('❌ Error in batch scheduling:', error);
-        res.status(500).json({ success: false, message: error.message });
-    }
-}
-
-// Internal helper to get consultant list
-function getConsultantListInternal() {
-    const consultantsPath = path.join(__dirname, '../config/consultants.json');
-    return JSON.parse(fs.readFileSync(consultantsPath, 'utf8'));
-}
-
 module.exports = {
     getState,
     getConsultantList,
@@ -1920,8 +1669,5 @@ module.exports = {
     resetState,
     scheduleConsultant,
     cancelConsultantSchedule,
-    restoreConsultantSchedule,
-    updateSections,
-    batchSchedule,
-    getActiveSchedules
+    restoreConsultantSchedule
 };
