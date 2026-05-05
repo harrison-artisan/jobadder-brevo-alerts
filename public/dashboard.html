@@ -7894,6 +7894,9 @@
                 loadPreview('/api/preview/consultant');
                 showToast('Newsletter built for ' + data.consultant + '!', 'success');
 
+                // Show the edit panel first so elements exist
+                if (typeof showConsultantEditPanel === 'function') showConsultantEditPanel();
+
                 // Populate editable fields from the parsed state
                 if (s) {
                     // Populate Industry Insight
@@ -7931,9 +7934,6 @@
                         if (tME) tME.checked = !!s.sections.media;
                     }
                 }
-                
-                // Show the edit panel
-                if (typeof showConsultantEditPanel === 'function') showConsultantEditPanel();
             } catch (error) {
                 errorDiv.textContent = 'Error: ' + error.message;
                 errorDiv.style.display = 'block';
