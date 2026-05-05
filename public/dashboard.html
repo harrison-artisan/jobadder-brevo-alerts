@@ -1915,6 +1915,13 @@
                 </div>
             </div>
 
+            <!-- Articles Edit Container (Required for legacy function compatibility) -->
+            <div class="actions-card" id="articlesSection" style="display:none;">
+                <h2>Creative Community Articles</h2>
+                <div id="articlesEditContainer"></div>
+                <button class="btn btn-info" onclick="addArticleField()" style="margin-top:15px;">Add Article</button>
+            </div>
+
             <!-- Step 2: Recipient Selector + Actions -->
             <div class="actions-card" id="consultantActionsSection">
                 <h2>Step 2 — Send Newsletter</h2>
@@ -7959,6 +7966,10 @@
         async function parseConsultantJSON() { await uploadConsultantCsv(); }
 
         // Reset state
+        function addArticleField() {
+            console.log('addArticleField called - articles are now automatic');
+        }
+
         async function resetConsultantState() {
             if (!confirm('Reset the consultant newsletter? This will clear the current content.')) return;
             try {
