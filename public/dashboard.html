@@ -1221,26 +1221,26 @@
         
         <!-- Main Category Tabs -->
         <div class="tabs" id="mainTabs">
-            <button class="tab active" onclick="switchMainTab('email-marketing')">
+            <button class="tab active" onclick="switchMainTab('email-marketing', event)">
                 Email Marketing
             </button>
-            <button class="tab" onclick="switchMainTab('content-marketing')">
+            <button class="tab" onclick="switchMainTab('content-marketing', event)">
                 Content Marketing
             </button>
         </div>
         
         <!-- Email Type Tabs (shown when Email Marketing is active) -->
         <div class="tabs" id="emailTabs">
-            <button class="tab active" onclick="switchTab('job-alerts')">
+            <button class="tab active" onclick="switchTab('job-alerts', event)">
                 Job Alerts
             </button>
-            <button class="tab alist" onclick="switchTab('alist')">
+            <button class="tab alist" onclick="switchTab('alist', event)">
                 A-List
             </button>
-            <button class="tab xpose" onclick="switchTab('xpose')">
+            <button class="tab xpose" onclick="switchTab('xpose', event)">
                 Xpose
             </button>
-            <button class="tab consultant" onclick="switchTab('consultant')">
+            <button class="tab consultant" onclick="switchTab('consultant', event)">
                 Consultant Newsletters
             </button>
         </div>
@@ -2038,7 +2038,7 @@
         // Switch between main category tabs
         let emailContentBackup = null;
         
-        function switchMainTab(mainTabName) {
+        function switchMainTab(mainTabName, event) {
             const emailTabs = document.getElementById('emailTabs');
             const mainContent = document.querySelector('.main-content');
             const mainTabButtons = document.querySelectorAll('#mainTabs .tab');
@@ -2048,10 +2048,10 @@
                 btn.classList.remove('active');
             });
             
-            // Fix: Use window.event if event is not passed
-            const evt = arguments[1] || window.event;
-            if (evt && evt.target) {
-                evt.target.classList.add('active');
+            if (event && event.target) {
+                event.target.classList.add('active');
+            } else if (window.event && window.event.target) {
+                window.event.target.classList.add('active');
             }
             
             if (mainTabName === 'email-marketing') {
@@ -3075,7 +3075,7 @@
             }
         }
         
-        function switchTab(tabName) {
+        function switchTab(tabName, event) {
             // Hide all tab contents
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.remove('active');
@@ -3090,10 +3090,10 @@
             const content = document.getElementById(tabName + '-content');
             if (content) content.classList.add('active');
             
-            // Fix: Use window.event if event is not passed
-            const evt = arguments[1] || window.event;
-            if (evt && evt.target) {
-                evt.target.classList.add('active');
+            if (event && event.target) {
+                event.target.classList.add('active');
+            } else if (window.event && window.event.target) {
+                window.event.target.classList.add('active');
             }
             
             // Load articles when switching to Xpose tab
