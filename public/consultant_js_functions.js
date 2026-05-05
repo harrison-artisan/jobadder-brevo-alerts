@@ -1,4 +1,3 @@
-
 // Consultant Newsletter Editing Functions
 
 function showConsultantEditPanel() {
@@ -6,28 +5,34 @@ function showConsultantEditPanel() {
     if (panel) panel.style.display = 'block';
 }
 
-function addEventField(data = { title: '', date: '', url: '' }) {
+function addEventField(data = { title: '', date: '', url: '', description: '' }) {
     const container = document.getElementById('eventsEditContainer');
     if (!container) return;
     
     const div = document.createElement('div');
     div.className = 'event-edit-item';
-    div.style.cssText = 'display:grid; grid-template-columns: 1fr 1fr 1fr auto; gap:8px; align-items:end; margin-bottom:8px; padding:10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:4px;';
+    div.style.cssText = 'display:grid; grid-template-columns: 1fr 1fr 1fr auto; gap:8px; align-items:start; margin-bottom:12px; padding:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:6px;';
     
     div.innerHTML = `
-        <div>
-            <label style="display:block; font-size:10px; color:rgba(255,255,255,0.5); text-transform:uppercase;">Title</label>
-            <input type="text" class="event-title" value="${data.title || ''}" style="width:100%; padding:6px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:white; font-size:12px;">
+        <div style="grid-column: span 3; display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px;">
+            <div>
+                <label style="display:block; font-size:10px; color:rgba(255,255,255,0.5); text-transform:uppercase;">Title</label>
+                <input type="text" class="event-title" value="${data.title || ''}" style="width:100%; padding:6px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:white; font-size:12px;">
+            </div>
+            <div>
+                <label style="display:block; font-size:10px; color:rgba(255,255,255,0.5); text-transform:uppercase;">Date (e.g. 15 May)</label>
+                <input type="text" class="event-date" value="${data.date || ''}" style="width:100%; padding:6px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:white; font-size:12px;">
+            </div>
+            <div>
+                <label style="display:block; font-size:10px; color:rgba(255,255,255,0.5); text-transform:uppercase;">URL</label>
+                <input type="text" class="event-url" value="${data.url || ''}" style="width:100%; padding:6px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:white; font-size:12px;">
+            </div>
+            <div style="grid-column: span 3; margin-top:8px;">
+                <label style="display:block; font-size:10px; color:rgba(255,255,255,0.5); text-transform:uppercase;">Description (Max 250 chars)</label>
+                <textarea class="event-description" maxlength="250" style="width:100%; padding:6px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:white; font-size:12px; height:40px; resize:none;">${data.description || ''}</textarea>
+            </div>
         </div>
-        <div>
-            <label style="display:block; font-size:10px; color:rgba(255,255,255,0.5); text-transform:uppercase;">Date (e.g. 15 May)</label>
-            <input type="text" class="event-date" value="${data.date || ''}" style="width:100%; padding:6px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:white; font-size:12px;">
-        </div>
-        <div>
-            <label style="display:block; font-size:10px; color:rgba(255,255,255,0.5); text-transform:uppercase;">URL</label>
-            <input type="text" class="event-url" value="${data.url || ''}" style="width:100%; padding:6px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:white; font-size:12px;">
-        </div>
-        <button onclick="this.parentElement.remove()" style="padding:6px; background:#e74c3c; border:none; border-radius:4px; color:white; cursor:pointer;">&times;</button>
+        <button onclick="this.parentElement.remove()" style="padding:6px; background:#e74c3c; border:none; border-radius:4px; color:white; cursor:pointer; margin-top:18px;">&times;</button>
     `;
     container.appendChild(div);
 }
@@ -38,7 +43,6 @@ function populateEventsEditor(events = []) {
     container.innerHTML = '';
     
     if (events.length === 0) {
-        // Add 3 empty slots if none in CSV
         for (let i = 0; i < 3; i++) addEventField();
     } else {
         events.forEach(ev => addEventField(ev));
@@ -82,7 +86,6 @@ function populateMediaEditor(media = []) {
     container.innerHTML = '';
     
     if (media.length === 0) {
-        // Add 3 empty slots if none in CSV
         for (let i = 0; i < 3; i++) addMediaField();
     } else {
         media.forEach(m => addMediaField(m));
@@ -95,102 +98,81 @@ async function updateConsultantSectionVisibility() {
         return;
     }
 
-    const btn = document.querySelector('button[onclick="updateConsultantSectionVisibility()"]');
-    const originalText = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = 'Saving Changes...';
-
-    // Collect sections
     const sections = {
         industry_insight: document.getElementById('toggleIndustryInsight').checked,
-        life_update: document.getElementById('toggleLifeUpdate').checked,
-        instagram_grid: document.getElementById('toggleInstagram').checked,
+        personal_update: document.getElementById('togglePersonalUpdate').checked,
+        media: document.getElementById('toggleMedia').checked,
         events: document.getElementById('toggleEvents').checked,
-        media: document.getElementById('toggleMedia').checked
+        instagram: document.getElementById('toggleInstagram').checked
     };
 
-    // Collect text content
     const content = {
         industry_insight: {
-            heading: document.getElementById('editIndustryInsightHeading').value,
-            body: document.getElementById('editIndustryInsightBody').value
+            title: document.getElementById('industryInsightTitle').value,
+            body: document.getElementById('industryInsightBody').value
         },
-        life_update: {
-            heading: document.getElementById('editLifeUpdateHeading').value,
-            body: document.getElementById('editLifeUpdateBody').value
+        personal_update: {
+            title: document.getElementById('personalUpdateTitle').value,
+            body: document.getElementById('personalUpdateBody').value
         },
-        instagram_grid: {
+        instagram: {
             caption: document.getElementById('igCaption').value
         }
     };
 
-    // Collect Events
     const eventItems = document.querySelectorAll('.event-edit-item');
     const events = Array.from(eventItems).map(item => ({
         title: item.querySelector('.event-title').value,
         date: item.querySelector('.event-date').value,
-        url: item.querySelector('.event-url').value
+        url: item.querySelector('.event-url').value,
+        description: item.querySelector('.event-description') ? item.querySelector('.event-description').value : ''
     })).filter(e => e.title || e.url);
 
-    // Collect Media
     const mediaItems = document.querySelectorAll('.media-edit-item');
     const media = Array.from(mediaItems).map(item => ({
         title: item.querySelector('.media-title').value,
         url: item.querySelector('.media-url').value,
-        type: item.querySelector('.media-type').value
+        type: item.querySelector('.media-type').value,
+        caption: item.querySelector('.media-title').value
     })).filter(m => m.title || m.url);
+
+    const instagram_grid = [];
+    for (let i = 1; i <= 4; i++) {
+        const preview = document.getElementById('igPreview' + i);
+        if (preview && preview.style.backgroundImage && preview.style.backgroundImage !== 'none') {
+            const url = preview.style.backgroundImage.slice(5, -2);
+            if (url.startsWith('data:')) instagram_grid.push(url);
+        }
+    }
+
+    const life_update_images = [];
+    for (let i = 1; i <= 3; i++) {
+        const preview = document.getElementById('lifeUpdatePreview' + i);
+        if (preview && preview.style.backgroundImage && preview.style.backgroundImage !== 'none') {
+            const url = preview.style.backgroundImage.slice(5, -2);
+            if (url.startsWith('data:')) life_update_images.push(url);
+        }
+    }
 
     try {
         const response = await fetch('/api/consultant/update-sections', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sections, content, events, media })
+            body: JSON.stringify({ sections, content, events, media, instagram_grid, life_update_images })
         });
 
         const data = await response.json();
         if (response.ok) {
             showToast('✅ Edits saved successfully!', 'success');
-            // Refresh preview
-            if (typeof loadPreview === 'function') loadPreview('/api/preview/consultant');
+            // Refresh preview if available
+            if (typeof previewConsultantNewsletter === 'function') {
+                previewConsultantNewsletter();
+            }
         } else {
-            showToast('❌ Save failed: ' + (data.message || 'Unknown error'), 'error');
+            showToast('❌ Error saving edits: ' + (data.error || 'Unknown error'), 'error');
         }
-    } catch (error) {
-        showToast('❌ Network error: ' + error.message, 'error');
-    } finally {
-        btn.disabled = false;
-        btn.textContent = originalText;
-    }
-}
-
-function previewLifeUpdateImage(index) {
-    const input = document.getElementById('lifeUpdateImage' + index);
-    const preview = document.getElementById('lifeUpdatePreview' + index);
-    if (input && preview && input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.style.backgroundImage = `url(${e.target.result})`;
-            preview.style.backgroundSize = 'cover';
-            preview.style.backgroundPosition = 'center';
-            preview.style.borderStyle = 'solid';
-            preview.textContent = '';
-        };
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-
-function previewInstagramImage(index) {
-    const input = document.getElementById('igImage' + index);
-    const preview = document.getElementById('igPreview' + index);
-    if (input && preview && input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.style.backgroundImage = `url(${e.target.result})`;
-            preview.style.backgroundSize = 'cover';
-            preview.style.backgroundPosition = 'center';
-            preview.style.borderStyle = 'solid';
-            preview.textContent = '';
-        };
-        reader.readAsDataURL(input.files[0]);
+    } catch (err) {
+        console.error('Save error:', err);
+        showToast('❌ Connection error while saving.', 'error');
     }
 }

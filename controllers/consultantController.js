@@ -514,7 +514,17 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
         // Personal media — nested object with items array
         media: {
             has_media: activeSections.media && Array.isArray(mediaArray) && mediaArray.length > 0,
-            items: Array.isArray(mediaArray) ? mediaArray : []
+            items: Array.isArray(mediaArray) ? mediaArray.map(m => {
+                let thumbnailUrl = m.thumbnail || '';
+                if (!thumbnailUrl && m.type === 'youtube' && m.url) {
+                    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                    const match = m.url.match(regExp);
+                    if (match && match[2].length === 11) {
+                        thumbnailUrl = `https://img.youtube.com/vi/${match[2]}/mqdefault.jpg`;
+                    }
+                }
+                return { ...m, thumbnail: thumbnailUrl };
+            }) : []
         },
 
         // Featured job — nested object
@@ -543,13 +553,16 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
         })) : [],
 
         // Events — array of objects
-        events: activeSections.events ? (Array.isArray(parsed.events) ? parsed.events : []) : [],
+        events: activeSections.events ? (Array.isArray(parsed.events) ? parsed.events.map(e => ({
+            ...e,
+            description: e.description || ''
+        })) : []) : [],
         
         // Sections visibility flags
         sections: activeSections,
         
         // Instagram grid
-        instagram_grid: instagramGrid
+        instagram_grid: activeSections.instagram ? instagramGrid : null
     };
 }
 
@@ -1675,7 +1688,12 @@ async function parseCsv(req, res) {
 
 async function updateSections(req, res) {
     try {
-        const { sections, industry_insight_content, life_update_content, instagram_grid, events, media } = req.body;
+        const { sections, content, events, media } = req.body;
+        // Map old structure to new structure if needed
+        const industry_insight_content = content ? content.industry_insight : req.body.industry_insight_content;
+        const life_update_content = content ? content.life_update : req.body.life_update_content;
+        const instagram_grid = content ? content.instagram_grid : req.body.instagram_grid;
+        
         const state = readState();
         // Allow updating even if state is GENERATED or SENT
         if (state.state === 'EMPTY') {
@@ -1718,21 +1736,54 @@ async function updateSections(req, res) {
 
         // Update Events
         if (events) {
-            state.content.events = events.map(e => ({
-                title: e.title,
-                date: e.date,
-                link: e.url,
-                ...(e.date ? parseEventDate(e.date) : {})
-            }));
+            state.content.events = events.map(e => {
+                const eventData = {
+                    title: e.title || '',
+                    date: e.date || '',
+                    description: (e.description || '').substring(0, 250),
+                    link: e.url || e.link || ''
+                };
+                // Add parsed date components for the template
+                if (eventData.date) {
+                    const parsedDate = parseEventDate(eventData.date);
+                    if (parsedDate) {
+                        eventData.day = parsedDate.day;
+                        eventData.month = parsedDate.month;
+                    }
+                }
+                return eventData;
+            });
         }
 
         // Update Media
         if (media) {
-            state.content.media = media.map(m => ({
-                title: m.title,
-                url: m.url,
-                type: m.type || 'link'
-            }));
+            state.content.media = media.map(m => {
+                const item = {
+                    title: m.title || '',
+                    url: m.url || '',
+                    type: m.type || 'link',
+                    caption: m.caption || ''
+                };
+                // Re-calculate YouTube thumbnail if URL changed
+                if (item.type === 'youtube' && item.url) {
+                    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                    const match = item.url.match(regExp);
+                    if (match && match[2].length === 11) {
+                        item.thumbnail = `https://img.youtube.com/vi/${match[2]}/mqdefault.jpg`;
+                    }
+                }
+                return item;
+            });
+        }
+
+        // Update Life Update Images
+        if (req.body.life_update_images) {
+            state.content.life_update_images = req.body.life_update_images;
+        }
+
+        // Update Instagram Grid
+        if (req.body.instagram_grid) {
+            state.content.instagram_grid = req.body.instagram_grid;
         }
 
         // Rebuild template params for preview/send
@@ -1743,14 +1794,7 @@ async function updateSections(req, res) {
 
         // Ensure we use the updated content for template params
         const mediaArray = state.content.media || [];
-        // Add life update images if they exist
-        const allMedia = [...mediaArray];
-        if (state.content.life_update_images) {
-            state.content.life_update_images.forEach(url => {
-                allMedia.push({ type: 'life_update_image', url });
-            });
-        }
-
+        
         state.templateParams = buildTemplateParams(
             consultantConfig, 
             {
@@ -1758,13 +1802,22 @@ async function updateSections(req, res) {
                 life_update: state.content.life_update,
                 events: state.content.events
             }, 
-            allMedia, 
+            mediaArray, 
             articles, 
             alistCandidate, 
             liveJob,
-            state.content.sections,
-            state.content.instagram_grid
+            sections || state.content.sections,
+            instagram_grid || state.content.instagram_grid
         );
+        
+        // Explicitly update the visibility flags in templateParams based on sections
+        if (sections) {
+            state.templateParams.has_industry_insight = sections.industry_insight !== false;
+            state.templateParams.has_life_update = sections.life_update !== false;
+            state.templateParams.has_events = (state.content.events && state.content.events.length > 0) && sections.events !== false;
+            state.templateParams.has_media = (state.content.media && state.content.media.length > 0) && sections.media !== false;
+            state.templateParams.has_instagram = !!(instagram_grid || state.content.instagram_grid) && sections.instagram_grid !== false;
+        }
 
         writeState(state);
         res.json({ success: true, message: 'Sections updated successfully', state });
