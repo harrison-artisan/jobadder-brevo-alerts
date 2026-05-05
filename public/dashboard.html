@@ -7888,6 +7888,7 @@
                     document.getElementById('btnScheduleConsultant').disabled = false;
                 }
                 loadPreview('/api/preview/consultant');
+                populateArticlesEditor(s.content.editable.articles);
                 showToast('Newsletter built for ' + data.consultant + '!', 'success');
             } catch (error) {
                 errorDiv.textContent = 'Error: ' + error.message;
