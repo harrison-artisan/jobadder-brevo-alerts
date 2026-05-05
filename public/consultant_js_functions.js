@@ -1,254 +1,162 @@
 
-// Consolidated Consultant Newsletter Functions
-// Handles toggles, rich text editing, image previews, and saving for consultant newsletters
+// Consultant Newsletter Editing Functions
 
 function showConsultantEditPanel() {
     const panel = document.getElementById('consultantEditSectionsPanel');
     if (panel) panel.style.display = 'block';
 }
 
-function hideConsultantEditPanel() {
-    const panel = document.getElementById('consultantEditSectionsPanel');
-    if (panel) panel.style.display = 'none';
-}
-
-function populateConsultantEditor(data) {
-    if (!data) return;
-    
-    // 1. Industry Insight
-    if (data.industryInsight) {
-        const heading = document.getElementById('editIndustryInsightHeading');
-        const body = document.getElementById('editIndustryInsightBody');
-        if (heading) heading.value = data.industryInsight.heading || '';
-        if (body) body.value = data.industryInsight.body || '';
-    }
-    
-    // 2. Personal Update
-    if (data.lifeUpdate) {
-        const heading = document.getElementById('editLifeUpdateHeading');
-        const body = document.getElementById('editLifeUpdateBody');
-        if (heading) heading.value = data.lifeUpdate.heading || '';
-        if (body) body.value = data.lifeUpdate.body || '';
-    }
-    
-    // 3. Instagram
-    if (data.instagram) {
-        const caption = document.getElementById('igCaption');
-        if (caption) caption.value = data.instagram.caption || '';
-    }
-    
-    // 4. Events
-    populateEventsEditor(data.events || []);
-    
-    // 5. Media (Worth Reading)
-    populateMediaEditor(data.media || []);
-    
-    // 6. Toggles
-    if (data.sections) {
-        const mapping = {
-            industryInsight: 'toggleIndustryInsight',
-            lifeUpdate: 'toggleLifeUpdate',
-            instagram: 'toggleInstagram',
-            events: 'toggleEvents',
-            media: 'toggleMedia'
-        };
-        Object.keys(mapping).forEach(key => {
-            const toggle = document.getElementById(mapping[key]);
-            if (toggle) toggle.checked = !!data.sections[key];
-        });
-    }
-}
-
-function addEventBox(event = { title: '', url: '', date: '' }) {
+function addEventField(data = { title: '', date: '', url: '' }) {
     const container = document.getElementById('eventsEditContainer');
     if (!container) return;
     
-    if (container.innerHTML.includes('No events')) container.innerHTML = '';
-
-    const row = document.createElement('div');
-    row.className = 'event-edit-row';
-    row.style.cssText = 'padding:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px; margin-bottom:10px; position:relative;';
-    row.innerHTML = `
-        <button onclick="this.parentElement.remove()" style="position:absolute; top:8px; right:8px; background:none; border:none; color:rgba(231,76,60,0.6); cursor:pointer; font-size:16px;">&times;</button>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
-            <div style="flex:1;">
-                <label style="display:block; color:rgba(255,255,255,0.4); font-size:10px; text-transform:uppercase; margin-bottom:4px;">Event Title</label>
-                <input type="text" placeholder="Event Title" class="event-title" value="${event.title || ''}" style="width:100%; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;">
-            </div>
-            <div style="flex:1;">
-                <label style="display:block; color:rgba(255,255,255,0.4); font-size:10px; text-transform:uppercase; margin-bottom:4px;">Date</label>
-                <input type="text" placeholder="e.g. 15th May" class="event-date" value="${event.date || ''}" style="width:100%; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;">
-            </div>
+    const div = document.createElement('div');
+    div.className = 'event-edit-item';
+    div.style.cssText = 'display:grid; grid-template-columns: 1fr 1fr 1fr auto; gap:8px; align-items:end; margin-bottom:8px; padding:10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:4px;';
+    
+    div.innerHTML = `
+        <div>
+            <label style="display:block; font-size:10px; color:rgba(255,255,255,0.5); text-transform:uppercase;">Title</label>
+            <input type="text" class="event-title" value="${data.title || ''}" style="width:100%; padding:6px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:white; font-size:12px;">
         </div>
         <div>
-            <label style="display:block; color:rgba(255,255,255,0.4); font-size:10px; text-transform:uppercase; margin-bottom:4px;">Booking URL</label>
-            <input type="url" placeholder="https://..." class="event-url" value="${event.url || ''}" style="width:100%; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;">
+            <label style="display:block; font-size:10px; color:rgba(255,255,255,0.5); text-transform:uppercase;">Date (e.g. 15 May)</label>
+            <input type="text" class="event-date" value="${data.date || ''}" style="width:100%; padding:6px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:white; font-size:12px;">
         </div>
+        <div>
+            <label style="display:block; font-size:10px; color:rgba(255,255,255,0.5); text-transform:uppercase;">URL</label>
+            <input type="text" class="event-url" value="${data.url || ''}" style="width:100%; padding:6px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:white; font-size:12px;">
+        </div>
+        <button onclick="this.parentElement.remove()" style="padding:6px; background:#e74c3c; border:none; border-radius:4px; color:white; cursor:pointer;">&times;</button>
     `;
-    container.appendChild(row);
+    container.appendChild(div);
 }
 
-function populateEventsEditor(events) {
+function populateEventsEditor(events = []) {
     const container = document.getElementById('eventsEditContainer');
     if (!container) return;
     container.innerHTML = '';
     
-    if (events && events.length > 0) {
-        events.forEach(event => addEventBox(event));
+    if (events.length === 0) {
+        // Add 3 empty slots if none in CSV
+        for (let i = 0; i < 3; i++) addEventField();
     } else {
-        // Show 3 empty slots by default
-        for(let i=0; i<3; i++) addEventBox();
-    }
-
-    let addBtn = document.getElementById('btnAddEvent');
-    if (!addBtn) {
-        addBtn = document.createElement('button');
-        addBtn.id = 'btnAddEvent';
-        addBtn.textContent = '+ Add Event';
-        addBtn.style.cssText = 'width:100%; padding:10px; background:rgba(255,255,255,0.05); border:1px dashed rgba(255,255,255,0.2); border-radius:8px; color:rgba(255,255,255,0.6); font-size:12px; cursor:pointer; margin-top:5px;';
-        addBtn.onclick = () => addEventBox();
-        container.insertAdjacentElement('afterend', addBtn);
+        events.forEach(ev => addEventField(ev));
     }
 }
 
-function addMediaBox(item = { title: '', url: '', type: 'link' }) {
+function addMediaField(data = { title: '', url: '', type: 'link' }) {
     const container = document.getElementById('mediaEditContainer');
     if (!container) return;
     
-    if (container.innerHTML.includes('No media')) container.innerHTML = '';
-
-    const row = document.createElement('div');
-    row.className = 'media-edit-row';
-    row.style.cssText = 'padding:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px; margin-bottom:10px; position:relative;';
-    row.innerHTML = `
-        <button onclick="this.parentElement.remove()" style="position:absolute; top:8px; right:8px; background:none; border:none; color:rgba(231,76,60,0.6); cursor:pointer; font-size:16px;">&times;</button>
-        <div style="margin-bottom:8px;">
-            <label style="display:block; color:rgba(255,255,255,0.4); font-size:10px; text-transform:uppercase; margin-bottom:4px;">Media Type</label>
-            <select class="media-type" style="width:100%; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;">
-                <option value="link" ${item.type === 'link' ? 'selected' : ''}>Worth Reading (Link Card)</option>
-                <option value="youtube" ${item.type === 'youtube' ? 'selected' : ''}>YouTube Video</option>
-                <option value="podcast" ${item.type === 'podcast' ? 'selected' : ''}>Podcast URL</option>
+    const div = document.createElement('div');
+    div.className = 'media-edit-item';
+    div.style.cssText = 'display:grid; grid-template-columns: 1fr 1fr 1fr auto; gap:8px; align-items:end; margin-bottom:8px; padding:10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:4px;';
+    
+    div.innerHTML = `
+        <div>
+            <label style="display:block; font-size:10px; color:rgba(255,255,255,0.5); text-transform:uppercase;">Title / Caption</label>
+            <input type="text" class="media-title" value="${data.title || ''}" style="width:100%; padding:6px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:white; font-size:12px;">
+        </div>
+        <div>
+            <label style="display:block; font-size:10px; color:rgba(255,255,255,0.5); text-transform:uppercase;">URL</label>
+            <input type="text" class="media-url" value="${data.url || ''}" style="width:100%; padding:6px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:white; font-size:12px;">
+        </div>
+        <div>
+            <label style="display:block; font-size:10px; color:rgba(255,255,255,0.5); text-transform:uppercase;">Type</label>
+            <select class="media-type" style="width:100%; padding:6px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:white; font-size:12px;">
+                <option value="link" ${data.type === 'link' ? 'selected' : ''}>Worth Reading</option>
+                <option value="youtube" ${data.type === 'youtube' ? 'selected' : ''}>YouTube</option>
+                <option value="podcast" ${data.type === 'podcast' ? 'selected' : ''}>Podcast</option>
+                <option value="instagram" ${data.type === 'instagram' ? 'selected' : ''}>Instagram</option>
             </select>
         </div>
-        <div style="margin-bottom:8px;">
-            <label style="display:block; color:rgba(255,255,255,0.4); font-size:10px; text-transform:uppercase; margin-bottom:4px;">Title / Caption</label>
-            <input type="text" placeholder="e.g. Why AI is changing Design" class="media-title" value="${item.title || ''}" style="width:100%; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;">
-        </div>
-        <div>
-            <label style="display:block; color:rgba(255,255,255,0.4); font-size:10px; text-transform:uppercase; margin-bottom:4px;">URL</label>
-            <input type="url" placeholder="https://..." class="media-url" value="${item.url || ''}" style="width:100%; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;">
-        </div>
+        <button onclick="this.parentElement.remove()" style="padding:6px; background:#e74c3c; border:none; border-radius:4px; color:white; cursor:pointer;">&times;</button>
     `;
-    container.appendChild(row);
+    container.appendChild(div);
 }
 
-function populateMediaEditor(mediaItems) {
+function populateMediaEditor(media = []) {
     const container = document.getElementById('mediaEditContainer');
     if (!container) return;
     container.innerHTML = '';
     
-    if (mediaItems && mediaItems.length > 0) {
-        mediaItems.forEach(item => addMediaBox(item));
+    if (media.length === 0) {
+        // Add 3 empty slots if none in CSV
+        for (let i = 0; i < 3; i++) addMediaField();
     } else {
-        // Show 1 empty box by default if none in CSV
-        addMediaBox();
-    }
-
-    // Ensure button is always there and correctly placed
-    let addBtn = document.getElementById('btnAddMedia');
-    if (!addBtn) {
-        addBtn = document.createElement('button');
-        addBtn.id = 'btnAddMedia';
-        addBtn.textContent = '+ Add Worth Reading / Media Item';
-        addBtn.style.cssText = 'width:100%; padding:10px; background:rgba(255,255,255,0.05); border:1px dashed rgba(255,255,255,0.2); border-radius:8px; color:rgba(255,255,255,0.6); font-size:12px; cursor:pointer; margin-top:5px;';
-        addBtn.onclick = () => addMediaBox();
-        container.insertAdjacentElement('afterend', addBtn);
+        media.forEach(m => addMediaField(m));
     }
 }
 
 async function updateConsultantSectionVisibility() {
-    const btn = document.querySelector('#consultantEditSectionsPanel .btn-success');
-    if (!btn) return;
-    
+    if (!consultantParsed) {
+        showToast('❌ No newsletter built yet. Upload CSV first.', 'error');
+        return;
+    }
+
+    const btn = document.querySelector('button[onclick="updateConsultantSectionVisibility()"]');
     const originalText = btn.textContent;
     btn.disabled = true;
-    btn.textContent = 'Saving...';
+    btn.textContent = 'Saving Changes...';
 
+    // Collect sections
     const sections = {
-        industryInsight: document.getElementById('toggleIndustryInsight')?.checked || false,
-        lifeUpdate: document.getElementById('toggleLifeUpdate')?.checked || false,
-        instagram: document.getElementById('toggleInstagram')?.checked || false,
-        events: document.getElementById('toggleEvents')?.checked || false,
-        media: document.getElementById('toggleMedia')?.checked || false,
-        articles: true
+        industry_insight: document.getElementById('toggleIndustryInsight').checked,
+        life_update: document.getElementById('toggleLifeUpdate').checked,
+        instagram_grid: document.getElementById('toggleInstagram').checked,
+        events: document.getElementById('toggleEvents').checked,
+        media: document.getElementById('toggleMedia').checked
     };
 
-    const industryInsight = {
-        heading: document.getElementById('editIndustryInsightHeading')?.value || '',
-        body: document.getElementById('editIndustryInsightBody')?.value || ''
+    // Collect text content
+    const content = {
+        industry_insight: {
+            heading: document.getElementById('editIndustryInsightHeading').value,
+            body: document.getElementById('editIndustryInsightBody').value
+        },
+        life_update: {
+            heading: document.getElementById('editLifeUpdateHeading').value,
+            body: document.getElementById('editLifeUpdateBody').value
+        },
+        instagram_grid: {
+            caption: document.getElementById('igCaption').value
+        }
     };
 
-    const lifeUpdate = {
-        heading: document.getElementById('editLifeUpdateHeading')?.value || '',
-        body: document.getElementById('editLifeUpdateBody')?.value || ''
-    };
-
-    const instagram = {
-        caption: document.getElementById('igCaption')?.value || ''
-    };
-
-    const events = Array.from(document.querySelectorAll('.event-edit-row')).map(row => ({
-        title: row.querySelector('.event-title').value,
-        date: row.querySelector('.event-date').value,
-        url: row.querySelector('.event-url').value
+    // Collect Events
+    const eventItems = document.querySelectorAll('.event-edit-item');
+    const events = Array.from(eventItems).map(item => ({
+        title: item.querySelector('.event-title').value,
+        date: item.querySelector('.event-date').value,
+        url: item.querySelector('.event-url').value
     })).filter(e => e.title || e.url);
 
-    const media = Array.from(document.querySelectorAll('.media-edit-row')).map(row => ({
-        type: row.querySelector('.media-type').value,
-        title: row.querySelector('.media-title').value,
-        url: row.querySelector('.media-url').value
+    // Collect Media
+    const mediaItems = document.querySelectorAll('.media-edit-item');
+    const media = Array.from(mediaItems).map(item => ({
+        title: item.querySelector('.media-title').value,
+        url: item.querySelector('.media-url').value,
+        type: item.querySelector('.media-type').value
     })).filter(m => m.title || m.url);
-
-    const payload = {
-        sections,
-        industryInsight,
-        lifeUpdate,
-        instagram,
-        events,
-        media
-    };
 
     try {
         const response = await fetch('/api/consultant/update-sections', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({ sections, content, events, media })
         });
 
-        const result = await response.json();
+        const data = await response.json();
         if (response.ok) {
-            if (typeof showToast === 'function') {
-                showToast('✅ Newsletter edits saved successfully!', 'success');
-            } else {
-                alert('Newsletter edits saved successfully!');
-            }
-            if (typeof refreshConsultantPreview === 'function') {
-                refreshConsultantPreview();
-            }
+            showToast('✅ Edits saved successfully!', 'success');
+            // Refresh preview
+            if (typeof loadPreview === 'function') loadPreview('/api/preview/consultant');
         } else {
-            const errorMsg = result.message || 'Failed to save edits';
-            if (typeof showToast === 'function') {
-                showToast('❌ Error: ' + errorMsg, 'error');
-            } else {
-                alert('Error: ' + errorMsg);
-            }
+            showToast('❌ Save failed: ' + (data.message || 'Unknown error'), 'error');
         }
     } catch (error) {
-        if (typeof showToast === 'function') {
-            showToast('❌ Error: ' + error.message, 'error');
-        } else {
-            alert('Error: ' + error.message);
-        }
+        showToast('❌ Network error: ' + error.message, 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = originalText;
