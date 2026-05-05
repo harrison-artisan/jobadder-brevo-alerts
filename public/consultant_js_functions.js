@@ -100,20 +100,20 @@ async function updateConsultantSectionVisibility() {
 
     const sections = {
         industry_insight: document.getElementById('toggleIndustryInsight').checked,
-        personal_update: document.getElementById('togglePersonalUpdate').checked,
+        life_update: document.getElementById('toggleLifeUpdate').checked,
         media: document.getElementById('toggleMedia').checked,
         events: document.getElementById('toggleEvents').checked,
-        instagram: document.getElementById('toggleInstagram').checked
+        instagram_grid: document.getElementById('toggleInstagram').checked
     };
 
     const content = {
         industry_insight: {
-            title: document.getElementById('industryInsightTitle').value,
-            body: document.getElementById('industryInsightBody').value
+            title: document.getElementById('editIndustryInsightHeading').value,
+            body: document.getElementById('editIndustryInsightBody').value
         },
         personal_update: {
-            title: document.getElementById('personalUpdateTitle').value,
-            body: document.getElementById('personalUpdateBody').value
+            title: document.getElementById('editLifeUpdateHeading').value,
+            body: document.getElementById('editLifeUpdateBody').value
         },
         instagram: {
             caption: document.getElementById('igCaption').value
