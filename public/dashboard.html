@@ -2031,7 +2031,7 @@
                     <div style="margin-top:20px; border-top:1px solid rgba(255,255,255,0.1); padding-top:20px; text-align:right;">
                         <button onclick="updateConsultantSectionVisibility()" class="btn btn-success" style="padding:10px 24px; font-size:14px; font-weight:700; box-shadow:0 4px 12px rgba(46,204,113,0.3);">Save All Changes</button>
                     </div>
-                </div>v>
+                </div>
             </div>
 
             <!-- Articles Section Hidden (Kept for legacy function compatibility) -->
@@ -6243,7 +6243,7 @@
                                     <div style="margin-top: 8px;">
                                         <label style="font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase;">Job Title</label>
                                         <input type="text" class="candidate-title-input" value="${c.title}" 
-                                            style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: white; padding: 6px 8px; margin-top: 2px;">
+                                            style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #333; font-weight: 500; padding: 6px 8px; margin-top: 2px;">
                                     </div>
                                     <div class="candidate-experience" style="margin-top: 4px;">${c.experience}</div>
                                 </div>
@@ -6251,7 +6251,7 @@
                             <div style="margin-top: 15px;">
                                 <label style="font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase;">Description</label>
                                 <textarea class="candidate-summary-input" 
-                                    style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: white; padding: 8px; margin-top: 2px; min-height: 100px; resize: vertical; line-height: 1.5;">${c.summary}</textarea>
+                                    style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #333; font-weight: 400; padding: 8px; margin-top: 2px; min-height: 100px; resize: vertical; line-height: 1.5;">${c.summary}</textarea>
                             </div>
                         </div>
                     `).join('')}
@@ -8120,16 +8120,21 @@
                     if (tME) tME.checked = sections.media !== false;
                     
                     // Populate Events & Media lists
-                    const editorEvents = (content.events || []).map(e => ({
-                        title: e.title,
-                        date: (e.day && e.month) ? `${e.day} ${e.month}` : '',
-                        url: e.link
+                    let editorEvents = (content.events || []).map(e => ({
+                        title: e.title || '',
+                        date: (e.day && e.month) ? `${e.day} ${e.month}` : (e.date || ''),
+                        url: e.link || ''
                     }));
                     
+                    // Ensure at least 3 event slots are shown
+                    while (editorEvents.length < 3) {
+                        editorEvents.push({ title: '', date: '', url: '' });
+                    }
+                    
                     const editorMedia = (content.media || []).map(m => ({
-                        title: m.title || m.caption,
-                        url: m.url,
-                        type: m.type
+                        title: m.title || m.caption || '',
+                        url: m.url || '',
+                        type: m.type || 'link'
                     }));
 
                     if (typeof populateEventsEditor === 'function') populateEventsEditor(editorEvents);

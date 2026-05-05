@@ -44,6 +44,35 @@
             }
         }
 
+        // Helper to add an event box
+        function addEventBox(event = {}) {
+            const container = document.getElementById('eventsEditContainer');
+            if (!container) return;
+            
+            // Remove "No events" placeholder if it exists
+            if (container.innerHTML.includes('No events')) container.innerHTML = '';
+
+            const eventBox = document.createElement('div');
+            eventBox.className = 'event-edit-box';
+            eventBox.style.cssText = 'padding:12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:6px; margin-bottom:10px; position:relative;';
+            eventBox.innerHTML = `
+                <button onclick="this.parentElement.remove()" style="position:absolute; top:8px; right:8px; background:none; border:none; color:rgba(255,255,255,0.4); cursor:pointer; font-size:16px;">&times;</button>
+                <div style="margin-bottom:8px;">
+                    <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">Event Title</label>
+                    <input type="text" class="eventTitle" value="${event.title || ''}" style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;">
+                </div>
+                <div style="margin-bottom:8px;">
+                    <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">Date</label>
+                    <input type="text" class="eventDate" value="${event.date || ''}" placeholder="e.g. 15 May 2026" style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;">
+                </div>
+                <div>
+                    <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">URL (Optional)</label>
+                    <input type="text" class="eventUrl" value="${event.url || ''}" placeholder="https://..." style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;">
+                </div>
+            `;
+            container.appendChild(eventBox);
+        }
+
         // Populate Events Container with editable fields
         function populateEventsEditor(events) {
             const container = document.getElementById('eventsEditContainer');
@@ -51,29 +80,57 @@
             container.innerHTML = '';
             
             if (!events || events.length === 0) {
-                container.innerHTML = '<div style="color:rgba(255,255,255,0.5); font-size:12px;">No events in CSV</div>';
-                return;
+                container.innerHTML = '<div style="color:rgba(255,255,255,0.5); font-size:12px; margin-bottom:10px;">No events in CSV</div>';
+            } else {
+                events.forEach(event => addEventBox(event));
             }
 
-            events.forEach((event, idx) => {
-                const eventBox = document.createElement('div');
-                eventBox.style.cssText = 'padding:12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:6px; margin-bottom:10px;';
-                eventBox.innerHTML = `
-                    <div style="margin-bottom:8px;">
-                        <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">Event Title</label>
-                        <input type="text" class="eventTitle" value="${event.title || ''}" style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;">
-                    </div>
-                    <div style="margin-bottom:8px;">
-                        <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">Date</label>
-                        <input type="text" class="eventDate" value="${event.date || ''}" placeholder="e.g. 15 May 2026" style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;">
-                    </div>
-                    <div>
-                        <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">URL (Optional)</label>
-                        <input type="text" class="eventUrl" value="${event.url || ''}" placeholder="https://..." style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;">
-                    </div>
-                `;
-                container.appendChild(eventBox);
-            });
+            // Add button if not already present
+            if (!document.getElementById('btnAddEvent')) {
+                const addBtn = document.createElement('button');
+                addBtn.id = 'btnAddEvent';
+                addBtn.className = 'btn';
+                addBtn.style.cssText = 'width:100%; padding:8px; background:rgba(255,255,255,0.05); border:1px dashed rgba(255,255,255,0.2); color:rgba(255,255,255,0.7); font-size:12px; margin-top:5px;';
+                addBtn.textContent = '+ Add Event';
+                addBtn.onclick = () => addEventBox();
+                container.parentElement.appendChild(addBtn);
+            }
+        }
+
+        // Helper to add a media box
+        function addMediaBox(item = {}) {
+            const container = document.getElementById('mediaEditContainer');
+            if (!container) return;
+            
+            if (container.innerHTML.includes('No media')) container.innerHTML = '';
+
+            const mediaBox = document.createElement('div');
+            mediaBox.className = 'media-edit-box';
+            mediaBox.style.cssText = 'padding:12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:6px; margin-bottom:10px; position:relative;';
+            
+            const type = item.type || 'link';
+            
+            mediaBox.innerHTML = `
+                <button onclick="this.parentElement.remove()" style="position:absolute; top:8px; right:8px; background:none; border:none; color:rgba(255,255,255,0.4); cursor:pointer; font-size:16px;">&times;</button>
+                <div style="margin-bottom:8px;">
+                    <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">Media Type</label>
+                    <select class="mediaType" style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;">
+                        <option value="link" ${type === 'link' ? 'selected' : ''}>Worth Reading</option>
+                        <option value="youtube" ${type === 'youtube' ? 'selected' : ''}>YouTube Video</option>
+                        <option value="instagram" ${type === 'instagram' ? 'selected' : ''}>Instagram Post</option>
+                        <option value="podcast" ${type === 'podcast' ? 'selected' : ''}>Podcast URL</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:8px;">
+                    <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">Title / Caption</label>
+                    <input type="text" class="mediaTitle" value="${item.title || ''}" style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;">
+                </div>
+                <div>
+                    <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">URL</label>
+                    <input type="text" class="mediaUrl" value="${item.url || ''}" placeholder="https://..." style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;">
+                </div>
+            `;
+            container.appendChild(mediaBox);
         }
 
         // Populate Media Container with editable fields
@@ -83,34 +140,21 @@
             container.innerHTML = '';
             
             if (!media || media.length === 0) {
-                container.innerHTML = '<div style="color:rgba(255,255,255,0.5); font-size:12px;">No media in CSV</div>';
-                return;
+                container.innerHTML = '<div style="color:rgba(255,255,255,0.5); font-size:12px; margin-bottom:10px;">No media in CSV</div>';
+            } else {
+                media.forEach(item => addMediaBox(item));
             }
 
-            media.forEach((item, idx) => {
-                const mediaBox = document.createElement('div');
-                mediaBox.style.cssText = 'padding:12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:6px; margin-bottom:10px;';
-                
-                let typeLabel = 'Worth Reading';
-                if (item.type === 'youtube') typeLabel = 'YouTube Video';
-                else if (item.type === 'instagram') typeLabel = 'Instagram Post';
-                
-	                mediaBox.innerHTML = `
-	                    <div style="margin-bottom:8px;">
-	                        <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">Type: ${typeLabel}</label>
-	                        <input type="hidden" class="mediaType" value="${item.type || 'link'}">
-	                    </div>
-                    <div style="margin-bottom:8px;">
-                        <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">Title</label>
-                        <input type="text" class="mediaTitle" value="${item.title || ''}" style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;">
-                    </div>
-                    <div>
-                        <label style="display:block; color:rgba(255,255,255,0.5); font-size:10px; margin-bottom:3px; text-transform:uppercase;">URL</label>
-                        <input type="text" class="mediaUrl" value="${item.url || ''}" style="width:100%; padding:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:white; font-size:12px; box-sizing:border-box;">
-                    </div>
-                `;
-                container.appendChild(mediaBox);
-            });
+            // Add button if not already present
+            if (!document.getElementById('btnAddMedia')) {
+                const addBtn = document.createElement('button');
+                addBtn.id = 'btnAddMedia';
+                addBtn.className = 'btn';
+                addBtn.style.cssText = 'width:100%; padding:8px; background:rgba(255,255,255,0.05); border:1px dashed rgba(255,255,255,0.2); color:rgba(255,255,255,0.7); font-size:12px; margin-top:5px;';
+                addBtn.textContent = '+ Add Media / Worth Reading';
+                addBtn.onclick = () => addMediaBox();
+                container.parentElement.appendChild(addBtn);
+            }
         }
 
         // Update section visibility and content, then send to backend
