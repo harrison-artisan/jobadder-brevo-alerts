@@ -8062,6 +8062,9 @@
                     // Populate Events & Media lists
                     if (typeof populateEventsEditor === 'function') populateEventsEditor(content.events || []);
                     if (typeof populateMediaEditor === 'function') populateMediaEditor(content.media || []);
+                    
+                    // Show toast that population is complete
+                    showToast('Edit suite populated with CSV data.', 'info');
                 }
             } catch (error) {
                 errorDiv.textContent = 'Error: ' + error.message;

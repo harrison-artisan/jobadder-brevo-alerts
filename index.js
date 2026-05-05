@@ -1438,10 +1438,15 @@ app.post('/api/consultant/cancel-schedule', (req, res) => {
   consultantController.cancelConsultantSchedule(req, res);
 });
 
-// POST /api/consultant/update-sections - Update section visibility and Instagram grid
-app.post('/api/consultant/update-sections', (req, res) => {
-  consultantController.updateSections(req, res);
-});
+	// POST /api/consultant/update-sections - Update section visibility and Instagram grid
+	app.post('/api/consultant/update-sections', async (req, res) => {
+	  try {
+	    await consultantController.updateSections(req, res);
+	  } catch (error) {
+	    console.error('Route error /api/consultant/update-sections:', error);
+	    res.status(500).json({ success: false, message: error.message });
+	  }
+	});
 
 app.post('/api/consultant/batch-schedule', (req, res) => {
   consultantController.batchSchedule(req, res);

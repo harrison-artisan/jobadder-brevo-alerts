@@ -1681,6 +1681,10 @@ async function updateSections(req, res) {
             return res.status(400).json({ success: false, message: 'No newsletter parsed yet' });
         }
 
+        // Initialize content if missing
+        if (!state.content) state.content = {};
+        if (!state.content.sections) state.content.sections = {};
+
         // Update sections visibility
         if (sections) {
             state.content.sections = { ...state.content.sections, ...sections };
@@ -1689,16 +1693,16 @@ async function updateSections(req, res) {
         // Update Industry Insight
         if (industry_insight_content) {
             state.content.industry_insight = {
-                heading: industry_insight_content.heading || state.content.industry_insight.heading,
-                body: industry_insight_content.body || state.content.industry_insight.body
+                heading: industry_insight_content.heading || (state.content.industry_insight ? state.content.industry_insight.heading : ''),
+                body: industry_insight_content.body || (state.content.industry_insight ? state.content.industry_insight.body : '')
             };
         }
 
         // Update Life Update
         if (life_update_content) {
             state.content.life_update = {
-                heading: life_update_content.heading || state.content.life_update.heading,
-                body: life_update_content.body || state.content.life_update.body
+                heading: life_update_content.heading || (state.content.life_update ? state.content.life_update.heading : ''),
+                body: life_update_content.body || (state.content.life_update ? state.content.life_update.body : '')
             };
             if (life_update_content.images && life_update_content.images.length > 0) {
                 state.content.life_update_images = life_update_content.images;
@@ -1716,7 +1720,6 @@ async function updateSections(req, res) {
                 title: e.title,
                 date: e.date,
                 link: e.url,
-                // preserve day/month parsing if date changed
                 ...(e.date ? parseEventDate(e.date) : {})
             }));
         }
@@ -1736,27 +1739,30 @@ async function updateSections(req, res) {
         const alistCandidate = state.content.alist_candidate;
         const liveJob = state.content.live_job;
 
-        const parsedForTemplate = {
-            consultant: consultantConfig.id,
-            preheader_text: `${state.content.industry_insight.heading} — from ${consultantConfig.name} at Artisan`,
-            industry_insight: state.content.industry_insight,
-            life_update: state.content.life_update,
-            events: state.content.events,
-            media: state.content.media
-        };
+        // Ensure we use the updated content for template params
+        const mediaArray = state.content.media || [];
+        // Add life update images if they exist
+        const allMedia = [...mediaArray];
+        if (state.content.life_update_images) {
+            state.content.life_update_images.forEach(url => {
+                allMedia.push({ type: 'life_update_image', url });
+            });
+        }
 
         state.templateParams = buildTemplateParams(
             consultantConfig, 
-            parsedForTemplate, 
-            state.content.life_update_images || [], 
+            {
+                industry_insight: state.content.industry_insight,
+                life_update: state.content.life_update,
+                events: state.content.events
+            }, 
+            allMedia, 
             articles, 
             alistCandidate, 
-            liveJob
+            liveJob,
+            state.content.sections,
+            state.content.instagram_grid
         );
-        
-        // Ensure templateParams sections are updated
-        state.templateParams.sections = state.content.sections;
-        if (instagram_grid) state.templateParams.instagram_grid = instagram_grid;
 
         writeState(state);
         res.json({ success: true, message: 'Sections updated successfully', state });

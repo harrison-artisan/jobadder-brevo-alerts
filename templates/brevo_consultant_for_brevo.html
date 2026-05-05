@@ -199,6 +199,7 @@
           </tr>
 
           <!-- ====== INDUSTRY INSIGHT ====== -->
+          {% if params.sections.industry_insight %}
           <tr>
             <td style="padding:40px 45px 0 45px;" class="mobile-pad">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#fff8f8 0%,#fff0f0 100%);border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(189,32,61,0.07);">
@@ -212,8 +213,10 @@
               </table>
             </td>
           </tr>
+          {% endif %}
 
           <!-- ====== LIFE UPDATE ====== -->
+          {% if params.sections.life_update %}
           <tr>
             <td style="padding:28px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#f8faff 0%,#f0f4ff 100%);border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(27,51,77,0.06);">
@@ -227,6 +230,7 @@
               </table>
             </td>
           </tr>
+          {% endif %}
 
           <!-- ====== PERSONAL MEDIA (array — one block per item) ====== -->
           {% if params.media.has_media %}
