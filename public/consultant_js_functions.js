@@ -140,8 +140,15 @@ async function updateConsultantSectionVisibility() {
     for (let i = 1; i <= 4; i++) {
         const preview = document.getElementById('igPreview' + i);
         if (preview && preview.style.backgroundImage && preview.style.backgroundImage !== 'none') {
-            const url = preview.style.backgroundImage.slice(5, -2);
-            if (url.startsWith('data:')) instagram_grid.push(url);
+            try {
+                const bgImage = preview.style.backgroundImage;
+                const url = bgImage.slice(5, -2);
+                if (url && url.startsWith('data:')) {
+                    instagram_grid.push(url);
+                }
+            } catch (e) {
+                console.warn('Error extracting Instagram image ' + i, e);
+            }
         }
     }
 
@@ -149,10 +156,19 @@ async function updateConsultantSectionVisibility() {
     for (let i = 1; i <= 3; i++) {
         const preview = document.getElementById('lifeUpdatePreview' + i);
         if (preview && preview.style.backgroundImage && preview.style.backgroundImage !== 'none') {
-            const url = preview.style.backgroundImage.slice(5, -2);
-            if (url.startsWith('data:')) life_update_images.push(url);
+            try {
+                const bgImage = preview.style.backgroundImage;
+                const url = bgImage.slice(5, -2);
+                if (url && url.startsWith('data:')) {
+                    life_update_images.push(url);
+                }
+            } catch (e) {
+                console.warn('Error extracting Life Update image ' + i, e);
+            }
         }
     }
+
+    console.log('Saving:', { sections, content, events, media, instagram_grid, life_update_images });
 
     try {
         const response = await fetch('/api/consultant/update-sections', {
