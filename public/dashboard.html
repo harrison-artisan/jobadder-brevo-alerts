@@ -8029,7 +8029,7 @@
                 // Show the edit panel first so elements exist
                 if (typeof showConsultantEditPanel === 'function') showConsultantEditPanel();
 
-                //                // Populate editable fields from the parsed state
+                // Populate editable fields from the parsed state
                 if (s && s.content) {
                     const content = s.content;
                     // Populate Industry Insight
@@ -8045,25 +8045,36 @@
                     if (lb) lb.value = (content.life_update && content.life_update.body) || '';
                     
                     // Set toggles
-                    if (s.sections) {
-                        const tII = document.getElementById('toggleIndustryInsight');
-                        const tLU = document.getElementById('toggleLifeUpdate');
-                        const tIG = document.getElementById('toggleInstagram');
-                        const tEV = document.getElementById('toggleEvents');
-                        const tME = document.getElementById('toggleMedia');
-                        
-                        if (tII) tII.checked = s.sections.industry_insight !== false;
-                        if (tLU) tLU.checked = s.sections.life_update !== false;
-                        if (tIG) tIG.checked = s.sections.instagram !== false;
-                        if (tEV) tEV.checked = s.sections.events !== false;
-                        if (tME) tME.checked = s.sections.media !== false;
-                    }
+                    const sections = s.content.sections || {};
+                    const tII = document.getElementById('toggleIndustryInsight');
+                    const tLU = document.getElementById('toggleLifeUpdate');
+                    const tIG = document.getElementById('toggleInstagram');
+                    const tEV = document.getElementById('toggleEvents');
+                    const tME = document.getElementById('toggleMedia');
+                    
+                    if (tII) tII.checked = sections.industry_insight !== false;
+                    if (tLU) tLU.checked = sections.life_update !== false;
+                    if (tIG) tIG.checked = sections.instagram_grid !== false;
+                    if (tEV) tEV.checked = sections.events !== false;
+                    if (tME) tME.checked = sections.media !== false;
                     
                     // Populate Events & Media lists
-                    if (typeof populateEventsEditor === 'function') populateEventsEditor(content.events || []);
-                    if (typeof populateMediaEditor === 'function') populateMediaEditor(content.media || []);
+                    // Map the content structure to the editor structure
+                    const editorEvents = (content.events || []).map(e => ({
+                        title: e.title,
+                        date: (e.day && e.month) ? `${e.day} ${e.month}` : '',
+                        url: e.link
+                    }));
                     
-                    // Show toast that population is complete
+                    const editorMedia = (content.media || []).map(m => ({
+                        title: m.title || m.caption,
+                        url: m.url,
+                        type: m.type
+                    }));
+
+                    if (typeof populateEventsEditor === 'function') populateEventsEditor(editorEvents);
+                    if (typeof populateMediaEditor === 'function') populateMediaEditor(editorMedia);
+                    
                     showToast('Edit suite populated with CSV data.', 'info');
                 }
             } catch (error) {
