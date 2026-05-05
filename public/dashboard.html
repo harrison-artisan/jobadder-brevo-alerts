@@ -1221,26 +1221,26 @@
         
         <!-- Main Category Tabs -->
         <div class="tabs" id="mainTabs">
-            <button class="tab active" onclick="switchMainTab('email-marketing', event)">
+            <button class="tab active" onclick="switchMainTab('email-marketing')">
                 Email Marketing
             </button>
-            <button class="tab" onclick="switchMainTab('content-marketing', event)">
+            <button class="tab" onclick="switchMainTab('content-marketing')">
                 Content Marketing
             </button>
         </div>
         
         <!-- Email Type Tabs (shown when Email Marketing is active) -->
         <div class="tabs" id="emailTabs">
-            <button class="tab active" onclick="switchTab('job-alerts', event)">
+            <button class="tab active" onclick="switchTab('job-alerts')">
                 Job Alerts
             </button>
-            <button class="tab alist" onclick="switchTab('alist', event)">
+            <button class="tab alist" onclick="switchTab('alist')">
                 A-List
             </button>
-            <button class="tab xpose" onclick="switchTab('xpose', event)">
+            <button class="tab xpose" onclick="switchTab('xpose')">
                 Xpose
             </button>
-            <button class="tab consultant" onclick="switchTab('consultant', event)">
+            <button class="tab consultant" onclick="switchTab('consultant')">
                 Consultant Newsletters
             </button>
         </div>
@@ -1999,11 +1999,7 @@
         <!-- End Main Content -->
     
     <script>
-        // Global State
-        let _csvFile = null;
-        let consultantParsed = false;
-        let consultantSegment = null;
-        let consultantState = null;
+        let alistState = null;
         
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
@@ -2036,7 +2032,7 @@
         // Switch between main category tabs
         let emailContentBackup = null;
         
-        function switchMainTab(mainTabName, event) {
+        function switchMainTab(mainTabName) {
             const emailTabs = document.getElementById('emailTabs');
             const mainContent = document.querySelector('.main-content');
             const mainTabButtons = document.querySelectorAll('#mainTabs .tab');
@@ -2045,11 +2041,7 @@
             mainTabButtons.forEach(btn => {
                 btn.classList.remove('active');
             });
-            if (event && event.target) {
-                event.target.classList.add('active');
-            } else if (window.event && window.event.target) {
-                window.event.target.classList.add('active');
-            }
+            event.target.classList.add('active');
             
             if (mainTabName === 'email-marketing') {
                 // Show email type tabs and restore content
@@ -3072,7 +3064,7 @@
             }
         }
         
-        function switchTab(tabName, event) {
+        function switchTab(tabName) {
             // Hide all tab contents
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.remove('active');
@@ -3084,15 +3076,10 @@
             });
             
             // Show selected tab content
-            const content = document.getElementById(tabName + '-content');
-            if (content) content.classList.add('active');
+            document.getElementById(tabName + '-content').classList.add('active');
             
             // Add active class to clicked tab
-            if (event && event.target) {
-                event.target.classList.add('active');
-            } else if (window.event && window.event.target) {
-                window.event.target.classList.add('active');
-            }
+            event.target.classList.add('active');
             
             // Load articles when switching to Xpose tab
             if (tabName === 'xpose') {
@@ -7660,6 +7647,8 @@
 
         // ========== CONSULTANT NEWSLETTER FUNCTIONS (Gemini JSON Paste Workflow) ==========
 
+        let consultantParsed = false; // true once JSON has been successfully parsed
+        let consultantSegment = null; // { type, id, name } once confirmed
         let selectedConsultantId = null; // currently selected consultant ID
         let currentProfile = null; // loaded profile from config
         let profileEditOpen = false;
@@ -7884,7 +7873,6 @@
                 // Success
                 consultantParsed = true;
                 const s = data.state;
-                consultantState = s;
                 document.getElementById('consultantStateBadge').textContent = 'GENERATED';
                 document.getElementById('consultantStateBadge').className = 'status-badge GENERATED';
                 document.getElementById('consultantStateTimestamp').textContent =
@@ -7901,47 +7889,6 @@
                 }
                 loadPreview('/api/preview/consultant');
                 showToast('Newsletter built for ' + data.consultant + '!', 'success');
-
-                // Show the edit panel first so elements exist
-                if (typeof showConsultantEditPanel === 'function') showConsultantEditPanel();
-
-                // Populate editable fields from the parsed state
-                if (s) {
-                    // Populate Industry Insight
-                    if (s.industry_insight_content) {
-                        const h = document.getElementById('editIndustryInsightHeading');
-                        const b = document.getElementById('editIndustryInsightBody');
-                        if (h) h.value = s.industry_insight_content.heading || '';
-                        if (b) b.value = s.industry_insight_content.body || '';
-                    }
-                    
-                    // Populate Life Update
-                    if (s.life_update_content) {
-                        const h = document.getElementById('editLifeUpdateHeading');
-                        const b = document.getElementById('editLifeUpdateBody');
-                        if (h) h.value = s.life_update_content.heading || '';
-                        if (b) b.value = s.life_update_content.body || '';
-                    }
-                    
-                    // Populate Events and Media
-                    if (typeof populateEventsEditor === 'function') populateEventsEditor(s.events || []);
-                    if (typeof populateMediaEditor === 'function') populateMediaEditor(s.media || []);
-                    
-                    // Set toggles
-                    if (s.sections) {
-                        const tII = document.getElementById('toggleIndustryInsight');
-                        const tLU = document.getElementById('toggleLifeUpdate');
-                        const tIG = document.getElementById('toggleInstagram');
-                        const tEV = document.getElementById('toggleEvents');
-                        const tME = document.getElementById('toggleMedia');
-                        
-                        if (tII) tII.checked = s.sections.industry_insight !== false;
-                        if (tLU) tLU.checked = s.sections.life_update !== false;
-                        if (tIG) tIG.checked = !!s.sections.instagram;
-                        if (tEV) tEV.checked = s.sections.events !== false;
-                        if (tME) tME.checked = !!s.sections.media;
-                    }
-                }
             } catch (error) {
                 errorDiv.textContent = 'Error: ' + error.message;
                 errorDiv.style.display = 'block';
@@ -7994,8 +7941,6 @@
                 updateConsultantScheduledBox(null);
                 // Clear preview
                 loadPreview(null);
-                // Hide edit panel
-                if (typeof hideConsultantEditPanel === 'function') hideConsultantEditPanel();
                 showToast('Consultant state reset.', 'info');
             } catch (e) {
                 showToast('Reset failed: ' + e.message, 'error');
@@ -8216,8 +8161,6 @@
         }
         // ===== END CONSULTANT SCHEDULE FUNCTIONS =====
 
-
-
         // Send now
         async function sendConsultantNow() {
             if (!consultantParsed) {
@@ -8289,6 +8232,5 @@
             }
         }
     </script>
-    <script src="/consultant_js_functions.js"></script>
 </body>
 </html>
