@@ -1998,7 +1998,13 @@
         </div>
         <!-- End Main Content -->
     
+    <script src="/consultant_js_functions.js"></script>
     <script>
+        // Global State
+        let _csvFile = null;
+        let consultantParsed = false;
+        let consultantSegment = null;
+        let consultantState = null;
         let alistState = null;
         
         // Initialize
@@ -7889,6 +7895,47 @@
                 }
                 loadPreview('/api/preview/consultant');
                 showToast('Newsletter built for ' + data.consultant + '!', 'success');
+
+                // Show the edit panel first so elements exist
+                if (typeof showConsultantEditPanel === 'function') showConsultantEditPanel();
+
+                // Populate editable fields from the parsed state
+                if (s) {
+                    // Populate Industry Insight
+                    if (s.industry_insight_content) {
+                        const h = document.getElementById('editIndustryInsightHeading');
+                        const b = document.getElementById('editIndustryInsightBody');
+                        if (h) h.value = s.industry_insight_content.heading || '';
+                        if (b) b.value = s.industry_insight_content.body || '';
+                    }
+                    
+                    // Populate Life Update
+                    if (s.life_update_content) {
+                        const h = document.getElementById('editLifeUpdateHeading');
+                        const b = document.getElementById('editLifeUpdateBody');
+                        if (h) h.value = s.life_update_content.heading || '';
+                        if (b) b.value = s.life_update_content.body || '';
+                    }
+                    
+                    // Populate Events and Media
+                    if (typeof populateEventsEditor === 'function') populateEventsEditor(s.events || []);
+                    if (typeof populateMediaEditor === 'function') populateMediaEditor(s.media || []);
+                    
+                    // Set toggles
+                    if (s.sections) {
+                        const tII = document.getElementById('toggleIndustryInsight');
+                        const tLU = document.getElementById('toggleLifeUpdate');
+                        const tIG = document.getElementById('toggleInstagram');
+                        const tEV = document.getElementById('toggleEvents');
+                        const tME = document.getElementById('toggleMedia');
+                        
+                        if (tII) tII.checked = s.sections.industry_insight !== false;
+                        if (tLU) tLU.checked = s.sections.life_update !== false;
+                        if (tIG) tIG.checked = !!s.sections.instagram;
+                        if (tEV) tEV.checked = s.sections.events !== false;
+                        if (tME) tME.checked = !!s.sections.media;
+                    }
+                }
             } catch (error) {
                 errorDiv.textContent = 'Error: ' + error.message;
                 errorDiv.style.display = 'block';
