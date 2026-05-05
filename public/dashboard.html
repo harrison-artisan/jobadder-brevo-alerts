@@ -2047,7 +2047,12 @@
             mainTabButtons.forEach(btn => {
                 btn.classList.remove('active');
             });
-            event.target.classList.add('active');
+            
+            // Fix: Use window.event if event is not passed
+            const evt = arguments[1] || window.event;
+            if (evt && evt.target) {
+                evt.target.classList.add('active');
+            }
             
             if (mainTabName === 'email-marketing') {
                 // Show email type tabs and restore content
@@ -3082,10 +3087,14 @@
             });
             
             // Show selected tab content
-            document.getElementById(tabName + '-content').classList.add('active');
+            const content = document.getElementById(tabName + '-content');
+            if (content) content.classList.add('active');
             
-            // Add active class to clicked tab
-            event.target.classList.add('active');
+            // Fix: Use window.event if event is not passed
+            const evt = arguments[1] || window.event;
+            if (evt && evt.target) {
+                evt.target.classList.add('active');
+            }
             
             // Load articles when switching to Xpose tab
             if (tabName === 'xpose') {
