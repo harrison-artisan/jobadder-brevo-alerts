@@ -321,154 +321,171 @@
           <!-- ====== FEATURED THIS WEEK ====== -->
           <tr>
             <td style="padding:40px 45px 0 45px;" class="mobile-pad">
+              <h2 style="margin:0 0 24px 0;font-size:18px;font-weight:900;color:#1b334d;text-align:center;text-transform:uppercase;letter-spacing:0.5px;">Featured This Week</h2>
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                <tr><td align="center" style="padding-bottom:28px;"><h2 style="margin:0;font-size:24px;font-weight:900;color:#1b334d;letter-spacing:-0.5px;">Featured This Week</h2><div style="width:40px;height:4px;background:#bd203d;margin:12px auto 0 auto;border-radius:2px;"></div></td></tr>
                 <tr>
-                  <td>
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+                  <!-- FEATURED JOB -->
+                  <td width="49%" valign="top" class="two-col-left" style="padding-right:10px;">
+                    {% if params.job.has_job %}
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#1b334d 0%,#0f1f30 100%);border-radius:14px;overflow:hidden;box-shadow:0 4px 18px rgba(27,51,77,0.22);">
                       <tr>
-                        <!-- FEATURED JOB -->
-                        {% if params.job.has_job %}
-                        <td width="50%" valign="top" class="two-col-left" style="padding-right:12px;">
-                          <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;border:1px solid #e0e0e0;border-radius:14px;padding:24px;height:240px;box-shadow:0 4px 12px rgba(0,0,0,0.04);border-left:4px solid #bd203d;">
-                            <tr>
-                              <td valign="top">
-                                <p style="margin:0 0 8px 0;font-size:10px;font-weight:700;color:#bd203d;letter-spacing:1.5px;text-transform:uppercase;">Hot Job</p>
-                                <h3 style="margin:0 0 10px 0;font-size:17px;font-weight:800;color:#1b334d;line-height:1.3;">{{ params.job.title }}</h3>
-                                <p style="margin:0 0 18px 0;font-size:13px;color:#666666;line-height:1.5;">{{ params.job.description }}</p>
-                                <a href="{{ params.job.link }}" style="display:inline-block;background:#bd203d;color:#ffffff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:700;font-size:11px;letter-spacing:0.5px;">VIEW JOB &#8594;</a>
-                              </td>
-                            </tr>
-                          </table>
+                        <td height="200" style="padding:20px 22px;text-align:center;vertical-align:middle;height:200px;">
+                          <p style="margin:0 0 5px 0;font-size:9px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:2px;text-transform:uppercase;">Open Role</p>
+                          <p style="margin:0 0 5px 0;font-size:10px;font-weight:600;color:rgba(255,255,255,0.5);">{{ params.job.type }} &nbsp;&#183;&nbsp; {{ params.job.location }}</p>
+                          <h3 style="margin:0 0 10px 0;font-size:17px;font-weight:900;color:#ffffff;line-height:1.3;">{{ params.job.title }}</h3>
+                          <a href="{{ params.job.link }}" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:10px 20px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 4px 12px rgba(189,32,61,0.4);">VIEW ROLE &#8594;</a>
                         </td>
-                        {% endif %}
-
-                        <!-- A-LIST CANDIDATE -->
-                        {% if params.alist.has_candidate %}
-                        <td width="50%" valign="top" class="two-col-right" style="padding-left:12px;">
-                          <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#1b334d;border-radius:14px;padding:24px;height:240px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
-                            <tr>
-                              <td valign="top">
-                                <p style="margin:0 0 8px 0;font-size:10px;font-weight:700;color:#e05070;letter-spacing:1.5px;text-transform:uppercase;">A-List Talent</p>
-                                <h3 style="margin:0 0 10px 0;font-size:17px;font-weight:800;color:#ffffff;line-height:1.3;">{{ params.alist.title }}</h3>
-                                <p style="margin:0 0 18px 0;font-size:13px;color:rgba(255,255,255,0.7);line-height:1.5;">{{ params.alist.summary }}</p>
-                                <a href="{{ params.alist.link }}" style="display:inline-block;background:#ffffff;color:#1b334d;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:700;font-size:11px;letter-spacing:0.5px;">REQUEST CV &#8594;</a>
-                              </td>
-                            </tr>
-                          </table>
-                        </td>
-                        {% endif %}
                       </tr>
                     </table>
+                    {% else %}
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#1b334d 0%,#0f1f30 100%);border-radius:14px;overflow:hidden;box-shadow:0 4px 18px rgba(27,51,77,0.22);">
+                      <tr><td height="200" style="padding:20px 22px;text-align:center;vertical-align:middle;height:200px;"><p style="margin:0 0 16px 0;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.6;">Looking for your next creative role?</p><a href="https://clientapps.jobadder.com/67514/artisan?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:10px 20px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 4px 12px rgba(189,32,61,0.4);">VIEW ALL JOBS &#8594;</a></td></tr>
+                    </table>
+                    {% endif %}
+                  </td>
+
+                  <!-- A-LIST CANDIDATE -->
+                  <td width="49%" valign="top" class="two-col-right" style="padding-left:10px;">
+                    {% if params.alist.has_candidate %}
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#fff8f8 0%,#fff0f0 100%);border-radius:14px;overflow:hidden;box-shadow:0 4px 18px rgba(189,32,61,0.1);">
+                      <tr>
+                        <td height="200" style="padding:20px 22px;text-align:center;vertical-align:middle;height:200px;">
+                          <p style="margin:0 0 8px 0;font-size:9px;font-weight:700;color:#bd203d;letter-spacing:2px;text-transform:uppercase;">A-List Candidate</p>
+                          <img src="{{ params.alist.image }}" alt="{{ params.alist.title }}" width="64" height="64" style="display:block;border:0;border-radius:50%;width:64px;height:64px;object-fit:cover;margin:0 auto 10px auto;box-shadow:0 3px 10px rgba(189,32,61,0.2);">
+                          <h3 style="margin:0 0 14px 0;font-size:16px;font-weight:900;color:#1b334d;line-height:1.3;">{{ params.alist.title }}</h3>
+                          <a href="{{ params.alist.link }}" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:10px 20px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 4px 12px rgba(189,32,61,0.35);">FIND OUT MORE &#8594;</a>
+                        </td>
+                      </tr>
+                    </table>
+                    {% else %}
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#fff8f8 0%,#fff0f0 100%);border-radius:14px;overflow:hidden;box-shadow:0 4px 18px rgba(189,32,61,0.1);">
+                      <tr><td height="200" style="padding:20px 22px;text-align:center;vertical-align:middle;height:200px;"><p style="margin:0 0 16px 0;font-size:13px;color:#666666;line-height:1.6;">Know someone who&apos;d be perfect for a role?</p><a href="https://artisan.com.au/refer-a-friend/?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:10px 20px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;">REFER A FRIEND &#8594;</a></td></tr>
+                    </table>
+                    {% endif %}
                   </td>
                 </tr>
+              </table>
+              <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" style="margin-top:20px;">
+                <tr><td><a href="https://clientapps.jobadder.com/67514/artisan?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER" style="display:inline-block;background-color:#ffffff;color:#1b334d;border:2px solid #1b334d;padding:10px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 3px 10px rgba(27,51,77,0.1);">VIEW ALL OUR JOBS &#8594;</a></td></tr>
               </table>
             </td>
           </tr>
 
           <!-- ====== EVENTS (CONDITIONAL) ====== -->
-          {% if params.sections.events and params.events.length > 0 %}
+          {% if params.events %}
+          <tr><td style="padding:40px 45px 0 45px;"><div style="height:3px;background:linear-gradient(90deg,#1b334d 0%,#bd203d 100%);border-radius:2px;"></div></td></tr>
           <tr>
-            <td style="padding:45px 45px 0 45px;" class="mobile-pad">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#fcfcfc;border:1px solid #eeeeee;border-radius:14px;padding:32px;">
-                <tr><td style="padding-bottom:24px;"><h2 style="margin:0;font-size:20px;font-weight:900;color:#1b334d;">What&apos;s On</h2></td></tr>
-                {% for event in params.events %}
+            <td style="padding:40px 45px;" class="mobile-pad">
+              <h2 style="margin:0 0 24px 0;font-size:18px;font-weight:900;color:#1b334d;text-align:center;text-transform:uppercase;letter-spacing:0.5px;">What&apos;s On</h2>
+              {% for event in params.events %}
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;border:1px solid #e8e8e8;border-radius:12px;margin-bottom:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
                 <tr>
-                  <td style="padding-bottom:16px;">
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;border:1px solid #e8e8e8;border-radius:12px;overflow:hidden;">
-                      <tr>
-                        <td width="70" bgcolor="#bd203d" align="center" valign="middle" class="event-date-cell" style="padding:18px 0;">
-                          <p style="margin:0;color:#ffffff;font-size:18px;font-weight:900;line-height:1;">{{ event.date.split(' ')[0] }}</p>
-                          <p style="margin:4px 0 0 0;color:rgba(255,255,255,0.8);font-size:10px;font-weight:700;text-transform:uppercase;">{{ event.date.split(' ')[1] }}</p>
-                        </td>
-                        <td style="padding:18px 22px;" class="event-content-cell">
-                          <h4 style="margin:0 0 4px 0;font-size:15px;font-weight:800;color:#1b334d;">{{ event.title }}</h4>
-                          {% if event.description %}<p style="margin:0 0 10px 0;font-size:12px;color:#666666;line-height:1.4;">{{ event.description }}</p>{% endif %}
-                          <a href="{{ event.url }}" style="font-size:12px;font-weight:700;color:#bd203d;text-decoration:none;">EVENT DETAILS &#8594;</a>
-                        </td>
-                      </tr>
+                  <td width="72" valign="middle" align="center" style="padding:20px 0 20px 20px;" class="event-date-cell">
+                    <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);border-radius:10px;width:56px;text-align:center;">
+                      {% if event.day %}
+                      <tr><td style="padding:10px 8px 4px 8px;font-size:22px;font-weight:900;color:#ffffff;line-height:1;">{{ event.day }}</td></tr>
+                      <tr><td style="padding:0 8px 10px 8px;font-size:9px;font-weight:700;color:rgba(255,255,255,0.85);letter-spacing:1px;text-transform:uppercase;">{{ event.month }}</td></tr>
+                      {% else %}
+                      <tr><td style="padding:10px 8px 10px 8px;font-size:13px;font-weight:900;color:#ffffff;line-height:1;text-align:center;">{{ event.month }}</td></tr>
+                      {% endif %}
                     </table>
                   </td>
+                  <td valign="middle" style="padding:20px 24px;" class="event-content-cell">
+                    <h3 style="margin:0 0 4px 0;font-size:16px;font-weight:900;color:#1b334d;line-height:1.3;">{{ event.title }}</h3>
+                    <p style="margin:0 0 10px 0;font-size:13px;line-height:1.6;color:#666666;">{{ event.description }}</p>
+                    {% if event.link %}<a href="{{ event.link }}" style="display:inline-block;background:linear-gradient(135deg,#1b334d 0%,#0f1f30 100%);color:#ffffff;padding:7px 16px;border-radius:8px;text-decoration:none;font-weight:700;font-size:11px;letter-spacing:0.5px;">FIND OUT MORE &#8594;</a>{% endif %}
+                  </td>
                 </tr>
-                {% endfor %}
               </table>
+              {% endfor %}
             </td>
           </tr>
           {% endif %}
+
+          <!-- ====== GRADIENT DIVIDER ====== -->
+          <tr><td style="padding:0 45px;"><div style="height:3px;background:linear-gradient(90deg,#bd203d 0%,#1b334d 100%);border-radius:2px;"></div></td></tr>
 
           <!-- ====== FROM THE CREATIVE COMMUNITY ====== -->
-          {% if params.sections.articles and params.articles.length > 0 %}
           <tr>
-            <td style="padding:45px 45px 0 45px;" class="mobile-pad">
+            <td style="padding:40px 45px 0 45px;" class="mobile-pad">
+              <h2 style="margin:0 0 6px 0;font-size:18px;font-weight:900;color:#1b334d;text-align:center;text-transform:uppercase;letter-spacing:0.5px;">From the Creative Community</h2>
+              <p style="margin:0 0 28px 0;font-size:13px;color:#888888;text-align:center;line-height:1.5;">Insights, ideas and industry news from Artisan XPOSE.</p>
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                <tr><td align="center" style="padding-bottom:28px;"><h2 style="margin:0;font-size:20px;font-weight:900;color:#1b334d;">From the Creative Community</h2><div style="width:30px;height:3px;background:#bd203d;margin:10px auto 0 auto;border-radius:2px;"></div></td></tr>
-                <tr>
+                <tbody><tr>
+                  {% for article in params.articles %}
+                  <td width="33%" valign="top" style="padding:0 6px;" class="article-col">
+                    <a href="{{ article.link }}" style="text-decoration:none;display:block;">
+                      <img src="{{ article.image }}" alt="{{ article.title }}" style="display:block;width:100%;height:150px;border-radius:8px;border:1px solid #e0e0e0;object-fit:cover;"/>
+                    </a>
+                    <p style="margin:8px 0 3px 0;font-size:11px;font-weight:700;color:#1b334d;line-height:1.4;text-align:center;">
+                      <a href="{{ article.link }}" style="color:#1b334d;text-decoration:none;">{{ article.title }}</a>
+                    </p>
+                    <p style="margin:0;text-align:center;"><a href="{{ article.link }}" style="font-size:10px;color:#bd203d;font-weight:700;text-decoration:none;">READ &#8594;</a></p>
+                  </td>
+                  {% endfor %}
+                </tr>
+              </tbody></table>
+              <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" style="margin-top:24px;">
+                <tbody><tr>
                   <td>
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                      <tr>
-                        {% for article in params.articles %}
-                        <td width="33.33%" valign="top" class="article-col" style="padding:0 8px;">
-                          <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                            <tr><td style="padding-bottom:12px;"><a href="{{ article.link }}"><img src="{{ article.image }}" alt="" width="100%" height="150" style="display:block;width:100%;height:150px;object-fit:cover;border-radius:10px;background:#eeeeee;"></a></td></tr>
-                            <tr><td align="center"><h4 style="margin:0 0 8px 0;font-size:13px;font-weight:800;color:#1b334d;line-height:1.4;height:3.2em;overflow:hidden;">{{ article.title }}</h4><a href="{{ article.link }}" style="font-size:11px;font-weight:700;color:#bd203d;text-decoration:none;letter-spacing:0.5px;">READ &#8594;</a></td></tr>
-                          </table>
-                        </td>
-                        {% endfor %}
-                      </tr>
-                    </table>
+                    <a href="https://artisan.com.au/creative-community/?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER" style="display:inline-block;background-color:#ffffff;color:#1b334d;border:2px solid #1b334d;padding:10px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 3px 10px rgba(27,51,77,0.1);">VISIT THE CREATIVE COMMUNITY &#8594;</a>
                   </td>
                 </tr>
-                <tr><td align="center" style="padding-top:28px;"><a href="https://artisan.com.au/creative-community/?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER" style="display:inline-block;border:2px solid #1b334d;color:#1b334d;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:1px;">VISIT THE CREATIVE COMMUNITY &#8594;</a></td></tr>
-              </table>
+              </tbody></table>
             </td>
           </tr>
-          {% endif %}
 
           <!-- ====== SPACING AFTER CREATIVE COMMUNITY ====== -->
-          <tr><td height="45" style="height:45px;">&nbsp;</td></tr>
+          <tr><td style="padding:28px 45px 0 45px;"></td></tr>
+
+          <!-- ====== GRADIENT DIVIDER ====== -->
+          <tr><td style="padding:0 45px;"><div style="height:3px;background:linear-gradient(90deg,#bd203d 0%,#1b334d 100%);border-radius:2px;"></div></td></tr>
 
           <!-- ====== BOOK A MEETING ====== -->
           <tr>
-            <td style="padding:0 45px 40px 45px;" class="mobile-pad">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#fcfcfc 0%,#f5f5f5 100%);border:1px solid #eeeeee;border-radius:16px;padding:36px 32px;text-align:center;">
+            <td style="padding:40px 45px 0 45px;" class="mobile-pad">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#fff5f5 0%,#ffe8e8 100%);border:1px solid #ffd4d4;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(189,32,61,0.07);">
                 <tr>
-                  <td align="center">
-                    <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" style="margin-bottom:20px;">
+                  <td style="padding:32px 32px 28px 32px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
                       <tr>
-                        <td align="center" style="background:#ffffff;border-radius:50%;padding:16px;box-shadow:0 4px 12px rgba(0,0,0,0.05);">
-                          <img src="https://cdn-icons-png.flaticon.com/512/2370/2370264.png" alt="" width="48" height="48" style="display:block;border:0;">
+                        <td width="60" valign="middle" align="center" style="padding-right:20px;" class="cal-icon-cell">
+                          <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);border-radius:12px;width:52px;height:52px;">
+                            <tr><td align="center" valign="middle" style="padding:10px;"><img src="https://ssl.gstatic.com/calendar/images/dynamiclogo_2020q4/calendar_31_2x.png" alt="Calendar" width="30" height="30" style="display:block;border:0;border-radius:4px;"></td></tr>
+                          </table>
+                        </td>
+                        <td valign="middle" class="cal-text-cell">
+                          <p style="margin:0 0 4px 0;font-size:10px;font-weight:700;color:#bd203d;letter-spacing:2px;text-transform:uppercase;">Let&apos;s Connect</p>
+                          <h2 style="margin:0 0 4px 0;font-size:18px;font-weight:900;color:#1b334d;line-height:1.2;">Book a Meeting with {{ params.consultant.name }}</h2>
+                          <p style="margin:0;font-size:13px;color:#888888;line-height:1.5;">Got a role to fill or a career move in mind?</p>
+                        </td>
+                        <td width="150" valign="middle" align="right" style="padding-left:16px;" class="cal-btn-cell">
+                          <a href="{{ params.consultant.calendar_link }}" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:13px 22px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 4px 14px rgba(189,32,61,0.3);white-space:nowrap;">BOOK NOW &#8594;</a>
+                          <p style="margin:8px 0 0 0;font-size:11px;color:#aaaaaa;text-align:center;font-style:italic;">Or reply to this email</p>
                         </td>
                       </tr>
                     </table>
-                    <h2 style="margin:0 0 12px 0;font-size:24px;font-weight:900;color:#1b334d;">Ready to start something new?</h2>
-                    <p style="margin:0 0 28px 0;font-size:15px;color:#666666;line-height:1.6;max-width:400px;margin-left:auto;margin-right:auto;">Whether you&apos;re looking to hire talent or find your next dream role, I&apos;m here to help you make it happen.</p>
-                    <a href="{{ params.consultant.calendar_link }}" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:16px 36px;border-radius:12px;text-decoration:none;font-weight:700;font-size:14px;letter-spacing:1px;box-shadow:0 8px 20px rgba(189,32,61,0.3);">BOOK A MEETING WITH ME &#8594;</a>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
 
+          <!-- ====== GRADIENT DIVIDER ====== -->
+          <tr><td style="padding:40px 45px 0 45px;"><div style="height:3px;background:linear-gradient(90deg,#1b334d 0%,#bd203d 100%);border-radius:2px;"></div></td></tr>
+
           <!-- ====== WORK WITH ARTISAN ====== -->
           <tr>
-            <td style="background:linear-gradient(135deg,#1b334d 0%,#0f1f30 100%);padding:45px 45px;" class="mobile-pad">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+            <td style="padding:40px 45px;" class="mobile-pad">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#1b334d 0%,#0f1f30 100%);border-radius:14px;overflow:hidden;">
                 <tr>
-                  <td align="center" style="padding-bottom:32px;">
-                    <h2 style="margin:0 0 12px 0;font-size:22px;font-weight:900;color:#ffffff;">Work With Artisan</h2>
-                    <p style="margin:0;font-size:14px;color:#b0c4d8;line-height:1.6;max-width:440px;">Whether you need someone in your team permanently or to freelance, or you are looking for your next project, just click below.</p>
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                      <tr class="cta-btn-row">
-                        <td width="50%" align="right" style="padding-right:10px;">
-                          <a href="https://artisan.com.au/hire-talent/?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER" style="display:inline-block;background:#bd203d;color:#ffffff;padding:14px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:11px;letter-spacing:1px;width:180px;text-align:center;">I&apos;M LOOKING FOR TALENT &#8594;</a>
-                        </td>
-                        <td width="50%" align="left" style="padding-left:10px;">
-                          <a href="https://artisan.com.au/find-work/?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER" style="display:inline-block;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:#ffffff;padding:14px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:11px;letter-spacing:1px;width:180px;text-align:center;">I&apos;M LOOKING FOR WORK &#8594;</a>
-                        </td>
+                  <td style="padding:36px 32px;text-align:center;">
+                    <h2 style="margin:0 0 12px 0;font-size:20px;font-weight:900;color:#ffffff;letter-spacing:0.5px;text-transform:uppercase;">Work With Artisan</h2>
+                    <p style="margin:0 0 28px 0;font-size:13px;color:#b0c4d8;line-height:1.7;max-width:420px;margin-left:auto;margin-right:auto;">Whether you need someone in your team permanently or to freelance, or you are looking for your next project, just click below.</p>
+                    <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" class="cta-btn-row">
+                      <tr>
+                        <td style="padding:0 10px;"><a href="https://artisan.com.au/hire-talent/?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:13px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 4px 15px rgba(189,32,61,0.35);">I&apos;M LOOKING FOR TALENT &#8594;</a></td>
+                        <td style="padding:0 10px;"><a href="https://clientapps.jobadder.com/67514/artisan?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER" style="display:inline-block;background-color:rgba(255,255,255,0.1);color:#ffffff;border:1px solid rgba(255,255,255,0.3);padding:13px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;">I&apos;M LOOKING FOR WORK &#8594;</a></td>
                       </tr>
                     </table>
                   </td>
@@ -479,16 +496,16 @@
 
           <!-- ====== FOOTER ====== -->
           <tr>
-            <td style="background-color:#fcfcfc;padding:45px 45px 40px 45px;border-top:1px solid #eeeeee;" class="mobile-pad">
+            <td style="padding:36px 45px;background:linear-gradient(180deg,#f9f9f9 0%,#f0f0f0 100%);border-top:2px solid #e0e0e0;" class="mobile-pad">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                <tr><td align="center" style="padding-bottom:24px;"><h2 style="margin:0;font-size:22px;font-weight:900;color:#1b334d;letter-spacing:2px;">ARTISAN</h2></td></tr>
+                <tr><td align="center" style="padding-bottom:18px;"><h3 style="margin:0 0 4px 0;font-size:17px;font-weight:900;color:#1b334d;letter-spacing:0.5px;">ARTISAN</h3><p style="margin:0;font-size:13px;color:#999999;"><a href="https://artisan.com.au?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER" style="color:#bd203d;text-decoration:none;font-weight:600;">www.artisan.com.au</a></p></td></tr>
                 <tr>
-                  <td align="center" style="padding-bottom:28px;">
+                  <td align="center" style="padding-bottom:16px;">
                     <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" class="footer-phones">
                       <tr>
-                        <td style="padding:0 12px;border-right:1px solid #dddddd;"><p style="margin:0;font-size:12px;color:#666666;font-weight:700;">BNE <span style="font-weight:400;margin-left:4px;">(07) 3105 1966</span></p></td>
-                        <td style="padding:0 12px;border-right:1px solid #dddddd;"><p style="margin:0;font-size:12px;color:#666666;font-weight:700;">MEL <span style="font-weight:400;margin-left:4px;">(03) 9514 1000</span></p></td>
-                        <td style="padding:0 12px;"><p style="margin:0;font-size:12px;color:#666666;font-weight:700;">SYD <span style="font-weight:400;margin-left:4px;">(02) 8246 7200</span></p></td>
+                        <td style="padding:0 10px;font-size:12px;color:#666666;white-space:nowrap;"><strong style="color:#1b334d;">BNE</strong> <a href="tel:+61733331833" style="color:#666666;text-decoration:none;">07 3333 1833</a></td>
+                        <td style="padding:0 10px;font-size:12px;color:#666666;white-space:nowrap;"><strong style="color:#1b334d;">MEL</strong> <a href="tel:+61396709820" style="color:#666666;text-decoration:none;">03 9670 9820</a></td>
+                        <td style="padding:0 10px;font-size:12px;color:#666666;white-space:nowrap;"><strong style="color:#1b334d;">SYD</strong> <a href="tel:+61292791788" style="color:#666666;text-decoration:none;">02 9279 1788</a></td>
                       </tr>
                     </table>
                   </td>
