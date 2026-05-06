@@ -526,8 +526,8 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
 
     const preheader_text = parsed.preheader_text || (industry_insight_heading ? `${industry_insight_heading} — from ${consultant.name} at Artisan` : '');
 
-    const instagram_grid_final = (instagram_grid !== undefined) ? instagram_grid : (parsed.instagram_grid || (parsed.instagram && parsed.instagram.images) || []);
-    const instagram_caption_final = (instagram_caption !== undefined) ? instagram_caption : (parsed.instagram_caption || (parsed.instagram && parsed.instagram.caption) || '');
+    const instagram_grid_final = (instagram_grid && instagram_grid.length > 0) ? instagram_grid : (parsed.instagram_grid || (parsed.instagram && parsed.instagram.images) || []);
+    const instagram_caption_final = (instagram_caption !== undefined && instagram_caption !== null) ? String(instagram_caption) : (parsed.instagram_caption || (parsed.instagram && parsed.instagram.caption) || '');
 
     return {
         sections: finalSections,
