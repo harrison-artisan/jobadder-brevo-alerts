@@ -297,14 +297,16 @@ async function parseCsv(req, res) {
             if (cells.length >= 2) {
                 const rawKey = cells[0].trim();
                 if (!rawKey) return;
-                const key = rawKey.toLowerCase().replace(/\s+/g, '_');
+                // Normalize key: lowercase, remove non-alphanumeric except underscores
+                const key = rawKey.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
                 data[key] = parseCsvCell(cells[1]);
             }
         });
 
+        console.log('Parsed CSV keys:', Object.keys(data));
         const consultants = loadConsultants();
         // Handle variations of the "Consultant" key in CSV
-        let consultantId = data.consultant || data.consultant_name || data.name || data.id;
+        let consultantId = data.consultant || data.consultant_name || data.name || data.id || data.consultant_id;
         
         // Match by display name if needed
         if (consultantId && !consultants[consultantId]) {
