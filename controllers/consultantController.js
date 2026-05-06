@@ -295,13 +295,16 @@ async function parseCsv(req, res) {
         lines.forEach(line => {
             const cells = splitCsvLine(line);
             if (cells.length >= 2) {
-                const key = cells[0].trim().toLowerCase().replace(/\s+/g, '_');
+                const rawKey = cells[0].trim();
+                if (!rawKey) return;
+                const key = rawKey.toLowerCase().replace(/\s+/g, '_');
                 data[key] = parseCsvCell(cells[1]);
             }
         });
 
         const consultants = loadConsultants();
-        let consultantId = data.consultant;
+        // Handle variations of the "Consultant" key in CSV
+        let consultantId = data.consultant || data.consultant_name || data.name || data.id;
         
         // Match by display name if needed
         if (consultantId && !consultants[consultantId]) {
