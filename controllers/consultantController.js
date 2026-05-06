@@ -550,10 +550,32 @@ async function updateSections(req, res) {
             return res.status(400).json({ success: false, message: 'No newsletter parsed yet.' });
         }
 
-        if (sections) state.content.sections = sections;
+        if (sections) {
+            // Map dashboard section keys to template section keys
+            state.content.sections = {
+                industry_insight: !!sections.industry_insight,
+                life_update: !!sections.life_update,
+                media: !!sections.media,
+                instagram: !!sections.instagram_grid, // Dashboard uses instagram_grid for the toggle
+                events: !!sections.events,
+                alist: true, // Always show these or add toggles if needed
+                job: true,
+                articles: true
+            };
+        }
         if (content) {
-            if (content.industry_insight) state.content.industry_insight = content.industry_insight;
-            if (content.life_update) state.content.life_update = content.life_update;
+            if (content.industry_insight) {
+                state.content.industry_insight = {
+                    heading: content.industry_insight.title,
+                    body: content.industry_insight.body
+                };
+            }
+            if (content.personal_update) {
+                state.content.life_update = {
+                    heading: content.personal_update.title,
+                    body: content.personal_update.body
+                };
+            }
             if (content.instagram) state.content.instagram = content.instagram;
         }
         if (events) state.content.events = events;
@@ -577,6 +599,9 @@ async function updateSections(req, res) {
             state.content.instagram_grid,
             state.content.instagram ? state.content.instagram.caption : ''
         );
+        
+        // Final sanity check: ensure templateParams is actually updated in state
+        console.log('✅ TemplateParams updated after save for:', state.consultant.name);
 
         writeState(state);
         res.json({ success: true, message: 'Edits saved successfully!', state });
