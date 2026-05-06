@@ -446,10 +446,9 @@ async function parseJSON(req, res) {
             events,
             media: resolvedMedia,
             articles,
-            alist_candidate: alistCandidate,
-            live_job: liveJob
+            alist_candidate: alistCandidate
         },
-        templateParams: buildTemplateParams(consultantConfig, parsed, resolvedMedia, articles, alistCandidate, liveJob, null, null, parsed.instagram ? parsed.instagram.caption : '')
+        templateParams: buildTemplateParams(consultantConfig, parsed, resolvedMedia, articles, alistCandidate, liveJob)
     };
 
     writeState(state);
@@ -489,9 +488,9 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
         articles: true
     };
 
-		    return {
-		        // Consultant identity — nested object
-		        consultant: {
+    return {
+        // Consultant identity — nested object
+        consultant: {
             newsletter_name: consultant.newsletter_name || consultant.name,
             name: consultant.name,
             title: consultant.title,
@@ -528,15 +527,15 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
             }) : []
         },
 
-	        // Featured job — nested object
-	        job: {
-	            has_job: !!(job.title || job.job_title),
-	            title: job.title || job.job_title || '',
-	            type: job.type || job.job_type || 'Full Time',
-	            location: job.location || '',
-	            description: (() => { const d = (job.description || job.job_description || '').replace(/<[^>]+>/g, '').trim(); return d.length > 120 ? d.slice(0, 117) + '...' : d; })(),
-	            link: job.link || job.apply_url || 'https://clientapps.jobadder.com/67514/artisan?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20DEBBIE%20YOUNGER'
-	        },
+        // Featured job — nested object
+        job: {
+            has_job: !!(job.title || job.job_title),
+            title: job.title || job.job_title || '',
+            type: job.type || job.job_type || 'Full Time',
+            location: job.location || '',
+            description: (() => { const d = (job.description || job.job_description || '').replace(/<[^>]+>/g, '').trim(); return d.length > 120 ? d.slice(0, 117) + '...' : d; })(),
+            link: job.link || job.apply_url || 'https://clientapps.jobadder.com/67514/artisan'
+        },
 
         // A-List candidate — nested object
         alist: {
@@ -562,14 +561,12 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
         // Sections visibility flags
         sections: activeSections,
         
-		        // Instagram caption
-		        instagram: {
-		            caption: instagramCaption || (parsed.instagram ? parsed.instagram.caption : '') || ''
-		        },
-		        
-		        // Instagram grid
-		        instagram_grid: instagramGrid || (parsed.instagram ? parsed.instagram.instagram_grid : []) || []
-		    };
+        // Instagram specific data
+        instagram: {
+            caption: instagramCaption || (parsed.instagram ? parsed.instagram.caption : '') || ''
+        },
+        instagram_grid: instagramGrid || (parsed.instagram ? parsed.instagram.instagram_grid : [])
+    };
 }
 
 // ============================================================
@@ -638,7 +635,11 @@ async function sendTest(req, res) {
             await brevoService.sendBatchEmail(
                 [{ email: testEmail, name: 'Test User' }],
                 parseInt(templateId),
-	                { params: state.templateParams }
+                { 
+                    params: state.templateParams,
+                    update_profile: 'https://artisan.com.au/email-preferences',
+                    unsubscribe: 'https://artisan.com.au/unsubscribe'
+                }
             );
         } else {
             console.log('ℹ️  No template ID — sending inline HTML test email.');
@@ -710,7 +711,11 @@ async function sendToAll(req, res) {
             await brevoService.sendBatchEmail(
                 finalRecipients,
                 parseInt(templateId),
-	                { params: state.templateParams }
+                { 
+                    params: state.templateParams,
+                    update_profile: 'https://artisan.com.au/email-preferences',
+                    unsubscribe: 'https://artisan.com.au/unsubscribe'
+                }
             );
         } else {
             console.log('ℹ️  No template ID — sending inline HTML to all recipients.');
@@ -1618,7 +1623,7 @@ async function parseCsv(req, res) {
         // 8. Auto-fetch WordPress articles
         console.log('📰 Fetching WordPress articles...');
         const wpArticles = await fetchWordPressArticles();
-        const articles = wpArticles.slice(0, 3);
+        const articles = [ wpArticles[0] || {}, wpArticles[1] || {}, wpArticles[2] || {} ];
 
         // 9. A-List candidate
         let alistCandidate = getAListCandidateFromState();
@@ -1638,38 +1643,12 @@ async function parseCsv(req, res) {
         };
 
         // 12. Build template params and save state
-        const templateParams = buildTemplateParams(consultantConfig, parsedForTemplate, mediaArray, articles, alistCandidate, liveJob, null, null, polished.instagram_caption || '');
+        const templateParams = buildTemplateParams(consultantConfig, parsedForTemplate, mediaArray, articles, alistCandidate, liveJob);
         const state = {
             state: 'GENERATED',
             generatedAt: new Date().toISOString(),
             consultant: consultantConfig,
-            content: {
-                industry_insight: parsedForTemplate.industry_insight || { heading: "", body: "" },
-                life_update: parsedForTemplate.life_update || { heading: "", body: "" },
-                events: events || [],
-                media: mediaArray || [],
-                articles: articles || [],
-                alist_candidate: alistCandidate || null,
-                sections: {
-                    industry_insight: true,
-                    life_update: true,
-                    instagram_grid: mediaArray.some(m => m.type === 'instagram'),
-                    articles: articles.length > 0,
-                    events: events.length > 0,
-                    media: mediaArray.length > 0
-                },
-                editable: {
-                    industry_insight_heading: polished.industry_insight_heading || "",
-                    industry_insight_body: polished.industry_insight_body || "",
-                    life_update_heading: polished.life_update_heading || "",
-                    life_update_body: polished.life_update_body || "",
-                    life_update_images: [], // Initialize as empty array
-                    instagram_caption: polished.instagram_caption || "",
-                    articles: articles.map(a => ({ title: a.title || "", link: a.link || "" })),
-                    events: events.map(e => ({ title: e.title || "", url: e.link || "", date: e.date || "" })),
-                    media: mediaArray.map(m => ({ type: m.type || "", url: m.url || "", caption: m.caption || "" }))
-                }
-            },
+            content: { industry_insight: parsedForTemplate.industry_insight, life_update: parsedForTemplate.life_update, events, media: mediaArray, articles, alist_candidate: alistCandidate },
             templateParams
         };
         writeState(state);
@@ -1692,176 +1671,6 @@ async function parseCsv(req, res) {
     }
 }
 
-async function updateSections(req, res) {
-    try {
-        const { sections, content, events, media, instagram_grid, life_update_images } = req.body;
-        // Map old structure to new structure if needed
-        const industry_insight_content = content ? content.industry_insight : req.body.industry_insight_content;
-        const life_update_content = content ? content.life_update : req.body.life_update_content;
-        
-        const state = readState();
-        // Allow updating even if state is GENERATED or SENT
-        if (state.state === 'EMPTY') {
-            console.log('⚠️ Attempted update on EMPTY state');
-            return res.status(400).json({ success: false, message: 'No newsletter parsed yet. Please upload a CSV first.' });
-        }
-
-        // Initialize content if missing
-        if (!state.content) state.content = {};
-        if (!state.content.sections) state.content.sections = {};
-
-        // Update sections visibility
-        if (sections) {
-            state.content.sections = { ...state.content.sections, ...sections };
-        }
-
-        // Update Industry Insight
-        if (industry_insight_content) {
-            state.content.industry_insight = {
-                heading: industry_insight_content.heading || (state.content.industry_insight ? state.content.industry_insight.heading : ''),
-                body: industry_insight_content.body || (state.content.industry_insight ? state.content.industry_insight.body : '')
-            };
-        }
-
-        // Update Life Update
-        if (life_update_content) {
-            state.content.life_update = {
-                heading: life_update_content.heading || (state.content.life_update ? state.content.life_update.heading : ''),
-                body: life_update_content.body || (state.content.life_update ? state.content.life_update.body : '')
-            };
-            if (life_update_content.images && life_update_content.images.length > 0) {
-                state.content.life_update_images = life_update_content.images;
-            }
-        }
-
-        // Update Instagram grid and caption
-        if (instagram_grid) {
-            state.content.instagram_grid = instagram_grid;
-        }
-        if (content && content.instagram) {
-            state.content.instagram = {
-                caption: content.instagram.caption || ''
-            };
-        }
-
-        // Update Events
-        if (events) {
-            state.content.events = events.map(e => {
-                const eventData = {
-                    title: e.title || '',
-                    date: e.date || '',
-                    description: (e.description || '').substring(0, 250),
-                    link: e.url || e.link || ''
-                };
-                // Add parsed date components for the template
-                if (eventData.date) {
-                    const parsedDate = parseEventDate(eventData.date);
-                    if (parsedDate) {
-                        eventData.day = parsedDate.day;
-                        eventData.month = parsedDate.month;
-                    }
-                }
-                return eventData;
-            });
-        }
-
-        // Update Media
-        if (media) {
-            state.content.media = media.map(m => {
-                const item = {
-                    title: m.title || '',
-                    url: m.url || '',
-                    type: m.type || 'link',
-                    caption: m.caption || ''
-                };
-                // Re-calculate YouTube thumbnail if URL changed
-                if (item.type === 'youtube' && item.url) {
-                    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-                    const match = item.url.match(regExp);
-                    if (match && match[2].length === 11) {
-                        item.thumbnail = `https://img.youtube.com/vi/${match[2]}/mqdefault.jpg`;
-                    }
-                }
-                return item;
-            });
-        }
-
-        // Update Life Update Images
-        if (req.body.life_update_images) {
-            state.content.life_update_images = req.body.life_update_images;
-        }
-
-        // Update Instagram Grid
-        if (req.body.instagram_grid) {
-            state.content.instagram_grid = req.body.instagram_grid;
-        }
-
-        // Rebuild template params for preview/send
-        const consultantConfig = state.consultant;
-        const articles = state.content.articles;
-	        const alistCandidate = state.content.alist_candidate;
-	        const liveJob = state.content.live_job || state.live_job;
-
-        // Ensure we use the updated content for template params
-        let mediaArray = state.content.media || [];
-        
-        // Add Life Update images to media array if they exist
-        if (req.body.life_update_images && req.body.life_update_images.length > 0) {
-            const lifeUpdateMediaItems = req.body.life_update_images.map(url => ({
-                type: 'life_update_image',
-                url: url,
-                title: '',
-                caption: ''
-            }));
-            mediaArray = [...lifeUpdateMediaItems, ...mediaArray];
-        }
-        
-        // Build the sections object with proper keys
-        const finalSections = sections ? {
-            industry_insight: sections.industry_insight !== false,
-            life_update: sections.life_update !== false,
-            media: sections.media !== false,
-            events: sections.events !== false,
-            instagram: sections.instagram_grid !== false,
-            articles: true
-        } : state.content.sections;
-        
-	        state.templateParams = buildTemplateParams(
-	            consultantConfig, 
-	            {
-	                industry_insight: state.content.industry_insight,
-	                life_update: state.content.life_update,
-	                events: state.content.events
-	            }, 
-	            mediaArray, 
-	            articles, 
-	            alistCandidate, 
-	            liveJob,
-	            finalSections,
-	            instagram_grid || state.content.instagram_grid,
-	            state.content.instagram ? state.content.instagram.caption : ''
-	        );
-	        
-	        // Ensure the job in state content is updated
-	        state.content.live_job = liveJob;
-        
-        // Explicitly update the visibility flags in templateParams based on sections
-        if (sections) {
-            state.templateParams.has_industry_insight = sections.industry_insight !== false;
-            state.templateParams.has_life_update = sections.life_update !== false;
-            state.templateParams.has_events = (state.content.events && state.content.events.length > 0) && sections.events !== false;
-            state.templateParams.has_media = (state.content.media && state.content.media.length > 0) && sections.media !== false;
-            state.templateParams.has_instagram = !!(instagram_grid || state.content.instagram_grid) && sections.instagram_grid !== false;
-        }
-
-        writeState(state);
-        res.json({ success: true, message: 'Sections updated successfully', state });
-    } catch (error) {
-        console.error('❌ Error updating sections:', error);
-        res.status(500).json({ success: false, message: error.message });
-    }
-}
-
 module.exports = {
     getState,
     getConsultantList,
@@ -1875,6 +1684,5 @@ module.exports = {
     resetState,
     scheduleConsultant,
     cancelConsultantSchedule,
-    restoreConsultantSchedule,
-    updateSections
+    restoreConsultantSchedule
 };
