@@ -617,7 +617,8 @@ async function sendTest(req, res) {
     try {
         if (templateId) {
             console.log(`📧 Sending test via Brevo template #${templateId} for ${state.consultant.name}`);
-            // Flatten state.templateParams so Brevo can wrap them in its own 'params' namespace
+            // Hand off state.templateParams directly. Brevo automatically provides the 'params' namespace.
+            // Footer links remain top-level for direct {{ update_profile }} access.
             await brevoService.sendBatchEmail(
                 [{ email: testEmail, name: 'Test User' }],
                 parseInt(templateId),
@@ -694,7 +695,8 @@ async function sendToAll(req, res) {
 
         if (templateId) {
             console.log(`📧 Sending via Brevo template #${templateId} for ${state.consultant.name} [mode: ${modeService.getMode()}]`);
-            // Flatten state.templateParams so Brevo can wrap them in its own 'params' namespace
+            // Hand off state.templateParams directly. Brevo automatically provides the 'params' namespace.
+            // Footer links remain top-level for direct {{ update_profile }} access.
             await brevoService.sendBatchEmail(
                 finalRecipients,
                 parseInt(templateId),
@@ -1686,7 +1688,8 @@ async function updateSections(req, res) {
                 industry_insight: state.content.industry_insight,
                 life_update: state.content.life_update,
                 events: state.content.events,
-                life_update_images: state.content.life_update_images
+                life_update_images: state.content.life_update_images,
+                job: state.content.live_job // Ensure job is passed for persistence
             },
             state.content.media,
             state.content.articles,
