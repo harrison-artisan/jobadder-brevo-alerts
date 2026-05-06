@@ -169,6 +169,16 @@
 
           <!-- ====== MEDIA ITEMS (CONDITIONAL) ====== -->
           {% if params.media.has_media %}
+          <!-- Gradient Line before Added Media -->
+          <tr>
+            <td align="center" style="padding: 20px 45px 40px 45px;">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td height="1" style="font-size: 1px; line-height: 1px; background: linear-gradient(to right, #E31B23, #000000);">&nbsp;</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
           {% for item in params.media.items %}
 
           <!-- IMAGE ITEM -->
@@ -234,110 +244,93 @@
           {% endfor %}
           {% endif %}
 
-          <!-- ====== INSTAGRAM GRID (STANDALONE) ====== -->
-          {% if params.sections.instagram and params.instagram_grid and params.instagram_grid.length > 0 %}
-          <tr>
-            <td style="padding:28px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;border:1px solid #dbdbdb;border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.12);max-width:480px;margin:0 auto;">
-                <tr>
-                  <td style="padding:12px 16px;border-bottom:1px solid #efefef;">
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                      <tr>
-                        <td valign="middle">
-                          <table cellpadding="0" cellspacing="0" border="0" role="presentation">
-                            <tr>
-                              <td valign="middle" style="padding-right:8px;">
-                                <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(45deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);border-radius:8px;width:28px;height:28px;">
-                                  <tr><td align="center" valign="middle" width="28" height="28" style="width:28px;height:28px;"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Instagram_logo_2022.svg/150px-Instagram_logo_2022.svg.png" alt="" width="16" height="16" style="display:block;border:0;filter:brightness(0) invert(1);"></td></tr>
-                                </table>
-                              </td>
-                              <td valign="middle"><span style="font-size:16px;font-weight:700;color:#262626;letter-spacing:-0.3px;">Instagram</span></td>
-                            </tr>
-                          </table>
-                        </td>
-                        <td align="right" valign="middle"><a href="https://www.instagram.com/artisanrecruitment/" style="font-size:12px;font-weight:700;color:#0095f6;text-decoration:none;">View profile &#8599;</a></td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding:10px 14px;">
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                      <tr>
-                        <td width="42" valign="middle" style="padding-right:10px;">
-                          <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(45deg,#f09433,#bc1888);border-radius:50%;padding:2px;width:42px;height:42px;">
-                            <tr><td align="center" valign="middle" style="background:#fff;border-radius:50%;padding:2px;"><img src="{{ params.consultant.photo }}" alt="{{ params.consultant.name }}" width="34" height="34" style="display:block;border:0;border-radius:50%;width:34px;height:34px;object-fit:cover;"></td></tr>
-                          </table>
-                        </td>
-                        <td valign="middle">
-                          <p style="margin:0;font-size:13px;font-weight:700;color:#262626;line-height:1.3;">{{ params.consultant.name }}</p>
-                          <p style="margin:0;font-size:11px;color:#8e8e8e;line-height:1.3;">Artisan Recruitment</p>
-                        </td>
-                        <td align="right" valign="middle"><a href="https://www.instagram.com/artisanrecruitment/" style="display:inline-block;background:#0095f6;color:#ffffff;padding:6px 16px;border-radius:8px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.2px;">Follow</a></td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding:0;line-height:0;">
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                      <tr>
-                        {% for img in params.instagram_grid %}
-                        <td width="25%" style="padding:1px;"><img src="{{ img }}" alt="Instagram" width="100%" style="display:block;width:100%;aspect-ratio:1/1;object-fit:cover;"></td>
-                        {% endfor %}
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding:10px 14px 6px 14px;">
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                      <tr>
-                        <td valign="middle">
-                          <table cellpadding="0" cellspacing="0" border="0" role="presentation">
-                            <tr>
-                              <td valign="middle" style="padding-right:14px;"><img src="https://cdn-icons-png.flaticon.com/512/833/833472.png" alt="Like" width="22" height="22" style="display:block;border:0;opacity:0.85;"></td>
-                              <td valign="middle" style="padding-right:14px;"><img src="https://cdn-icons-png.flaticon.com/512/1380/1380338.png" alt="Comment" width="22" height="22" style="display:block;border:0;opacity:0.85;"></td>
-                              <td valign="middle"><img src="https://cdn-icons-png.flaticon.com/512/3106/3106673.png" alt="Share" width="22" height="22" style="display:block;border:0;opacity:0.85;"></td>
-                            </tr>
-                          </table>
-                        </td>
-                        <td align="right" valign="middle"><img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" alt="Save" width="22" height="22" style="display:block;border:0;opacity:0.85;margin-left:auto;"></td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-                {% if params.content.instagram.caption %}
-                <tr><td style="padding:0 14px 14px 14px;"><p style="margin:0;font-size:13px;color:#262626;line-height:1.5;"><span style="font-weight:700;">{{ params.consultant.name }}</span> {{ params.content.instagram.caption }}</p></td></tr>
-                {% endif %}
-              </table>
-            </td>
-          </tr>
-          {% endif %}
+		          <!-- ====== INSTAGRAM GRID (STANDALONE) ====== -->
+		          {% if params.sections.instagram and params.instagram_grid and params.instagram_grid.length > 0 %}
+		          <!-- Gradient Line before Instagram -->
+		          <tr>
+		            <td align="center" style="padding: 20px 45px 40px 45px;">
+		              <table width="100%" border="0" cellspacing="0" cellpadding="0">
+		                <tr>
+		                  <td height="1" style="font-size: 1px; line-height: 1px; background: linear-gradient(to right, #E31B23, #000000);">&nbsp;</td>
+		                </tr>
+		              </table>
+		            </td>
+		          </tr>
+		          
+		          <tr>
+		            <td style="padding:0 45px 40px 45px;" class="mobile-pad">
+		              <h2 style="margin:0 0 24px 0;font-size:20px;font-weight:700;color:#000000;text-align:left;text-transform:uppercase;letter-spacing:0.5px;">#PASTATUESDAY - <a href="https://www.instagram.com/the_new_mathew" style="color:#E31B23;text-decoration:none;">@the_new_mathew</a></h2>
+		              
+		              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;border:1px solid #dbdbdb;border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.12);max-width:480px;margin:0 auto;">
+		                <tr>
+		                  <td style="padding:0;line-height:0;">
+		                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+		                      <tr>
+		                        <td width="50%" style="padding:1px;"><img src="{{ params.instagram_grid[0] }}" alt="Instagram" width="100%" style="display:block;width:100%;aspect-ratio:1/1;object-fit:cover;"></td>
+		                        <td width="50%" style="padding:1px;"><img src="{{ params.instagram_grid[1] }}" alt="Instagram" width="100%" style="display:block;width:100%;aspect-ratio:1/1;object-fit:cover;"></td>
+		                      </tr>
+		                      <tr>
+		                        <td width="50%" style="padding:1px;"><img src="{{ params.instagram_grid[2] }}" alt="Instagram" width="100%" style="display:block;width:100%;aspect-ratio:1/1;object-fit:cover;"></td>
+		                        <td width="50%" style="padding:1px;"><img src="{{ params.instagram_grid[3] }}" alt="Instagram" width="100%" style="display:block;width:100%;aspect-ratio:1/1;object-fit:cover;"></td>
+		                      </tr>
+		                    </table>
+		                  </td>
+		                </tr>
+		                <tr>
+		                  <td style="padding:15px 14px 6px 14px;">
+		                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+		                      <tr>
+		                        <td valign="middle">
+		                          <table cellpadding="0" cellspacing="0" border="0" role="presentation">
+		                            <tr>
+                                  <td style="padding-bottom: 10px;">
+                                    <img src="https://artisan.com.au/wp-content/uploads/2024/05/ig-icons.png" width="100" alt="Instagram Interactions" style="display: block; border: 0;">
+                                  </td>
+		                            </tr>
+		                          </table>
+		                        </td>
+		                      </tr>
+		                    </table>
+		                  </td>
+		                </tr>
+		                {% if params.instagram.caption %}
+		                <tr><td style="padding:0 14px 14px 14px;"><p style="margin:0;font-size:14px;color:#333333;line-height:1.5;"><span style="font-weight:700;">the_new_mathew</span> {{ params.instagram.caption }}</p></td></tr>
+		                {% endif %}
+		              </table>
+		            </td>
+		          </tr>
+		          {% endif %}
 
-          <!-- ====== GRADIENT DIVIDER ====== -->
-          <tr><td style="padding:45px 45px 0 45px;" class="mobile-pad"><div style="height:2px;background:linear-gradient(to right,rgba(189,32,61,0),rgba(189,32,61,0.2),rgba(189,32,61,0));"></div></td></tr>
-
-          <!-- ====== FEATURED THIS WEEK ====== -->
-          <tr>
-            <td style="padding:40px 45px 0 45px;" class="mobile-pad">
-              <h2 style="margin:0 0 24px 0;font-size:18px;font-weight:900;color:#1b334d;text-align:center;text-transform:uppercase;letter-spacing:0.5px;">Featured This Week</h2>
+	          <!-- Gradient Line before Featured This Week -->
+	          <tr>
+	            <td align="center" style="padding: 20px 45px 40px 45px;">
+	              <table width="100%" border="0" cellspacing="0" cellpadding="0">
+	                <tr>
+	                  <td height="1" style="font-size: 1px; line-height: 1px; background: linear-gradient(to right, #E31B23, #000000);">&nbsp;</td>
+	                </tr>
+	              </table>
+	            </td>
+	          </tr>
+	          <!-- ====== FEATURED THIS WEEK ====== -->
+	          <tr>
+	            <td style="padding:0 45px 0 45px;" class="mobile-pad">
+	              <h2 style="margin:0 0 24px 0;font-size:18px;font-weight:900;color:#1b334d;text-align:center;text-transform:uppercase;letter-spacing:0.5px;">Featured This Week</h2>
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
                 <tr>
                   <!-- FEATURED JOB -->
                   <td width="49%" valign="top" class="two-col-left" style="padding-right:10px;">
-                    {% if params.job.has_job %}
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#1b334d 0%,#0f1f30 100%);border-radius:14px;overflow:hidden;box-shadow:0 4px 18px rgba(27,51,77,0.22);">
-                      <tr>
-                        <td height="200" style="padding:20px 22px;text-align:center;vertical-align:middle;height:200px;">
-                          <p style="margin:0 0 5px 0;font-size:9px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:2px;text-transform:uppercase;">Open Role</p>
-                          <p style="margin:0 0 5px 0;font-size:10px;font-weight:600;color:rgba(255,255,255,0.5);">{{ params.job.type }} &nbsp;&#183;&nbsp; {{ params.job.location }}</p>
-                          <h3 style="margin:0 0 10px 0;font-size:17px;font-weight:900;color:#ffffff;line-height:1.3;">{{ params.job.title }}</h3>
-                          <a href="{{ params.job.link }}" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:10px 20px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 4px 12px rgba(189,32,61,0.4);">VIEW ROLE &#8594;</a>
-                        </td>
-                      </tr>
-                    </table>
-                    {% else %}
+	                    {% if params.job and params.job.title %}
+	                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#1b334d 0%,#0f1f30 100%);border-radius:14px;overflow:hidden;box-shadow:0 4px 18px rgba(27,51,77,0.22);">
+	                      <tr>
+	                        <td height="200" style="padding:20px 22px;text-align:center;vertical-align:middle;height:200px;">
+	                          <p style="margin:0 0 5px 0;font-size:9px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:2px;text-transform:uppercase;">Open Role</p>
+	                          <p style="margin:0 0 5px 0;font-size:10px;font-weight:600;color:rgba(255,255,255,0.5);">{{ params.job.type }} &nbsp;&#183;&nbsp; {{ params.job.location }}</p>
+	                          <h3 style="margin:0 0 10px 0;font-size:17px;font-weight:900;color:#ffffff;line-height:1.3;">{{ params.job.title }}</h3>
+	                          <a href="{{ params.job.link }}" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:10px 20px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 4px 12px rgba(189,32,61,0.4);">VIEW ROLE &#8594;</a>
+	                        </td>
+	                      </tr>
+	                    </table>
+	                    {% else %}
                     <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#1b334d 0%,#0f1f30 100%);border-radius:14px;overflow:hidden;box-shadow:0 4px 18px rgba(27,51,77,0.22);">
                       <tr><td height="200" style="padding:20px 22px;text-align:center;vertical-align:middle;height:200px;"><p style="margin:0 0 16px 0;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.6;">Looking for your next creative role?</p><a href="https://clientapps.jobadder.com/67514/artisan?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:10px 20px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 4px 12px rgba(189,32,61,0.4);">VIEW ALL JOBS &#8594;</a></td></tr>
                     </table>

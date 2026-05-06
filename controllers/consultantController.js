@@ -530,12 +530,12 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
 
         // Featured job — nested object
         job: {
-            has_job: !!(job.title),
-            title: job.title || '',
-            type: job.type || 'Full Time',
+            has_job: !!(job.title || job.job_title),
+            title: job.title || job.job_title || '',
+            type: job.type || job.job_type || 'Full Time',
             location: job.location || '',
-            description: (() => { const d = (job.description || '').replace(/<[^>]+>/g, '').trim(); return d.length > 120 ? d.slice(0, 117) + '...' : d; })(),
-            link: job.link || 'https://clientapps.jobadder.com/67514/artisan'
+            description: (() => { const d = (job.description || job.job_description || '').replace(/<[^>]+>/g, '').trim(); return d.length > 120 ? d.slice(0, 117) + '...' : d; })(),
+            link: job.link || job.apply_url || 'https://clientapps.jobadder.com/67514/artisan'
         },
 
         // A-List candidate — nested object
@@ -562,13 +562,13 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
         // Sections visibility flags
         sections: activeSections,
         
-        // Instagram caption
-        instagram: {
-            caption: instagramCaption || ''
-        },
-        
-        // Instagram grid
-        instagram_grid: activeSections.instagram ? instagramGrid : null
+	        // Instagram caption
+	        instagram: {
+	            caption: instagramCaption || (parsed.instagram ? parsed.instagram.caption : '') || ''
+	        },
+	        
+	        // Instagram grid
+	        instagram_grid: activeSections.instagram ? (instagramGrid || parsed.instagram_grid || []) : []
     };
 }
 
@@ -638,7 +638,7 @@ async function sendTest(req, res) {
             await brevoService.sendBatchEmail(
                 [{ email: testEmail, name: 'Test User' }],
                 parseInt(templateId),
-                state.templateParams
+                { params: state.templateParams }
             );
         } else {
             console.log('ℹ️  No template ID — sending inline HTML test email.');
@@ -710,7 +710,7 @@ async function sendToAll(req, res) {
             await brevoService.sendBatchEmail(
                 finalRecipients,
                 parseInt(templateId),
-                state.templateParams
+                { params: state.templateParams }
             );
         } else {
             console.log('ℹ️  No template ID — sending inline HTML to all recipients.');
@@ -774,7 +774,7 @@ async function sendToAllDirect(options = {}) {
         ? [{ email: modeService.getTestEmail() }]
         : recipients;
     if (templateId) {
-        await brevoService.sendBatchEmail(finalRecipients, parseInt(templateId), state.templateParams);
+        await brevoService.sendBatchEmail(finalRecipients, parseInt(templateId), { params: state.templateParams });
     } else {
         const emailPreviewService = require('../services/emailPreviewService');
         const htmlContent = await renderConsultantTemplate(state.templateParams, emailPreviewService);
@@ -1799,8 +1799,8 @@ async function updateSections(req, res) {
         // Rebuild template params for preview/send
         const consultantConfig = state.consultant;
         const articles = state.content.articles;
-        const alistCandidate = state.content.alist_candidate;
-        const liveJob = state.content.live_job;
+	        const alistCandidate = state.content.alist_candidate;
+	        const liveJob = state.content.live_job || state.live_job;
 
         // Ensure we use the updated content for template params
         let mediaArray = state.content.media || [];
@@ -1826,21 +1826,24 @@ async function updateSections(req, res) {
             articles: true
         } : state.content.sections;
         
-        state.templateParams = buildTemplateParams(
-            consultantConfig, 
-            {
-                industry_insight: state.content.industry_insight,
-                life_update: state.content.life_update,
-                events: state.content.events
-            }, 
-            mediaArray, 
-            articles, 
-            alistCandidate, 
-            liveJob,
-            finalSections,
-            instagram_grid || state.content.instagram_grid,
-            state.content.instagram ? state.content.instagram.caption : ''
-        );
+	        state.templateParams = buildTemplateParams(
+	            consultantConfig, 
+	            {
+	                industry_insight: state.content.industry_insight,
+	                life_update: state.content.life_update,
+	                events: state.content.events
+	            }, 
+	            mediaArray, 
+	            articles, 
+	            alistCandidate, 
+	            liveJob,
+	            finalSections,
+	            instagram_grid || state.content.instagram_grid,
+	            state.content.instagram ? state.content.instagram.caption : ''
+	        );
+	        
+	        // Ensure the job in state content is updated
+	        state.content.live_job = liveJob;
         
         // Explicitly update the visibility flags in templateParams based on sections
         if (sections) {
