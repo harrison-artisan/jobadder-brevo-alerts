@@ -451,7 +451,9 @@ async function parseCsv(req, res) {
         const data = parseCsvBuffer(req.file.buffer);
         console.log('Parsed CSV data keys:', Object.keys(data));
         const consultants = loadConsultants();
-        let consultantId = data.consultant;
+        
+        // Prioritize consultant ID from request body (dropdown), then fallback to CSV
+        let consultantId = req.body.consultantId || data.consultant;
         
         // Match by display name if needed
         if (consultantId && !consultants[consultantId]) {
@@ -683,11 +685,19 @@ async function sendToAll(req, res) {
 
 async function updateSections(req, res) {
     try {
-        const { sections, content, events, media, instagram_grid, life_update_images } = req.body;
+        const { consultantId, sections, content, events, media, instagram_grid, life_update_images } = req.body;
         const state = readState();
-        if (state.state === 'EMPTY') return res.status(400).json({ success: false, message: 'Empty state' });
+        if (state.state === 'EMPTY') return res.status(400).json({ success: false, message: 'No content to update' });
 
-        // 1. Update Section Visibility
+        // Update consultant if a new one was selected in the dashboard
+        if (consultantId) {
+            const consultants = loadConsultants();
+            if (consultants[consultantId]) {
+                state.consultant = consultants[consultantId];
+            }
+        }
+
+        // 1. Update Sections (Toggles)
         if (sections) {
             state.sections = {
                 industry_insight: !!sections.industry_insight,

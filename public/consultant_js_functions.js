@@ -187,7 +187,15 @@ async function updateConsultantSectionVisibility() {
         const response = await fetch('/api/consultant/update-sections', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sections, content, events, media, instagram_grid, life_update_images })
+            body: JSON.stringify({ 
+                consultantId: typeof selectedConsultantId !== 'undefined' ? selectedConsultantId : null,
+                sections, 
+                content, 
+                events, 
+                media, 
+                instagram_grid, 
+                life_update_images 
+            })
         });
 
         const data = await response.json();

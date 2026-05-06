@@ -8067,6 +8067,9 @@
             try {
                 const formData = new FormData();
                 formData.append('csv', _csvFile);
+                if (selectedConsultantId) {
+                    formData.append('consultantId', selectedConsultantId);
+                }
                 const response = await fetch('/api/consultant/parse-csv', {
                     method: 'POST',
                     body: formData
