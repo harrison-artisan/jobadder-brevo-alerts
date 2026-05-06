@@ -731,9 +731,20 @@ async function updateSections(req, res) {
             }
         }
         
-        // 3. Update Arrays
-        if (events) state.content.events = events;
-        if (media) state.content.media = media;
+        // 3. Update Arrays with safety stripping of base64 data: URLs (Brevo doesn't support them)
+        if (events) {
+            state.content.events = events.map(e => ({
+                ...e,
+                image: (e.image && e.image.startsWith('data:')) ? '' : e.image
+            }));
+        }
+        if (media) {
+            state.content.media = media.map(m => ({
+                ...m,
+                url: (m.url && m.url.startsWith('data:')) ? '' : m.url,
+                thumbnail: (m.thumbnail && m.thumbnail.startsWith('data:')) ? '' : m.thumbnail
+            }));
+        }
         state.content.instagram_grid = (instagram_grid || []).filter(url => !url.startsWith("data:"));
         state.content.life_update_images = (life_update_images || []).filter(url => !url.startsWith("data:"));
 
