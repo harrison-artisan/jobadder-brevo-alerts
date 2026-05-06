@@ -98,6 +98,11 @@ async function updateConsultantSectionVisibility() {
         return;
     }
 
+    const btn = document.getElementById('btnSaveConsultantChanges');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span style="display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid white; border-radius: 50%; animation: spin 0.8s linear infinite;" style="animation: spin 0.8s linear infinite;"></span> Saving...';
+
     const sections = {
         industry_insight: document.getElementById('toggleIndustryInsight').checked,
         life_update: document.getElementById('toggleLifeUpdate').checked,
@@ -180,15 +185,20 @@ async function updateConsultantSectionVisibility() {
         const data = await response.json();
         if (response.ok) {
             showToast('✅ Edits saved successfully!', 'success');
-            // Refresh preview if available
+            btn.innerHTML = 'Save All Changes';
+            btn.disabled = false;
             if (typeof previewConsultantNewsletter === 'function') {
                 previewConsultantNewsletter();
             }
         } else {
             showToast('❌ Error saving edits: ' + (data.error || 'Unknown error'), 'error');
+            btn.innerHTML = 'Save All Changes';
+            btn.disabled = false;
         }
     } catch (err) {
         console.error('Save error:', err);
         showToast('❌ Connection error while saving.', 'error');
+        btn.innerHTML = 'Save All Changes';
+        btn.disabled = false;
     }
 }
