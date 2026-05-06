@@ -1792,7 +1792,18 @@ async function updateSections(req, res) {
         const liveJob = state.content.live_job;
 
         // Ensure we use the updated content for template params
-        const mediaArray = state.content.media || [];
+        let mediaArray = state.content.media || [];
+        
+        // Add Life Update images to media array if they exist
+        if (req.body.life_update_images && req.body.life_update_images.length > 0) {
+            const lifeUpdateMediaItems = req.body.life_update_images.map(url => ({
+                type: 'life_update_image',
+                url: url,
+                title: '',
+                caption: ''
+            }));
+            mediaArray = [...lifeUpdateMediaItems, ...mediaArray];
+        }
         
         // Build the sections object with proper keys
         const finalSections = sections ? {

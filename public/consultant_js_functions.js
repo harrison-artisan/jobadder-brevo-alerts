@@ -185,8 +185,11 @@ async function updateConsultantSectionVisibility() {
         const data = await response.json();
         if (response.ok) {
             showToast('✅ Edits saved successfully!', 'success');
-            btn.innerHTML = 'Save All Changes';
+            btn.innerHTML = 'SAVED';
             btn.disabled = false;
+            setTimeout(() => {
+                btn.innerHTML = 'Save All Changes';
+            }, 2000);
             if (typeof previewConsultantNewsletter === 'function') {
                 previewConsultantNewsletter();
             }
