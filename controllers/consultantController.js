@@ -638,7 +638,7 @@ async function sendTest(req, res) {
             await brevoService.sendBatchEmail(
                 [{ email: testEmail, name: 'Test User' }],
                 parseInt(templateId),
-                state.templateParams
+	                { params: state.templateParams }
             );
         } else {
             console.log('ℹ️  No template ID — sending inline HTML test email.');
@@ -710,7 +710,7 @@ async function sendToAll(req, res) {
             await brevoService.sendBatchEmail(
                 finalRecipients,
                 parseInt(templateId),
-                state.templateParams
+	                { params: state.templateParams }
             );
         } else {
             console.log('ℹ️  No template ID — sending inline HTML to all recipients.');
