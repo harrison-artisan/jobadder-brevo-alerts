@@ -100,53 +100,74 @@
           </tr>
           {% endif %}
 
-          <!-- Life Update -->
+          <!-- Personal Update -->
           {% if params.sections.life_update %}
           <tr>
-            <td style="padding:0 45px 45px 45px;" class="mobile-pad">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#f9f9f9;border-radius:12px;border-left:4px solid #bd203d;">
+            <td style="padding:35px 45px;background-color:#f9f9f9;" class="mobile-pad">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
                 <tr>
-                  <td style="padding:30px;">
-                    <p style="margin:0 0 10px 0;color:#bd203d;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Life at Artisan</p>
-                    <h3 style="margin:0 0 15px 0;color:#1b334d;font-size:20px;font-weight:900;">{{ params.content.life_update_heading }}</h3>
-                    <p style="margin:0 0 20px 0;color:#555555;font-size:15px;line-height:1.6;">{{ params.content.life_update_body }}</p>
-                    
-                    {% if params.content.life_update_images.length > 0 %}
+                  <td style="padding-bottom:15px;">
+                    <p style="margin:0 0 10px 0;color:#bd203d;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Personal Update</p>
+                    <h2 style="margin:0;color:#1b334d;font-size:24px;font-weight:900;line-height:1.2;">{{ params.content.life_update_heading }}</h2>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-bottom:25px;color:#555555;font-size:16px;line-height:1.6;">
+                    {{ params.content.life_update_body }}
+                  </td>
+                </tr>
+                {% if params.content.life_update_images.length > 0 %}
+                <tr>
+                  <td>
                     <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
                       <tr>
                         {% for img in params.content.life_update_images %}
-                        <td class="mobile-stack" style="padding:5px;">
-                          <img src="{{ img }}" width="100%" style="display:block;border-radius:8px;object-fit:cover;" />
+                        <td class="col-half" width="{% if params.content.life_update_images.length == 1 %}100%{% elif params.content.life_update_images.length == 2 %}48.5%{% else %}31%{% endif %}" valign="top">
+                          <img src="{{ img }}" width="100%" style="display:block;border-radius:8px;" alt="Update" />
                         </td>
+                        {% if not loop.last %}<td width="3%">&nbsp;</td>{% endif %}
                         {% endfor %}
                       </tr>
                     </table>
-                    {% endif %}
                   </td>
                 </tr>
+                {% endif %}
               </table>
             </td>
           </tr>
           {% endif %}
 
-          <!-- Media Section -->
-          {% if params.sections.media and params.media.has_media %}
+          <!-- Added Media / Resources -->
+          {% if params.sections.media %}
           <tr>
-            <td style="padding:0 45px 45px 45px;" class="mobile-pad">
+            <td style="padding:45px 45px 25px 45px;" class="mobile-pad">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+                <tr>
+                  <td style="padding-bottom:25px;">
+                    <p style="margin:0 0 10px 0;color:#bd203d;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Worth a look</p>
+                    <h2 style="margin:0;color:#1b334d;font-size:24px;font-weight:900;line-height:1.2;">Added Media</h2>
+                  </td>
+                </tr>
                 {% for item in params.media.items %}
                 <tr>
                   <td style="padding-bottom:30px;">
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#ffffff;border:1px solid #eeeeee;border-radius:10px;overflow:hidden;">
+                      {% if item.type == 'image' or item.type == 'instagram' or item.type == 'youtube' %}
                       <tr>
-                        <td width="200" valign="top" class="col-half">
-                          <a href="{{ item.link }}"><img src="{{ item.thumbnail }}" width="100%" style="display:block;border-radius:8px;box-shadow:0 4px 10px rgba(0,0,0,0.1);" /></a>
+                        <td>
+                          <a href="{{ item.url }}" style="text-decoration:none;">
+                            <img src="{{ item.image or item.thumbnail }}" width="100%" style="display:block;" alt="{{ item.title }}" />
+                          </a>
                         </td>
-                        <td style="padding-left:25px;" valign="top" class="col-half">
-                          <p style="margin:0 0 8px 0;color:#bd203d;font-size:12px;font-weight:700;text-transform:uppercase;">{% if item.type == 'youtube' %}Watch Video{% else %}Listen Now{% endif %}</p>
-                          <h4 style="margin:0 0 10px 0;color:#1b334d;font-size:18px;font-weight:900;line-height:1.2;">{{ item.title }}</h4>
-                          <p style="margin:0 0 15px 0;color:#666666;font-size:14px;line-height:1.5;">{{ item.description }}</p>
-                          <a href="{{ item.link }}" style="color:#bd203d;font-size:14px;font-weight:700;text-decoration:none;">View content &rarr;</a>
+                      </tr>
+                      {% endif %}
+                      <tr>
+                        <td style="padding:20px;">
+                          <h3 style="margin:0 0 10px 0;font-size:18px;font-weight:700;color:#1b334d;">{{ item.title }}</h3>
+                          {% if item.caption %}
+                          <p style="margin:0 0 15px 0;font-size:14px;color:#666666;line-height:1.5;">{{ item.caption }}</p>
+                          {% endif %}
+                          <a href="{{ item.url }}" style="color:#bd203d;font-size:14px;font-weight:700;text-decoration:none;">{% if item.type == 'youtube' %}Watch video{% elif item.type == 'instagram' %}View post{% else %}Learn more{% endif %} &rarr;</a>
                         </td>
                       </tr>
                     </table>
@@ -161,126 +182,148 @@
           <!-- Instagram Section -->
           {% if params.sections.instagram %}
           <tr>
-            <td style="padding:0 45px 45px 45px;" class="mobile-pad">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border:1px solid #eeeeee;border-radius:12px;overflow:hidden;">
+            <td style="padding:20px 45px 45px 45px;" class="mobile-pad">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#fdfdfd;border:1px solid #f0f0f0;border-radius:12px;padding:25px;">
                 <tr>
-                  <td style="padding:15px 20px;background-color:#ffffff;border-bottom:1px solid #eeeeee;">
+                  <td style="padding-bottom:20px;">
                     <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
                       <tr>
-                        <td width="32"><img src="https://artisan.com.au/wp-content/uploads/2024/05/instagram-logo.png" width="32" style="display:block;" /></td>
+                        <td width="32"><img src="https://artisan.com.au/wp-content/uploads/2024/05/instagram-red.png" width="32" style="display:block;" alt="IG" /></td>
                         <td style="padding-left:12px;">
-                          <p style="margin:0;color:#1b334d;font-size:14px;font-weight:700;">the_new_mathew</p>
-                          <p style="margin:0;color:#999999;font-size:12px;">Artisan Recruitment</p>
+                          <p style="margin:0;font-size:14px;font-weight:700;color:#1b334d;">@the_new_mathew</p>
                         </td>
                       </tr>
                     </table>
                   </td>
                 </tr>
                 <tr>
-                  <td style="padding:2px;background-color:#f0f0f0;">
+                  <td>
                     <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
                       <tr>
                         {% for img in params.content.instagram_grid %}
-                        <td width="50%" style="padding:2px;"><img src="{{ img }}" width="100%" style="display:block;" /></td>
-                        {% if loop.index % 2 == 0 and not loop.last %}</tr><tr>{% endif %}
+                        <td width="23.5%" valign="top">
+                          <img src="{{ img }}" width="100%" style="display:block;border-radius:4px;aspect-ratio:1/1;object-fit:cover;" alt="IG" />
+                        </td>
+                        {% if not loop.last %}<td width="2%">&nbsp;</td>{% endif %}
                         {% endfor %}
                       </tr>
                     </table>
                   </td>
                 </tr>
+                {% if params.content.instagram_caption %}
                 <tr>
-                  <td style="padding:15px 20px;">
-                    <img src="https://artisan.com.au/wp-content/uploads/2024/05/ig-interactions.png" width="100" style="display:block;margin-bottom:10px;" />
-                    <p style="margin:0;color:#333333;font-size:14px;line-height:1.5;">
-                      <span style="font-weight:700;">the_new_mathew</span> {{ params.content.instagram_caption }}
-                    </p>
+                  <td style="padding-top:15px;font-size:13px;color:#666666;line-height:1.5;font-style:italic;">
+                    {{ params.content.instagram_caption }}
                   </td>
                 </tr>
+                {% endif %}
               </table>
             </td>
           </tr>
           {% endif %}
 
           <!-- Events Section -->
-          {% if params.sections.events and params.events.length > 0 %}
+          {% if params.sections.events %}
           <tr>
-            <td style="padding:0 45px 45px 45px;" class="mobile-pad">
-              <p style="margin:0 0 20px 0;color:#bd203d;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Upcoming Events</p>
-              {% for event in params.events %}
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom:15px;background-color:#ffffff;border:1px solid #eeeeee;border-radius:8px;">
+            <td style="padding:45px;background-color:#1b334d;" class="mobile-pad">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
                 <tr>
-                  <td width="70" style="background-color:#1b334d;color:#ffffff;text-align:center;padding:15px;border-radius:8px 0 0 8px;">
-                    <p style="margin:0;font-size:12px;text-transform:uppercase;">{{ event.month }}</p>
-                    <p style="margin:0;font-size:24px;font-weight:900;">{{ event.day }}</p>
-                  </td>
-                  <td style="padding:15px 20px;">
-                    <h5 style="margin:0 0 5px 0;color:#1b334d;font-size:16px;font-weight:700;">{{ event.title }}</h5>
-                    <p style="margin:0;color:#666666;font-size:13px;">{{ event.location }} &bull; {{ event.time }}</p>
+                  <td style="padding-bottom:30px;">
+                    <p style="margin:0 0 10px 0;color:#bd203d;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Don't Miss Out</p>
+                    <h2 style="margin:0;color:#ffffff;font-size:24px;font-weight:900;line-height:1.2;">Upcoming Events</h2>
                   </td>
                 </tr>
+                {% for event in params.events %}
+                <tr>
+                  <td style="padding-bottom:20px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:rgba(255,255,255,0.05);border-radius:10px;">
+                      <tr>
+                        <td width="80" align="center" valign="middle" style="padding:20px;border-right:1px solid rgba(255,255,255,0.1);">
+                          <p style="margin:0;color:#bd203d;font-size:24px;font-weight:900;line-height:1;">{{ event.day }}</p>
+                          <p style="margin:0;color:#ffffff;font-size:12px;font-weight:700;text-transform:uppercase;">{{ event.month }}</p>
+                        </td>
+                        <td style="padding:20px;">
+                          <h3 style="margin:0 0 5px 0;font-size:17px;font-weight:700;color:#ffffff;">{{ event.title }}</h3>
+                          <p style="margin:0 0 12px 0;font-size:13px;color:#cccccc;line-height:1.4;">{{ event.description }}</p>
+                          <a href="{{ event.link }}" style="color:#bd203d;font-size:13px;font-weight:700;text-decoration:none;">Event details &rarr;</a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                {% endfor %}
               </table>
-              {% endfor %}
             </td>
           </tr>
           {% endif %}
 
           <!-- Featured This Week -->
           <tr>
-            <td style="padding:45px;background-color:#f9f9f9;" class="mobile-pad">
-              <h2 style="margin:0 0 30px 0;color:#1b334d;font-size:24px;font-weight:900;text-align:center;">Featured This Week</h2>
+            <td style="padding:50px 45px;" class="mobile-pad">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
                 <tr>
-                  <!-- Hot Job -->
-                  {% if params.sections.job and params.job.has_job %}
-                  <td width="48%" valign="top" class="mobile-stack">
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#ffffff;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.05);height:320px;">
+                  <td style="padding-bottom:30px;">
+                    <h2 style="margin:0;color:#1b334d;font-size:24px;font-weight:900;line-height:1.2;text-align:center;">Featured This Week</h2>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
                       <tr>
-                        <td style="padding:25px;height:320px;" valign="top">
-                          <div style="background-color:#bd203d;color:#ffffff;font-size:10px;font-weight:700;padding:4px 8px;border-radius:4px;display:inline-block;margin-bottom:15px;text-transform:uppercase;">Hot Job</div>
-                          <h3 style="margin:0 0 10px 0;color:#1b334d;font-size:18px;font-weight:900;line-height:1.2;">{{ params.job.title }}</h3>
-                          <p style="margin:0 0 5px 0;color:#666666;font-size:13px;font-weight:700;">{{ params.job.type }}</p>
-                          <p style="margin:0 0 15px 0;color:#999999;font-size:13px;">{{ params.job.location }}</p>
-                          <p style="margin:0 0 20px 0;color:#555555;font-size:13px;line-height:1.5;">{{ params.job.description }}</p>
-                          <a href="{{ params.job.link }}" style="color:#bd203d;font-size:14px;font-weight:700;text-decoration:none;">Apply Now &rarr;</a>
+                        <!-- Hot Job -->
+                        {% if params.sections.job %}
+                        <td class="col-half" width="48.5%" valign="top">
+                          <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#ffffff;border:1px solid #eeeeee;border-radius:12px;height:240px;">
+                            <tr>
+                              <td style="padding:25px;height:240px;" valign="top">
+                                <p style="margin:0 0 10px 0;color:#bd203d;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Hot Job</p>
+                                <h3 style="margin:0 0 8px 0;font-size:18px;font-weight:900;color:#1b334d;line-height:1.2;">{{ params.job.title }}</h3>
+                                <p style="margin:0 0 15px 0;font-size:12px;color:#666666;font-weight:600;">{{ params.job.type }} &bull; {{ params.job.location }}</p>
+                                <div style="margin-bottom:20px;">
+                                  <a href="{{ params.job.link }}" style="background-color:#1b334d;color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:6px;font-size:12px;font-weight:700;display:inline-block;">Apply Now</a>
+                                </div>
+                              </td>
+                            </tr>
+                          </table>
                         </td>
+                        {% endif %}
+                        
+                        {% if params.sections.job and params.sections.alist %}<td width="3%">&nbsp;</td>{% endif %}
+                        
+                        <!-- A-List Talent -->
+                        {% if params.sections.alist %}
+                        <td class="col-half" width="48.5%" valign="top">
+                          <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#ffffff;border:1px solid #eeeeee;border-radius:12px;height:240px;">
+                            <tr>
+                              <td style="padding:25px;height:240px;" valign="top">
+                                <p style="margin:0 0 10px 0;color:#bd203d;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">A-List Talent</p>
+                                <div style="margin-bottom:12px;">
+                                  <img src="{{ params.alist.image }}" width="50" height="50" style="border-radius:25px;display:block;" alt="Talent" />
+                                </div>
+                                <h3 style="margin:0 0 15px 0;font-size:16px;font-weight:900;color:#1b334d;line-height:1.2;">{{ params.alist.title }}</h3>
+                                <a href="{{ params.alist.link }}" style="color:#bd203d;font-size:12px;font-weight:700;text-decoration:none;">Request folio &rarr;</a>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                        {% endif %}
                       </tr>
                     </table>
                   </td>
-                  <td width="4%" class="mobile-stack">&nbsp;</td>
-                  {% endif %}
-
-                  <!-- A-List Talent -->
-                  {% if params.sections.alist and params.alist.has_candidate %}
-                  <td width="48%" valign="top" class="mobile-stack">
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#ffffff;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.05);height:320px;">
-                      <tr>
-                        <td style="padding:25px;height:320px;text-align:center;" valign="top">
-                          <div style="background-color:#1b334d;color:#ffffff;font-size:10px;font-weight:700;padding:4px 8px;border-radius:4px;display:inline-block;margin-bottom:15px;text-transform:uppercase;">A-List Talent</div>
-                          <div style="margin-bottom:15px;">
-                            <img src="{{ params.alist.image }}" width="80" height="80" style="border-radius:40px;object-fit:cover;border:3px solid #f0f0f0;" />
-                          </div>
-                          <h3 style="margin:0 0 15px 0;color:#1b334d;font-size:18px;font-weight:900;line-height:1.2;">{{ params.alist.title }}</h3>
-                          <p style="margin:0 0 20px 0;color:#555555;font-size:13px;line-height:1.5;">Available for immediate start. Expert in their field with proven track record.</p>
-                          <a href="{{ params.alist.link }}" style="background-color:#1b334d;color:#ffffff;text-decoration:none;padding:10px 20px;border-radius:6px;font-size:13px;font-weight:700;display:inline-block;">Request Folio</a>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                  {% endif %}
                 </tr>
               </table>
             </td>
           </tr>
 
-          <!-- Creative Community -->
-          {% if params.sections.articles and params.articles.length > 0 %}
+          <!-- Worth Reading -->
+          {% if params.sections.articles %}
           <tr>
-            <td style="padding:45px 45px 20px 45px;" class="mobile-pad">
+            <td style="padding:45px;background-color:#f9f9f9;" class="mobile-pad">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
                 <tr>
-                  <td style="padding-bottom:25px;text-align:center;">
-                    <p style="margin:0 0 5px 0;color:#bd203d;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">The Creative Community</p>
-                    <h2 style="margin:0;color:#1b334d;font-size:24px;font-weight:900;">Latest Insights & News</h2>
+                  <td style="padding-bottom:30px;">
+                    <p style="margin:0 0 10px 0;color:#bd203d;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Artisan Blog</p>
+                    <h2 style="margin:0;color:#1b334d;font-size:24px;font-weight:900;line-height:1.2;">Worth Reading</h2>
                   </td>
                 </tr>
                 <tr>
@@ -288,16 +331,16 @@
                     <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
                       <tr>
                         {% for article in params.articles %}
-                        <td width="31%" valign="top" class="mobile-stack" style="padding-bottom:25px;">
+                        <td class="mobile-stack" width="31%" valign="top" style="padding-bottom:25px;">
                           <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
                             <tr>
-                              <td style="padding-bottom:12px;">
-                                <a href="{{ article.link }}"><img src="{{ article.image }}" width="100%" style="display:block;border-radius:8px;aspect-ratio:16/9;object-fit:cover;" /></a>
+                              <td style="padding-bottom:15px;">
+                                <a href="{{ article.link }}"><img src="{{ article.image }}" width="100%" style="display:block;border-radius:8px;" alt="Article" /></a>
                               </td>
                             </tr>
                             <tr>
                               <td>
-                                <h5 style="margin:0 0 8px 0;color:#1b334d;font-size:14px;font-weight:700;line-height:1.4;">{{ article.title }}</h5>
+                                <h3 style="margin:0 0 10px 0;font-size:15px;font-weight:700;color:#1b334d;line-height:1.4;">{{ article.title }}</h3>
                                 <a href="{{ article.link }}" style="color:#bd203d;font-size:12px;font-weight:700;text-decoration:none;">Read article &rarr;</a>
                               </td>
                             </tr>

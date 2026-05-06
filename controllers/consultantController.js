@@ -1,15 +1,67 @@
+/**
+ * Consultant Newsletter Controller
+ *
+ * Workflow:
+ *   1. GET  /api/consultant/list        — returns consultant list for dropdown
+ *   2. GET  /api/consultant/profile/:id — returns full profile for a consultant
+ *   3. POST /api/consultant/profile/:id — saves updated profile to consultants.json
+ *   4. POST /api/consultant/parse       — validates Gemini JSON, merges with config, saves state
+ *   5. GET  /api/consultant/state       — returns current state for dashboard
+ *   6. GET  /api/preview/consultant     — renders HTML preview
+ *   7. POST /api/consultant/send-test   — sends test email to TEST_EMAIL
+ *   8. POST /api/consultant/send        — sends to selected segment/list
+ *   9. POST /api/consultant/reset       — clears state
+ */
+
 const fs = require('fs');
 const path = require('path');
-const brevoService = require('../services/brevoService');
-const jobadderService = require('../services/jobadderService');
-const wordpressService = require('../services/wordpressService');
-const modeService = require('../services/modeService');
+const https = require('https');
+const http = require('http');
 const axios = require('axios');
+const brevoService = require('../services/brevoService');
+const modeService = require('../services/modeService');
+const jobadderService = require('../services/jobadderService');
+const candidateService = require('../services/candidateService');
 
-/**
- * Fetch Instagram post data (og:image and og:description) from a public URL.
- * Uses a simple axios + cheerio scrape.
- */
+const ALIST_STATE_FILE = path.join(__dirname, '..', '.alist-state.json');
+const WP_API = 'https://artisan.com.au/wp-json/wp/v2';
+const WP_ARTICLE_CATEGORY = 6; // 'Article' category ID
+
+const { OpenAI } = require('openai');
+const client = new OpenAI();
+
+// ============================================================
+// Fetch 3 latest Creative Community articles from WordPress
+// ============================================================
+async function fetchWordPressArticles() {
+    try {
+        const response = await axios.get(`${WP_API}/posts?categories=${WP_ARTICLE_CATEGORY}&per_page=3&orderby=date&order=desc&_fields=id,title,link,featured_media`, { timeout: 5000 });
+        const posts = response.data;
+        const articles = await Promise.all(posts.map(async (p) => {
+            let image = 'https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png';
+            if (p.featured_media) {
+                try {
+                    const mediaRes = await axios.get(`${WP_API}/media/${p.featured_media}?_fields=source_url`, { timeout: 3000 });
+                    if (mediaRes.data.source_url) image = mediaRes.data.source_url;
+                } catch (e) { /* use fallback */ }
+            }
+            return {
+                title: p.title && p.title.rendered ? p.title.rendered : '',
+                image,
+                link: p.link || 'https://artisan.com.au/creative-community/'
+            };
+        }));
+        console.log(`✅ Fetched ${articles.length} WordPress articles`);
+        return articles;
+    } catch (e) {
+        console.warn('⚠️  WordPress article fetch failed:', e.message);
+        return [];
+    }
+}
+
+// ============================================================
+// Fetch Instagram post data
+// ============================================================
 async function fetchInstagramPostData(url) {
     try {
         const cheerio = require('cheerio');
@@ -32,78 +84,55 @@ async function fetchInstagramPostData(url) {
     }
 }
 
-/**
- * Fetch the 3 most recent WordPress articles from the Artisan blog.
- */
-async function fetchWordPressArticles() {
-    try {
-        const response = await axios.get('https://artisan.com.au/wp-json/wp/v2/posts?per_page=3&_embed', { timeout: 5000 });
-        return response.data.map(post => ({
-            title: post.title.rendered,
-            link: post.link,
-            image: post._embedded && post._embedded['wp:featuredmedia'] 
-                ? post._embedded['wp:featuredmedia'][0].source_url 
-                : 'https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png'
-        }));
-    } catch (e) {
-        console.warn(`⚠️  WordPress article fetch failed: ${e.message}`);
-        return [];
-    }
-}
-
-/**
- * Get the A-List candidate stored in the shared state file (if it exists).
- * The A-List dashboard saves its state to .alist-state.json.
- */
+// ============================================================
+// Auto-pull first candidate from A-List state or live JobAdder
+// ============================================================
 function getAListCandidateFromState() {
-    const alistStateFile = path.join(__dirname, '..', '.alist-state.json');
-    if (!fs.existsSync(alistStateFile)) return null;
     try {
-        const alistState = JSON.parse(fs.readFileSync(alistStateFile, 'utf8'));
-        if (alistState.candidates && alistState.candidates.length > 0) {
-            const c = alistState.candidates[0];
-            return {
-                title: c.title || c.currentJobTitle,
-                image_url: c.photo || 'https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png',
-                mailto_link: `mailto:?subject=A-List Talent Request: ${c.title}&body=Hi, I am interested in viewing the folio for ${c.title}.`
-            };
-        }
+        if (!fs.existsSync(ALIST_STATE_FILE)) return null;
+        const state = JSON.parse(fs.readFileSync(ALIST_STATE_FILE, 'utf8'));
+        if (!state || !state.candidates || state.candidates.length === 0) return null;
+        const c = state.candidates[0];
+        return {
+            title: c.title || c.currentJobTitle || '',
+            image_url: c.photo || c.image_url || c.avatar_url || 'https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png',
+            mailto_link: c.mailto_link || `mailto:?subject=A-List Talent Request: ${c.title}&body=Hi, I am interested in viewing the folio for ${c.title}.`,
+            candidateId: c.candidateId || ''
+        };
     } catch (e) {
         console.warn('⚠️  Could not read A-List state:', e.message);
+        return null;
     }
-    return null;
 }
 
-/**
- * Fetch a live candidate from JobAdder if no state exists.
- */
 async function fetchAListCandidateLive() {
     try {
+        console.log('🔍 Fetching live candidate from JobAdder...');
         const candidates = await jobadderService.getAListCandidates();
-        if (candidates && candidates.length > 0) {
-            const c = candidates[0];
-            return {
-                title: c.currentJobTitle || 'Creative Professional',
-                image_url: c.photo || 'https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png',
-                mailto_link: `mailto:?subject=A-List Talent Request: ${c.currentJobTitle}&body=Hi, I am interested in viewing the folio for this candidate.`
-            };
+        if (!candidates || candidates.length === 0) {
+            console.log('ℹ️  No recent candidates found in JobAdder');
+            return null;
         }
+        const c = candidates[0];
+        return {
+            title: c.currentJobTitle || 'Creative Professional',
+            image_url: c.photo || 'https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png',
+            mailto_link: `mailto:?subject=A-List Talent Request: ${c.currentJobTitle}&body=Hi, I am interested in viewing the folio for this candidate.`,
+            candidateId: c.candidateId || ''
+        };
     } catch (e) {
-        console.warn('⚠️  Live A-List fetch failed:', e.message);
+        console.warn('⚠️  Live candidate fetch failed:', e.message);
+        return null;
     }
-    return null;
 }
 
-/**
- * Fetch a live job from JobAdder.
- */
 async function fetchLiveJob() {
     for (let attempt = 1; attempt <= 2; attempt++) {
         try {
+            console.log(`📋 Fetching live job from JobAdder (attempt ${attempt})...`);
             const liveJobs = await jobadderService.getLiveJobs();
-            if (!liveJobs || liveJobs.length === 0) throw new Error('No live jobs found');
+            if (!liveJobs || liveJobs.length === 0) return null;
             
-            // Pick the most recent job
             const job = liveJobs[0];
             const formatted = jobadderService.formatJobForEmail(job);
             console.log(`✅ Live job fetched: ${formatted.job_title}`);
@@ -116,10 +145,9 @@ async function fetchLiveJob() {
             };
         } catch (e) {
             console.warn(`⚠️  Live job fetch attempt ${attempt} failed: ${e.message}`);
-            if (attempt < 2) await new Promise(r => setTimeout(r, 2000)); // wait 2s before retry
+            if (attempt < 2) await new Promise(r => setTimeout(r, 2000));
         }
     }
-    console.warn('⚠️  All job fetch attempts failed — no job will appear in newsletter');
     return null;
 }
 
@@ -127,9 +155,6 @@ const STATE_FILE = path.join(__dirname, '..', '.consultant-state.json');
 const CONSULTANTS_FILE = path.join(__dirname, '..', 'config', 'consultants.json');
 const TEMPLATE_FILE = path.join(__dirname, '..', 'templates', 'brevo_consultant_for_brevo.html');
 
-// ============================================================
-// State helpers
-// ============================================================
 function readState() {
     if (!fs.existsSync(STATE_FILE)) return { state: 'EMPTY' };
     try { return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')); } catch (e) { return { state: 'EMPTY' }; }
@@ -141,42 +166,27 @@ function writeState(data) {
 
 function loadConsultants() {
     try {
-        // Load base config from repo
-        const base = JSON.parse(fs.readFileSync(CONSULTANTS_FILE, 'utf8'));
-        // Merge in any overrides saved in Railway env var (survives deploys)
-        if (process.env.CONSULTANT_PROFILES_JSON) {
-            try {
-                const overrides = JSON.parse(process.env.CONSULTANT_PROFILES_JSON);
-                Object.keys(overrides).forEach(id => {
-                    if (base[id]) Object.assign(base[id], overrides[id]);
-                });
-            } catch (e) {
-                console.warn('⚠️  CONSULTANT_PROFILES_JSON is set but could not be parsed:', e.message);
-            }
-        }
-        return base;
+        return JSON.parse(fs.readFileSync(CONSULTANTS_FILE, 'utf8'));
     } catch (e) {
-        console.error('❌ Error loading consultants:', e);
-        throw e;
+        throw new Error('Could not load consultants config.');
     }
 }
 
 // ============================================================
-// GET /api/consultant/state
+// Controller Methods
 // ============================================================
+
 function getState(req, res) {
-    res.json(readState());
+    res.json({ success: true, state: readState() });
 }
 
-// ============================================================
-// GET /api/consultant/list
-// ============================================================
 function getConsultantList(req, res) {
     try {
         const consultants = loadConsultants();
         const list = Object.keys(consultants).map(id => ({
             id,
-            name: consultants[id].name
+            name: consultants[id].name,
+            newsletter_name: consultants[id].newsletter_name || consultants[id].name
         }));
         res.json({ consultants: list });
     } catch (e) {
@@ -184,205 +194,165 @@ function getConsultantList(req, res) {
     }
 }
 
-// ============================================================
-// GET /api/consultant/profile/:id
-// ============================================================
 function getProfile(req, res) {
     try {
         const consultants = loadConsultants();
         const profile = consultants[req.params.id];
-        if (!profile) return res.status(404).json({ error: 'Consultant not found' });
-        res.json(profile);
+        if (!profile) return res.status(404).json({ success: false, message: 'Consultant not found' });
+        res.json({ success: true, profile });
     } catch (e) {
-        res.status(500).json({ error: e.message });
+        res.status(500).json({ success: false, message: e.message });
     }
 }
 
-// ============================================================
-// POST /api/consultant/profile/:id
-// ============================================================
 function saveProfile(req, res) {
     try {
         const id = req.params.id;
         const consultants = loadConsultants();
-        if (!consultants[id]) return res.status(404).json({ error: 'Consultant not found' });
-
-        // Update local memory
+        if (!consultants[id]) return res.status(404).json({ success: false, message: 'Consultant not found' });
         Object.assign(consultants[id], req.body);
-
-        // Save back to Railway env var (if possible) or just memory for this session
-        // Note: In a real prod env, you'd save this to a DB or persistent file.
-        // For now, we update the local file in the sandbox.
         fs.writeFileSync(CONSULTANTS_FILE, JSON.stringify(consultants, null, 2));
-
         res.json({ success: true, profile: consultants[id] });
     } catch (e) {
-        res.status(500).json({ error: e.message });
+        res.status(500).json({ success: false, message: e.message });
     }
 }
 
-// ============================================================
-// POST /api/consultant/parse-json
-// ============================================================
 async function parseJSON(req, res) {
     const { json } = req.body;
     let parsed;
-    try {
-        parsed = JSON.parse(json);
-    } catch (e) {
-        return res.status(400).json({ success: false, message: 'Invalid JSON format.' });
-    }
+    try { parsed = JSON.parse(json); } catch (e) { return res.status(400).json({ success: false, message: 'Invalid JSON' }); }
 
-    // Basic validation
-    const errors = [];
-    if (!parsed.consultant) errors.push('Missing consultant ID');
-    if (!parsed.industry_insight || !parsed.industry_insight.heading) errors.push('Missing industry_insight.heading');
-    if (!parsed.life_update || !parsed.life_update.body) errors.push('Missing life_update.body');
-
-    if (errors.length > 0) {
-        return res.status(400).json({ success: false, message: 'JSON is missing required fields.', errors });
-    }
-
-    // Load consultant config
-    let consultants;
-    try {
-        consultants = loadConsultants();
-    } catch (e) {
-        return res.status(500).json({ success: false, message: e.message });
-    }
-
+    const consultants = loadConsultants();
     const consultantConfig = consultants[parsed.consultant];
-    if (!consultantConfig) {
-        return res.status(400).json({
-            success: false,
-            message: `Unknown consultant ID: "${parsed.consultant}". Valid IDs: ${Object.keys(consultants).join(', ')}`
-        });
-    }
+    if (!consultantConfig) return res.status(400).json({ success: false, message: 'Unknown consultant' });
 
-    // Validate events array
-    const events = Array.isArray(parsed.events) ? parsed.events : [];
-    if (events.length > 3) {
-        return res.status(400).json({ success: false, message: 'Maximum 3 events allowed.' });
-    }
-
-    // Resolve media — supports array (multiple items) or single object from Gemini JSON
-    const rawMedia = parsed.media;
-    const rawMediaArray = Array.isArray(rawMedia)
-        ? rawMedia
-        : (rawMedia && rawMedia.type && rawMedia.type !== 'none' && rawMedia.url ? [rawMedia] : []);
-
-    const enrichMedia = async (m) => {
-        if (!m || !m.type || m.type === 'none' || !m.url) return null;
-        const item = { ...m };
-        if (m.type === 'youtube') {
-            const ytMatch = m.url.match(/(?:v=|youtu\.be\/)?([\w-]{11})/);
-            if (ytMatch) item.thumbnail = `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`;
-        }
-        if (m.type === 'instagram') {
-            const igData = await fetchInstagramPostData(m.url);
-            if (igData.imageUrl) item.scraped_image = igData.imageUrl;
-            if (igData.caption && !item.caption) item.caption = igData.caption;
-            if (igData.handle) item.handle = igData.handle;
-        }
-        return item;
-    };
-
-    const resolvedMedia = (await Promise.all(rawMediaArray.map(enrichMedia))).filter(Boolean);
-
-    console.log('📰 Fetching WordPress articles...');
     const wpArticles = await fetchWordPressArticles();
+    const articles = [parsed.article1 || wpArticles[0] || {}, parsed.article2 || wpArticles[1] || {}, parsed.article3 || wpArticles[2] || {}];
+    const alistCandidate = getAListCandidateFromState() || await fetchAListCandidateLive();
+    const liveJob = await fetchLiveJob();
 
-    const articles = [
-        parsed.article1 || wpArticles[0] || {},
-        parsed.article2 || wpArticles[1] || {},
-        parsed.article3 || wpArticles[2] || {}
-    ];
-
-    let alistCandidate = getAListCandidateFromState();
-    if (!alistCandidate) {
-        alistCandidate = await fetchAListCandidateLive();
-    }
-
-    let liveJob = null;
-    if (parsed.job && parsed.job.title) {
-        liveJob = parsed.job;
-    } else {
-        liveJob = await fetchLiveJob();
-    }
-
-    // Build the merged state object
+    const templateParams = buildTemplateParams(consultantConfig, parsed, parsed.media || [], articles, alistCandidate, liveJob);
     const state = {
         state: 'GENERATED',
         generatedAt: new Date().toISOString(),
         consultant: consultantConfig,
-        content: {
-            industry_insight: parsed.industry_insight,
-            life_update: parsed.life_update,
-            events,
-            media: resolvedMedia,
-            articles,
-            alist_candidate: alistCandidate,
-            live_job: liveJob,
-            sections: {
-                industry_insight: true,
-                life_update: true,
-                media: true,
-                instagram: true,
-                events: true,
-                alist: true,
-                job: true,
-                articles: true
-            },
-            instagram_grid: [],
-            instagram_caption: ''
-        },
+        content: { ...parsed, articles, alist_candidate: alistCandidate, live_job: liveJob },
+        templateParams
     };
-
-    // Build template params for the initial generation
-    state.templateParams = buildTemplateParams(
-        state.consultant,
-        {
-            industry_insight: state.content.industry_insight,
-            life_update: state.content.life_update,
-            events: state.content.events,
-            life_update_images: []
-        },
-        state.content.media,
-        state.content.articles,
-        state.content.alist_candidate,
-        state.content.live_job,
-        state.content.sections,
-        state.content.instagram_grid,
-        state.content.instagram_caption
-    );
-
     writeState(state);
-    console.log(`✅ Consultant newsletter parsed for ${consultantConfig.name}`);
-
-    res.json({
-        success: true,
-        message: `Newsletter content parsed for ${consultantConfig.name}.`,
-        consultant: consultantConfig.name,
-        state
-    });
+    res.json({ success: true, state });
 }
 
-// ============================================================
-// POST /api/consultant/parse-csv
-// ============================================================
+// CSV Parsing Helpers
+function splitCsvIntoLogicalRows(text) {
+    const rows = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (ch === '"') {
+            if (inQuotes && text[i + 1] === '"') { current += '""'; i++; }
+            else { inQuotes = !inQuotes; current += ch; }
+        } else if (ch === '\n' && !inQuotes) { rows.push(current); current = ''; }
+        else if (ch !== '\r') { current += ch; }
+    }
+    if (current.trim()) rows.push(current);
+    return rows;
+}
+
+function splitCsvLine(line) {
+    const cells = [];
+    let inQuote = false, cur = '';
+    for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+            if (inQuote && line[i + 1] === '"') { cur += '"'; i++; }
+            else { inQuote = !inQuote; }
+        } else if (ch === ',' && !inQuote) { cells.push(cur.trim()); cur = ''; }
+        else { cur += ch; }
+    }
+    cells.push(cur.trim());
+    return cells;
+}
+
+function parseCsvCell(raw) {
+    if (!raw) return '';
+    const s = raw.trim();
+    if (s.startsWith('"')) {
+        const inner = s.slice(1, s.lastIndexOf('"'));
+        return inner.replace(/""/g, '"').trim();
+    }
+    return s;
+}
+
 async function parseCsv(req, res) {
-    // Placeholder for CSV parsing logic if needed
-    res.status(501).json({ success: false, message: 'CSV parsing not implemented yet.' });
+    try {
+        if (!req.file || !req.file.buffer) return res.status(400).json({ success: false, message: 'No file' });
+        const text = req.file.buffer.toString('utf8');
+        const lines = splitCsvIntoLogicalRows(text);
+        const data = {};
+        lines.forEach(line => {
+            const cells = splitCsvLine(line);
+            if (cells.length >= 2) {
+                const key = cells[0].trim().toLowerCase().replace(/\s+/g, '_');
+                data[key] = parseCsvCell(cells[1]);
+            }
+        });
+
+        const consultants = loadConsultants();
+        let consultantId = data.consultant;
+        
+        // Match by display name if needed
+        if (!consultants[consultantId]) {
+            const match = Object.keys(consultants).find(id => consultants[id].name.toLowerCase() === consultantId.toLowerCase());
+            if (match) consultantId = match;
+        }
+
+        const consultantConfig = consultants[consultantId];
+        if (!consultantConfig) return res.status(400).json({ success: false, message: `Unknown consultant: ${consultantId}` });
+
+        const parsed = {
+            industry_insight: { heading: data.industry_insight_heading || 'Industry Insight', body: data.industry_insight_body || '' },
+            life_update: { heading: data.life_update_heading || 'Life Update', body: data.life_update_body || '' },
+            events: []
+        };
+        for (let i = 1; i <= 3; i++) {
+            if (data[`event_${i}_title`]) {
+                parsed.events.push({
+                    day: data[`event_${i}_day`] || '',
+                    month: data[`event_${i}_month`] || '',
+                    title: data[`event_${i}_title`],
+                    description: data[`event_${i}_description`] || '',
+                    link: data[`event_${i}_link`] || ''
+                });
+            }
+        }
+
+        const wpArticles = await fetchWordPressArticles();
+        const articles = [wpArticles[0] || {}, wpArticles[1] || {}, wpArticles[2] || {}];
+        const alistCandidate = getAListCandidateFromState() || await fetchAListCandidateLive();
+        const liveJob = await fetchLiveJob();
+
+        const templateParams = buildTemplateParams(consultantConfig, parsed, [], articles, alistCandidate, liveJob);
+        const state = {
+            state: 'GENERATED',
+            generatedAt: new Date().toISOString(),
+            consultant: consultantConfig,
+            content: { ...parsed, articles, alist_candidate: alistCandidate, live_job: liveJob },
+            templateParams
+        };
+        writeState(state);
+        res.json({ success: true, state, consultant: consultantConfig.name });
+    } catch (e) {
+        res.status(500).json({ success: false, message: e.message });
+    }
 }
 
-// ============================================================
-// Build nested template params for Brevo
-// ============================================================
 function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCandidate, liveJob, sections, instagram_grid, instagram_caption) {
     const job = liveJob || {};
     const fallbackImg = 'https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png';
-    const fallbackArticleLink = 'https://artisan.com.au/creative-community/';
-
+    
     const finalSections = sections || {
         industry_insight: true,
         life_update: true,
@@ -408,13 +378,13 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
         },
         content: {
             preheader_text: parsed.preheader_text || (parsed.industry_insight ? `${parsed.industry_insight.heading} — from ${consultant.name} at Artisan` : ''),
-            industry_insight_heading: parsed.industry_insight ? parsed.industry_insight.heading : '',
-            industry_insight_body: parsed.industry_insight ? parsed.industry_insight.body : '',
-            life_update_heading: parsed.life_update ? parsed.life_update.heading : '',
-            life_update_body: parsed.life_update ? parsed.life_update.body : '',
-            life_update_images: parsed.life_update_images || [],
-            instagram_grid: instagram_grid || [],
-            instagram_caption: instagram_caption || ''
+            industry_insight_heading: parsed.industry_insight ? (parsed.industry_insight.heading || parsed.industry_insight_heading) : (parsed.industry_insight_heading || ''),
+            industry_insight_body: parsed.industry_insight ? (parsed.industry_insight.body || parsed.industry_insight_body) : (parsed.industry_insight_body || ''),
+            life_update_heading: parsed.life_update ? (parsed.life_update.heading || parsed.life_update_heading) : (parsed.life_update_heading || ''),
+            life_update_body: parsed.life_update ? (parsed.life_update.body || parsed.life_update_body) : (parsed.life_update_body || ''),
+            life_update_images: parsed.life_update_images || parsed.life_update_images || [],
+            instagram_grid: instagram_grid || parsed.instagram_grid || [],
+            instagram_caption: instagram_caption || (parsed.instagram ? parsed.instagram.caption : '') || parsed.instagram_caption || ''
         },
         media: {
             has_media: Array.isArray(mediaArray) && mediaArray.length > 0,
@@ -437,107 +407,79 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
         articles: (articles || []).slice(0, 3).map(a => ({
             title: a.title || '',
             image: a.image || fallbackImg,
-            link: a.link || fallbackArticleLink
+            link: a.link || 'https://artisan.com.au/creative-community/'
         })),
         events: Array.isArray(parsed.events) ? parsed.events : []
     };
 }
 
-// ============================================================
-// GET /api/consultant/preview
-// ============================================================
 async function previewConsultant(req, res) {
     try {
         const state = readState();
         if (state.state === 'EMPTY' || !state.templateParams) {
             return res.send('<div style="padding:40px;text-align:center;"><h2>No content yet</h2></div>');
         }
-
         const emailPreviewService = require('../services/emailPreviewService');
-        const html = await renderConsultantTemplate(state.templateParams, emailPreviewService);
+        const templateHtml = fs.readFileSync(TEMPLATE_FILE, 'utf8');
+        const html = emailPreviewService.replaceTemplateVariables(templateHtml, { params: state.templateParams });
         res.send(html);
-    } catch (error) {
-        res.status(500).send(`Error: ${error.message}`);
+    } catch (e) {
+        res.status(500).send(e.message);
     }
 }
 
-async function renderConsultantTemplate(params, emailPreviewService) {
-    const templateHtml = fs.readFileSync(TEMPLATE_FILE, 'utf8');
-    const data = {
-        params,
-        update_profile: 'https://artisan.com.au/email-preferences',
-        unsubscribe: 'https://artisan.com.au/unsubscribe'
-    };
-    return emailPreviewService.replaceTemplateVariables(templateHtml, data);
-}
-
-// ============================================================
-// POST /api/consultant/send-test
-// ============================================================
 async function sendTest(req, res) {
-    const state = readState();
-    if (state.state === 'EMPTY' || !state.templateParams) {
-        return res.status(400).json({ success: false, message: 'No content yet.' });
-    }
-
-    const testEmail = process.env.TEST_EMAIL;
-    const templateId = state.consultant && state.consultant.brevo_template_id ? state.consultant.brevo_template_id : null;
-
     try {
-        if (templateId) {
-            await brevoService.sendBatchEmail(
-                [{ email: testEmail, name: 'Test User' }],
-                parseInt(templateId),
-                { 
-                    ...state.templateParams,
-                    update_profile: 'https://artisan.com.au/email-preferences',
-                    unsubscribe: 'https://artisan.com.au/unsubscribe'
-                }
-            );
-        } else {
-            const emailPreviewService = require('../services/emailPreviewService');
-            const htmlContent = await renderConsultantTemplate(state.templateParams, emailPreviewService);
-            await brevoService.sendEmailWithHtml({
-                to: { email: testEmail, name: 'Test User' },
-                subject: `[TEST] Consultant — Artisan`,
-                htmlContent
-            });
+        const state = readState();
+        if (state.state === 'EMPTY') return res.status(400).json({ success: false, message: 'No content to test. Please parse or build first.' });
+        
+        const testEmail = process.env.TEST_EMAIL || 'test@artisan.com.au';
+        const templateId = state.consultant.brevo_template_id;
+        
+        if (!templateId) {
+            return res.status(400).json({ success: false, message: 'No Brevo template ID found for this consultant.' });
         }
+
+        // The Brevo template uses {{ params.xxx }}, so we wrap templateParams in a 'params' key
+        const payload = { params: state.templateParams };
+        
+        await brevoService.sendBatchEmail([{ email: testEmail }], parseInt(templateId), payload);
+        
         res.json({ success: true, message: `Test email sent to ${testEmail}` });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+    } catch (e) {
+        console.error('Error in sendTest:', e);
+        res.status(500).json({ success: false, message: e.message });
     }
 }
 
-// ============================================================
-// POST /api/consultant/send
-// ============================================================
 async function sendToAll(req, res) {
-    const state = readState();
-    const templateId = state.consultant && state.consultant.brevo_template_id ? state.consultant.brevo_template_id : null;
-
     try {
+        const state = readState();
+        if (state.state === 'EMPTY') return res.status(400).json({ success: false, message: 'No content to send.' });
+
         const { recipientType, recipientId } = req.body;
         let recipients = [];
         if (recipientType === 'segment') recipients = await brevoService.getSegmentContacts(recipientId);
         else if (recipientType === 'list') recipients = await brevoService.getListContacts(recipientId);
 
-        const finalRecipients = modeService.isTestMode() ? [{ email: modeService.getTestEmail() }] : recipients;
-
-        if (templateId) {
-            await brevoService.sendBatchEmail(
-                finalRecipients,
-                parseInt(templateId),
-                { 
-                    ...state.templateParams,
-                    update_profile: 'https://artisan.com.au/email-preferences',
-                    unsubscribe: 'https://artisan.com.au/unsubscribe'
-                }
-            );
+        if (recipients.length === 0) {
+            return res.status(400).json({ success: false, message: 'No recipients found.' });
         }
-        res.json({ success: true, message: 'Email sent successfully!' });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+
+        const templateId = state.consultant.brevo_template_id;
+        if (!templateId) {
+            return res.status(400).json({ success: false, message: 'No Brevo template ID found.' });
+        }
+
+        // The Brevo template uses {{ params.xxx }}, so we wrap templateParams in a 'params' key
+        const payload = { params: state.templateParams };
+
+        await brevoService.sendBatchEmail(recipients, parseInt(templateId), payload);
+        
+        res.json({ success: true, message: `Newsletter sent successfully to ${recipients.length} recipients.` });
+    } catch (e) {
+        console.error('Error in sendToAll:', e);
+        res.status(500).json({ success: false, message: e.message });
     }
 }
 
@@ -545,72 +487,44 @@ async function updateSections(req, res) {
     try {
         const { sections, content, events, media, instagram_grid, life_update_images } = req.body;
         const state = readState();
-        
-        if (state.state === 'EMPTY') {
-            return res.status(400).json({ success: false, message: 'No newsletter parsed yet.' });
-        }
+        if (state.state === 'EMPTY') return res.status(400).json({ success: false, message: 'Empty state' });
 
+        // Update sections
         if (sections) {
-            // Map dashboard section keys to template section keys
-            state.content.sections = {
-                industry_insight: !!sections.industry_insight,
-                life_update: !!sections.life_update,
-                media: !!sections.media,
-                instagram: !!sections.instagram_grid, // Dashboard uses instagram_grid for the toggle
-                events: !!sections.events,
-                alist: true, // Always show these or add toggles if needed
-                job: true,
-                articles: true
-            };
+            state.sections = sections;
+            state.content.sections = sections;
         }
+        
+        // Update content fields
         if (content) {
-            if (content.industry_insight) {
-                state.content.industry_insight = {
-                    heading: content.industry_insight.title,
-                    body: content.industry_insight.body
-                };
-            }
-            if (content.personal_update) {
-                state.content.life_update = {
-                    heading: content.personal_update.title,
-                    body: content.personal_update.body
-                };
-            }
+            if (content.industry_insight) state.content.industry_insight = content.industry_insight;
+            if (content.personal_update) state.content.life_update = content.personal_update;
             if (content.instagram) state.content.instagram = content.instagram;
         }
+        
         if (events) state.content.events = events;
         if (media) state.content.media = media;
         if (instagram_grid) state.content.instagram_grid = instagram_grid;
         if (life_update_images) state.content.life_update_images = life_update_images;
 
+        // Rebuild templateParams
         state.templateParams = buildTemplateParams(
             state.consultant,
-            {
-                industry_insight: state.content.industry_insight,
-                life_update: state.content.life_update,
-                events: state.content.events,
-                life_update_images: state.content.life_update_images
-            },
+            state.content,
             state.content.media,
             state.content.articles,
             state.content.alist_candidate,
             state.content.live_job,
-            state.content.sections,
+            state.sections,
             state.content.instagram_grid,
             state.content.instagram ? state.content.instagram.caption : ''
         );
-        
-        // Preserve data that buildTemplateParams might not return but we need in state
-        // (like raw objects from the dashboard)
-        state.content.sections = state.templateParams.sections;
-        
-        // Final sanity check: ensure templateParams is actually updated in state
-        console.log('✅ TemplateParams updated after save for:', state.consultant.name);
 
         writeState(state);
-        res.json({ success: true, message: 'Edits saved successfully!', state });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.json({ success: true, state });
+    } catch (e) {
+        console.error('Error in updateSections:', e);
+        res.status(500).json({ success: false, message: e.message });
     }
 }
 
@@ -618,10 +532,6 @@ function resetState(req, res) {
     writeState({ state: 'EMPTY' });
     res.json({ success: true });
 }
-
-function scheduleConsultant(req, res) { res.status(501).send(); }
-function cancelConsultantSchedule(req, res) { res.status(501).send(); }
-function restoreConsultantSchedule() {}
 
 module.exports = {
     getState,
@@ -634,8 +544,5 @@ module.exports = {
     sendTest,
     sendToAll,
     resetState,
-    scheduleConsultant,
-    cancelConsultantSchedule,
-    restoreConsultantSchedule,
     updateSections
 };
