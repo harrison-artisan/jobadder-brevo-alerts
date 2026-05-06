@@ -450,7 +450,7 @@
                 <tr>
                   <td style="padding:0;line-height:0;">
                     <a href="{{ insta_url }}" style="display:block;line-height:0;">
-                      {% if insta_grid|length > 1 %}
+                      {% if insta_grid|length >= 2 %}
                         <!-- 2x2 Grid for multiple images -->
                         <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
                           <tr>
@@ -458,18 +458,16 @@
                               <img src="{{ insta_grid[0] }}" alt="Instagram post 1" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
                             </td>
                             <td width="50%" style="padding:0;line-height:0;">
-                              {% if insta_grid|length > 1 %}
-                                <img src="{{ insta_grid[1] }}" alt="Instagram post 2" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
-                              {% endif %}
+                              <img src="{{ insta_grid[1] }}" alt="Instagram post 2" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
                             </td>
                           </tr>
-                          {% if insta_grid|length > 2 %}
+                          {% if insta_grid|length >= 3 %}
                           <tr>
                             <td width="50%" style="padding:0;line-height:0;">
                               <img src="{{ insta_grid[2] }}" alt="Instagram post 3" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
                             </td>
                             <td width="50%" style="padding:0;line-height:0;">
-                              {% if insta_grid|length > 3 %}
+                              {% if insta_grid|length >= 4 %}
                                 <img src="{{ insta_grid[3] }}" alt="Instagram post 4" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
                               {% else %}
                                 <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">

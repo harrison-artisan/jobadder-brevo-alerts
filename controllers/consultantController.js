@@ -745,8 +745,8 @@ async function updateSections(req, res) {
                 thumbnail: (m.thumbnail && m.thumbnail.startsWith('data:')) ? '' : m.thumbnail
             }));
         }
-        state.content.instagram_grid = (instagram_grid || []).filter(url => !url.startsWith("data:"));
-        state.content.life_update_images = (life_update_images || []).filter(url => !url.startsWith("data:"));
+        state.content.instagram_grid = (instagram_grid || state.content.instagram_grid || []).filter(url => !url.startsWith("data:"));
+        state.content.life_update_images = (life_update_images || state.content.life_update_images || []).filter(url => !url.startsWith("data:"));
 
         // 4. Rebuild templateParams using the same logic as initial build
         state.templateParams = buildTemplateParams(
