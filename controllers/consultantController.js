@@ -724,15 +724,14 @@ async function updateSections(req, res) {
                 };
             }
             if (content.instagram) {
-                state.content.instagram_caption = content.instagram.caption || '';
+                state.content.instagram_caption = String(content.instagram.caption || '');
+                state.content.instagram_grid = (instagram_grid && instagram_grid.length > 0) ? instagram_grid : (state.content.instagram_grid || []);
                 // Sync legacy objects for buildTemplateParams
                 state.content.instagram = {
                     caption: state.content.instagram_caption,
-                    images: (instagram_grid && instagram_grid.length > 0) ? instagram_grid : (state.content.instagram_grid || []),
-                    grid: (instagram_grid && instagram_grid.length > 0) ? instagram_grid : (state.content.instagram_grid || [])
+                    images: state.content.instagram_grid,
+                    grid: state.content.instagram_grid
                 };
-                // Explicitly set it at the top level for templateParams
-                state.instagram_caption = state.content.instagram_caption;
             }
         }
         
@@ -770,12 +769,12 @@ async function updateSections(req, res) {
         state.templateParams.instagram_grid = state.content.instagram_grid;
         state.templateParams.instagram_caption = state.content.instagram_caption;
         state.templateParams.instagram = {
-            caption: String(state.content.instagram_caption || ""),
-            images: Array.isArray(state.content.instagram_grid) ? state.content.instagram_grid : [],
-            grid: Array.isArray(state.content.instagram_grid) ? state.content.instagram_grid : []
+            caption: state.content.instagram_caption,
+            images: state.content.instagram_grid,
+            grid: state.content.instagram_grid
         };
-        state.templateParams.instagram_caption = String(state.content.instagram_caption || "");
-        state.templateParams.instagram_grid = Array.isArray(state.content.instagram_grid) ? state.content.instagram_grid : [];
+        state.templateParams.instagram_caption = state.content.instagram_caption;
+        state.templateParams.instagram_grid = state.content.instagram_grid;
 
         writeState(state);
         res.json({ success: true, state });

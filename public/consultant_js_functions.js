@@ -121,7 +121,7 @@ async function updateConsultantSectionVisibility() {
             body: document.getElementById('editLifeUpdateBody').value
         },
         instagram: {
-            caption: document.getElementById('igCaption').value
+            caption: document.getElementById('igCaption') ? document.getElementById('igCaption').value : ''
         }
     };
 
