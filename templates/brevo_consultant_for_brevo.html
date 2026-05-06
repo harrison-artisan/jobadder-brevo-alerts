@@ -342,10 +342,10 @@
           {% endif %}
 
           <!-- ====== INSTAGRAM (Independent block) ====== -->
-          {% if params.sections.instagram and params.instagram_grid and params.instagram_grid.length > 0 %}
+          {% if params.sections.instagram %}
           {% set insta_url = "https://www.instagram.com/get_artisan/" %}
-          {% set insta_grid = params.instagram_grid %}
-          {% set insta_caption = params.instagram.caption %}
+          {% set insta_grid = params.instagram_grid or [] %}
+          {% set insta_caption = params.instagram.caption or "" %}
           <tr>
             <td style="padding:28px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
               <!-- Instagram post-style card -->
@@ -414,7 +414,11 @@
                 <tr>
                   <td style="padding:0;line-height:0;">
                     <a href="{{ insta_url }}" style="display:block;line-height:0;">
-                      <img src="{{ insta_grid[0] }}" alt="Instagram post" width="100%" style="display:block;border:0;width:100%;height:auto;max-height:400px;object-fit:cover;">
+                      {% if insta_grid and insta_grid.length > 0 %}
+                        <img src="{{ insta_grid[0] }}" alt="Instagram post" width="100%" style="display:block;border:0;width:100%;height:auto;max-height:400px;object-fit:cover;">
+                      {% else %}
+                        <img src="https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png" alt="Instagram post" width="100%" style="display:block;border:0;width:100%;height:auto;max-height:400px;object-fit:cover;">
+                      {% endif %}
                     </a>
                   </td>
                 </tr>
