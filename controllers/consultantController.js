@@ -560,7 +560,9 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
         },
         instagram_grid: instagram_grid || (parsed.instagram_grid || (parsed.instagram && parsed.instagram.images) || []),
         instagram: {
-            caption: instagram_caption || (parsed.instagram_caption || (parsed.instagram && parsed.instagram.caption) || '')
+            caption: instagram_caption || (parsed.instagram_caption || (parsed.instagram && parsed.instagram.caption) || ''),
+            // Add grid to the instagram object as well, as some templates might use params.instagram.grid
+            grid: instagram_grid || (parsed.instagram_grid || (parsed.instagram && parsed.instagram.images) || [])
         },
         job: {
             has_job: !!(job.title),
@@ -582,17 +584,29 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
             link: a.link || 'https://artisan.com.au/creative-community/'
         })),
         events: (Array.isArray(parsed.events) ? parsed.events : []).map(e => {
-            // Ensure events have day/month for the template
-            if (e.date && (!e.day || !e.month)) {
-                const parts = e.date.split(' ');
+            // Normalize event data for template
+            const day = e.day || '';
+            const month = (e.month || '').toUpperCase();
+            const link = e.link || e.url || '';
+            
+            // If date is provided but day/month are missing, try to parse
+            let finalDay = day;
+            let finalMonth = month;
+            if (e.date && (!day || !month)) {
+                const parts = e.date.trim().split(/\s+/);
                 if (parts.length >= 2) {
-                    e.day = parts[0];
-                    e.month = parts[1].toUpperCase();
+                    finalDay = parts[0];
+                    finalMonth = parts[1].toUpperCase();
                 }
             }
-            // Ensure URL is mapped correctly for the template
-            if (e.link && !e.url) e.url = e.link;
-            return e;
+
+            return {
+                ...e,
+                day: finalDay,
+                month: finalMonth,
+                link: link,
+                url: link // Ensure both are present for safety
+            };
         })
     };
 }

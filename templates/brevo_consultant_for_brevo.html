@@ -222,6 +222,17 @@
                     <p style="margin:0 0 10px 0;font-size:10px;font-weight:700;color:#1b334d;letter-spacing:2.5px;text-transform:uppercase;">From {{ params.consultant.name }}</p>
                     <h2 style="margin:0 0 16px 0;font-size:22px;font-weight:900;color:#1b334d;line-height:1.3;">{{ params.content.life_update_heading }}</h2>
                     <p style="margin:0;font-size:14px;line-height:1.8;color:#444444;">{{ params.content.life_update_body }}</p>
+                    {% if params.content.life_update_images and params.content.life_update_images.length > 0 %}
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-top:20px;">
+                      <tr>
+                        <td align="center">
+                          {% for img_url in params.content.life_update_images %}
+                          <img src="{{ img_url }}" alt="Life Update" width="100%" style="display:block;width:100%;max-width:540px;height:auto;border-radius:12px;margin-bottom:15px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                          {% endfor %}
+                        </td>
+                      </tr>
+                    </table>
+                    {% endif %}
                   </td>
                 </tr>
               </table>
@@ -253,7 +264,10 @@
           </tr>
           {% endif %}
 
-          {% if item.type == 'instagram' %}
+          {% if item.type == 'instagram' or (params.sections.instagram and params.instagram_grid and params.instagram_grid.length > 0) %}
+          {% set insta_url = item.url or "https://www.instagram.com/get_artisan/" %}
+          {% set insta_grid = item.grid or params.instagram_grid or [] %}
+          {% set insta_caption = item.caption or params.instagram.caption or "" %}
           <tr>
             <td style="padding:28px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
               <!-- Instagram post-style card -->
@@ -284,7 +298,7 @@
                         </td>
                         <!-- Right: View Post link -->
                         <td align="right" valign="middle">
-                          <a href="{{ item.url }}" style="font-size:12px;font-weight:700;color:#0095f6;text-decoration:none;">View post &#8599;</a>
+                          <a href="{{ insta_url }}" style="font-size:12px;font-weight:700;color:#0095f6;text-decoration:none;">View post &#8599;</a>
                         </td>
                       </tr>
                     </table>
@@ -300,7 +314,7 @@
                         <td width="42" valign="middle" style="padding-right:10px;">
                           <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(45deg,#f09433,#bc1888);border-radius:50%;padding:2px;width:42px;height:42px;">
                             <tr><td align="center" valign="middle" style="background:#fff;border-radius:50%;padding:2px;">
-                              <img src="{{ params.consultant.photo }}" alt="{{ item.handle or params.consultant.name }}" width="34" height="34" style="display:block;border:0;border-radius:50%;width:34px;height:34px;object-fit:cover;">
+                              <img src="{{ params.consultant.photo }}" alt="{{ params.consultant.name }}" width="34" height="34" style="display:block;border:0;border-radius:50%;width:34px;height:34px;object-fit:cover;">
                             </td></tr>
                           </table>
                         </td>
@@ -311,23 +325,25 @@
                         </td>
                         <!-- Follow button -->
                         <td align="right" valign="middle">
-                          <a href="{{ item.profile_url or item.url }}" style="display:inline-block;background:#0095f6;color:#ffffff;padding:6px 16px;border-radius:8px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.2px;">Follow</a>
+                          <a href="{{ insta_url }}" style="display:inline-block;background:#0095f6;color:#ffffff;padding:6px 16px;border-radius:8px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.2px;">Follow</a>
                         </td>
                       </tr>
                     </table>
                   </td>
                 </tr>
 
-                <!-- ── Post image ── -->
-                {% if item.scraped_image %}
+                <!-- ── Post image(s) ── -->
                 <tr>
                   <td style="padding:0;line-height:0;">
-                    <a href="{{ item.url }}" style="display:block;line-height:0;">
-                      <img src="{{ item.scraped_image }}" alt="Instagram post" width="100%" style="display:block;border:0;width:100%;height:auto;max-height:400px;object-fit:cover;">
+                    <a href="{{ insta_url }}" style="display:block;line-height:0;">
+                      {% if item.scraped_image %}
+                        <img src="{{ item.scraped_image }}" alt="Instagram post" width="100%" style="display:block;border:0;width:100%;height:auto;max-height:400px;object-fit:cover;">
+                      {% elif insta_grid and insta_grid.length > 0 %}
+                        <img src="{{ insta_grid[0] }}" alt="Instagram post" width="100%" style="display:block;border:0;width:100%;height:auto;max-height:400px;object-fit:cover;">
+                      {% endif %}
                     </a>
                   </td>
                 </tr>
-                {% endif %}
 
                 <!-- ── Action icons row (heart, comment, share | bookmark) ── -->
                 <tr>
@@ -340,19 +356,19 @@
                             <tr>
                               <!-- Heart icon -->
                               <td valign="middle" style="padding-right:14px;">
-                                <a href="{{ item.url }}" style="text-decoration:none;display:block;">
+                                <a href="{{ insta_url }}" style="text-decoration:none;display:block;">
                                   <img src="https://cdn-icons-png.flaticon.com/512/833/833472.png" alt="Like" width="22" height="22" style="display:block;border:0;opacity:0.85;">
                                 </a>
                               </td>
                               <!-- Comment icon -->
                               <td valign="middle" style="padding-right:14px;">
-                                <a href="{{ item.url }}" style="text-decoration:none;display:block;">
+                                <a href="{{ insta_url }}" style="text-decoration:none;display:block;">
                                   <img src="https://cdn-icons-png.flaticon.com/512/1380/1380338.png" alt="Comment" width="22" height="22" style="display:block;border:0;opacity:0.85;">
                                 </a>
                               </td>
                               <!-- Share/DM icon -->
                               <td valign="middle">
-                                <a href="{{ item.url }}" style="text-decoration:none;display:block;">
+                                <a href="{{ insta_url }}" style="text-decoration:none;display:block;">
                                   <img src="https://cdn-icons-png.flaticon.com/512/3106/3106673.png" alt="Share" width="22" height="22" style="display:block;border:0;opacity:0.85;">
                                 </a>
                               </td>
@@ -361,7 +377,7 @@
                         </td>
                         <!-- Right: bookmark icon -->
                         <td align="right" valign="middle">
-                          <a href="{{ item.url }}" style="text-decoration:none;display:block;">
+                          <a href="{{ insta_url }}" style="text-decoration:none;display:block;">
                             <img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" alt="Save" width="22" height="22" style="display:block;border:0;opacity:0.85;margin-left:auto;">
                           </a>
                         </td>
@@ -371,11 +387,11 @@
                 </tr>
 
                 <!-- ── Caption ── -->
-                {% if item.caption %}
+                {% if insta_caption %}
                 <tr>
                   <td style="padding:2px 14px 12px 14px;">
                     <p style="margin:0;font-size:13px;color:#262626;line-height:1.55;">
-                      <span style="font-weight:700;">{{ item.handle or "get_artisan" }}</span>&nbsp;{{ item.caption }}
+                      <span style="font-weight:700;">{{ item.handle or "get_artisan" }}</span>&nbsp;{{ insta_caption }}
                     </p>
                   </td>
                 </tr>
@@ -384,7 +400,7 @@
                 <!-- ── View on Instagram footer ── -->
                 <tr>
                   <td style="padding:10px 14px 14px 14px;border-top:1px solid #efefef;">
-                    <a href="{{ item.url }}" style="font-size:12px;color:#8e8e8e;text-decoration:none;font-weight:600;">View this post on Instagram &#8599;</a>
+                    <a href="{{ insta_url }}" style="font-size:12px;color:#8e8e8e;text-decoration:none;font-weight:600;">View this post on Instagram &#8599;</a>
                   </td>
                 </tr>
 
