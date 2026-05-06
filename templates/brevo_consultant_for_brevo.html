@@ -461,10 +461,15 @@
                               <img src="{{ insta_grid[1] }}" alt="Instagram post 2" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
                             </td>
                           </tr>
-                          {% if insta_grid|length >= 3 %}
                           <tr>
                             <td width="50%" style="padding:0;line-height:0;">
-                              <img src="{{ insta_grid[2] }}" alt="Instagram post 3" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
+                              {% if insta_grid|length >= 3 %}
+                                <img src="{{ insta_grid[2] }}" alt="Instagram post 3" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
+                              {% else %}
+                                <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+                                  <tr><td height="240" style="background-color:#f0f0f0;height:240px;">&nbsp;</td></tr>
+                                </table>
+                              {% endif %}
                             </td>
                             <td width="50%" style="padding:0;line-height:0;">
                               {% if insta_grid|length >= 4 %}
@@ -476,7 +481,6 @@
                               {% endif %}
                             </td>
                           </tr>
-                          {% endif %}
                         </table>
                       {% elif insta_grid|length == 1 %}
                         <img src="{{ insta_grid[0] }}" alt="Instagram post" width="100%" style="display:block;border:0;width:100%;height:auto;max-height:480px;object-fit:cover;">

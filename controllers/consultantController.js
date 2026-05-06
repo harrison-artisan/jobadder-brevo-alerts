@@ -769,8 +769,11 @@ async function updateSections(req, res) {
         // Final sync for templateParams
         state.templateParams.instagram_grid = state.content.instagram_grid;
         state.templateParams.instagram_caption = state.content.instagram_caption;
-        state.templateParams.instagram.images = state.content.instagram_grid;
-        state.templateParams.instagram.caption = state.content.instagram_caption;
+        state.templateParams.instagram = {
+            caption: state.content.instagram_caption,
+            images: state.content.instagram_grid,
+            grid: state.content.instagram_grid
+        };
 
         writeState(state);
         res.json({ success: true, state });
