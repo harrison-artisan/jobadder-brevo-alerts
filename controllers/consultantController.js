@@ -548,11 +548,19 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
         },
         media: {
             has_media: Array.isArray(mediaArray) && mediaArray.length > 0,
-            items: Array.isArray(mediaArray) ? mediaArray : []
+            items: (Array.isArray(mediaArray) ? mediaArray : []).map(item => {
+                if (item.type === 'youtube' && item.url && !item.thumbnail) {
+                    const videoIdMatch = item.url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
+                    if (videoIdMatch && videoIdMatch[1]) {
+                        item.thumbnail = `https://img.youtube.com/vi/${videoIdMatch[1]}/maxresdefault.jpg`;
+                    }
+                }
+                return item;
+            })
         },
-        instagram_grid: instagram_grid || parsed.instagram_grid || (parsed.instagram ? parsed.instagram.images : []) || [],
+        instagram_grid: instagram_grid || (parsed.instagram_grid || (parsed.instagram && parsed.instagram.images) || []),
         instagram: {
-            caption: instagram_caption || parsed.instagram_caption || (parsed.instagram ? parsed.instagram.caption : '') || ''
+            caption: instagram_caption || (parsed.instagram_caption || (parsed.instagram && parsed.instagram.caption) || '')
         },
         job: {
             has_job: !!(job.title),
@@ -582,6 +590,8 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
                     e.month = parts[1].toUpperCase();
                 }
             }
+            // Ensure URL is mapped correctly for the template
+            if (e.link && !e.url) e.url = e.link;
             return e;
         })
     };
@@ -702,7 +712,7 @@ async function updateSections(req, res) {
                 // Sync legacy objects for buildTemplateParams
                 state.content.instagram = {
                     caption: state.content.instagram_caption,
-                    images: state.content.instagram_grid || []
+                    images: state.content.instagram_grid
                 };
             }
         }
@@ -710,8 +720,8 @@ async function updateSections(req, res) {
         // 3. Update Arrays
         if (events) state.content.events = events;
         if (media) state.content.media = media;
-        if (instagram_grid) state.content.instagram_grid = instagram_grid;
-        if (life_update_images) state.content.life_update_images = life_update_images;
+        state.content.instagram_grid = (instagram_grid || []).filter(url => !url.startsWith("data:"));
+        state.content.life_update_images = (life_update_images || []).filter(url => !url.startsWith("data:"));
 
         // 4. Rebuild templateParams using the same logic as initial build
         state.templateParams = buildTemplateParams(
