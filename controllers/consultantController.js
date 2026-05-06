@@ -304,8 +304,11 @@ async function parseCsv(req, res) {
         let consultantId = data.consultant;
         
         // Match by display name if needed
-        if (!consultants[consultantId]) {
-            const match = Object.keys(consultants).find(id => consultants[id].name.toLowerCase() === consultantId.toLowerCase());
+        if (consultantId && !consultants[consultantId]) {
+            const match = Object.keys(consultants).find(id => {
+                const name = consultants[id].name;
+                return name && name.toLowerCase() === consultantId.toLowerCase();
+            });
             if (match) consultantId = match;
         }
 
