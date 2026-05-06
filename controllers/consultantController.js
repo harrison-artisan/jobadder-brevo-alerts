@@ -446,7 +446,8 @@ async function parseJSON(req, res) {
             events,
             media: resolvedMedia,
             articles,
-            alist_candidate: alistCandidate
+            alist_candidate: alistCandidate,
+            live_job: liveJob
         },
         templateParams: buildTemplateParams(consultantConfig, parsed, resolvedMedia, articles, alistCandidate, liveJob)
     };
