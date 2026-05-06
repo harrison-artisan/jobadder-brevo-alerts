@@ -750,6 +750,7 @@ async function updateSections(req, res) {
                 };
             }
             if (content.instagram) {
+                // Fix: Correctly handle the caption from the dashboard field (personal_update.instagram.caption)
                 state.content.instagram_caption = String(content.instagram.caption || '');
                 state.content.instagram_grid = (instagram_grid && instagram_grid.length > 0) ? instagram_grid : (state.content.instagram_grid || []);
                 // Sync legacy objects for buildTemplateParams

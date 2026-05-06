@@ -448,60 +448,58 @@
                 <tr>
                   <td style="padding:0;line-height:0;">
                     <a href="{{ insta_url }}" style="display:block;line-height:0;">
-                      <!-- Instagram Image(s) - Simplified for maximum compatibility -->
+                      <!-- Instagram Image(s) - Using robust Personal Section logic -->
                       <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                        {% if params.has_insta_img %}
-                          {% if params.insta_img_count == "1" or params.insta_img_count == 1 %}
-                            <tr>
-                              <td align="center" style="padding:0;">
-                                <img src="{{ params.insta_img_1 }}" alt="Instagram" width="100%" style="display:block;width:100%;height:auto;max-height:500px;object-fit:cover;border:0;">
-                              </td>
-                            </tr>
-                          {% elif params.insta_img_count == "2" or params.insta_img_count == 2 %}
-                            <tr>
-                              <td width="50%" style="padding:0;line-height:0;">
-                                <img src="{{ params.insta_img_1 }}" alt="Instagram 1" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
-                              </td>
-                              <td width="50%" style="padding:0;line-height:0;">
-                                <img src="{{ params.insta_img_2 }}" alt="Instagram 2" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
-                              </td>
-                            </tr>
-                          {% elif params.insta_img_count == "3" or params.insta_img_count == 3 %}
-                            <tr>
-                              <td width="33.3%" style="padding:0;line-height:0;">
-                                <img src="{{ params.insta_img_1 }}" alt="Instagram 1" width="100%" style="display:block;width:100%;height:160px;object-fit:cover;border:0;">
-                              </td>
-                              <td width="33.3%" style="padding:0;line-height:0;">
-                                <img src="{{ params.insta_img_2 }}" alt="Instagram 2" width="100%" style="display:block;width:100%;height:160px;object-fit:cover;border:0;">
-                              </td>
-                              <td width="33.4%" style="padding:0;line-height:0;">
-                                <img src="{{ params.insta_img_3 }}" alt="Instagram 3" width="100%" style="display:block;width:100%;height:160px;object-fit:cover;border:0;">
-                              </td>
-                            </tr>
-                          {% elif params.insta_img_count == "4" or params.insta_img_count == 4 or params.insta_img_count|int >= 4 %}
-                            <tr>
-                              <td width="50%" style="padding:0;line-height:0;">
-                                <img src="{{ params.insta_img_1 }}" alt="Instagram 1" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
-                              </td>
-                              <td width="50%" style="padding:0;line-height:0;">
-                                <img src="{{ params.insta_img_2 }}" alt="Instagram 2" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
-                              </td>
-                            </tr>
-                            <tr>
-                              <td width="50%" style="padding:0;line-height:0;">
-                                <img src="{{ params.insta_img_3 }}" alt="Instagram 3" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
-                              </td>
-                              <td width="50%" style="padding:0;line-height:0;">
-                                <img src="{{ params.insta_img_4 }}" alt="Instagram 4" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
-                              </td>
-                            </tr>
-                          {% endif %}
+                        {% if params.insta_img_count == "1" or params.insta_img_count == 1 %}
+                        <tr>
+                          <td align="center" style="padding:0;">
+                            <img src="{{ params.insta_img_1 }}" alt="Instagram" width="100%" style="display:block;width:100%;height:auto;max-height:500px;object-fit:cover;border:0;">
+                          </td>
+                        </tr>
+                        {% elif params.insta_img_count == "2" or params.insta_img_count == 2 %}
+                        <tr>
+                          <td width="50%" style="padding:0;line-height:0;">
+                            <img src="{{ params.insta_img_1 }}" alt="Instagram 1" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
+                          </td>
+                          <td width="50%" style="padding:0;line-height:0;">
+                            <img src="{{ params.insta_img_2 }}" alt="Instagram 2" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
+                          </td>
+                        </tr>
+                        {% elif params.insta_img_count == "3" or params.insta_img_count == 3 %}
+                        <tr>
+                          <td width="33.3%" style="padding:0;line-height:0;">
+                            <img src="{{ params.insta_img_1 }}" alt="Instagram 1" width="100%" style="display:block;width:100%;height:160px;object-fit:cover;border:0;">
+                          </td>
+                          <td width="33.3%" style="padding:0;line-height:0;">
+                            <img src="{{ params.insta_img_2 }}" alt="Instagram 2" width="100%" style="display:block;width:100%;height:160px;object-fit:cover;border:0;">
+                          </td>
+                          <td width="33.4%" style="padding:0;line-height:0;">
+                            <img src="{{ params.insta_img_3 }}" alt="Instagram 3" width="100%" style="display:block;width:100%;height:160px;object-fit:cover;border:0;">
+                          </td>
+                        </tr>
+                        {% elif params.insta_img_count == "4" or params.insta_img_count == 4 %}
+                        <tr>
+                          <td width="50%" style="padding:0;line-height:0;">
+                            <img src="{{ params.insta_img_1 }}" alt="Instagram 1" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
+                          </td>
+                          <td width="50%" style="padding:0;line-height:0;">
+                            <img src="{{ params.insta_img_2 }}" alt="Instagram 2" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
+                          </td>
+                        </tr>
+                        <tr>
+                          <td width="50%" style="padding:0;line-height:0;">
+                            <img src="{{ params.insta_img_3 }}" alt="Instagram 3" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
+                          </td>
+                          <td width="50%" style="padding:0;line-height:0;">
+                            <img src="{{ params.insta_img_4 }}" alt="Instagram 4" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
+                          </td>
+                        </tr>
                         {% else %}
-                          <tr>
-                            <td align="center" style="padding:40px;">
-                              <img src="https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png" alt="Artisan" width="80" style="display:block;width:80px;height:auto;opacity:0.2;">
-                            </td>
-                          </tr>
+                        <tr>
+                          <td align="center" style="padding:40px;">
+                            <img src="https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png" alt="Artisan" width="80" style="display:block;width:80px;height:auto;opacity:0.2;">
+                          </td>
+                        </tr>
                         {% endif %}
                       </table>
                     </a>
