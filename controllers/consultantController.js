@@ -726,7 +726,8 @@ async function updateSections(req, res) {
                 // Sync legacy objects for buildTemplateParams
                 state.content.instagram = {
                     caption: state.content.instagram_caption,
-                    images: state.content.instagram_grid || []
+                    images: instagram_grid || state.content.instagram_grid || [],
+                    grid: instagram_grid || state.content.instagram_grid || []
                 };
                 // Explicitly set it at the top level for templateParams
                 state.instagram_caption = state.content.instagram_caption;
