@@ -551,6 +551,12 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
             life_update_body,
             life_update_images
         },
+        // Flatten Life Update images for preview compatibility
+        life_img_1: life_update_images[0] || "",
+        life_img_2: life_update_images[1] || "",
+        life_img_3: life_update_images[2] || "",
+        life_img_count: life_update_images.length,
+        
         media: {
             has_media: Array.isArray(mediaArray) && mediaArray.length > 0,
             items: (Array.isArray(mediaArray) ? mediaArray : []).map(item => {
@@ -563,6 +569,14 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
                 return item;
             })
         },
+        // Flatten Instagram data for maximum compatibility
+        insta_img_1: instagram_grid_final[0] || "",
+        insta_img_2: instagram_grid_final[1] || "",
+        insta_img_3: instagram_grid_final[2] || "",
+        insta_img_4: instagram_grid_final[3] || "",
+        insta_img_count: instagram_grid_final.length,
+        insta_caption: instagram_caption_final,
+        
         instagram_grid: instagram_grid_final,
         instagram: {
             caption: instagram_caption_final,
