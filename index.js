@@ -23,9 +23,9 @@ const PORT = process.env.PORT || 3000;
 const modeService = require('./services/modeService');
 
 // Middleware
-// Increased limit to 15mb to support base64 image uploads in Content Marketing
-app.use(express.json({ limit: '15mb' }));
-app.use(express.urlencoded({ extended: true, limit: '15mb' }));
+// Increased limit to 50mb to support base64 image uploads in Consultant Newsletter
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static('public'));
 
 // Dashboard route
