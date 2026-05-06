@@ -489,9 +489,11 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
         articles: true
     };
 
-    return {
-        // Consultant identity — nested object
-        consultant: {
+	    return {
+	        // Top-level caption for template fallback
+	        instagram_caption: instagramCaption,
+	        // Consultant identity — nested object
+	        consultant: {
             newsletter_name: consultant.newsletter_name || consultant.name,
             name: consultant.name,
             title: consultant.title,
@@ -638,7 +640,7 @@ async function sendTest(req, res) {
             await brevoService.sendBatchEmail(
                 [{ email: testEmail, name: 'Test User' }],
                 parseInt(templateId),
-                { params: state.templateParams }
+                state.templateParams
             );
         } else {
             console.log('ℹ️  No template ID — sending inline HTML test email.');
@@ -710,7 +712,7 @@ async function sendToAll(req, res) {
             await brevoService.sendBatchEmail(
                 finalRecipients,
                 parseInt(templateId),
-                { params: state.templateParams }
+                state.templateParams
             );
         } else {
             console.log('ℹ️  No template ID — sending inline HTML to all recipients.');
@@ -774,7 +776,7 @@ async function sendToAllDirect(options = {}) {
         ? [{ email: modeService.getTestEmail() }]
         : recipients;
     if (templateId) {
-        await brevoService.sendBatchEmail(finalRecipients, parseInt(templateId), { params: state.templateParams });
+        await brevoService.sendBatchEmail(finalRecipients, parseInt(templateId), state.templateParams);
     } else {
         const emailPreviewService = require('../services/emailPreviewService');
         const htmlContent = await renderConsultantTemplate(state.templateParams, emailPreviewService);
