@@ -1,0 +1,129 @@
+{
+  "state": "GENERATED",
+  "consultant": {
+    "id": "debbie-younger",
+    "name": "Debbie Younger"
+  },
+  "content": {
+    "articles": [],
+    "alist_candidate": null,
+    "live_job": null,
+    "sections": {
+      "industry_insight": true,
+      "life_update": true,
+      "media": true,
+      "events": true,
+      "instagram_grid": true
+    },
+    "industry_insight": {
+      "heading": "Industry News",
+      "body": "Something interesting happened."
+    },
+    "life_update": {
+      "heading": "My Week",
+      "body": "I had a great week!"
+    },
+    "instagram_grid": [
+      "https://picsum.photos/200",
+      "https://picsum.photos/201",
+      "https://picsum.photos/202",
+      "https://picsum.photos/203"
+    ],
+    "instagram": {
+      "caption": "Check out our latest post!"
+    },
+    "events": [
+      {
+        "title": "Artisan Event",
+        "date": "15 May",
+        "description": "Join us for a great event!",
+        "link": "https://artisan.com.au",
+        "day": "15",
+        "month": "MAY"
+      }
+    ],
+    "media": [
+      {
+        "title": "Great Video",
+        "url": "https://youtube.com/watch?v=dQw4w9WgXcQ",
+        "type": "youtube",
+        "caption": "",
+        "thumbnail": "https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg"
+      }
+    ]
+  },
+  "templateParams": {
+    "consultant": {
+      "newsletter_name": "Debbie Younger",
+      "name": "Debbie Younger",
+      "calendar_link": "https://artisan.com.au/contact"
+    },
+    "content": {
+      "preheader_text": "Industry News — from Debbie Younger at Artisan",
+      "industry_insight_heading": "Industry News",
+      "industry_insight_body": "Something interesting happened.",
+      "life_update_heading": "My Week",
+      "life_update_body": "I had a great week!",
+      "life_update_images": []
+    },
+    "media": {
+      "has_media": true,
+      "items": [
+        {
+          "title": "Great Video",
+          "url": "https://youtube.com/watch?v=dQw4w9WgXcQ",
+          "type": "youtube",
+          "caption": "",
+          "thumbnail": "https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg"
+        }
+      ]
+    },
+    "job": {
+      "has_job": false,
+      "title": "",
+      "type": "Full Time",
+      "location": "",
+      "description": "",
+      "link": "https://clientapps.jobadder.com/67514/artisan"
+    },
+    "alist": {
+      "has_candidate": false,
+      "title": "",
+      "image": "https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png",
+      "link": ""
+    },
+    "articles": [],
+    "events": [
+      {
+        "title": "Artisan Event",
+        "date": "15 May",
+        "description": "Join us for a great event!",
+        "link": "https://artisan.com.au",
+        "day": "15",
+        "month": "MAY"
+      }
+    ],
+    "sections": {
+      "industry_insight": true,
+      "life_update": true,
+      "media": true,
+      "events": true,
+      "instagram": true,
+      "articles": true
+    },
+    "instagram": {
+      "caption": "Check out our latest post!"
+    },
+    "instagram_grid": [
+      "https://picsum.photos/200",
+      "https://picsum.photos/201",
+      "https://picsum.photos/202",
+      "https://picsum.photos/203"
+    ],
+    "has_industry_insight": true,
+    "has_life_update": true,
+    "has_events": true,
+    "has_media": true,
+    "has_instagram": true
+  }
+}

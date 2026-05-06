@@ -101,12 +101,18 @@ class EmailPreviewService {
                         if (/loop\.first/.test(trimmed)) return data.loop && data.loop.first;
                         // Handle: loop.last
                         if (/loop\.last/.test(trimmed)) return data.loop && data.loop.last;
-                        // Handle: "path and path.length > N"
-                        const andLengthMatch = trimmed.match(/^([\w.]+)\s+and\s+[\w.]+\.length\s*>\s*(\d+)$/);
-                        if (andLengthMatch) {
-                            const arr = this.getNestedProperty(data, andLengthMatch[1], null);
-                            return Array.isArray(arr) && arr.length > parseInt(andLengthMatch[2], 10);
+                        // Handle complex OR conditions
+                        if (trimmed.includes(' or ')) {
+                            const parts = trimmed.split(/\s+or\s+/);
+                            return parts.some(part => evalCondition(part));
                         }
+
+                        // Handle complex AND conditions
+                        if (trimmed.includes(' and ')) {
+                            const parts = trimmed.split(/\s+and\s+/);
+                            return parts.every(part => evalCondition(part));
+                        }
+
                         // Handle: "path.length > N"
                         const lengthMatch = trimmed.match(/^([\w.]+)\.length\s*>\s*(\d+)$/);
                         if (lengthMatch) {

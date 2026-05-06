@@ -449,7 +449,7 @@ async function parseJSON(req, res) {
             alist_candidate: alistCandidate,
             live_job: liveJob
         },
-        templateParams: buildTemplateParams(consultantConfig, parsed, resolvedMedia, articles, alistCandidate, liveJob)
+        templateParams: buildTemplateParams(consultantConfig, parsed, resolvedMedia, articles, alistCandidate, liveJob, null, null, parsed.instagram ? parsed.instagram.caption : '')
     };
 
     writeState(state);
@@ -473,7 +473,7 @@ async function parseJSON(req, res) {
 // Brevo's Nunjucks engine requires nested objects (not flat strings)
 // for {{ params.xxx }} substitution to work correctly.
 // ============================================================
-function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCandidate, liveJob, sections = null, instagramGrid = null) {
+function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCandidate, liveJob, sections = null, instagramGrid = null, instagramCaption = '') {
     // liveJob is pre-fetched from JobAdder (or from Gemini JSON if provided)
     const job = liveJob || parsed.job || {};
     const fallbackImg = 'https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png';
@@ -561,6 +561,11 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
         
         // Sections visibility flags
         sections: activeSections,
+        
+        // Instagram caption
+        instagram: {
+            caption: instagramCaption || ''
+        },
         
         // Instagram grid
         instagram_grid: activeSections.instagram ? instagramGrid : null
@@ -1633,7 +1638,7 @@ async function parseCsv(req, res) {
         };
 
         // 12. Build template params and save state
-        const templateParams = buildTemplateParams(consultantConfig, parsedForTemplate, mediaArray, articles, alistCandidate, liveJob);
+        const templateParams = buildTemplateParams(consultantConfig, parsedForTemplate, mediaArray, articles, alistCandidate, liveJob, null, null, polished.instagram_caption || '');
         const state = {
             state: 'GENERATED',
             generatedAt: new Date().toISOString(),
@@ -1729,9 +1734,14 @@ async function updateSections(req, res) {
             }
         }
 
-        // Update Instagram grid
+        // Update Instagram grid and caption
         if (instagram_grid) {
             state.content.instagram_grid = instagram_grid;
+        }
+        if (content && content.instagram) {
+            state.content.instagram = {
+                caption: content.instagram.caption || ''
+            };
         }
 
         // Update Events
@@ -1828,7 +1838,8 @@ async function updateSections(req, res) {
             alistCandidate, 
             liveJob,
             finalSections,
-            instagram_grid || state.content.instagram_grid
+            instagram_grid || state.content.instagram_grid,
+            state.content.instagram ? state.content.instagram.caption : ''
         );
         
         // Explicitly update the visibility flags in templateParams based on sections
