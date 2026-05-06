@@ -1688,11 +1688,10 @@ async function parseCsv(req, res) {
 
 async function updateSections(req, res) {
     try {
-        const { sections, content, events, media } = req.body;
+        const { sections, content, events, media, instagram_grid, life_update_images } = req.body;
         // Map old structure to new structure if needed
         const industry_insight_content = content ? content.industry_insight : req.body.industry_insight_content;
         const life_update_content = content ? content.life_update : req.body.life_update_content;
-        const instagram_grid = content ? content.instagram_grid : req.body.instagram_grid;
         
         const state = readState();
         // Allow updating even if state is GENERATED or SENT
@@ -1795,6 +1794,16 @@ async function updateSections(req, res) {
         // Ensure we use the updated content for template params
         const mediaArray = state.content.media || [];
         
+        // Build the sections object with proper keys
+        const finalSections = sections ? {
+            industry_insight: sections.industry_insight !== false,
+            life_update: sections.life_update !== false,
+            media: sections.media !== false,
+            events: sections.events !== false,
+            instagram: sections.instagram_grid !== false,
+            articles: true
+        } : state.content.sections;
+        
         state.templateParams = buildTemplateParams(
             consultantConfig, 
             {
@@ -1806,7 +1815,7 @@ async function updateSections(req, res) {
             articles, 
             alistCandidate, 
             liveJob,
-            sections || state.content.sections,
+            finalSections,
             instagram_grid || state.content.instagram_grid
         );
         
