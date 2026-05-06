@@ -564,18 +564,7 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
         instagram_grid: instagram_grid_final,
         instagram: {
             caption: instagram_caption_final,
-            grid: instagram_grid_final,
-            img1: instagram_grid_final[0] || '',
-            img2: instagram_grid_final[1] || '',
-            img3: instagram_grid_final[2] || '',
-            img4: instagram_grid_final[3] || '',
-            count: instagram_grid_final.length
-        },
-        life_update: {
-            img1: life_update_images[0] || '',
-            img2: life_update_images[1] || '',
-            img3: life_update_images[2] || '',
-            count: life_update_images.length
+            grid: instagram_grid_final
         },
         job: {
             has_job: !!(job.title),
