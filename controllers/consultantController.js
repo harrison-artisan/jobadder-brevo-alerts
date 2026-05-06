@@ -556,6 +556,7 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
         life_img_2: life_update_images[1] || "",
         life_img_3: life_update_images[2] || "",
         life_img_count: life_update_images.length,
+        has_life_img: life_update_images.length > 0,
         
         media: {
             has_media: Array.isArray(mediaArray) && mediaArray.length > 0,
@@ -574,12 +575,13 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
         insta_img_2: instagram_grid_final[1] || "",
         insta_img_3: instagram_grid_final[2] || "",
         insta_img_4: instagram_grid_final[3] || "",
-        insta_img_count: instagram_grid_final.length,
-        insta_caption: instagram_caption_final,
+        insta_img_count: String(instagram_grid_final.length),
+        has_insta_img: instagram_grid_final.length > 0,
+        insta_caption: String(instagram_caption_final || ''),
         
         instagram_grid: instagram_grid_final,
         instagram: {
-            caption: instagram_caption_final,
+            caption: String(instagram_caption_final || ''),
             grid: instagram_grid_final
         },
         job: {

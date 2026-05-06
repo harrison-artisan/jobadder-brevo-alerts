@@ -448,16 +448,16 @@
                 <tr>
                   <td style="padding:0;line-height:0;">
                     <a href="{{ insta_url }}" style="display:block;line-height:0;">
-                      <!-- Instagram Image(s) - Using robust Personal Section logic -->
+                      <!-- Instagram Image(s) - Simplified for maximum compatibility -->
                       <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                        {% if params.insta_img_count and params.insta_img_count > 0 %}
-                          {% if params.insta_img_count == 1 %}
+                        {% if params.has_insta_img %}
+                          {% if params.insta_img_count == "1" or params.insta_img_count == 1 %}
                             <tr>
                               <td align="center" style="padding:0;">
                                 <img src="{{ params.insta_img_1 }}" alt="Instagram" width="100%" style="display:block;width:100%;height:auto;max-height:500px;object-fit:cover;border:0;">
                               </td>
                             </tr>
-                          {% elif params.insta_img_count == 2 %}
+                          {% elif params.insta_img_count == "2" or params.insta_img_count == 2 %}
                             <tr>
                               <td width="50%" style="padding:0;line-height:0;">
                                 <img src="{{ params.insta_img_1 }}" alt="Instagram 1" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
@@ -466,7 +466,7 @@
                                 <img src="{{ params.insta_img_2 }}" alt="Instagram 2" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
                               </td>
                             </tr>
-                          {% elif params.insta_img_count == 3 %}
+                          {% elif params.insta_img_count == "3" or params.insta_img_count == 3 %}
                             <tr>
                               <td width="33.3%" style="padding:0;line-height:0;">
                                 <img src="{{ params.insta_img_1 }}" alt="Instagram 1" width="100%" style="display:block;width:100%;height:160px;object-fit:cover;border:0;">
@@ -478,7 +478,7 @@
                                 <img src="{{ params.insta_img_3 }}" alt="Instagram 3" width="100%" style="display:block;width:100%;height:160px;object-fit:cover;border:0;">
                               </td>
                             </tr>
-                          {% elif params.insta_img_count >= 4 %}
+                          {% elif params.insta_img_count == "4" or params.insta_img_count == 4 or params.insta_img_count|int >= 4 %}
                             <tr>
                               <td width="50%" style="padding:0;line-height:0;">
                                 <img src="{{ params.insta_img_1 }}" alt="Instagram 1" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">

@@ -8120,7 +8120,7 @@
                     if (lb) lb.value = (content.life_update && content.life_update.body) || '';
                     
                     const igCap = document.getElementById('igCaption');
-                    if (igCap) igCap.value = (content.instagram_grid && content.instagram_grid.caption) || '';
+                    if (igCap) igCap.value = (content.instagram && content.instagram.caption) || content.instagram_caption || '';
                     
                     // Set toggles
                     const sections = content.sections || {};
