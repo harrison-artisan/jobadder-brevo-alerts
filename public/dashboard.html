@@ -1951,7 +1951,7 @@
                         </div>
                         <div>
                             <label style="display:block; color:rgba(255,255,255,0.5); font-size:11px; margin-bottom:8px; text-transform:uppercase;">Add Photos (Optional)</label>
-                            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
+                            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px;">
                                 <div style="text-align:center;">
                                     <input type="file" id="lifeUpdateImage1" accept="image/*" style="display:none;" onchange="previewLifeUpdateImage(1)">
                                     <div id="lifeUpdatePreview1" onclick="document.getElementById('lifeUpdateImage1').click();" style="width:100%; aspect-ratio:1; max-width:80px; margin:0 auto; background:rgba(255,255,255,0.08); border:2px dashed rgba(255,255,255,0.2); border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:20px; color:rgba(255,255,255,0.3);">+</div>
@@ -1964,6 +1964,12 @@
                                     <input type="file" id="lifeUpdateImage3" accept="image/*" style="display:none;" onchange="previewLifeUpdateImage(3)">
                                     <div id="lifeUpdatePreview3" onclick="document.getElementById('lifeUpdateImage3').click();" style="width:100%; aspect-ratio:1; max-width:80px; margin:0 auto; background:rgba(255,255,255,0.08); border:2px dashed rgba(255,255,255,0.2); border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:20px; color:rgba(255,255,255,0.3);">+</div>
                                 </div>
+                            </div>
+                            <label style="display:block; color:rgba(255,255,255,0.5); font-size:11px; margin-bottom:4px; text-transform:uppercase;">Or Paste Image URLs</label>
+                            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
+                                <input type="text" id="lifeUpdateUrl1" placeholder="Image URL 1" style="width:100%; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:12px; box-sizing:border-box;">
+                                <input type="text" id="lifeUpdateUrl2" placeholder="Image URL 2" style="width:100%; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:12px; box-sizing:border-box;">
+                                <input type="text" id="lifeUpdateUrl3" placeholder="Image URL 3" style="width:100%; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:12px; box-sizing:border-box;">
                             </div>
                         </div>
                     </div>
@@ -1991,6 +1997,13 @@
                                 <input type="file" id="igImage4" accept="image/*" style="display:none;" onchange="previewInstagramImage(4)">
                                 <div id="igPreview4" onclick="document.getElementById('igImage4').click();" style="width:100%; aspect-ratio:1; max-width:60px; margin:0 auto; background:rgba(255,255,255,0.08); border:2px dashed rgba(255,255,255,0.2); border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:18px; color:rgba(255,255,255,0.3);">+</div>
                             </div>
+                        </div>
+                        <label style="display:block; color:rgba(255,255,255,0.5); font-size:11px; margin-bottom:4px; text-transform:uppercase;">Or Paste Image URLs</label>
+                        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; margin-bottom:12px;">
+                            <input type="text" id="igUrl1" placeholder="Image URL 1" style="width:100%; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:12px; box-sizing:border-box;">
+                            <input type="text" id="igUrl2" placeholder="Image URL 2" style="width:100%; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:12px; box-sizing:border-box;">
+                            <input type="text" id="igUrl3" placeholder="Image URL 3" style="width:100%; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:12px; box-sizing:border-box;">
+                            <input type="text" id="igUrl4" placeholder="Image URL 4" style="width:100%; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:12px; box-sizing:border-box;">
                         </div>
                         <div>
                             <label style="display:block; color:rgba(255,255,255,0.5); font-size:11px; margin-bottom:4px; text-transform:uppercase;">Caption (All 4 Images)</label>

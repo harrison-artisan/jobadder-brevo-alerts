@@ -143,8 +143,12 @@ async function updateConsultantSectionVisibility() {
 
     const instagram_grid = [];
     for (let i = 1; i <= 4; i++) {
+        const urlInput = document.getElementById('igUrl' + i);
         const preview = document.getElementById('igPreview' + i);
-        if (preview && preview.style.backgroundImage && preview.style.backgroundImage !== 'none') {
+        
+        if (urlInput && urlInput.value.trim()) {
+            instagram_grid.push(urlInput.value.trim());
+        } else if (preview && preview.style.backgroundImage && preview.style.backgroundImage !== 'none') {
             try {
                 const bgImage = preview.style.backgroundImage;
                 const url = bgImage.slice(5, -2);
@@ -159,8 +163,12 @@ async function updateConsultantSectionVisibility() {
 
     const life_update_images = [];
     for (let i = 1; i <= 3; i++) {
+        const urlInput = document.getElementById('lifeUpdateUrl' + i);
         const preview = document.getElementById('lifeUpdatePreview' + i);
-        if (preview && preview.style.backgroundImage && preview.style.backgroundImage !== 'none') {
+        
+        if (urlInput && urlInput.value.trim()) {
+            life_update_images.push(urlInput.value.trim());
+        } else if (preview && preview.style.backgroundImage && preview.style.backgroundImage !== 'none') {
             try {
                 const bgImage = preview.style.backgroundImage;
                 const url = bgImage.slice(5, -2);
