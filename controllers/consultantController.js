@@ -244,7 +244,10 @@ async function parseJSON(req, res) {
     res.json({ success: true, state });
 }
 
-// CSV Parsing Helpers
+// ============================================================
+// CSV UPLOAD HELPERS (Restored Robust Logic)
+// ============================================================
+
 function splitCsvIntoLogicalRows(text) {
     const rows = [];
     let current = '';
@@ -254,26 +257,16 @@ function splitCsvIntoLogicalRows(text) {
         if (ch === '"') {
             if (inQuotes && text[i + 1] === '"') { current += '""'; i++; }
             else { inQuotes = !inQuotes; current += ch; }
-        } else if (ch === '\n' && !inQuotes) { rows.push(current); current = ''; }
-        else if (ch !== '\r') { current += ch; }
+        } else if (ch === '\r' && text[i + 1] === '\n' && !inQuotes) {
+            rows.push(current); current = ''; i++;
+        } else if (ch === '\n' && !inQuotes) {
+            rows.push(current); current = '';
+        } else {
+            current += ch;
+        }
     }
     if (current.trim()) rows.push(current);
     return rows;
-}
-
-function splitCsvLine(line) {
-    const cells = [];
-    let inQuote = false, cur = '';
-    for (let i = 0; i < line.length; i++) {
-        const ch = line[i];
-        if (ch === '"') {
-            if (inQuote && line[i + 1] === '"') { cur += '"'; i++; }
-            else { inQuote = !inQuote; }
-        } else if (ch === ',' && !inQuote) { cells.push(cur.trim()); cur = ''; }
-        else { cur += ch; }
-    }
-    cells.push(cur.trim());
-    return cells;
 }
 
 function parseCsvCell(raw) {
@@ -286,37 +279,182 @@ function parseCsvCell(raw) {
     return s;
 }
 
+function splitCsvLine(line) {
+    const cells = [];
+    let inQuote = false, cur = '';
+    for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+            if (inQuote && line[i + 1] === '"') { cur += '"'; i++; }
+            else { inQuote = !inQuote; }
+        } else if (ch === ',' && !inQuote) {
+            cells.push(cur.trim()); cur = '';
+        } else {
+            cur += ch;
+        }
+    }
+    cells.push(cur.trim());
+    return cells;
+}
+
+const LABEL_TO_KEY = {
+    'consultant': 'consultant',
+    'your name': 'consultant',
+    'industry insight body text': 'industry_insight_body',
+    'industry insight': 'industry_insight_body',
+    'personal update body text': 'life_update_body',
+    'life update body text': 'life_update_body',
+    'personal update': 'life_update_body',
+    'life update': 'life_update_body',
+    'youtube url': 'youtube_url',
+    'youtube caption': 'youtube_caption',
+    'image url': 'image_url',
+    'image caption': 'image_caption',
+    'instagram post url': 'instagram_url',
+    'instagram url': 'instagram_url',
+    'article url': 'link_url',
+    'link url': 'link_url',
+    'worth reading url': 'link_url',
+    'event 1 date': 'event_1_date',
+    'event 1 title': 'event_1_title',
+    'event 1 description': 'event_1_description',
+    'event 1 link url': 'event_1_link',
+    'event 1 link': 'event_1_link',
+    'event 2 date': 'event_2_date',
+    'event 2 title': 'event_2_title',
+    'event 2 description': 'event_2_description',
+    'event 2 link url': 'event_2_link',
+    'event 2 link': 'event_2_link',
+    'event 3 date': 'event_3_date',
+    'event 3 title': 'event_3_title',
+    'event 3 description': 'event_3_description',
+    'event 3 link url': 'event_3_link',
+    'event 3 link': 'event_3_link',
+};
+
+const SECTION_CONTEXTS = [
+    { pattern: /industry insight/i, bodyKey: 'industry_insight_body', captionKey: null },
+    { pattern: /personal update|life update/i, bodyKey: 'life_update_body', captionKey: null },
+    { pattern: /youtube/i, bodyKey: null, captionKey: 'youtube_caption' },
+    { pattern: /\bimage\b/i, bodyKey: null, captionKey: 'image_caption' },
+    { pattern: /instagram/i, bodyKey: null, captionKey: null },
+    { pattern: /worth reading/i, bodyKey: null, captionKey: null },
+    { pattern: /events?/i, bodyKey: null, captionKey: null },
+];
+
+function parseGoogleFormsCsv(lines) {
+    const nonEmpty = lines.filter(l => l.trim());
+    if (nonEmpty.length < 2) return null;
+    const headerCells = splitCsvLine(nonEmpty[0]);
+    const firstHeader = parseCsvCell(headerCells[0]).trim().toLowerCase();
+    if (firstHeader !== 'timestamp') return null;
+    const lastRow = nonEmpty[nonEmpty.length - 1];
+    const valueCells = splitCsvLine(lastRow);
+    const data = {};
+    for (let i = 1; i < headerCells.length; i++) {
+        const header = parseCsvCell(headerCells[i]).trim();
+        const value = i < valueCells.length ? parseCsvCell(valueCells[i]).trim() : '';
+        if (!header || !value) continue;
+        const normHeader = header.replace(/\s*\([^)]*\)/gi, '').replace(/[^a-z0-9\s\-]/gi, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+        let key = LABEL_TO_KEY[normHeader];
+        if (!key) {
+            const stripped = normHeader.replace(/^[\w\s]+ - /, '').trim();
+            const eventMatch = normHeader.match(/event\s*(\d)[\s\-]+(date|title|description|url|link)/);
+            if (eventMatch) {
+                const n = eventMatch[1];
+                const field = eventMatch[2] === 'url' ? 'link' : eventMatch[2];
+                key = `event_${n}_${field}`;
+            } else {
+                key = LABEL_TO_KEY[stripped];
+            }
+        }
+        if (!key) {
+            if (/industry insight.*body/i.test(header)) key = 'industry_insight_body';
+            else if (/personal update.*body/i.test(header)) key = 'life_update_body';
+            else if (/youtube.*url/i.test(header)) key = 'youtube_url';
+            else if (/youtube.*caption/i.test(header)) key = 'youtube_caption';
+            else if (/image.*url/i.test(header)) key = 'image_url';
+            else if (/image.*caption/i.test(header)) key = 'image_caption';
+            else if (/instagram/i.test(header)) key = 'instagram_url';
+            else if (/worth reading/i.test(header)) key = 'link_url';
+            else if (/your name/i.test(header)) key = 'consultant';
+        }
+        if (key) data[key] = value;
+    }
+    return Object.keys(data).length > 0 ? data : null;
+}
+
+function parseCsvBuffer(buffer) {
+    const text = buffer.toString('utf8');
+    const lines = splitCsvIntoLogicalRows(text);
+    const gFormsData = parseGoogleFormsCsv(lines);
+    if (gFormsData) return gFormsData;
+    const data = {};
+    let currentSection = null;
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const cells = splitCsvLine(trimmed);
+        if (cells.length < 1) continue;
+        const rawLabel = cells[0].trim();
+        const rawValue = cells.length >= 2 ? cells.slice(1).join(',').trim() : '';
+        const value = parseCsvCell(rawValue);
+        const cleanLabel = rawLabel.replace(/^[\u2014\-\u2500\u2501\s]+|[\u2014\-\u2500\u2501\s]+$/g, '').replace(/\s*\(optional.*?\)/gi, '').replace(/\s*\u2014.*$/, '').replace(/\s*up to \d+.*$/i, '').trim();
+        const isSectionHeader = !value && /^[\u2014\-\u2500\u2501]|section|insight|update|youtube|image|instagram|worth|event/i.test(rawLabel);
+        if (isSectionHeader) {
+            for (const ctx of SECTION_CONTEXTS) {
+                if (ctx.pattern.test(cleanLabel)) { currentSection = ctx; break; }
+            }
+            continue;
+        }
+        const normLabel = cleanLabel.toLowerCase().replace(/[\u2605\u2714\u2713\*]+/g, '').replace(/required|optional/gi, '').replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+        let key = LABEL_TO_KEY[normLabel];
+        if (!key && currentSection) {
+            if (/body text|body/i.test(normLabel) && currentSection.bodyKey) key = currentSection.bodyKey;
+            else if (/caption|description/i.test(normLabel) && currentSection.captionKey) key = currentSection.captionKey;
+        }
+        if (!key) {
+            const machineKey = rawLabel.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+            const KNOWN_KEYS = ['consultant','industry_insight_body','life_update_body','youtube_url','youtube_caption','image_url','image_caption','instagram_url','link_url','event_1_date','event_1_title','event_1_description','event_1_link','event_2_date','event_2_title','event_2_description','event_2_link','event_3_date','event_3_title','event_3_description','event_3_link'];
+            if (KNOWN_KEYS.includes(machineKey)) key = machineKey;
+        }
+        if (key && value !== '') data[key] = value;
+    }
+    return data;
+}
+
+function parseEventDate(dateStr) {
+    if (!dateStr || !dateStr.trim()) return null;
+    const s = dateStr.trim();
+    const MONTHS = { january:'JAN', february:'FEB', march:'MAR', april:'APR', may:'MAY', june:'JUN', july:'JUL', august:'AUG', september:'SEP', october:'OCT', november:'NOV', december:'DEC', jan:'JAN', feb:'FEB', mar:'MAR', apr:'APR', jun:'JUN', jul:'JUL', aug:'AUG', sep:'SEP', oct:'OCT', nov:'NOV', dec:'DEC' };
+    const wordMatch = s.match(/^(\d{1,2})\s+([A-Za-z]+)(?:\s+\d{2,4})?$/) || s.match(/^([A-Za-z]+)\s+(\d{1,2})(?:\s+\d{2,4})?$/);
+    if (wordMatch) {
+        let day, monthWord;
+        if (/^\d/.test(wordMatch[1])) { day = wordMatch[1]; monthWord = wordMatch[2]; }
+        else { monthWord = wordMatch[1]; day = wordMatch[2]; }
+        const abbr = MONTHS[monthWord.toLowerCase()];
+        if (abbr) return { day: String(parseInt(day, 10)), month: abbr };
+    }
+    const numMatch = s.match(/^(\d{1,2})[\/-](\d{1,2})(?:[\/-]\d{2,4})?$/);
+    if (numMatch) {
+        const day = numMatch[1];
+        const monthNum = parseInt(numMatch[2], 10);
+        const monthNames = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+        if (monthNum >= 1 && monthNum <= 12) return { day: String(parseInt(day, 10)), month: monthNames[monthNum - 1] };
+    }
+    return null;
+}
+
 async function parseCsv(req, res) {
     try {
         if (!req.file || !req.file.buffer) return res.status(400).json({ success: false, message: 'No file' });
-        const text = req.file.buffer.toString('utf8');
-        const lines = splitCsvIntoLogicalRows(text);
-        const data = {};
-        lines.forEach(line => {
-            const cells = splitCsvLine(line);
-            if (cells.length >= 2) {
-                const rawKey = cells[0].trim();
-                if (!rawKey) return;
-                // Normalize key: lowercase, remove non-alphanumeric except underscores
-                const key = rawKey.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
-                data[key] = parseCsvCell(cells[1]);
-            }
-        });
-
-        console.log('Parsed CSV keys:', Object.keys(data));
+        const data = parseCsvBuffer(req.file.buffer);
         const consultants = loadConsultants();
-        // Handle variations of the "Consultant" key in CSV
-        let consultantId = data.consultant || data.consultant_name || data.name || data.id || data.consultant_id;
-        
-        // Match by display name if needed
+        let consultantId = data.consultant;
         if (consultantId && !consultants[consultantId]) {
-            const match = Object.keys(consultants).find(id => {
-                const name = consultants[id].name;
-                return name && name.toLowerCase() === consultantId.toLowerCase();
-            });
+            const match = Object.keys(consultants).find(id => consultants[id].name && consultants[id].name.toLowerCase() === consultantId.toLowerCase());
             if (match) consultantId = match;
         }
-
         const consultantConfig = consultants[consultantId];
         if (!consultantConfig) return res.status(400).json({ success: false, message: `Unknown consultant: ${consultantId}` });
 
@@ -327,9 +465,10 @@ async function parseCsv(req, res) {
         };
         for (let i = 1; i <= 3; i++) {
             if (data[`event_${i}_title`]) {
+                const dateInfo = parseEventDate(data[`event_${i}_date`]);
                 parsed.events.push({
-                    day: data[`event_${i}_day`] || '',
-                    month: data[`event_${i}_month`] || '',
+                    day: dateInfo ? dateInfo.day : '',
+                    month: dateInfo ? dateInfo.month : '',
                     title: data[`event_${i}_title`],
                     description: data[`event_${i}_description`] || '',
                     link: data[`event_${i}_link`] || ''
