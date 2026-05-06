@@ -599,11 +599,12 @@ async function sendTest(req, res) {
     try {
         if (templateId) {
             console.log(`📧 Sending test via Brevo template #${templateId} for ${state.consultant.name}`);
+            // Flatten state.templateParams so Brevo can wrap them in its own 'params' namespace
             await brevoService.sendBatchEmail(
                 [{ email: testEmail, name: 'Test User' }],
                 parseInt(templateId),
                 { 
-                    params: state.templateParams,
+                    ...state.templateParams,
                     update_profile: 'https://artisan.com.au/email-preferences',
                     unsubscribe: 'https://artisan.com.au/unsubscribe'
                 }
@@ -675,11 +676,12 @@ async function sendToAll(req, res) {
 
         if (templateId) {
             console.log(`📧 Sending via Brevo template #${templateId} for ${state.consultant.name} [mode: ${modeService.getMode()}]`);
+            // Flatten state.templateParams so Brevo can wrap them in its own 'params' namespace
             await brevoService.sendBatchEmail(
                 finalRecipients,
                 parseInt(templateId),
                 { 
-                    params: state.templateParams,
+                    ...state.templateParams,
                     update_profile: 'https://artisan.com.au/email-preferences',
                     unsubscribe: 'https://artisan.com.au/unsubscribe'
                 }
