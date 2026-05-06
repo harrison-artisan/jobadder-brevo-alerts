@@ -450,43 +450,52 @@
                 <tr>
                   <td style="padding:0;line-height:0;">
                     <a href="{{ insta_url }}" style="display:block;line-height:0;">
-                      {% if insta_grid|length >= 2 %}
-                        <!-- 2x2 Grid for multiple images -->
-                        <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+                      <!-- Instagram Image(s) - Using robust Personal Section logic -->
+                      <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+                        {% if insta_grid|length == 1 %}
+                          <tr>
+                            <td align="center" style="padding:0;">
+                              <img src="{{ insta_grid[0] }}" alt="Instagram" width="100%" style="display:block;width:100%;height:auto;max-height:500px;object-fit:cover;border:0;">
+                            </td>
+                          </tr>
+                        {% elif insta_grid|length == 2 %}
                           <tr>
                             <td width="50%" style="padding:0;line-height:0;">
-                              <img src="{{ insta_grid[0] }}" alt="Instagram post 1" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
+                              <img src="{{ insta_grid[0] }}" alt="Instagram 1" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
                             </td>
                             <td width="50%" style="padding:0;line-height:0;">
-                              <img src="{{ insta_grid[1] }}" alt="Instagram post 2" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
+                              <img src="{{ insta_grid[1] }}" alt="Instagram 2" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
+                            </td>
+                          </tr>
+                        {% elif insta_grid|length >= 3 %}
+                          <tr>
+                            <td width="50%" style="padding:0;line-height:0;">
+                              <img src="{{ insta_grid[0] }}" alt="Instagram 1" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
+                            </td>
+                            <td width="50%" style="padding:0;line-height:0;">
+                              <img src="{{ insta_grid[1] }}" alt="Instagram 2" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
                             </td>
                           </tr>
                           <tr>
                             <td width="50%" style="padding:0;line-height:0;">
-                              {% if insta_grid|length >= 3 %}
-                                <img src="{{ insta_grid[2] }}" alt="Instagram post 3" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
-                              {% else %}
-                                <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                                  <tr><td height="240" style="background-color:#f0f0f0;height:240px;">&nbsp;</td></tr>
-                                </table>
-                              {% endif %}
+                              <img src="{{ insta_grid[2] }}" alt="Instagram 3" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
                             </td>
                             <td width="50%" style="padding:0;line-height:0;">
                               {% if insta_grid|length >= 4 %}
-                                <img src="{{ insta_grid[3] }}" alt="Instagram post 4" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
+                                <img src="{{ insta_grid[3] }}" alt="Instagram 4" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
                               {% else %}
-                                <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                                  <tr><td height="240" style="background-color:#f0f0f0;height:240px;">&nbsp;</td></tr>
-                                </table>
+                                <div style="height:240px;background-color:#f8f8f8;"></div>
                               {% endif %}
                             </td>
                           </tr>
-                        </table>
-                      {% elif insta_grid|length == 1 %}
-                        <img src="{{ insta_grid[0] }}" alt="Instagram post" width="100%" style="display:block;border:0;width:100%;height:auto;max-height:480px;object-fit:cover;">
-                      {% else %}
-                        <img src="https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png" alt="Instagram post" width="100%" style="display:block;border:0;width:100%;height:auto;max-height:400px;object-fit:cover;">
-                      {% endif %}
+                        {% else %}
+                          <tr>
+                            <td align="center" style="padding:40px;">
+                              <img src="https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png" alt="Artisan" width="80" style="display:block;width:80px;height:auto;opacity:0.2;">
+                            </td>
+                          </tr>
+                        {% endif %}
+                      </table>
                     </a>
                   </td>
                 </tr>

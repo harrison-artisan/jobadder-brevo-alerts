@@ -770,10 +770,12 @@ async function updateSections(req, res) {
         state.templateParams.instagram_grid = state.content.instagram_grid;
         state.templateParams.instagram_caption = state.content.instagram_caption;
         state.templateParams.instagram = {
-            caption: state.content.instagram_caption,
-            images: state.content.instagram_grid,
-            grid: state.content.instagram_grid
+            caption: String(state.content.instagram_caption || ""),
+            images: Array.isArray(state.content.instagram_grid) ? state.content.instagram_grid : [],
+            grid: Array.isArray(state.content.instagram_grid) ? state.content.instagram_grid : []
         };
+        state.templateParams.instagram_caption = String(state.content.instagram_caption || "");
+        state.templateParams.instagram_grid = Array.isArray(state.content.instagram_grid) ? state.content.instagram_grid : [];
 
         writeState(state);
         res.json({ success: true, state });
