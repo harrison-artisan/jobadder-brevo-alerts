@@ -472,13 +472,28 @@ async function parseJSON(req, res) {
 // Brevo's Nunjucks engine requires nested objects (not flat strings)
 // for {{ params.xxx }} substitution to work correctly.
 // ============================================================
-function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCandidate, liveJob) {
+function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCandidate, liveJob, sections = null, instagram_grid = null, instagram_caption = '') {
     // liveJob is pre-fetched from JobAdder (or from Gemini JSON if provided)
     const job = liveJob || parsed.job || {};
     const fallbackImg = 'https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png';
     const fallbackArticleLink = 'https://artisan.com.au/creative-community/';
 
+    // Use passed sections or fallback to default visibility (all true)
+    const finalSections = sections || {
+        industry_insight: true,
+        life_update: true,
+        media: true,
+        instagram: true,
+        events: true,
+        alist: true,
+        job: true,
+        articles: true
+    };
+
     return {
+        // Section visibility flags
+        sections: finalSections,
+
         // Consultant identity — nested object
         consultant: {
             newsletter_name: consultant.newsletter_name || consultant.name,
@@ -493,11 +508,14 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
 
         // Email content — nested object
         content: {
-            preheader_text: parsed.preheader_text || `${parsed.industry_insight.heading} — from ${consultant.name} at Artisan`,
-            industry_insight_heading: parsed.industry_insight.heading,
-            industry_insight_body: parsed.industry_insight.body,
-            life_update_heading: parsed.life_update.heading,
-            life_update_body: parsed.life_update.body
+            preheader_text: parsed.preheader_text || (parsed.industry_insight ? `${parsed.industry_insight.heading} — from ${consultant.name} at Artisan` : ''),
+            industry_insight_heading: parsed.industry_insight ? parsed.industry_insight.heading : '',
+            industry_insight_body: parsed.industry_insight ? parsed.industry_insight.body : '',
+            life_update_heading: parsed.life_update ? parsed.life_update.heading : '',
+            life_update_body: parsed.life_update ? parsed.life_update.body : '',
+            life_update_images: parsed.life_update_images || [],
+            instagram_grid: instagram_grid || [],
+            instagram_caption: instagram_caption || ''
         },
 
         // Personal media — nested object with items array
@@ -1640,6 +1658,53 @@ async function parseCsv(req, res) {
     }
 }
 
+async function updateSections(req, res) {
+    try {
+        const { sections, content, events, media, instagram_grid, life_update_images } = req.body;
+        const state = readState();
+        
+        if (state.state === 'EMPTY') {
+            return res.status(400).json({ success: false, message: 'No newsletter parsed yet.' });
+        }
+
+        // Update state content
+        if (sections) state.content.sections = sections;
+        if (content) {
+            if (content.industry_insight) state.content.industry_insight = content.industry_insight;
+            if (content.life_update) state.content.life_update = content.life_update;
+            if (content.instagram) state.content.instagram = content.instagram;
+        }
+        if (events) state.content.events = events;
+        if (media) state.content.media = media;
+        if (instagram_grid) state.content.instagram_grid = instagram_grid;
+        if (life_update_images) state.content.life_update_images = life_update_images;
+
+        // Rebuild template params
+        state.templateParams = buildTemplateParams(
+            state.consultant,
+            {
+                industry_insight: state.content.industry_insight,
+                life_update: state.content.life_update,
+                events: state.content.events,
+                life_update_images: state.content.life_update_images
+            },
+            state.content.media,
+            state.content.articles,
+            state.content.alist_candidate,
+            state.content.live_job,
+            state.content.sections,
+            state.content.instagram_grid,
+            state.content.instagram ? state.content.instagram.caption : ''
+        );
+
+        writeState(state);
+        res.json({ success: true, message: 'Edits saved successfully!', state });
+    } catch (error) {
+        console.error('❌ Error updating sections:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+}
+
 module.exports = {
     getState,
     getConsultantList,
@@ -1653,5 +1718,6 @@ module.exports = {
     resetState,
     scheduleConsultant,
     cancelConsultantSchedule,
-    restoreConsultantSchedule
+    restoreConsultantSchedule,
+    updateSections
 };
