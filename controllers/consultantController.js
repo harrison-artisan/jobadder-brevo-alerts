@@ -472,21 +472,11 @@ async function parseJSON(req, res) {
 // Brevo's Nunjucks engine requires nested objects (not flat strings)
 // for {{ params.xxx }} substitution to work correctly.
 // ============================================================
-function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCandidate, liveJob, sections = null, instagramGrid = null, instagramCaption = '') {
+function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCandidate, liveJob) {
     // liveJob is pre-fetched from JobAdder (or from Gemini JSON if provided)
     const job = liveJob || parsed.job || {};
     const fallbackImg = 'https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png';
     const fallbackArticleLink = 'https://artisan.com.au/creative-community/';
-
-    // If sections not provided, default to all true (initial build)
-    const activeSections = sections || {
-        industry_insight: true,
-        life_update: true,
-        instagram: true,
-        events: true,
-        media: true,
-        articles: true
-    };
 
     return {
         // Consultant identity — nested object
@@ -503,38 +493,27 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
 
         // Email content — nested object
         content: {
-            preheader_text: parsed.preheader_text || (parsed.industry_insight ? `${parsed.industry_insight.heading} — from ${consultant.name} at Artisan` : ''),
-            industry_insight_heading: parsed.industry_insight ? parsed.industry_insight.heading : '',
-            industry_insight_body: parsed.industry_insight ? parsed.industry_insight.body : '',
-            life_update_heading: parsed.life_update ? parsed.life_update.heading : '',
-            life_update_body: parsed.life_update ? parsed.life_update.body : '',
-            life_update_images: Array.isArray(mediaArray) ? mediaArray.filter(m => m.type === 'life_update_image').map(m => m.url) : []
+            preheader_text: parsed.preheader_text || `${parsed.industry_insight.heading} — from ${consultant.name} at Artisan`,
+            industry_insight_heading: parsed.industry_insight.heading,
+            industry_insight_body: parsed.industry_insight.body,
+            life_update_heading: parsed.life_update.heading,
+            life_update_body: parsed.life_update.body
         },
 
         // Personal media — nested object with items array
         media: {
-            has_media: activeSections.media && Array.isArray(mediaArray) && mediaArray.length > 0,
-            items: Array.isArray(mediaArray) ? mediaArray.map(m => {
-                let thumbnailUrl = m.thumbnail || '';
-                if (!thumbnailUrl && m.type === 'youtube' && m.url) {
-                    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-                    const match = m.url.match(regExp);
-                    if (match && match[2].length === 11) {
-                        thumbnailUrl = `https://img.youtube.com/vi/${match[2]}/mqdefault.jpg`;
-                    }
-                }
-                return { ...m, thumbnail: thumbnailUrl };
-            }) : []
+            has_media: Array.isArray(mediaArray) && mediaArray.length > 0,
+            items: Array.isArray(mediaArray) ? mediaArray : []
         },
 
         // Featured job — nested object
         job: {
-            has_job: !!(job.title || job.job_title),
-            title: job.title || job.job_title || '',
-            type: job.type || job.job_type || 'Full Time',
+            has_job: !!(job.title),
+            title: job.title || '',
+            type: job.type || 'Full Time',
             location: job.location || '',
-            description: (() => { const d = (job.description || job.job_description || '').replace(/<[^>]+>/g, '').trim(); return d.length > 120 ? d.slice(0, 117) + '...' : d; })(),
-            link: job.link || job.apply_url || 'https://clientapps.jobadder.com/67514/artisan'
+            description: (() => { const d = (job.description || '').replace(/<[^>]+>/g, '').trim(); return d.length > 120 ? d.slice(0, 117) + '...' : d; })(),
+            link: job.link || 'https://clientapps.jobadder.com/67514/artisan'
         },
 
         // A-List candidate — nested object
@@ -546,26 +525,14 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
         },
 
         // Creative Community articles — array of objects (iterated with {% for %})
-        articles: activeSections.articles ? (articles || []).slice(0, 3).map(a => ({
+        articles: (articles || []).slice(0, 3).map(a => ({
             title: a.title || '',
             image: a.image || fallbackImg,
             link: a.link || fallbackArticleLink
-        })) : [],
+        })),
 
         // Events — array of objects
-        events: activeSections.events ? (Array.isArray(parsed.events) ? parsed.events.map(e => ({
-            ...e,
-            description: e.description || ''
-        })) : []) : [],
-        
-        // Sections visibility flags
-        sections: activeSections,
-        
-        // Instagram specific data
-        instagram: {
-            caption: instagramCaption || (parsed.instagram ? parsed.instagram.caption : '') || ''
-        },
-        instagram_grid: instagramGrid || (parsed.instagram ? parsed.instagram.instagram_grid : [])
+        events: Array.isArray(parsed.events) ? parsed.events : []
     };
 }
 
