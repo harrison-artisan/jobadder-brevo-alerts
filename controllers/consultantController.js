@@ -728,6 +728,8 @@ async function updateSections(req, res) {
                     caption: state.content.instagram_caption,
                     images: state.content.instagram_grid || []
                 };
+                // Explicitly set it at the top level for templateParams
+                state.instagram_caption = state.content.instagram_caption;
             }
         }
         
