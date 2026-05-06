@@ -726,7 +726,7 @@ async function updateSections(req, res) {
                 // Sync legacy objects for buildTemplateParams
                 state.content.instagram = {
                     caption: state.content.instagram_caption,
-                    images: state.content.instagram_grid
+                    images: state.content.instagram_grid || []
                 };
             }
         }

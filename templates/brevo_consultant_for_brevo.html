@@ -376,8 +376,8 @@
           <!-- ====== INSTAGRAM (Independent block) ====== -->
           {% if params.sections.instagram %}
           {% set insta_url = "https://www.instagram.com/the_new_mathew/" %}
-          {% set insta_grid = params.instagram_grid or [] %}
-          {% set insta_caption = params.instagram.caption or "" %}
+          {% set insta_grid = params.instagram.images or params.instagram_grid or [] %}
+          {% set insta_caption = params.instagram.caption or params.instagram_caption or "" %}
           <!-- Gradient rule -->
           <tr><td style="padding:40px 45px 0 45px;"><div style="height:3px;background:linear-gradient(90deg,#bd203d 0%,#1b334d 100%);border-radius:2px;"></div></td></tr>
           <tr>
