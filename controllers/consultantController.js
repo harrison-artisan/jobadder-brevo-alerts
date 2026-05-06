@@ -5,7 +5,6 @@ const jobadderService = require('../services/jobadderService');
 const wordpressService = require('../services/wordpressService');
 const modeService = require('../services/modeService');
 const axios = require('axios');
-const cheerio = require('cheerio');
 
 /**
  * Fetch Instagram post data (og:image and og:description) from a public URL.
@@ -13,6 +12,7 @@ const cheerio = require('cheerio');
  */
 async function fetchInstagramPostData(url) {
     try {
+        const cheerio = require('cheerio');
         const response = await axios.get(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -599,6 +599,10 @@ async function updateSections(req, res) {
             state.content.instagram_grid,
             state.content.instagram ? state.content.instagram.caption : ''
         );
+        
+        // Preserve data that buildTemplateParams might not return but we need in state
+        // (like raw objects from the dashboard)
+        state.content.sections = state.templateParams.sections;
         
         // Final sanity check: ensure templateParams is actually updated in state
         console.log('✅ TemplateParams updated after save for:', state.consultant.name);
