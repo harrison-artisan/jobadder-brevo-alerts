@@ -245,7 +245,7 @@ async function parseJSON(req, res) {
 }
 
 // ============================================================
-// CSV UPLOAD HELPERS (Restored Robust Logic)
+// CSV UPLOAD HELPERS (Restored Robust Original Logic)
 // ============================================================
 
 function splitCsvIntoLogicalRows(text) {
@@ -449,12 +449,16 @@ async function parseCsv(req, res) {
     try {
         if (!req.file || !req.file.buffer) return res.status(400).json({ success: false, message: 'No file' });
         const data = parseCsvBuffer(req.file.buffer);
+        console.log('Parsed CSV data keys:', Object.keys(data));
         const consultants = loadConsultants();
         let consultantId = data.consultant;
+        
+        // Match by display name if needed
         if (consultantId && !consultants[consultantId]) {
             const match = Object.keys(consultants).find(id => consultants[id].name && consultants[id].name.toLowerCase() === consultantId.toLowerCase());
             if (match) consultantId = match;
         }
+
         const consultantConfig = consultants[consultantId];
         if (!consultantConfig) return res.status(400).json({ success: false, message: `Unknown consultant: ${consultantId}` });
 
