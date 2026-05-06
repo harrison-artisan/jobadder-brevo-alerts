@@ -84,7 +84,7 @@ class BrevoService {
         const payload = {
           templateId: tid,
           to: [{ email: recipient.email, name: recipient.name || recipient.email }],
-          params: { params: params }
+	          params: { params: params }
         };
         if (this.senderEmail) {
           payload.sender = { email: this.senderEmail, name: this.senderName };
@@ -112,7 +112,7 @@ class BrevoService {
         const batch = batches[i];
         const messageVersions = batch.map(recipient => ({
           to: [{ email: recipient.email, name: recipient.name || recipient.email }],
-          params: { params: params }
+	          params: { params: params }
         }));
 
         const payload = {

@@ -489,11 +489,9 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
         articles: true
     };
 
-	    return {
-	        // Top-level caption for template fallback
-	        instagram_caption: instagramCaption,
-	        // Consultant identity — nested object
-	        consultant: {
+		    return {
+		        // Consultant identity — nested object
+		        consultant: {
             newsletter_name: consultant.newsletter_name || consultant.name,
             name: consultant.name,
             title: consultant.title,
@@ -530,15 +528,15 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
             }) : []
         },
 
-        // Featured job — nested object
-        job: {
-            has_job: !!(job.title || job.job_title),
-            title: job.title || job.job_title || '',
-            type: job.type || job.job_type || 'Full Time',
-            location: job.location || '',
-            description: (() => { const d = (job.description || job.job_description || '').replace(/<[^>]+>/g, '').trim(); return d.length > 120 ? d.slice(0, 117) + '...' : d; })(),
-            link: job.link || job.apply_url || 'https://clientapps.jobadder.com/67514/artisan'
-        },
+	        // Featured job — nested object
+	        job: {
+	            has_job: !!(job.title || job.job_title),
+	            title: job.title || job.job_title || '',
+	            type: job.type || job.job_type || 'Full Time',
+	            location: job.location || '',
+	            description: (() => { const d = (job.description || job.job_description || '').replace(/<[^>]+>/g, '').trim(); return d.length > 120 ? d.slice(0, 117) + '...' : d; })(),
+	            link: job.link || job.apply_url || 'https://clientapps.jobadder.com/67514/artisan?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20DEBBIE%20YOUNGER'
+	        },
 
         // A-List candidate — nested object
         alist: {
@@ -564,14 +562,14 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
         // Sections visibility flags
         sections: activeSections,
         
-	        // Instagram caption
-	        instagram: {
-	            caption: instagramCaption || (parsed.instagram ? parsed.instagram.caption : '') || ''
-	        },
-	        
-	        // Instagram grid
-	        instagram_grid: activeSections.instagram ? (instagramGrid || parsed.instagram_grid || []) : []
-    };
+		        // Instagram caption
+		        instagram: {
+		            caption: instagramCaption || (parsed.instagram ? parsed.instagram.caption : '') || ''
+		        },
+		        
+		        // Instagram grid
+		        instagram_grid: instagramGrid || (parsed.instagram ? parsed.instagram.instagram_grid : []) || []
+		    };
 }
 
 // ============================================================
