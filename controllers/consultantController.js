@@ -614,9 +614,10 @@ async function sendTest(req, res) {
             return res.status(400).json({ success: false, message: 'No Brevo template ID found for this consultant.' });
         }
 
-        // Your template uses {{ params.xxx }}, so we MUST wrap the data in a 'params' key.
-        // Brevo's template API will then see 'params.consultant', 'params.content', etc.
-        await brevoService.sendBatchEmail([{ email: testEmail }], parseInt(templateId), { params: state.templateParams });
+        // Your template uses {{ params.xxx }}. 
+        // When we pass state.templateParams to Brevo, it automatically becomes the 'params' object.
+        // So {{ params.consultant.name }} in the template will look for 'consultant.name' inside our object.
+        await brevoService.sendBatchEmail([{ email: testEmail }], parseInt(templateId), state.templateParams);
         
         res.json({ success: true, message: `Test email sent to ${testEmail}` });
     } catch (e) {
@@ -644,8 +645,8 @@ async function sendToAll(req, res) {
             return res.status(400).json({ success: false, message: 'No Brevo template ID found.' });
         }
 
-        // Your template uses {{ params.xxx }}, so we MUST wrap the data in a 'params' key.
-        await brevoService.sendBatchEmail(recipients, parseInt(templateId), { params: state.templateParams });
+        // Your template uses {{ params.xxx }}.
+        await brevoService.sendBatchEmail(recipients, parseInt(templateId), state.templateParams);
         
         res.json({ success: true, message: `Newsletter sent successfully to ${recipients.length} recipients.` });
     } catch (e) {

@@ -1,410 +1,294 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;900&display=swap" rel="stylesheet">
-  <style type="text/css">
-    body { font-family: 'Source Sans Pro', Arial, sans-serif; }
-    @media only screen and (max-width: 600px) {
-      .outer-wrapper { padding: 12px 10px !important; }
-      .email-container { width: 100% !important; max-width: 100% !important; border-radius: 20px !important; border-width: 1px !important; }
-      .mobile-pad { padding: 22px 18px !important; }
-      .mobile-pad-sm { padding: 16px 18px 0 18px !important; }
-      .header-left, .header-right { display: block !important; width: 100% !important; text-align: center !important; }
-      .header-right { padding-top: 18px !important; }
-      .header-right > table { margin: 0 auto !important; }
-      .header-badge-table { margin: 0 auto !important; }
-      .header-logo-link { text-align: center !important; display: block !important; }
-      .header-logo-img { margin: 0 auto !important; }
-      .hero-photo-cell { text-align: center !important; display: block !important; width: 100% !important; padding: 28px 18px 10px 18px !important; }
-      .mobile-book-btn { display: block !important; width: 100% !important; padding-top: 12px !important; }
-      .cal-icon-cell { display: block !important; width: 100% !important; text-align: center !important; padding: 0 0 12px 0 !important; }
-      .cal-text-cell { display: block !important; width: 100% !important; text-align: center !important; padding: 0 0 16px 0 !important; }
-      .cal-btn-cell { display: block !important; width: 100% !important; text-align: center !important; padding: 0 !important; }
-      .hero-content-cell { text-align: center !important; display: block !important; width: 100% !important; padding: 0 18px 28px 18px !important; }
-      .two-col-left, .two-col-right { display: block !important; width: 100% !important; padding: 0 0 12px 0 !important; }
-      .two-col-right { padding: 0 !important; }
-      .cta-btn-row td { display: block !important; width: 100% !important; text-align: center !important; padding: 6px 0 !important; box-sizing: border-box !important; }
-      .yt-thumb-cell { display: block !important; width: 100% !important; border-radius: 14px 14px 0 0 !important; }
-      .yt-text-cell { display: block !important; width: 100% !important; padding: 18px 18px 22px 18px !important; }
-      .article-col { padding: 0 2px !important; }
-      .article-img { height: 70px !important; }
-      .event-date-cell { padding: 14px 0 14px 14px !important; }
-      .event-content-cell { padding: 14px 14px !important; }
-      .footer-phones td { font-size: 10px !important; padding: 0 5px !important; }
-      .desktop-only { display: none !important; }
-    }
-  </style>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Consultant Newsletter</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    <style type="text/css">
+        body { margin: 0; padding: 0; min-width: 100%; background-color: #f4f4f4; font-family: 'Source Sans Pro', Arial, sans-serif; }
+        table { border-spacing: 0; font-family: 'Source Sans Pro', Arial, sans-serif; }
+        td { padding: 0; }
+        img { border: 0; }
+        .wrapper { width: 100%; table-layout: fixed; background-color: #f4f4f4; padding-bottom: 40px; }
+        .webkit { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
+        .outer { margin: 0 auto; width: 100%; max-width: 600px; border-spacing: 0; color: #333333; }
+        
+        @media screen and (max-width: 600px) {
+            .two-column .column { max-width: 100% !important; }
+            .two-column img { max-width: 100% !important; }
+            .hero-photo-cell { display: block !important; width: 100% !important; text-align: center !important; }
+            .hero-content-cell { display: block !important; width: 100% !important; text-align: center !important; padding: 20px !important; }
+            .header-left { display: block !important; width: 100% !important; text-align: center !important; padding: 10px 0 !important; }
+            .header-right { display: block !important; width: 100% !important; text-align: center !important; padding: 10px 0 !important; }
+        }
+    </style>
 </head>
-<body style="margin:0;padding:0;font-family:'Source Sans Pro',Arial,sans-serif;background-color:#f5f5f5;-webkit-font-smoothing:antialiased;">
-
-  <!-- ====== PREHEADER ====== -->
-  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">{{ params.content.preheader_text }}</div>
-
-  <!-- ====== OUTER WRAPPER ====== -->
-  <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" class="outer-wrapper" style="background-color:#f5f5f5;padding:40px 20px;">
-    <tr>
-      <td align="center">
-
-        <!-- ====== EMAIL CONTAINER ====== -->
-        <table width="650" cellpadding="0" cellspacing="0" border="0" role="presentation" class="email-container" style="max-width:650px;width:100%;background-color:#ffffff;border:2px solid #e0e0e0;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.09);overflow:hidden;">
-
-          <!-- ====== HEADER ====== -->
-          <tr>
-            <td style="background:linear-gradient(135deg,#1b334d 0%,#0f1f30 100%);padding:36px 45px 32px 45px;" class="mobile-pad">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+<body>
+    <center class="wrapper">
+        <div class="webkit">
+            <table class="outer" align="center">
+                <!-- HEADER -->
                 <tr>
-                  <td width="55%" valign="middle" class="header-left">
-                    <a href="https://artisan.com.au/?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20DEBBIE%20YOUNGER" style="text-decoration:none;display:block;margin-bottom:12px;" class="header-logo-link">
-                      <img src="https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png" alt="Artisan" width="56" height="56" style="display:block;border:0;" class="header-logo-img">
-                    </a>
-                    <p style="margin:0 0 14px 0;font-size:12px;color:rgba(255,255,255,0.5);font-weight:600;letter-spacing:0.3px;line-height:1.5;">Creative, Digital and Marketing Recruitment</p>
-                    <div style="margin:0;">
-                      <span style="font-size:22px;font-weight:900;color:#ffffff;letter-spacing:0.2px;line-height:1.2;">{{ params.consultant.newsletter_name }}</span><br>
-                      <span style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.5);">by <span style="color:#e05070;">{{ params.consultant.name }}</span></span>
-                    </div>
-                  </td>
-                  <td width="45%" valign="middle" align="right" class="header-right">
-                    <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:14px;padding:20px;max-width:210px;margin-left:auto;">
-                      <tr>
-                        <td>
-                          <h3 style="margin:0 0 6px 0;font-size:14px;font-weight:900;color:#ffffff;text-align:center;">Book a Meeting</h3>
-                          <p style="margin:0 0 14px 0;font-size:11px;color:rgba(255,255,255,0.5);text-align:center;line-height:1.6;">Got a role to fill or a career move in mind? Let&apos;s talk.</p>
-                          <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
+                    <td style="padding: 20px; background-color: #000000;">
+                        <table width="100%">
                             <tr>
-                              <td>
-                                <a href="{{ params.consultant.calendar_link }}" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:11px 20px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 4px 14px rgba(189,32,61,0.4);">BOOK NOW &#8594;</a>
-                              </td>
+                                <td class="header-left" width="50%">
+                                    <img src="https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png" width="120" alt="Artisan Logo" style="display: block;" />
+                                </td>
+                                <td class="header-right" width="50%" align="right" style="color: #ffffff; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+                                    Consultant Newsletter
+                                </td>
                             </tr>
-                          </table>
-                          <p style="margin:10px 0 0 0;font-size:11px;color:rgba(255,255,255,0.3);text-align:center;font-style:italic;">Or simply reply to this email</p>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
+                        </table>
+                    </td>
                 </tr>
-              </table>
-            </td>
-          </tr>
 
-          <!-- ====== CONSULTANT HERO ====== -->
-          <tr>
-            <td style="padding:20px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#f8faff 0%,#eef2f9 100%);border:1px solid #d4dce8;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(27,51,77,0.10);">
+                <!-- HERO SECTION -->
                 <tr>
-                  <td width="160" valign="middle" align="center" style="padding:22px 0 22px 36px;" class="hero-photo-cell">
-                    <img src="{{ params.consultant.photo }}" alt="{{ params.consultant.name }}" width="120" height="120" style="display:block;border:0;border-radius:50%;width:120px;height:120px;object-fit:cover;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
-                    <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" style="margin-top:14px;">
-                      <tr>
-                        <td>
-                          <a href="{{ params.consultant.linkedin }}" style="display:inline-block;background-color:#0077b5;color:#ffffff;padding:9px 20px;border-radius:20px;text-decoration:none;font-weight:700;font-size:11px;letter-spacing:0.5px;line-height:1;min-width:110px;text-align:center;">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/c/ca/LinkedIn_logo_initials.png" alt="in" width="14" height="14" style="display:inline-block;border:0;vertical-align:middle;margin-right:7px;border-radius:2px;">
-                            <span style="vertical-align:middle;">LINKEDIN</span>
-                          </a>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                  <td valign="middle" style="padding:22px 36px 22px 24px;" class="hero-content-cell">
-                    <h1 style="margin:0 0 6px 0;font-size:24px;font-weight:900;color:#1b334d;line-height:1.2;">{{ params.consultant.name }}</h1>
-                    <p style="margin:0 0 18px 0;font-size:13px;font-weight:600;color:#bd203d;letter-spacing:0.3px;">{{ params.consultant.title }}</p>
-                    <table cellpadding="0" cellspacing="0" border="0" role="presentation">
-                      <tr><td style="padding-bottom:8px;"><a href="mailto:{{ params.consultant.email }}" style="text-decoration:none;color:#1b334d;font-size:13px;">&#9993; {{ params.consultant.email }}</a></td></tr>
-                      <tr><td><a href="tel:{{ params.consultant.phone }}" style="text-decoration:none;color:#1b334d;font-size:13px;">&#9742; {{ params.consultant.phone }}</a></td></tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- ====== INDUSTRY INSIGHT (CONDITIONAL) ====== -->
-          {% if params.sections.industry_insight %}
-          <tr>
-            <td style="padding:40px 45px 0 45px;" class="mobile-pad">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#fff8f8 0%,#fff0f0 100%);border:1px solid #ffd4d4;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(189,32,61,0.07);">
-                <tr>
-                  <td style="padding:32px 32px 28px 32px;">
-                    <p style="margin:0 0 10px 0;font-size:10px;font-weight:700;color:#bd203d;letter-spacing:2.5px;text-transform:uppercase;">Industry Insight</p>
-                    <h2 style="margin:0 0 16px 0;font-size:22px;font-weight:900;color:#1b334d;line-height:1.3;">{{ params.content.industry_insight_heading }}</h2>
-                    <p style="margin:0;font-size:14px;line-height:1.8;color:#444444;">{{ params.content.industry_insight_body }}</p>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          {% endif %}
-
-          <!-- ====== LIFE UPDATE (CONDITIONAL) ====== -->
-          {% if params.sections.life_update %}
-          <tr>
-            <td style="padding:28px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#f0f4f8 0%,#e1e9f0 100%);border:1px solid #c8d6e5;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(27,51,77,0.05);">
-                <tr>
-                  <td style="padding:32px 32px 28px 32px;">
-                    <p style="margin:0 0 10px 0;font-size:10px;font-weight:700;color:#1b334d;letter-spacing:2.5px;text-transform:uppercase;">Personal Update</p>
-                    <h2 style="margin:0 0 16px 0;font-size:22px;font-weight:900;color:#1b334d;line-height:1.3;">{{ params.content.life_update_heading }}</h2>
-                    <p style="margin:0 0 24px 0;font-size:14px;line-height:1.8;color:#444444;">{{ params.content.life_update_body }}</p>
-                    
-                    {% if params.content.life_update_images.length > 0 %}
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                      <tr>
-                        {% for img in params.content.life_update_images %}
-                        <td width="33.33%" style="padding:0 5px;">
-                          <img src="{{ img }}" alt="Update" width="100%" style="display:block;width:100%;border-radius:8px;aspect-ratio:1;object-fit:cover;border:1px solid #d4dce8;">
-                        </td>
-                        {% endfor %}
-                      </tr>
-                    </table>
-                    {% endif %}
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          {% endif %}
-
-          <!-- ====== ADDED MEDIA (CONDITIONAL) ====== -->
-          {% if params.sections.media %}
-          <tr>
-            <td style="padding:28px 45px 0 45px;" class="mobile-pad">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                {% for item in params.media.items %}
-                <tr>
-                  <td style="padding-bottom:16px;">
-                    {% if item.type == 'youtube' %}
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#ffffff;border:1px solid #e0e0e0;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
-                      <tr>
-                        <td width="200" class="yt-thumb-cell" valign="top">
-                          <a href="{{ item.url }}" style="text-decoration:none;display:block;position:relative;">
-                            <img src="{{ item.thumbnail }}" alt="Video" width="200" style="display:block;width:200px;height:120px;object-fit:cover;">
-                            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;background-color:rgba(189,32,61,0.9);border-radius:50%;text-align:center;line-height:40px;color:#ffffff;font-size:18px;">&#9658;</div>
-                          </a>
-                        </td>
-                        <td style="padding:20px 24px;" class="yt-text-cell" valign="middle">
-                          <p style="margin:0 0 4px 0;font-size:10px;font-weight:700;color:#bd203d;letter-spacing:1px;text-transform:uppercase;">Watch on YouTube</p>
-                          <h3 style="margin:0 0 12px 0;font-size:16px;font-weight:700;color:#1b334d;line-height:1.4;">{{ item.title }}</h3>
-                          <a href="{{ item.url }}" style="color:#bd203d;font-size:12px;font-weight:700;text-decoration:none;letter-spacing:0.5px;">WATCH VIDEO &#8594;</a>
-                        </td>
-                      </tr>
-                    </table>
-                    {% else %}
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#ffffff;border:1px solid #e0e0e0;border-radius:12px;padding:18px 22px;box-shadow:0 2px 8px rgba(0,0,0,0.03);">
-                      <tr>
-                        <td valign="middle">
-                          <p style="margin:0 0 4px 0;font-size:10px;font-weight:700;color:#bd203d;letter-spacing:1px;text-transform:uppercase;">
-                            {% if item.type == 'podcast' %}Listen to Podcast{% else %}Worth Reading{% endif %}
-                          </p>
-                          <h3 style="margin:0 0 10px 0;font-size:15px;font-weight:700;color:#1b334d;line-height:1.4;">{{ item.title }}</h3>
-                          <a href="{{ item.url }}" style="color:#bd203d;font-size:12px;font-weight:700;text-decoration:none;">LEARN MORE &#8594;</a>
-                        </td>
-                        <td width="40" align="right" valign="middle">
-                          <div style="width:36px;height:36px;background-color:#f8faff;border-radius:50%;text-align:center;line-height:36px;color:#bd203d;font-size:18px;">
-                            {% if item.type == 'podcast' %}&#127911;{% else %}&#128279;{% endif %}
-                          </div>
-                        </td>
-                      </tr>
-                    </table>
-                    {% endif %}
-                  </td>
-                </tr>
-                {% endfor %}
-              </table>
-            </td>
-          </tr>
-          {% endif %}
-
-          <!-- ====== INSTAGRAM SECTION (CONDITIONAL) ====== -->
-          {% if params.sections.instagram %}
-          <tr>
-            <td style="padding:28px 45px 0 45px;" class="mobile-pad">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#fafafa;border:1px solid #e0e0e0;border-radius:14px;overflow:hidden;">
-                <tr>
-                  <td style="padding:28px;">
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom:18px;">
-                      <tr>
-                        <td width="32" valign="middle">
-                          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Instagram_logo_2016.svg/132px-Instagram_logo_2016.svg.png" alt="IG" width="24" height="24" style="display:block;border:0;">
-                        </td>
-                        <td valign="middle" style="padding-left:10px;">
-                          <p style="margin:0;font-size:14px;font-weight:700;color:#1b334d;">Instagram Updates</p>
-                        </td>
-                      </tr>
-                    </table>
-                    
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom:18px;">
-                      <tr>
-                        {% for img in params.instagram_grid %}
-                        <td width="25%" style="padding:0 3px;">
-                          <img src="{{ img }}" alt="Post" width="100%" style="display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;border:1px solid #e0e0e0;">
-                        </td>
-                        {% endfor %}
-                      </tr>
-                    </table>
-                    
-                    <p style="margin:0;font-size:13px;line-height:1.6;color:#666666;font-style:italic;">{{ params.instagram.caption }}</p>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          {% endif %}
-
-          <!-- ====== FEATURED THIS WEEK ====== -->
-          <tr>
-            <td style="padding:40px 45px 40px 45px;" class="mobile-pad">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom:24px;">
-                <tr>
-                  <td align="center">
-                    <div style="height:2px;background:linear-gradient(90deg,transparent 0%,#bd203d 50%,transparent 100%);width:80%;margin-bottom:20px;"></div>
-                    <h2 style="margin:0;font-size:22px;font-weight:900;color:#1b334d;text-transform:uppercase;letter-spacing:1px;">Featured This Week</h2>
-                  </td>
-                </tr>
-              </table>
-
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                <tr>
-                  <!-- HOT JOB -->
-                  {% if params.sections.job %}
-                  <td width="48%" valign="top" class="two-col-left">
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#ffffff;border:1px solid #e0e0e0;border-radius:14px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.05);height:200px;">
-                      <tr>
-                        <td style="padding:24px;">
-                          <p style="margin:0 0 6px 0;font-size:10px;font-weight:700;color:#bd203d;letter-spacing:1px;text-transform:uppercase;">Hot Job</p>
-                          <h3 style="margin:0 0 8px 0;font-size:16px;font-weight:700;color:#1b334d;line-height:1.3;">{{ params.job.title }}</h3>
-                          <p style="margin:0 0 16px 0;font-size:11px;color:#666666;">{{ params.job.type }} &bull; {{ params.job.location }}</p>
-                          <a href="{{ params.job.link }}" style="display:inline-block;background-color:#1b334d;color:#ffffff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:700;font-size:11px;">APPLY NOW &#8594;</a>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                  {% endif %}
-
-                  <td width="4%" class="desktop-only">&nbsp;</td>
-
-                  <!-- A-LIST TALENT -->
-                  {% if params.sections.alist %}
-                  <td width="48%" valign="top" class="two-col-right">
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#ffffff;border:1px solid #e0e0e0;border-radius:14px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.05);height:200px;">
-                      <tr>
-                        <td width="80" valign="top" style="padding:24px 0 0 24px;">
-                          <img src="{{ params.alist.image }}" alt="Talent" width="64" height="64" style="display:block;border-radius:50%;border:2px solid #bd203d;object-fit:cover;">
-                        </td>
-                        <td style="padding:24px;">
-                          <p style="margin:0 0 6px 0;font-size:10px;font-weight:700;color:#bd203d;letter-spacing:1px;text-transform:uppercase;">A-List Talent</p>
-                          <h3 style="margin:0 0 12px 0;font-size:16px;font-weight:700;color:#1b334d;line-height:1.3;">{{ params.alist.title }}</h3>
-                          <a href="{{ params.alist.link }}" style="display:inline-block;background-color:#bd203d;color:#ffffff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:700;font-size:11px;">VIEW FOLIO &#8594;</a>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                  {% endif %}
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- ====== EVENTS SECTION (CONDITIONAL) ====== -->
-          {% if params.sections.events %}
-          <tr>
-            <td style="padding:0 45px 40px 45px;" class="mobile-pad">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#1b334d;border-radius:14px;overflow:hidden;">
-                <tr>
-                  <td style="padding:32px;">
-                    <h2 style="margin:0 0 24px 0;font-size:20px;font-weight:900;color:#ffffff;text-align:center;">Upcoming Events</h2>
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                      {% for event in params.events %}
-                      <tr>
-                        <td style="padding-bottom:12px;">
-                          <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;">
+                    <td style="background-color: #f9f9f9; padding: 40px 20px;">
+                        <table width="100%">
                             <tr>
-                              <td width="60" align="center" style="padding:15px;border-right:1px solid rgba(255,255,255,0.1);">
-                                <div style="font-size:18px;font-weight:900;color:#e05070;">{{ event.day }}</div>
-                                <div style="font-size:10px;font-weight:700;color:#ffffff;text-transform:uppercase;">{{ event.month }}</div>
-                              </td>
-                              <td style="padding:15px 20px;">
-                                <h4 style="margin:0 0 4px 0;font-size:15px;font-weight:700;color:#ffffff;">{{ event.title }}</h4>
-                                <p style="margin:0 0 8px 0;font-size:12px;color:rgba(255,255,255,0.6);line-height:1.4;">{{ event.description }}</p>
-                                <a href="{{ event.url }}" style="color:#e05070;font-size:11px;font-weight:700;text-decoration:none;">EVENT DETAILS &#8594;</a>
-                              </td>
+                                <td class="hero-photo-cell" width="180" valign="top">
+                                    <img src="{{ params.consultant.photo }}" width="160" height="160" alt="{{ params.consultant.name }}" style="display: block; border-radius: 80px; border: 4px solid #ffffff; box-shadow: 0 4px 10px rgba(0,0,0,0.1);" />
+                                </td>
+                                <td class="hero-content-cell" style="padding-left: 30px;">
+                                    <h1 style="margin: 0 0 5px 0; font-size: 28px; color: #000000; font-weight: 700;">{{ params.consultant.name }}</h1>
+                                    <p style="margin: 0 0 20px 0; font-size: 16px; color: #666666; font-weight: 400;">{{ params.consultant.title }} at Artisan</p>
+                                    <table style="margin-bottom: 20px;">
+                                        <tr>
+                                            <td style="background-color: #e30613; padding: 12px 25px; border-radius: 4px;">
+                                                <a href="{{ params.consultant.calendar_link }}" style="color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 700; text-transform: uppercase;">Book a Meeting</a>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <p style="margin: 0; font-size: 14px; color: #333333;">
+                                        <strong>M:</strong> {{ params.consultant.phone }}<br />
+                                        <strong>E:</strong> <a href="mailto:{{ params.consultant.email }}" style="color: #e30613; text-decoration: none;">{{ params.consultant.email }}</a>
+                                    </p>
+                                </td>
                             </tr>
-                          </table>
-                        </td>
-                      </tr>
-                      {% endfor %}
-                    </table>
-                  </td>
+                        </table>
+                    </td>
                 </tr>
-              </table>
-            </td>
-          </tr>
-          {% endif %}
 
-          <!-- ====== CREATIVE COMMUNITY (CONDITIONAL) ====== -->
-          {% if params.sections.articles %}
-          <tr>
-            <td style="padding:0 45px 45px 45px;" class="mobile-pad">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+                <!-- INDUSTRY INSIGHT -->
+                {% if params.sections.industry_insight %}
                 <tr>
-                  <td style="padding-bottom:20px;">
-                    <h2 style="margin:0;font-size:18px;font-weight:900;color:#1b334d;text-align:center;">Creative Community</h2>
-                  </td>
+                    <td style="padding: 40px 20px;">
+                        <h2 style="margin: 0 0 20px 0; font-size: 22px; color: #000000; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #e30613; padding-bottom: 10px; display: inline-block;">Industry Insight</h2>
+                        <h3 style="margin: 0 0 15px 0; font-size: 20px; color: #000000; font-weight: 600;">{{ params.content.industry_insight_heading }}</h3>
+                        <p style="margin: 0; font-size: 16px; line-height: 1.6; color: #444444;">
+                            {{ params.content.industry_insight_body }}
+                        </p>
+                    </td>
                 </tr>
+                {% endif %}
+
+                <!-- PERSONAL UPDATE / LIFE UPDATE -->
+                {% if params.sections.life_update %}
                 <tr>
-                  <td>
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                      <tr>
-                        {% for article in params.articles %}
-                        <td width="33.33%" valign="top" style="padding:0 8px;" class="article-col">
-                          <a href="{{ article.link }}" style="text-decoration:none;display:block;">
-                            <img src="{{ article.image }}" alt="Article" width="100%" style="display:block;width:100%;height:100px;object-fit:cover;border-radius:10px;margin-bottom:12px;border:1px solid #e0e0e0;" class="article-img">
-                            <h4 style="margin:0;font-size:12px;font-weight:700;color:#1b334d;line-height:1.4;height:3.2em;overflow:hidden;">{{ article.title }}</h4>
-                          </a>
-                        </td>
+                    <td style="padding: 0 20px 40px 20px;">
+                        <div style="background-color: #f9f9f9; padding: 30px; border-radius: 8px;">
+                            <h2 style="margin: 0 0 15px 0; font-size: 20px; color: #000000; font-weight: 700;">{{ params.content.life_update_heading }}</h2>
+                            <p style="margin: 0 0 25px 0; font-size: 16px; line-height: 1.6; color: #444444;">
+                                {{ params.content.life_update_body }}
+                            </p>
+                            
+                            {% if params.content.life_update_images.length > 0 %}
+                            <table width="100%">
+                                <tr>
+                                    {% for img in params.content.life_update_images %}
+                                    <td style="padding: 5px;">
+                                        <img src="{{ img }}" width="100%" style="display: block; border-radius: 4px;" />
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                            </table>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endif %}
+
+                <!-- ADDED MEDIA (YouTube / Links) -->
+                {% if params.sections.media %}
+                <tr>
+                    <td style="padding: 0 20px 40px 20px;">
+                        <h2 style="margin: 0 0 20px 0; font-size: 22px; color: #000000; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #e30613; padding-bottom: 10px; display: inline-block;">Worth a Look</h2>
+                        
+                        {% for item in params.media.items %}
+                        <table width="100%" style="margin-bottom: 25px;">
+                            <tr>
+                                {% if item.type == 'youtube' %}
+                                <td style="padding-bottom: 15px;">
+                                    <div style="position: relative; background-color: #000000; border-radius: 8px; overflow: hidden;">
+                                        <a href="{{ item.url }}">
+                                            <img src="{{ item.thumbnail }}" width="100%" style="display: block; opacity: 0.8;" />
+                                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                                                <img src="https://artisan.com.au/wp-content/uploads/2024/05/play-button.png" width="60" />
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <p style="margin: 10px 0 0 0; font-size: 16px; font-weight: 600; color: #000000;">{{ item.title }}</p>
+                                </td>
+                                {% else %}
+                                <td style="padding: 15px; background-color: #f4f4f4; border-left: 4px solid #e30613; border-radius: 0 4px 4px 0;">
+                                    <p style="margin: 0 0 5px 0; font-size: 16px; font-weight: 600; color: #000000;">{{ item.title }}</p>
+                                    <a href="{{ item.url }}" style="color: #e30613; text-decoration: none; font-size: 14px; font-weight: 600;">Read More &rarr;</a>
+                                </td>
+                                {% endif %}
+                            </tr>
+                        </table>
                         {% endfor %}
-                      </tr>
-                    </table>
-                  </td>
+                    </td>
                 </tr>
-              </table>
-            </td>
-          </tr>
-          {% endif %}
+                {% endif %}
 
-        </table>
-
-        <!-- ====== FOOTER ====== -->
-        <table width="650" cellpadding="0" cellspacing="0" border="0" role="presentation" style="max-width:650px;width:100%;">
-          <tr>
-            <td align="center" style="padding:40px 0 20px 0;">
-              <img src="https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png" alt="Artisan" width="40" height="40" style="display:block;border:0;margin-bottom:24px;opacity:0.6;">
-              <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom:24px;">
+                <!-- INSTAGRAM SECTION -->
+                {% if params.sections.instagram %}
                 <tr>
-                  <td style="padding:0 12px;"><a href="https://www.instagram.com/artisan_recruitment/" style="text-decoration:none;color:#999999;font-size:20px;">&#128247;</a></td>
-                  <td style="padding:0 12px;"><a href="https://www.linkedin.com/company/artisan-recruitment" style="text-decoration:none;color:#999999;font-size:20px;">&#128188;</a></td>
-                  <td style="padding:0 12px;"><a href="https://www.facebook.com/artisanrecruitment" style="text-decoration:none;color:#999999;font-size:20px;">&#128227;</a></td>
+                    <td style="padding: 0 20px 40px 20px;">
+                        <table width="100%">
+                            <tr>
+                                <td style="padding-bottom: 15px;">
+                                    <img src="https://artisan.com.au/wp-content/uploads/2024/05/instagram-logo.png" width="24" style="vertical-align: middle; margin-right: 10px;" />
+                                    <span style="font-size: 16px; font-weight: 700; color: #000000; vertical-align: middle;">@artisanrecruitment</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <table width="100%">
+                                        <tr>
+                                            {% for img in params.instagram_grid %}
+                                            <td width="25%" style="padding: 2px;">
+                                                <img src="{{ img }}" width="100%" style="display: block; aspect-ratio: 1/1; object-fit: cover;" />
+                                            </td>
+                                            {% endfor %}
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding-top: 15px;">
+                                    <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #666666; font-style: italic;">
+                                        {{ params.instagram.caption }}
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
                 </tr>
-              </table>
-              <p style="margin:0 0 10px 0;font-size:11px;color:#999999;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Artisan Recruitment</p>
-              <table cellpadding="0" cellspacing="0" border="0" role="presentation" class="footer-phones" style="margin-bottom:20px;">
-                <tr>
-                  <td style="padding:0 10px;font-size:11px;color:#999999;border-right:1px solid #dddddd;">MELB: (03) 9514 1000</td>
-                  <td style="padding:0 10px;font-size:11px;color:#999999;border-right:1px solid #dddddd;">SYD: (02) 8251 0000</td>
-                  <td style="padding:0 10px;font-size:11px;color:#999999;">QLD: (07) 3105 5000</td>
-                </tr>
-              </table>
-              <p style="margin:0;font-size:11px;color:#999999;line-height:1.8;">
-                You are receiving this because you&apos;re part of the Artisan community.<br>
-                <a href="{{ update_profile }}" style="color:#bd203d;text-decoration:none;font-weight:700;">Update Profile</a> &nbsp;&bull;&nbsp; <a href="{{ unsubscribe }}" style="color:#bd203d;text-decoration:none;font-weight:700;">Unsubscribe</a>
-              </p>
-            </td>
-          </tr>
-        </table>
+                {% endif %}
 
-      </td>
-    </tr>
-  </table>
+                <!-- FEATURED THIS WEEK (Hot Job & A-List) -->
+                <tr>
+                    <td style="padding: 0 20px 40px 20px;">
+                        <h2 style="margin: 0 0 20px 0; font-size: 22px; color: #000000; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #e30613; padding-bottom: 10px; display: inline-block;">Featured This Week</h2>
+                        
+                        <table width="100%">
+                            <tr>
+                                <!-- HOT JOB -->
+                                <td width="50%" valign="top" style="padding-right: 10px;">
+                                    <div style="border: 1px solid #eeeeee; border-radius: 8px; overflow: hidden; height: 100%;">
+                                        <div style="background-color: #e30613; padding: 10px; text-align: center;">
+                                            <span style="color: #ffffff; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Hot Job</span>
+                                        </div>
+                                        <div style="padding: 20px; min-height: 200px;">
+                                            <h4 style="margin: 0 0 10px 0; font-size: 18px; color: #000000; font-weight: 700;">{{ params.job.title }}</h4>
+                                            <p style="margin: 0 0 5px 0; font-size: 14px; color: #666666;"><strong>{{ params.job.type }}</strong> | {{ params.job.location }}</p>
+                                            <p style="margin: 0 0 20px 0; font-size: 14px; line-height: 1.5; color: #444444;">{{ params.job.description }}</p>
+                                            <a href="{{ params.job.link }}" style="color: #e30613; text-decoration: none; font-size: 14px; font-weight: 700; text-transform: uppercase;">View Job &rarr;</a>
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <!-- A-LIST TALENT -->
+                                <td width="50%" valign="top" style="padding-left: 10px;">
+                                    <div style="border: 1px solid #eeeeee; border-radius: 8px; overflow: hidden; height: 100%;">
+                                        <div style="background-color: #000000; padding: 10px; text-align: center;">
+                                            <span style="color: #ffffff; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">A-List Talent</span>
+                                        </div>
+                                        <div style="padding: 20px; text-align: center; min-height: 200px;">
+                                            <img src="{{ params.alist.image }}" width="80" height="80" style="display: block; margin: 0 auto 15px auto; border-radius: 40px;" />
+                                            <h4 style="margin: 0 0 15px 0; font-size: 18px; color: #000000; font-weight: 700;">{{ params.alist.title }}</h4>
+                                            <a href="{{ params.alist.link }}" style="display: inline-block; background-color: #000000; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 4px; font-size: 12px; font-weight: 700; text-transform: uppercase;">Request Folio</a>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- UPCOMING EVENTS -->
+                {% if params.sections.events %}
+                <tr>
+                    <td style="padding: 0 20px 40px 20px;">
+                        <h2 style="margin: 0 0 20px 0; font-size: 22px; color: #000000; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #e30613; padding-bottom: 10px; display: inline-block;">Upcoming Events</h2>
+                        
+                        <table width="100%">
+                            {% for event in params.events %}
+                            <tr>
+                                <td width="60" valign="top" style="padding-bottom: 20px;">
+                                    <div style="background-color: #f4f4f4; border-radius: 4px; text-align: center; padding: 10px 5px;">
+                                        <span style="display: block; font-size: 18px; font-weight: 700; color: #e30613;">{{ event.day }}</span>
+                                        <span style="display: block; font-size: 10px; font-weight: 700; color: #000000; text-transform: uppercase;">{{ event.month }}</span>
+                                    </div>
+                                </td>
+                                <td style="padding: 0 0 20px 20px;">
+                                    <h4 style="margin: 0 0 5px 0; font-size: 16px; color: #000000; font-weight: 700;">{{ event.title }}</h4>
+                                    <p style="margin: 0 0 10px 0; font-size: 14px; line-height: 1.4; color: #666666;">{{ event.description }}</p>
+                                    <a href="{{ event.url }}" style="color: #e30613; text-decoration: none; font-size: 13px; font-weight: 600;">Event Details &rarr;</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </table>
+                    </td>
+                </tr>
+                {% endif %}
+
+                <!-- FROM THE COMMUNITY -->
+                {% if params.sections.articles %}
+                <tr>
+                    <td style="padding: 0 20px 40px 20px;">
+                        <h2 style="margin: 0 0 20px 0; font-size: 22px; color: #000000; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #e30613; padding-bottom: 10px; display: inline-block;">From the Community</h2>
+                        
+                        <table width="100%">
+                            <tr>
+                                {% for article in params.articles %}
+                                <td width="33.33%" valign="top" style="padding: 0 5px;">
+                                    <a href="{{ article.link }}" style="text-decoration: none;">
+                                        <img src="{{ article.image }}" width="100%" style="display: block; border-radius: 4px; margin-bottom: 10px; aspect-ratio: 16/9; object-fit: cover;" />
+                                        <p style="margin: 0; font-size: 14px; font-weight: 600; color: #000000; line-height: 1.4;">{{ article.title }}</p>
+                                    </a>
+                                </td>
+                                {% endfor %}
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                {% endif %}
+
+                <!-- FOOTER -->
+                <tr>
+                    <td style="background-color: #000000; padding: 40px 20px; text-align: center;">
+                        <img src="https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png" width="100" alt="Artisan Logo" style="display: block; margin: 0 auto 20px auto;" />
+                        <p style="margin: 0 0 20px 0; font-size: 12px; color: #999999; line-height: 1.6;">
+                            &copy; 2024 Artisan Recruitment. All rights reserved.<br />
+                            You are receiving this email because you are a valued contact of {{ params.consultant.name }}.
+                        </p>
+                        <p style="margin: 0; font-size: 12px;">
+                            <a href="{{ update_profile }}" style="color: #ffffff; text-decoration: underline;">Update Profile</a>
+                            <span style="color: #666666; margin: 0 10px;">|</span>
+                            <a href="{{ unsubscribe }}" style="color: #ffffff; text-decoration: underline;">Unsubscribe</a>
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </center>
 </body>
 </html>
