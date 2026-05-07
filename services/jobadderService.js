@@ -244,8 +244,11 @@ class JobAdderService {
       const enrichedAds = await Promise.all(
         ads.map(async (ad) => {
           try {
-            // Get full job details using the reference number
-            const jobDetails = await this.getJobByReference(ad.reference);
+            // Get job summary using the reference number
+            const jobSummary = await this.getJobByReference(ad.reference);
+            // Fetch full job details using the jobId from the summary
+            // This is necessary because the summary doesn't contain location/workType
+            const jobDetails = await this.getJobDetails(jobSummary.jobId);
             // Merge ad data with job details
             return { ...ad, jobDetails };
           } catch (error) {
@@ -254,8 +257,6 @@ class JobAdderService {
           }
         })
       );
-      
-      console.log(`✅ Enriched ${enrichedAds.length} ads with full job details`);
       
       // Debug: Log first enriched ad
       if (enrichedAds.length > 0 && enrichedAds[0].jobDetails) {
@@ -353,21 +354,24 @@ class JobAdderService {
     // ad contains: title, summary, bulletPoints, reference, adId, links, portal
     // ad.jobDetails contains: location, workType, category, etc. (if enriched)
     
-    // Get location and work type from job details if available
+       // Get location and work type from job details if available
     let location = 'Location TBD';
     let jobType = '';
     
     // 1. Check for Job Ad Portal fields (Dynamic)
     if (ad.portal && ad.portal.fields) {
       const fields = ad.portal.fields;
-      const locationField = fields.find(f => f.fieldName === 'Location' || f.name === 'Location');
-      const workTypeField = fields.find(f => f.fieldName === 'Work Type' || f.name === 'Work Type');
+      // Check for various possible field names for Location and Work Type
+      const locationField = fields.find(f => /location/i.test(f.fieldName || f.name || ''));
+      const workTypeField = fields.find(f => /work\s*type|job\s*type/i.test(f.fieldName || f.name || ''));
       
-      if (locationField && (locationField.value || locationField.text)) {
-        location = locationField.value || locationField.text;
+      if (locationField) {
+        const val = locationField.value || locationField.text || locationField.externalValue;
+        if (val) location = val;
       }
-      if (workTypeField && (workTypeField.value || workTypeField.text)) {
-        jobType = this.mapWorkType(workTypeField.value || workTypeField.text);
+      if (workTypeField) {
+        const val = workTypeField.value || workTypeField.text || workTypeField.externalValue;
+        if (val) jobType = this.mapWorkType(val);
       }
     }
 
@@ -375,10 +379,18 @@ class JobAdderService {
     if (ad.jobDetails && (location === 'Location TBD' || !jobType)) {
       if (location === 'Location TBD') {
         const dLoc = ad.jobDetails.location;
-        location = (dLoc && typeof dLoc === 'object') ? (dLoc.name || dLoc.city || dLoc.text || location) : (dLoc || location);
+        if (dLoc && typeof dLoc === 'object') {
+          // JobOrderLocationModel often has name and area.name
+          const city = dLoc.name || dLoc.text;
+          const area = dLoc.area ? (dLoc.area.name || dLoc.area.text) : null;
+          location = (city && area) ? `${city}, ${area}` : (city || area || location);
+        } else if (dLoc) {
+          location = dLoc;
+        }
       }
       if (!jobType) {
         const dWT = ad.jobDetails.workType;
+        // WorkTypeModel has workTypeId and name
         const rawWorkType = (dWT && typeof dWT === 'object') ? (dWT.name || dWT.text || '') : (dWT || '');
         if (rawWorkType) jobType = this.mapWorkType(rawWorkType);
       }
@@ -391,6 +403,7 @@ class JobAdderService {
     if (!jobType) {
       jobType = this.extractJobType(ad.summary, ad.bulletPoints);
     }
+
     
     // Build description from summary and bullet points
     let description = ad.summary || '';
@@ -413,7 +426,7 @@ class JobAdderService {
     };
   }
 
-  /**
+   /**
    * Extract location from summary text
    */
   extractLocation(summary, bulletPoints) {
@@ -421,20 +434,54 @@ class JobAdderService {
     
     // Common location patterns
     const patterns = [
-      /(?:in|at|location:|based in)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*(?:\s+(?:CBD|City|Area))?)/i,
-      /(Sydney|Melbourne|Brisbane|Perth|Adelaide|Canberra|Hobart|Darwin)(?:\s+(?:CBD|City|Inner|Outer|North|South|East|West))?/i,
+      /(?:in|at|location:|based in|office in)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*(?:\s+(?:CBD|City|Area|Metro))?)/i,
+      /\b(Sydney|Melbourne|Brisbane|Perth|Adelaide|Canberra|Hobart|Darwin|Gold Coast|Sunshine Coast)\b(?:\s+(?:CBD|City|Inner|Outer|North|South|East|West))?/i,
       /Hybrid.*?([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i
     ];
     
     for (const pattern of patterns) {
       const match = text.match(pattern);
       if (match) {
-        return match[1] || match[0];
+        let loc = match[1] || match[0];
+        // Clean up common prefixes
+        loc = loc.replace(/^(in|at|location:|based in|office in)\s+/i, '').trim();
+        return loc;
       }
     }
     
     return 'Location TBD';
   }
+
+  /**
+   * Map a raw JobAdder workType string to the display label used in emails.
+   */
+  mapWorkType(raw) {
+    const s = (raw || '').toLowerCase().trim();
+    // Map to Artisan's preferred terminology: Freelance, Permanent, Contract
+    if (/freelance|temp|temporary|casual/i.test(s)) return 'Freelance';
+    if (/contract/i.test(s)) return 'Contract';
+    if (/permanent|perm|full[\s-]?time/i.test(s)) return 'Permanent';
+    if (/part[\s-]?time/i.test(s)) return 'Part-time';
+    // Return the raw value capitalised if we don't recognise it
+    return raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : '';
+  }
+
+  /**
+   * Extract job type from summary / bullet-point text when JobAdder workType is absent.
+   */
+  extractJobType(summary, bulletPoints) {
+    const text = `${summary || ''} ${(bulletPoints || []).join(' ')}`;
+    
+    if (/\b(\d+\s*(?:month|mth|week|wk))\s+contract/i.test(text)) return 'Contract';
+    if (/\bcontract\b/i.test(text)) return 'Contract';
+    if (/\bpermanent\b|\bfull[\s-]?time\b/i.test(text)) return 'Permanent';
+    if (/\btemp\b|\btemporary\b|\bfreelance\b|\bcasual\b/i.test(text)) return 'Freelance';
+    if (/\bpart[\s-]?time\b/i.test(text)) return 'Part-time';
+    
+    return '';
+  }
+
+  
 
   /**
    * Map a raw JobAdder workType string to the display label used in emails.
