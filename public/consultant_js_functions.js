@@ -49,6 +49,73 @@ function populateEventsEditor(events = []) {
     }
 }
 
+function populateEditor(state) {
+    if (!state || !state.content) return;
+
+    // Set checkboxes based on state.content.sections
+    if (state.content.sections) {
+        if (document.getElementById("toggleIndustryInsight")) document.getElementById("toggleIndustryInsight").checked = state.content.sections.industry_insight;
+        if (document.getElementById("toggleLifeUpdate")) document.getElementById("toggleLifeUpdate").checked = state.content.sections.life_update;
+        if (document.getElementById("toggleMedia")) document.getElementById("toggleMedia").checked = state.content.sections.media;
+        if (document.getElementById("toggleEvents")) document.getElementById("toggleEvents").checked = state.content.sections.events;
+        if (document.getElementById("toggleInstagram")) document.getElementById("toggleInstagram").checked = state.content.sections.instagram;
+    }
+
+    // Populate content fields
+    if (state.content.industry_insight) {
+        if (document.getElementById("editIndustryInsightHeading")) document.getElementById("editIndustryInsightHeading").value = state.content.industry_insight.title || '';
+        if (document.getElementById("editIndustryInsightBody")) document.getElementById("editIndustryInsightBody").value = state.content.industry_insight.body || '';
+    }
+    
+    if (state.content.life_update) {
+        if (document.getElementById("editLifeUpdateHeading")) document.getElementById("editLifeUpdateHeading").value = state.content.life_update.heading || '';
+        if (document.getElementById("editLifeUpdateBody")) document.getElementById("editLifeUpdateBody").value = state.content.life_update.body || '';
+    }
+
+    // Populate Events and Media
+    if (state.content.events) populateEventsEditor(state.content.events);
+    if (state.content.media) populateMediaEditor(state.content.media);
+
+    // Populate Life Update Images
+    if (state.content.life_update_images) {
+        for (let i = 1; i <= 3; i++) {
+            const urlInput = document.getElementById('lifeUpdateUrl' + i);
+            const preview = document.getElementById('lifeUpdatePreview' + i);
+            if (urlInput) {
+                urlInput.value = state.content.life_update_images[i - 1] || '';
+                if (typeof updateImagePreview === 'function') updateImagePreview(urlInput, preview);
+            }
+        }
+    }
+
+    // Populate Instagram Grid and Caption
+    if (state.content.instagram) {
+        if (document.getElementById('igCaption')) {
+            document.getElementById('igCaption').value = state.content.instagram.caption || '';
+        }
+        for (let i = 1; i <= 4; i++) {
+            const urlInput = document.getElementById('igUrl' + i);
+            const preview = document.getElementById('igPreview' + i);
+            if (urlInput) {
+                urlInput.value = state.content.instagram.images[i - 1] || '';
+                if (typeof updateImagePreview === 'function') updateImagePreview(urlInput, preview);
+            }
+        }
+    }
+
+    // Populate Life Update Images
+    if (state.content.life_update_images) {
+        for (let i = 1; i <= 3; i++) {
+            const urlInput = document.getElementById('lifeUpdateUrl' + i);
+            const preview = document.getElementById('lifeUpdatePreview' + i);
+            if (urlInput) {
+                urlInput.value = state.content.life_update_images[i - 1] || '';
+                if (typeof updateImagePreview === 'function') updateImagePreview(urlInput, preview);
+            }
+        }
+    }
+}
+
 function addMediaField(data = { title: '', url: '', type: 'link' }) {
     const container = document.getElementById('mediaEditContainer');
     if (!container) return;
@@ -113,19 +180,17 @@ async function updateConsultantSectionVisibility() {
 
     const content = {
         industry_insight: {
-            title: document.getElementById('editIndustryInsightHeading').value,
-            body: document.getElementById('editIndustryInsightBody').value
+            title: document.getElementById("editIndustryInsightHeading").value,
+            body: document.getElementById("editIndustryInsightBody").value
         },
         personal_update: {
-            title: document.getElementById('editLifeUpdateHeading').value,
-            body: document.getElementById('editLifeUpdateBody').value
+            title: document.getElementById("editLifeUpdateHeading").value,
+            body: document.getElementById("editLifeUpdateBody").value
         },
         instagram: {
-            caption: document.getElementById('igCaption') ? document.getElementById('igCaption').value : ''
+            caption: document.getElementById("igCaption") ? document.getElementById("igCaption").value : ""
         }
     };
-
-    const eventItems = document.querySelectorAll('.event-edit-item');
     const events = Array.from(eventItems).map(item => ({
         title: item.querySelector('.event-title').value,
         date: item.querySelector('.event-date').value,

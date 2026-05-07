@@ -152,13 +152,18 @@ class EmailPreviewService {
             return value || defaultVal;
         });
 
-        // Step 3b: Replace all {{ variable.path }} with actual values
-        result = result.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (match, varPath) => {
+        // Step 3b: Replace all {{ variable.path }} or {{ variable.path | nl2br }} with actual values
+        result = result.replace(/\{\{\s*([\w.]+)(?:\s*\|\s*nl2br)?\s*\}\}/g, (match, varPath) => {
             const value = this.getNestedProperty(data, varPath, '');
             
             // Handle special cases for URLs - don't replace if it's a placeholder
             if (varPath === 'unsubscribe' && value === '') {
                 return 'https://artisan.com.au/unsubscribe';
+            }
+            
+            // Apply nl2br if requested
+            if (match.includes('| nl2br')) {
+                return String(value).replace(/\n/g, '<br>');
             }
             
             return value;

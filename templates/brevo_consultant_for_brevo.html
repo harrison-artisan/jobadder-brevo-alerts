@@ -450,48 +450,48 @@
                     <a href="{{ insta_url }}" style="display:block;line-height:0;">
                       <!-- Instagram Image(s) - Using robust Personal Section logic -->
                       <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                        {% if params.insta_img_count == "1" or params.insta_img_count == 1 %}
+                        {% if params.instagram_grid.length == 1 %}
                         <tr>
                           <td align="center" style="padding:0;">
-                            <img src="{{ params.insta_img_1 }}" alt="Instagram" width="100%" style="display:block;width:100%;height:auto;max-height:500px;object-fit:cover;border:0;">
+                            <img src="{{ params.instagram_grid[0] }}" alt="Instagram" width="100%" style="display:block;width:100%;height:auto;max-height:500px;object-fit:cover;border:0;">
                           </td>
                         </tr>
-                        {% elif params.insta_img_count == "2" or params.insta_img_count == 2 %}
+                        {% elif params.instagram_grid.length == 2 %}
                         <tr>
                           <td width="50%" style="padding:0;line-height:0;">
-                            <img src="{{ params.insta_img_1 }}" alt="Instagram 1" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
+                            <img src="{{ params.instagram_grid[0] }}" alt="Instagram 1" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
                           </td>
                           <td width="50%" style="padding:0;line-height:0;">
-                            <img src="{{ params.insta_img_2 }}" alt="Instagram 2" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
+                            <img src="{{ params.instagram_grid[1] }}" alt="Instagram 2" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
                           </td>
                         </tr>
-                        {% elif params.insta_img_count == "3" or params.insta_img_count == 3 %}
+                        {% elif params.instagram_grid.length == 3 %}
                         <tr>
                           <td width="33.3%" style="padding:0;line-height:0;">
-                            <img src="{{ params.insta_img_1 }}" alt="Instagram 1" width="100%" style="display:block;width:100%;height:160px;object-fit:cover;border:0;">
+                            <img src="{{ params.instagram_grid[0] }}" alt="Instagram 1" width="100%" style="display:block;width:100%;height:160px;object-fit:cover;border:0;">
                           </td>
                           <td width="33.3%" style="padding:0;line-height:0;">
-                            <img src="{{ params.insta_img_2 }}" alt="Instagram 2" width="100%" style="display:block;width:100%;height:160px;object-fit:cover;border:0;">
+                            <img src="{{ params.instagram_grid[1] }}" alt="Instagram 2" width="100%" style="display:block;width:100%;height:160px;object-fit:cover;border:0;">
                           </td>
                           <td width="33.4%" style="padding:0;line-height:0;">
-                            <img src="{{ params.insta_img_3 }}" alt="Instagram 3" width="100%" style="display:block;width:100%;height:160px;object-fit:cover;border:0;">
+                            <img src="{{ params.instagram_grid[2] }}" alt="Instagram 3" width="100%" style="display:block;width:100%;height:160px;object-fit:cover;border:0;">
                           </td>
                         </tr>
-                        {% elif params.insta_img_count == "4" or params.insta_img_count == 4 %}
+                        {% elif params.instagram_grid.length == 4 %}
                         <tr>
                           <td width="50%" style="padding:0;line-height:0;">
-                            <img src="{{ params.insta_img_1 }}" alt="Instagram 1" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
+                            <img src="{{ params.instagram_grid[0] }}" alt="Instagram 1" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
                           </td>
                           <td width="50%" style="padding:0;line-height:0;">
-                            <img src="{{ params.insta_img_2 }}" alt="Instagram 2" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
+                            <img src="{{ params.instagram_grid[1] }}" alt="Instagram 2" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
                           </td>
                         </tr>
                         <tr>
                           <td width="50%" style="padding:0;line-height:0;">
-                            <img src="{{ params.insta_img_3 }}" alt="Instagram 3" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
+                            <img src="{{ params.instagram_grid[2] }}" alt="Instagram 3" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
                           </td>
                           <td width="50%" style="padding:0;line-height:0;">
-                            <img src="{{ params.insta_img_4 }}" alt="Instagram 4" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
+                            <img src="{{ params.instagram_grid[3] }}" alt="Instagram 4" width="100%" style="display:block;width:100%;height:240px;object-fit:cover;border:0;">
                           </td>
                         </tr>
                         {% else %}
@@ -548,11 +548,11 @@
                 </tr>
 
                 <!-- ── Caption ── -->
-                {% if params.insta_caption %}
+                {% if params.instagram_caption %}
                 <tr>
                   <td style="padding:15px 15px 15px 15px;">
                     <p style="margin:0;font-size:14px;color:#1b334d;line-height:1.5;">
-                      <strong style="color:#bd203d;">the_new_mathew</strong> {{ params.insta_caption }}
+                      <strong style="color:#bd203d;">the_new_mathew</strong> {{ params.instagram_caption | nl2br }}
                     </p>
                   </td>
                 </tr>

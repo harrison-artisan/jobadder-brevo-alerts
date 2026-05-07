@@ -451,9 +451,7 @@ async function parseCsv(req, res) {
         const data = parseCsvBuffer(req.file.buffer);
         console.log('Parsed CSV data keys:', Object.keys(data));
         const consultants = loadConsultants();
-        
-        // Prioritize consultant ID from request body (dropdown), then fallback to CSV
-        let consultantId = req.body.consultantId || data.consultant;
+        let consultantId = data.consultant;
         
         // Match by display name if needed
         if (consultantId && !consultants[consultantId]) {
@@ -487,12 +485,45 @@ async function parseCsv(req, res) {
         const alistCandidate = getAListCandidateFromState() || await fetchAListCandidateLive();
         const liveJob = await fetchLiveJob();
 
-        const templateParams = buildTemplateParams(consultantConfig, parsed, [], articles, alistCandidate, liveJob);
+        const mediaArray = [];
+        if (data.youtube_url) {
+            mediaArray.push({
+                type: 'youtube',
+                url: data.youtube_url,
+                caption: data.youtube_caption || ''
+            });
+        }
+        if (data.image_url) {
+            mediaArray.push({
+                type: 'image',
+                url: data.image_url,
+                caption: data.image_caption || ''
+            });
+        }
+
+        // Handle 'Worth Reading' as an article if it exists in CSV data
+        if (data.link_url) {
+            articles.unshift({
+                title: data.link_title || 'Worth Reading',
+                link: data.link_url,
+                image: '' // No image from CSV for worth reading currently
+            });
+        }
+
+        const templateParams = buildTemplateParams(consultantConfig, parsed, mediaArray, articles, alistCandidate, liveJob);
         const state = {
             state: 'GENERATED',
             generatedAt: new Date().toISOString(),
             consultant: consultantConfig,
-            content: { ...parsed, articles, alist_candidate: alistCandidate, live_job: liveJob },
+            content: { 
+                ...parsed, 
+                articles, 
+                alist_candidate: alistCandidate, 
+                live_job: liveJob,
+                media: mediaArray,
+                sections: templateParams.sections,
+                instagram_grid: mediaArray.filter(m => m.type === 'instagram').map(m => m.url) // Basic mapping for UI
+            },
             templateParams
         };
         writeState(state);
@@ -506,18 +537,6 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
     const job = liveJob || {};
     const fallbackImg = 'https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png';
     
-    // Ensure sections is always an object with defaults
-    const finalSections = sections || (parsed && parsed.sections) || {
-        industry_insight: true,
-        life_update: true,
-        media: true,
-        instagram: true,
-        events: true,
-        alist: true,
-        job: true,
-        articles: true
-    };
-
     // Correctly map fields from either initial parse or dashboard update
     const industry_insight_heading = parsed.industry_insight_heading || (parsed.industry_insight ? (parsed.industry_insight.heading || parsed.industry_insight.title) : '');
     const industry_insight_body = parsed.industry_insight_body || (parsed.industry_insight ? parsed.industry_insight.body : '');
@@ -530,6 +549,19 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
 
     const instagram_grid_final = (instagram_grid && instagram_grid.length > 0) ? instagram_grid : (parsed.instagram_grid || (parsed.instagram && parsed.instagram.images) || []);
     const instagram_caption_final = (instagram_caption !== undefined && instagram_caption !== null) ? String(instagram_caption) : (parsed.instagram_caption || (parsed.instagram && parsed.instagram.caption) || '');
+
+    // Ensure sections is always an object with defaults
+    const finalSections = sections || (parsed && parsed.sections) || {};
+
+    // Determine section visibility based on content presence
+    finalSections.industry_insight = finalSections.industry_insight !== undefined ? finalSections.industry_insight : !!(industry_insight_heading || industry_insight_body);
+    finalSections.life_update = finalSections.life_update !== undefined ? finalSections.life_update : !!(life_update_heading || life_update_body || life_update_images.length > 0);
+    finalSections.media = finalSections.media !== undefined ? finalSections.media : (Array.isArray(mediaArray) && mediaArray.length > 0);
+    finalSections.instagram = finalSections.instagram !== undefined ? finalSections.instagram : (instagram_grid_final.length > 0 || instagram_caption_final.length > 0);
+    finalSections.events = finalSections.events !== undefined ? finalSections.events : (Array.isArray(parsed.events) && parsed.events.length > 0);
+    finalSections.alist = finalSections.alist !== undefined ? finalSections.alist : !!alistCandidate;
+    finalSections.job = finalSections.job !== undefined ? finalSections.job : !!(job.title);
+    finalSections.articles = finalSections.articles !== undefined ? finalSections.articles : (Array.isArray(articles) && articles.length > 0);
 
     return {
         sections: finalSections,
@@ -551,13 +583,6 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
             life_update_body,
             life_update_images
         },
-        // Flatten Life Update images for preview compatibility
-        life_img_1: life_update_images[0] || "",
-        life_img_2: life_update_images[1] || "",
-        life_img_3: life_update_images[2] || "",
-        life_img_count: life_update_images.length,
-        has_life_img: life_update_images.length > 0,
-        
         media: {
             has_media: Array.isArray(mediaArray) && mediaArray.length > 0,
             items: (Array.isArray(mediaArray) ? mediaArray : []).map(item => {
@@ -570,20 +595,15 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
                 return item;
             })
         },
-        // Flatten Instagram data for maximum compatibility
+        // Flatten Instagram images and caption for direct template access
         insta_img_1: instagram_grid_final[0] || "",
         insta_img_2: instagram_grid_final[1] || "",
         insta_img_3: instagram_grid_final[2] || "",
         insta_img_4: instagram_grid_final[3] || "",
-        insta_img_count: String(instagram_grid_final.length),
+        instagram_caption: instagram_caption_final,
+        insta_img_count: instagram_grid_final.length,
         has_insta_img: instagram_grid_final.length > 0,
-        insta_caption: String(instagram_caption_final || ''),
-        
         instagram_grid: instagram_grid_final,
-        instagram: {
-            caption: String(instagram_caption_final || ''),
-            grid: instagram_grid_final
-        },
         job: {
             has_job: !!(job.title),
             title: job.title || '',
@@ -701,19 +721,11 @@ async function sendToAll(req, res) {
 
 async function updateSections(req, res) {
     try {
-        const { consultantId, sections, content, events, media, instagram_grid, life_update_images } = req.body;
+        const { sections, content, events, media, instagram_grid, life_update_images } = req.body;
         const state = readState();
-        if (state.state === 'EMPTY') return res.status(400).json({ success: false, message: 'No content to update' });
+        if (state.state === 'EMPTY') return res.status(400).json({ success: false, message: 'Empty state' });
 
-        // Update consultant if a new one was selected in the dashboard
-        if (consultantId) {
-            const consultants = loadConsultants();
-            if (consultants[consultantId]) {
-                state.consultant = consultants[consultantId];
-            }
-        }
-
-        // 1. Update Sections (Toggles)
+        // 1. Update Section Visibility
         if (sections) {
             state.sections = {
                 industry_insight: !!sections.industry_insight,
@@ -750,15 +762,8 @@ async function updateSections(req, res) {
                 };
             }
             if (content.instagram) {
-                // Fix: Correctly handle the caption from the dashboard field (personal_update.instagram.caption)
                 state.content.instagram_caption = String(content.instagram.caption || '');
                 state.content.instagram_grid = (instagram_grid && instagram_grid.length > 0) ? instagram_grid : (state.content.instagram_grid || []);
-                // Sync legacy objects for buildTemplateParams
-                state.content.instagram = {
-                    caption: state.content.instagram_caption,
-                    images: state.content.instagram_grid,
-                    grid: state.content.instagram_grid
-                };
             }
         }
         
@@ -792,16 +797,7 @@ async function updateSections(req, res) {
             state.content.instagram_caption
         );
         
-        // Final sync for templateParams
-        state.templateParams.instagram_grid = state.content.instagram_grid;
-        state.templateParams.instagram_caption = state.content.instagram_caption;
-        state.templateParams.instagram = {
-            caption: state.content.instagram_caption,
-            images: state.content.instagram_grid,
-            grid: state.content.instagram_grid
-        };
-        state.templateParams.instagram_caption = state.content.instagram_caption;
-        state.templateParams.instagram_grid = state.content.instagram_grid;
+
 
         writeState(state);
         res.json({ success: true, state });
