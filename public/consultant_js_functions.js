@@ -191,6 +191,8 @@ async function updateConsultantSectionVisibility() {
             caption: document.getElementById("igCaption") ? document.getElementById("igCaption").value : ""
         }
     };
+
+    const eventItems = document.querySelectorAll('.event-edit-item');
     const events = Array.from(eventItems).map(item => ({
         title: item.querySelector('.event-title').value,
         date: item.querySelector('.event-date').value,
