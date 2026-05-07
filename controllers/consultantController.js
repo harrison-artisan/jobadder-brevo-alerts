@@ -600,7 +600,7 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
         insta_img_2: instagram_grid_final[1] || "",
         insta_img_3: instagram_grid_final[2] || "",
         insta_img_4: instagram_grid_final[3] || "",
-        instagram_caption: instagram_caption_final,
+        instagram_caption: instagram_caption_final.replace(/\n/g, '<br>'),
         insta_img_count: instagram_grid_final.length,
         has_insta_img: instagram_grid_final.length > 0,
         instagram_grid: instagram_grid_final,
