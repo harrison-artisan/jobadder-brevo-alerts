@@ -514,7 +514,7 @@ async function parseCsv(req, res) {
         const state = {
             state: 'GENERATED',
             generatedAt: new Date().toISOString(),
-            consultant: consultantConfig,
+            consultant: consultantConfig, // Full config with brevo_template_id
             content: { 
                 ...parsed, 
                 articles, 
@@ -522,7 +522,7 @@ async function parseCsv(req, res) {
                 live_job: liveJob,
                 media: mediaArray,
                 sections: templateParams.sections,
-                instagram_grid: mediaArray.filter(m => m.type === 'instagram').map(m => m.url) // Basic mapping for UI
+                instagram_grid: mediaArray.filter(m => m.type === 'instagram').map(m => m.url)
             },
             templateParams
         };
@@ -721,9 +721,17 @@ async function sendToAll(req, res) {
 
 async function updateSections(req, res) {
     try {
-        const { sections, content, events, media, instagram_grid, life_update_images } = req.body;
+        const { consultantId, sections, content, events, media, instagram_grid, life_update_images } = req.body;
         const state = readState();
         if (state.state === 'EMPTY') return res.status(400).json({ success: false, message: 'Empty state' });
+
+        // Re-verify consultant metadata if missing or changed
+        if (consultantId && (!state.consultant || state.consultant.id !== consultantId)) {
+            const consultants = loadConsultants();
+            if (consultants[consultantId]) {
+                state.consultant = consultants[consultantId];
+            }
+        }
 
         // 1. Update Section Visibility
         if (sections) {
