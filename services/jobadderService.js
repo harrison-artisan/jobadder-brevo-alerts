@@ -239,24 +239,25 @@ class JobAdderService {
       // Get job ads from the Artisan board
       const ads = await this.getJobAds(artisanBoard.boardId);
       
-      // Enrich each ad with full job details
-      console.log(`🔍 Fetching full job details for ${ads.length} ads...`);
+        // Enrich each ad with full job details from the Master Job Record
+      console.log(`🔍 Fetching Master Job Records for ${ads.length} ads...`);
       const enrichedAds = await Promise.all(
         ads.map(async (ad) => {
           try {
-            // Get job summary using the reference number
-            const jobSummary = await this.getJobByReference(ad.reference);
-            // Fetch full job details using the jobId from the summary
-            // This is necessary because the summary doesn't contain location/workType
+            // Strip any suffixes from reference (e.g., 'ART123-1' -> 'ART123')
+            const cleanRef = ad.reference.split('-')[0];
+            const jobSummary = await this.getJobByReference(cleanRef);
+            
+            // Pull the full Job Record which contains the structured Location and Type
             const jobDetails = await this.getJobDetails(jobSummary.jobId);
-            // Merge ad data with job details
             return { ...ad, jobDetails };
           } catch (error) {
-            console.warn(`⚠️  Could not fetch details for job ${ad.reference}:`, error.message);
-            return ad; // Return ad without enrichment if fetch fails
+            console.warn(`⚠️  Could not fetch Master Job for ${ad.reference}:`, error.message);
+            return ad;
           }
         })
       );
+
       
       // Debug: Log first enriched ad
       if (enrichedAds.length > 0 && enrichedAds[0].jobDetails) {
@@ -355,54 +356,38 @@ class JobAdderService {
     // ad.jobDetails contains: location, workType, category, etc. (if enriched)
     
        // Get location and work type from job details if available
-    let location = 'Location TBD';
+       let location = 'Location TBD';
     let jobType = '';
-    
-    // 1. Check for Job Ad Portal fields (Dynamic)
-    if (ad.portal && ad.portal.fields) {
-      const fields = ad.portal.fields;
-      // Check for various possible field names for Location and Work Type
-      const locationField = fields.find(f => /location/i.test(f.fieldName || f.name || ''));
-      const workTypeField = fields.find(f => /work\s*type|job\s*type/i.test(f.fieldName || f.name || ''));
-      
-      if (locationField) {
-        const val = locationField.value || locationField.text || locationField.externalValue;
-        if (val) location = val;
+
+    // LOGICAL WAY: Prioritize the Master Job Record (jobDetails)
+    if (ad.jobDetails) {
+      // 1. Extract Location from Job Record
+      const dLoc = ad.jobDetails.location;
+      if (dLoc) {
+        // Combines City and Area if both exist (e.g., "Melbourne, CBD")
+        const city = dLoc.name || dLoc.text || '';
+        const area = dLoc.area ? (dLoc.area.name || dLoc.area.text || '') : '';
+        location = (city && area) ? `${city}, ${area}` : (city || area || location);
       }
-      if (workTypeField) {
-        const val = workTypeField.value || workTypeField.text || workTypeField.externalValue;
-        if (val) jobType = this.mapWorkType(val);
+
+      // 2. Extract Work Type from Job Record
+      const dWT = ad.jobDetails.workType;
+      const rawWorkType = (dWT && typeof dWT === 'object') ? (dWT.name || dWT.text || '') : (dWT || '');
+      if (rawWorkType) jobType = this.mapWorkType(rawWorkType);
+    }
+
+    // FALLBACK: If Job Record failed, check the Ad's Portal Fields
+    if (location === 'Location TBD' || !jobType) {
+      if (ad.portal && ad.portal.fields) {
+        const fields = ad.portal.fields;
+        const locF = fields.find(f => /location|city|area/i.test(f.fieldName || f.name || ''));
+        const typF = fields.find(f => /type|employment|work/i.test(f.fieldName || f.name || ''));
+        
+        if (location === 'Location TBD' && locF) location = locF.value || locF.text || location;
+        if (!jobType && typF) jobType = this.mapWorkType(typF.value || typF.text);
       }
     }
 
-    // 2. If still not found, check Enriched Job Details (Internal Job Record)
-    if (ad.jobDetails && (location === 'Location TBD' || !jobType)) {
-      if (location === 'Location TBD') {
-        const dLoc = ad.jobDetails.location;
-        if (dLoc && typeof dLoc === 'object') {
-          // JobOrderLocationModel often has name and area.name
-          const city = dLoc.name || dLoc.text;
-          const area = dLoc.area ? (dLoc.area.name || dLoc.area.text) : null;
-          location = (city && area) ? `${city}, ${area}` : (city || area || location);
-        } else if (dLoc) {
-          location = dLoc;
-        }
-      }
-      if (!jobType) {
-        const dWT = ad.jobDetails.workType;
-        // WorkTypeModel has workTypeId and name
-        const rawWorkType = (dWT && typeof dWT === 'object') ? (dWT.name || dWT.text || '') : (dWT || '');
-        if (rawWorkType) jobType = this.mapWorkType(rawWorkType);
-      }
-    }
-
-    // 3. Final fallback: Text extraction from summary/bullets
-    if (location === 'Location TBD') {
-      location = this.extractLocation(ad.summary, ad.bulletPoints);
-    }
-    if (!jobType) {
-      jobType = this.extractJobType(ad.summary, ad.bulletPoints);
-    }
 
     
     // Build description from summary and bullet points
@@ -455,16 +440,14 @@ class JobAdderService {
   /**
    * Map a raw JobAdder workType string to the display label used in emails.
    */
-  mapWorkType(raw) {
+    mapWorkType(raw) {
     const s = (raw || '').toLowerCase().trim();
-    // Map to Artisan's preferred terminology: Freelance, Permanent, Contract
     if (/freelance|temp|temporary|casual/i.test(s)) return 'Freelance';
     if (/contract/i.test(s)) return 'Contract';
     if (/permanent|perm|full[\s-]?time/i.test(s)) return 'Permanent';
-    if (/part[\s-]?time/i.test(s)) return 'Part-time';
-    // Return the raw value capitalised if we don't recognise it
     return raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : '';
   }
+
 
   /**
    * Extract job type from summary / bullet-point text when JobAdder workType is absent.
