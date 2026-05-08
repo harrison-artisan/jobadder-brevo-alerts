@@ -9,6 +9,9 @@
   <style type="text/css">
     /* ===== MOBILE RESPONSIVE ===== */
     @media only screen and (max-width: 600px) {
+      .mobile-center { text-align: center !important; margin: 0 auto !important; }
+      .mobile-center table { margin: 0 auto !important; }
+      .mobile-center img { margin: 0 auto !important; }
 
       /* Outer wrapper */
       .outer-wrapper { padding: 12px 10px !important; }
@@ -52,18 +55,14 @@
       .cal-icon-cell img { margin: 0 auto !important; }
       .cal-text-cell { display: block !important; width: 100% !important; text-align: center !important; padding: 0 0 16px 0 !important; }
       .cal-btn-cell { display: block !important; width: 100% !important; text-align: center !important; padding: 0 !important; }
-      .cal-btn-cell table { margin: 0 auto !important; }
-      .cal-btn-table { margin: 0 auto !important; }
+      .cal-btn-cell      .cal-btn-table { margin: 0 auto !important; }
       .hero-content-cell table { margin: 0 auto !important; }
       .hero-content-cell {
-        text-align: center !important;
         display: block !important;
         width: 100% !important;
         padding: 0 18px 28px 18px !important;
       }
-      .hero-content-cell table { margin: 0 auto !important; }
       .hero-content-cell h1, .hero-content-cell p, .hero-content-cell a { text-align: center !important; }
-
       /* Two-column sections */
       .two-col-left, .two-col-right {
         display: block !important;
@@ -170,7 +169,7 @@
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#f8faff 0%,#eef2f9 100%);border:1px solid #d4dce8;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(27,51,77,0.10);">
                 <tr>
                   <!-- Photo -->
-                  <td width="160" valign="middle" align="center" style="padding:22px 0 22px 36px;" class="hero-photo-cell">
+                  <td width="160" valign="middle" align="center" style="padding:22px 0 22px 36px;" class="hero-photo-cell mobile-center">
                     <img src="{{ params.consultant.photo }}" alt="{{ params.consultant.name }}" width="120" height="120" style="display:block;border:0;border-radius:50%;width:120px;height:120px;object-fit:cover;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
                     <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" style="margin-top:14px;">
                       <tr>
@@ -184,7 +183,7 @@
                     </table>
                   </td>
                   <!-- Details -->
-                  <td valign="middle" style="padding:22px 36px 22px 24px;" class="hero-content-cell">
+                  <td valign="middle" style="padding:22px 36px 22px 24px;" class="hero-content-cell mobile-center">
                     <h1 style="margin:0 0 6px 0;font-size:24px;font-weight:900;color:#1b334d;line-height:1.2;">{{ params.consultant.name }}</h1>
                     <p style="margin:0 0 18px 0;font-size:13px;font-weight:600;color:#bd203d;letter-spacing:0.3px;">{{ params.consultant.title }}</p>
                     <table cellpadding="0" cellspacing="0" border="0" role="presentation">
@@ -674,7 +673,7 @@
                       {% endif %}
                     </table>
                   </td>
-                        <td valign="middle" style="padding-left:20px;" class="cal-text-cell">
+                        <td valign="middle" style="padding-left:20px;" class="cal-text-cell mobile-center">
                     <h3 style="margin:0 0 4px 0;font-size:16px;font-weight:900;color:#1b334d;line-height:1.3;">{{ event.title }}</h3>
                     <p style="margin:0 0 10px 0;font-size:13px;line-height:1.6;color:#666666;">{{ event.description }}</p>
                     {% if event.link %}
@@ -726,12 +725,12 @@
 
                    <!-- ====== BOOK A MEETING ====== -->
           <tr>
-            <td style="padding:40px 45px 0 45px;" class="mobile-pad">
+            <td style="padding:40px 45px 0 45px;" class="mobile-pad mobile-center">
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#fff5f5 0%,#ffe8e8 100%);border:1px solid #ffd4d4;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(189,32,61,0.07);">
                 <tr>
                   <td style="padding:32px 32px 28px 32px;">
                     <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-                        <td width="60" valign="middle" style="padding-right:20px;" class="cal-icon-cell">
+                        <td width="60" valign="middle" style="padding-right:20px;" class="cal-icon-cell mobile-center">
                           <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);border-radius:12px;width:52px;height:52px;">
                             <tr>
                               <td align="center" valign="middle" style="padding:10px;">
@@ -740,12 +739,12 @@
                             </tr>
                           </table>
                         </td>
-                        <td valign="middle" style="padding-left:20px;" class="cal-text-cell">
+                        <td valign="middle" style="padding-left:20px;" class="cal-text-cell mobile-center">
                           <p style="margin:0 0 4px 0;font-size:10px;font-weight:700;color:#bd203d;letter-spacing:2px;text-transform:uppercase;">Let's Connect</p>
                           <h2 style="margin:0 0 4px 0;font-size:18px;font-weight:900;color:#1b334d;line-height:1.2;">Book a Meeting with {{ params.consultant.name }}</h2>
                           <p style="margin:0;font-size:13px;color:#666666;line-height:1.5;">Got a role to fill, a career move in mind, or just want to catch up?</p>
                         </td>
-                                <td width="140" valign="middle" align="right" style="padding-left:16px;" class="cal-btn-cell">
+                                <td width="140" valign="middle" align="right" style="padding-left:16px;" class="cal-btn-cell mobile-center">
                           <table cellpadding="0" cellspacing="0" border="0" role="presentation" class="cal-btn-table">
                             <tr>
                               <td>
