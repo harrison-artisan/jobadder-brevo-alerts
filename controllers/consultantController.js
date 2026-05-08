@@ -485,7 +485,15 @@ async function parseCsv(req, res) {
         const alistCandidate = getAListCandidateFromState() || await fetchAListCandidateLive();
         const liveJob = await fetchLiveJob();
 
-        const templateParams = buildTemplateParams(consultantConfig, parsed, [], articles, alistCandidate, liveJob);
+        const instagram_grid = [];
+        for (let i = 1; i <= 4; i++) {
+            if (data[`insta_img_${i}`]) {
+                instagram_grid.push(data[`insta_img_${i}`]);
+            }
+        }
+        const instagram_caption = data.instagram_caption || '';
+
+        const templateParams = buildTemplateParams(consultantConfig, parsed, [], articles, alistCandidate, liveJob, parsed.sections, instagram_grid, instagram_caption);
         const state = {
             state: 'GENERATED',
             generatedAt: new Date().toISOString(),
@@ -526,7 +534,8 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
 
     const preheader_text = parsed.preheader_text || (industry_insight_heading ? `${industry_insight_heading} — from ${consultant.name} at Artisan` : '');
 
-    const instagram_grid_final = (instagram_grid && instagram_grid.length > 0) ? instagram_grid : (parsed.instagram_grid || (parsed.instagram && parsed.instagram.images) || []);
+    const instagram_grid_raw = (instagram_grid && instagram_grid.length > 0) ? instagram_grid : (parsed.instagram_grid || (parsed.instagram && parsed.instagram.images) || []);
+    const instagram_grid_final = Array.from({ length: 4 }, (_, i) => instagram_grid_raw[i] || "");
     const instagram_caption_final = ((instagram_caption !== undefined && instagram_caption !== null) ? String(instagram_caption) : (parsed.instagram_caption || (parsed.instagram && parsed.instagram.caption) || '')).replace(/\n/g, "<br>");
 
     return {
@@ -561,14 +570,15 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
                 return item;
             })
         },
-        instagram_grid: instagram_grid_final,
-        insta_img_1: instagram_grid_final[0] || "",
-        insta_img_2: instagram_grid_final[1] || "",
-        insta_img_3: instagram_grid_final[2] || "",
-        insta_img_4: instagram_grid_final[3] || "",
+
+
         instagram: {
             caption: instagram_caption_final,
-            grid: instagram_grid_final
+            grid: instagram_grid_final,
+            insta_img_1: instagram_grid_final[0] || "",
+            insta_img_2: instagram_grid_final[1] || "",
+            insta_img_3: instagram_grid_final[2] || "",
+            insta_img_4: instagram_grid_final[3] || ""
         },
         job: {
             has_job: !!(job.title),
@@ -687,7 +697,7 @@ async function sendToAll(req, res) {
 
 async function updateSections(req, res) {
     try {
-        const { sections, content, events, media, instagram_grid, life_update_images } = req.body;
+        const { sections, content, events, media, instagram_grid, instagram_caption, life_update_images } = req.body;
         const state = readState();
         if (state.state === 'EMPTY') return res.status(400).json({ success: false, message: 'Empty state' });
 
@@ -718,19 +728,21 @@ async function updateSections(req, res) {
                 };
             }
             if (content.personal_update) {
-                state.content.life_update_heading = content.personal_update.title || content.personal_update.heading || '';
-                state.content.life_update_body = content.personal_update.body || '';
-                // Sync legacy objects for buildTemplateParams
+                state.content.life_update_heading = content.personal_update.title || content.personal_update.heading || 
+                state.content.life_update_body = content.personal_update.body || 
                 state.content.life_update = {
                     heading: state.content.life_update_heading,
                     body: state.content.life_update_body,
                     images: state.content.life_update_images || []
                 };
             }
-            if (content.instagram) {
-                state.content.instagram_caption = String(content.instagram.caption || '');
+            if (content.instagram || instagram_caption !== undefined || instagram_grid !== undefined) {
+                state.content.instagram_caption = String(instagram_caption !== undefined ? instagram_caption : (content.instagram && content.instagram.caption) || state.content.instagram_caption || '');
                 state.content.instagram_grid = (instagram_grid && instagram_grid.length > 0) ? instagram_grid : (state.content.instagram_grid || []);
-                // Sync legacy objects for buildTemplateParams
+                // Ensure individual insta_img_x are also updated for direct access if needed
+                for (let i = 0; i < 4; i++) {
+                    state.content[`insta_img_${i + 1}`] = state.content.instagram_grid[i] || '';
+                }
                 state.content.instagram = {
                     caption: state.content.instagram_caption,
                     images: state.content.instagram_grid,
@@ -739,11 +751,11 @@ async function updateSections(req, res) {
             }
         }
         
-        // 3. Update Arrays with safety stripping of base64 data: URLs (Brevo doesn't support them)
+        // 3. Update Arrays with safety stripping of base64 data: URLs (Brevo doesn\'t support them)
         if (events) {
             state.content.events = events.map(e => ({
                 ...e,
-                image: (e.image && e.image.startsWith('data:')) ? '' : e.image
+                image: (e.image && e.image.startsWith(\'data:\')) ? \'\' : e.image
             }));
         }
         if (media) {
@@ -753,32 +765,26 @@ async function updateSections(req, res) {
                 thumbnail: (m.thumbnail && m.thumbnail.startsWith('data:')) ? '' : m.thumbnail
             }));
         }
-        state.content.instagram_grid = (instagram_grid || state.content.instagram_grid || []).filter(url => url && !url.startsWith("data:"));
+
         state.content.life_update_images = (life_update_images || state.content.life_update_images || []).filter(url => url && !url.startsWith("data:"));
 
         // 4. Rebuild templateParams using the same logic as initial build
-        state.templateParams = buildTemplateParams(
-            state.consultant,
-            state.content,
-            state.content.media,
-            state.content.articles,
-            state.content.alist_candidate,
-            state.content.live_job,
-            state.sections,
-            state.content.instagram_grid,
-            state.content.instagram_caption
-        );
+            state.templateParams = buildTemplateParams(
+                state.consultant,
+                state.content,
+                state.content.media,
+                state.content.articles,
+                state.content.alist_candidate,
+                state.content.live_job,
+                state.sections,
+                state.content.instagram_grid,
+                state.content.instagram_caption
+            );
+
+
         
-        // Final sync for templateParams
-        state.templateParams.instagram_grid = state.content.instagram_grid;
-        state.templateParams.instagram_caption = state.content.instagram_caption;
-        state.templateParams.instagram = {
-            caption: state.content.instagram_caption,
-            images: state.content.instagram_grid,
-            grid: state.content.instagram_grid
-        };
-        state.templateParams.instagram_caption = state.content.instagram_caption;
-        state.templateParams.instagram_grid = state.content.instagram_grid;
+
+
 
         writeState(state);
         res.json({ success: true, state });
