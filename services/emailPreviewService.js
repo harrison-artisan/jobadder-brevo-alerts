@@ -1,7 +1,7 @@
-const fs = require("fs").promises;
-const path = require("path");
-const jobadderService = require("./jobadderService");
-const wordpressService = require("./wordpressService");
+const fs = require('fs').promises;
+const path = require('path');
+const jobadderService = require('./jobadderService');
+const wordpressService = require('./wordpressService');
 
 class EmailPreviewService {
     constructor() {
@@ -13,9 +13,9 @@ class EmailPreviewService {
      */
     async loadTemplate(templateName) {
         // Always read fresh from disk — no caching, so template updates deploy immediately
-        const templatePath = path.join(__dirname, "..", "templates", `${templateName}.html`);
+        const templatePath = path.join(__dirname, '..', 'templates', `${templateName}.html`);
         try {
-            const html = await fs.readFile(templatePath, "utf8");
+            const html = await fs.readFile(templatePath, 'utf8');
             return html;
         } catch (error) {
             console.error(`Failed to load template ${templateName}:`, error);
@@ -25,16 +25,16 @@ class EmailPreviewService {
 
     /**
      * Safely get nested property from object using dot notation
-     * Example: get({a: {b: {c: 5}}}, "a.b.c") returns 5
+     * Example: get({a: {b: {c: 5}}}, 'a.b.c') returns 5
      */
-    getNestedProperty(obj, path, defaultValue = "") {
+    getNestedProperty(obj, path, defaultValue = '') {
         if (!path || !obj) return defaultValue;
         
-        const keys = path.split(".");
+        const keys = path.split('.');
         let result = obj;
         
         for (const key of keys) {
-            if (result === null || result === undefined || typeof result !== "object") {
+            if (result === null || result === undefined || typeof result !== 'object') {
                 return defaultValue;
             }
             result = result[key];
@@ -57,7 +57,7 @@ class EmailPreviewService {
                 const array = this.getNestedProperty(data, arrayPath, []);
                 
                 if (!Array.isArray(array) || array.length === 0) {
-                    return ""; // Empty loop if no data
+                    return ''; // Empty loop if no data
                 }
                 
                 // Render the loop content for each item
@@ -78,14 +78,14 @@ class EmailPreviewService {
                     
                     // Recursively process the loop content
                     return this.replaceTemplateVariables(loopContent, loopData);
-                }).join("");
+                }).join('');
             }
         );
 
         // Step 2: Handle {% if %} conditionals — process iteratively to handle nested blocks
         // Use a loop to handle nested if/endif pairs correctly
         let ifIterations = 0;
-        while (result.includes("{%") && ifIterations < 20) {
+        while (result.includes('{%') && ifIterations < 20) {
             const before = result;
             result = result.replace(/\{%\s*if\s+([^%]+?)\s*%\}((?:(?!\{%\s*if\b)[\s\S])*?)(?:\{%\s*else\s*%\}((?:(?!\{%\s*if\b)[\s\S])*?))?\{%\s*endif\s*%\}/,
                 (match, condition, trueBlock, falseBlock) => {
@@ -102,13 +102,13 @@ class EmailPreviewService {
                         // Handle: loop.last
                         if (/loop\.last/.test(trimmed)) return data.loop && data.loop.last;
                         // Handle complex OR conditions
-                        if (trimmed.includes(" or ")) {
+                        if (trimmed.includes(' or ')) {
                             const parts = trimmed.split(/\s+or\s+/);
                             return parts.some(part => evalCondition(part));
                         }
 
                         // Handle complex AND conditions
-                        if (trimmed.includes(" and ")) {
+                        if (trimmed.includes(' and ')) {
                             const parts = trimmed.split(/\s+and\s+/);
                             return parts.every(part => evalCondition(part));
                         }
@@ -120,13 +120,13 @@ class EmailPreviewService {
                             return Array.isArray(arr) && arr.length > parseInt(lengthMatch[2], 10);
                         }
                         // Handle: string equality e.g. item.type == 'youtube' or item.type == "youtube"
-                        const strEqMatch = trimmed.match(/^([\w.]+)\s*==\s*["’]([^’"]+)["’]$/);
+                        const strEqMatch = trimmed.match(/^([\w.]+)\s*==\s*['"]([^'"]+)['"]$/);
                         if (strEqMatch) {
                             const val = this.getNestedProperty(data, strEqMatch[1], null);
                             return val === strEqMatch[2];
                         }
                         // Handle: string inequality e.g. item.type != 'youtube'
-                        const strNeqMatch = trimmed.match(/^([\w.]+)\s*!=\s*["’]([^’"]+)["’]$/);
+                        const strNeqMatch = trimmed.match(/^([\w.]+)\s*!=\s*['"]([^'"]+)['"]$/);
                         if (strNeqMatch) {
                             const val = this.getNestedProperty(data, strNeqMatch[1], null);
                             return val !== strNeqMatch[2];
@@ -139,7 +139,7 @@ class EmailPreviewService {
                         return false;
                     };
                     const conditionMet = evalCondition(condition);
-                    return conditionMet ? (trueBlock || "") : (falseBlock || "");
+                    return conditionMet ? (trueBlock || '') : (falseBlock || '');
                 }
             );
             if (result === before) break;
@@ -147,23 +147,18 @@ class EmailPreviewService {
         }
 
         // Step 3a: Handle {{ variable.path or "default" }} Nunjucks default value syntax
-        result = result.replace(/\{\{\s*([\w.]+)\s+or\s+["’]([^’"]*)["’]\s*\}\}/g, (match, varPath, defaultVal) => {
-            const value = this.getNestedProperty(data, varPath, "");
+        result = result.replace(/\{\{\s*([\w.]+)\s+or\s+['"]([^'"]*)['"]\s*\}\}/g, (match, varPath, defaultVal) => {
+            const value = this.getNestedProperty(data, varPath, '');
             return value || defaultVal;
         });
 
-        // Step 3b: Replace all {{ variable.path }} or {{ variable.path | nl2br }} with actual values
-        result = result.replace(/\{\{\s*([\w.]+)(?:\s*\|\s*nl2br)?\s*\}\}/g, (match, varPath) => {
-            const value = this.getNestedProperty(data, varPath, "");
+        // Step 3b: Replace all {{ variable.path }} with actual values
+        result = result.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (match, varPath) => {
+            const value = this.getNestedProperty(data, varPath, '');
             
             // Handle special cases for URLs - don't replace if it's a placeholder
-            if (varPath === "unsubscribe" && value === "") {
-                return "https://artisan.com.au/unsubscribe";
-            }
-            
-            // Apply nl2br if requested (excluding instagram_caption as it's pre-processed)
-            if (match.includes("| nl2br") && varPath !== "instagram_caption") {
-                return String(value).replace(/\n/g, "<br>");
+            if (varPath === 'unsubscribe' && value === '') {
+                return 'https://artisan.com.au/unsubscribe';
             }
             
             return value;
@@ -177,16 +172,16 @@ class EmailPreviewService {
      */
     async renderXposeNewsletter(state) {
         if (!state || !state.featuredArticle) {
-            throw new Error("No newsletter data available. Please generate first.");
+            throw new Error('No newsletter data available. Please generate first.');
         }
 
-        const template = await this.loadTemplate("brevo_template_161_xpose_newsletter");
+        const template = await this.loadTemplate('brevo_template_161_xpose_newsletter');
         
         const data = {
             contact: {
-                FIRSTNAME: "Preview",
-                LASTNAME: "User",
-                EMAIL: "preview@artisan.com.au"
+                FIRSTNAME: 'Preview',
+                LASTNAME: 'User',
+                EMAIL: 'preview@artisan.com.au'
             },
             params: {
                 featuredArticle: {
@@ -203,14 +198,14 @@ class EmailPreviewService {
                 })),
                 // Fix mapping to match brevo_template_161_xpose_newsletter.html expectations
                 jobs: (state.jobs || []).slice(0, 5).map(job => ({
-                    job_title: job.job_title || job.title || "Untitled Position",
-                    location: job.location || "Location TBD",
-                    job_type: job.job_type || job.workType || job.type || "",
-                    job_description: job.job_description || job.summary || job.description || "",
-                    apply_url: job.apply_url || job.link || job.url || "#"
+                    job_title: job.job_title || job.title || 'Untitled Position',
+                    location: job.location || 'Location TBD',
+                    job_type: job.job_type || job.workType || job.type || '',
+                    job_description: job.job_description || job.summary || job.description || '',
+                    apply_url: job.apply_url || job.link || job.url || '#'
                 }))
             },
-            unsubscribe: "https://artisan.com.au/unsubscribe"
+            unsubscribe: 'https://artisan.com.au/unsubscribe'
         };
 
         return this.replaceTemplateVariables(template, data);
@@ -222,16 +217,16 @@ class EmailPreviewService {
     async renderSingleArticle(articleId) {
         const article = await wordpressService.getArticleById(articleId);
         if (!article) {
-            throw new Error("Article not found");
+            throw new Error('Article not found');
         }
 
-        const template = await this.loadTemplate("brevo_template_162_single_article");
+        const template = await this.loadTemplate('brevo_template_162_single_article');
         
         const data = {
             contact: {
-                FIRSTNAME: "Preview",
-                LASTNAME: "User",
-                EMAIL: "preview@artisan.com.au"
+                FIRSTNAME: 'Preview',
+                LASTNAME: 'User',
+                EMAIL: 'preview@artisan.com.au'
             },
             params: {
                 article: {
@@ -241,7 +236,7 @@ class EmailPreviewService {
                     featuredImage: article.image || article.featuredImage
                 }
             },
-            unsubscribe: "https://artisan.com.au/unsubscribe"
+            unsubscribe: 'https://artisan.com.au/unsubscribe'
         };
 
         return this.replaceTemplateVariables(template, data);
@@ -252,26 +247,26 @@ class EmailPreviewService {
      */
     async renderSingleJob(job) {
         if (!job) {
-            throw new Error("Job not found");
+            throw new Error('Job not found');
         }
 
-        const template = await this.loadTemplate("brevo_template_job_alert");
+        const template = await this.loadTemplate('brevo_template_job_alert');
         
         const data = {
             contact: {
-                FIRSTNAME: "Preview",
-                LASTNAME: "User",
-                EMAIL: "preview@artisan.com.au"
+                FIRSTNAME: 'Preview',
+                LASTNAME: 'User',
+                EMAIL: 'preview@artisan.com.au'
             },
             params: {
                 // formatJobForEmail returns: job_title, location, job_type, job_description, apply_url, reference
-                job_title: job.job_title || job.title || "",
-                location: job.location || "",
-                job_type: job.job_type || job.workType || job.type || "",
-                job_description: job.job_description || job.summary || job.description || "",
-                apply_url: job.apply_url || job.link || job.url || "#"
+                job_title: job.job_title || job.title || '',
+                location: job.location || '',
+                job_type: job.job_type || job.workType || job.type || '',
+                job_description: job.job_description || job.summary || job.description || '',
+                apply_url: job.apply_url || job.link || job.url || '#'
             },
-            unsubscribe: "https://artisan.com.au/unsubscribe"
+            unsubscribe: 'https://artisan.com.au/unsubscribe'
         };
 
         return this.replaceTemplateVariables(template, data);
@@ -282,30 +277,30 @@ class EmailPreviewService {
      */
     async renderAlist(state) {
         if (!state || !state.candidates || state.candidates.length === 0) {
-            throw new Error("No A-List data available. Please generate first.");
+            throw new Error('No A-List data available. Please generate first.');
         }
 
-        const template = await this.loadTemplate("brevo_template_alist");
+        const template = await this.loadTemplate('brevo_template_alist');
         
         const data = {
             contact: {
-                FIRSTNAME: "Preview",
-                LASTNAME: "User",
-                EMAIL: "preview@artisan.com.au"
+                FIRSTNAME: 'Preview',
+                LASTNAME: 'User',
+                EMAIL: 'preview@artisan.com.au'
             },
             params: {
                 candidates: state.candidates.map((candidate, index) => ({
                     number: index + 1,
-                    name: candidate.name || candidate.firstName + " " + candidate.lastName,
+                    name: candidate.name || candidate.firstName + ' ' + candidate.lastName,
                     title: candidate.title || candidate.currentJobTitle,
                     location: candidate.location,
-                    summary: candidate.summary || candidate.bio || "",
-                    skills: candidate.skills ? candidate.skills.join(", ") : "",
-                    image_url: candidate.photo || "https://via.placeholder.com/100",
-                    profile_url: candidate.profileUrl || "#"
+                    summary: candidate.summary || candidate.bio || '',
+                    skills: candidate.skills ? candidate.skills.join(', ') : '',
+                    image_url: candidate.photo || 'https://via.placeholder.com/100',
+                    profile_url: candidate.profileUrl || '#'
                 }))
             },
-            unsubscribe: "https://artisan.com.au/unsubscribe"
+            unsubscribe: 'https://artisan.com.au/unsubscribe'
         };
 
         return this.replaceTemplateVariables(template, data);
@@ -313,3 +308,4 @@ class EmailPreviewService {
 }
 
 module.exports = new EmailPreviewService();
+
