@@ -240,6 +240,14 @@ async function parseJSON(req, res) {
         content: { ...parsed, articles, alist_candidate: alistCandidate, live_job: liveJob },
         templateParams
     };
+
+
+
+    console.log('DEBUG instagram_grid:', JSON.stringify(state.content.instagram_grid));
+    console.log('DEBUG instagram_caption:', state.content.instagram_caption);
+    console.log('DEBUG templateParams.instagram:', JSON.stringify(state.templateParams.instagram));
+
+    
     writeState(state);
     res.json({ success: true, state });
 }
