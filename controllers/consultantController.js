@@ -572,14 +572,17 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
         },
 
 
-        instagram: {
-            caption: instagram_caption_final,
-            grid: instagram_grid_final,
-            insta_img_1: instagram_grid_final[0] || "",
-            insta_img_2: instagram_grid_final[1] || "",
-            insta_img_3: instagram_grid_final[2] || "",
-            insta_img_4: instagram_grid_final[3] || ""
-        },
+      instagram: {
+    caption: instagram_caption_final,
+    grid: instagram_grid_final,
+    insta_img_1: instagram_grid_final[0] || "",
+    insta_img_2: instagram_grid_final[1] || "",
+    insta_img_3: instagram_grid_final[2] || "",
+    insta_img_4: instagram_grid_final[3] || ""
+},
+instagram_grid: instagram_grid_final,
+instagram_caption: instagram_caption_final,
+    
         job: {
             has_job: !!(job.title),
             title: job.title || '',
@@ -707,7 +710,7 @@ async function updateSections(req, res) {
                 industry_insight: !!sections.industry_insight,
                 life_update: !!sections.life_update,
                 media: !!sections.media,
-                instagram: !!sections.instagram || !!sections.instagram_grid,
+instagram: !!(sections.instagram === true || sections.instagram_grid),
                 events: !!sections.events,
                 alist: !!sections.alist,
                 job: !!sections.job,
