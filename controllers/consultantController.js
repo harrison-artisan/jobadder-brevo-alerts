@@ -728,8 +728,8 @@ async function updateSections(req, res) {
                 };
             }
             if (content.personal_update) {
-                state.content.life_update_heading = content.personal_update.title || content.personal_update.heading || 
-                state.content.life_update_body = content.personal_update.body || 
+                state.content.life_update_heading = content.personal_update.title || content.personal_update.heading || '';
+state.content.life_update_body = content.personal_update.body || '';
                 state.content.life_update = {
                     heading: state.content.life_update_heading,
                     body: state.content.life_update_body,
@@ -737,8 +737,10 @@ async function updateSections(req, res) {
                 };
             }
             if (content.instagram || instagram_caption !== undefined || instagram_grid !== undefined) {
-                state.content.instagram_caption = String(instagram_caption !== undefined ? instagram_caption : (content.instagram && content.instagram.caption) || state.content.instagram_caption || '');
-                state.content.instagram_grid = (instagram_grid && instagram_grid.length > 0) ? instagram_grid : (state.content.instagram_grid || []);
+const rawCaption = (instagram_caption !== undefined && instagram_caption !== true && instagram_caption !== false)
+    ? instagram_caption
+    : (content.instagram && content.instagram.caption) || state.content.instagram_caption || '';
+state.content.instagram_caption = String(rawCaption);                state.content.instagram_grid = (instagram_grid && instagram_grid.length > 0) ? instagram_grid : (state.content.instagram_grid || []);
                 // Ensure individual insta_img_x are also updated for direct access if needed
                 for (let i = 0; i < 4; i++) {
                     state.content[`insta_img_${i + 1}`] = state.content.instagram_grid[i] || '';
