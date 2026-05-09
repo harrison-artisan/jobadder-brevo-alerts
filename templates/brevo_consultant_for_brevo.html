@@ -50,10 +50,13 @@
         text-align: center !important;
         display: block !important;
         width: 100% !important;
-        padding: 28px 18px 10px 18px !important;
+        padding: 28px 18px 20px 18px !important;
+        box-sizing: border-box !important;
       }
-      .hero-photo-cell img { margin: 0 auto !important; }
-      .hero-photo-cell table { margin: 0 auto !important; }
+      .hero-photo-cell img { margin: 0 auto !important; display: block !important; }
+      .hero-photo-cell table { margin: 0 auto !important; float: none !important; }
+      .hero-linkedin-wrap { margin-top: 24px !important; margin-bottom: 8px !important; }
+      .photo-linkedin-spacer { height: 16px !important; line-height: 16px !important; font-size: 16px !important; }
       .mobile-book-btn { display: block !important; width: 100% !important; padding-top: 12px !important; }
       /* Book a meeting: stack icon+text, then button below */
       .cal-icon-cell { display: block !important; width: 100% !important; text-align: center !important; padding: 0 0 12px 0 !important; }
@@ -61,13 +64,28 @@
       .cal-text-cell { display: block !important; width: 100% !important; text-align: center !important; padding: 0 0 16px 0 !important; }
       .cal-btn-cell { display: block !important; width: 100% !important; text-align: center !important; padding: 0 !important; }
       .cal-btn-cell      .cal-btn-table { margin: 0 auto !important; }
-      .hero-content-cell table { margin: 0 auto !important; }
-      .hero-content-cell {
+
+      /* MOBILE FIX 1: Hero — force both cells to stack full-width and centre */
+      .hero-photo-cell, .hero-content-cell {
         display: block !important;
         width: 100% !important;
-        padding: 0 18px 28px 18px !important;
+        max-width: 100% !important;
+        float: none !important;
+        clear: both !important;
+        box-sizing: border-box !important;
       }
-      .hero-content-cell h1, .hero-content-cell p, .hero-content-cell a { text-align: center !important; }
+      .hero-content-cell {
+        padding: 0 18px 28px 18px !important;
+        text-align: center !important;
+      }
+      .hero-content-cell table { margin: 0 auto !important; }
+      .hero-content-cell h1,
+      .hero-content-cell p,
+      .hero-content-cell a { text-align: center !important; }
+      /* Also centre the contact detail rows */
+      .hero-contact-table { margin: 0 auto !important; }
+      .hero-contact-table td { text-align: center !important; }
+
       /* Two-column sections */
       .two-col-left, .two-col-right {
         display: block !important;
@@ -105,12 +123,23 @@
       .event-date-cell { padding: 14px 0 14px 14px !important; }
       .event-content-cell { padding: 14px 14px !important; }
 
+      /* MOBILE FIX 3: What's On — left-align event text on mobile */
+      .event-text-cell { text-align: left !important; padding-left: 20px !important; }
+      .event-text-cell h3,
+      .event-text-cell p,
+      .event-text-cell a { text-align: left !important; }
+
       /* Footer phones */
       .footer-phones td { font-size: 10px !important; padding: 0 5px !important; }
 
       /* Hide desktop-only spacers */
       .desktop-only { display: none !important; }
       .mobile-hide-book-meeting { display: none !important; }
+
+      /* MOBILE FIX 2: LinkedIn button — keep logo and text on one line */
+      .linkedin-btn { white-space: nowrap !important; display: inline-block !important; }
+      .linkedin-btn img { display: inline-block !important; vertical-align: middle !important; }
+      .linkedin-btn span { display: inline !important; vertical-align: middle !important; }
     }
   </style>
 </head>
@@ -134,7 +163,7 @@
                 <tr>
                   <!-- Left: Logo + tagline + newsletter name -->
                   <td width="55%" valign="middle" class="header-left">
-                    <a href="https://artisan.com.au/" style="text-decoration:none;display:block;margin-bottom:12px;" class="header-logo-link">
+                    <a href="https://artisan.com.au/?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="text-decoration:none;display:block;margin-bottom:12px;" class="header-logo-link">
                       <img src="https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png" alt="Artisan" width="56" height="56" style="display:block;border:0;" class="header-logo-img">
                     </a>
                     <p style="margin:0 0 14px 0;font-size:12px;color:rgba(255,255,255,0.5);font-weight:600;letter-spacing:0.3px;line-height:1.5;">Creative, Digital and Marketing Recruitment</p>
@@ -176,22 +205,26 @@
                   <!-- Photo -->
                   <td width="160" valign="middle" align="center" style="padding:22px 0 22px 36px;" class="hero-photo-cell mobile-center">
                     <img src="{{ params.consultant.photo }}" alt="{{ params.consultant.name }}" width="120" height="120" style="display:block;border:0;border-radius:50%;width:120px;height:120px;object-fit:cover;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
-                    <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" style="margin-top:14px;">
+                    <!-- Spacer between photo and LinkedIn button: 4px desktop, 16px mobile via CSS -->
+                    <div class="photo-linkedin-spacer" style="height:4px;line-height:4px;font-size:4px;">&nbsp;</div>
+                    <!-- MOBILE FIX 2: LinkedIn button — logo and text kept on one line with white-space:nowrap -->
+                    <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" class="hero-linkedin-wrap" style="margin-top:14px;">
                       <tr>
                         <td>
-                          <a href="{{ params.consultant.linkedin }}" style="display:inline-block;background-color:#0077b5;color:#ffffff;padding:9px 20px;border-radius:20px;text-decoration:none;font-weight:700;font-size:11px;letter-spacing:0.5px;line-height:1;min-width:110px;text-align:center;">
+                          <a href="{{ params.consultant.linkedin }}" class="linkedin-btn" style="display:inline-block;background-color:#0077b5;color:#ffffff;padding:9px 20px;border-radius:20px;text-decoration:none;font-weight:700;font-size:11px;letter-spacing:0.5px;line-height:1;min-width:110px;text-align:center;white-space:nowrap;">
                             <img src="https://upload.wikimedia.org/wikipedia/commons/c/ca/LinkedIn_logo_initials.png" alt="in" width="14" height="14" style="display:inline-block;border:0;vertical-align:middle;margin-right:7px;border-radius:2px;">
-                            <span style="vertical-align:middle;">LINKEDIN</span>
+                            <span style="vertical-align:middle;white-space:nowrap;">LINKEDIN</span>
                           </a>
                         </td>
                       </tr>
                     </table>
                   </td>
                   <!-- Details -->
+                  <!-- MOBILE FIX 1: Added hero-content-cell class for mobile centering via CSS -->
                   <td valign="middle" style="padding:22px 36px 22px 24px;" class="hero-content-cell mobile-center">
                     <h1 style="margin:0 0 6px 0;font-size:24px;font-weight:900;color:#1b334d;line-height:1.2;">{{ params.consultant.name }}</h1>
                     <p style="margin:0 0 18px 0;font-size:13px;font-weight:600;color:#bd203d;letter-spacing:0.3px;">{{ params.consultant.title }}</p>
-                    <table cellpadding="0" cellspacing="0" border="0" role="presentation">
+                    <table cellpadding="0" cellspacing="0" border="0" role="presentation" class="hero-contact-table">
                       <tr>
                         <td style="padding-bottom:8px;">
                           <a href="mailto:{{ params.consultant.email }}" style="text-decoration:none;color:#1b334d;font-size:13px;">&#9993; {{ params.consultant.email }}</a>
@@ -615,7 +648,7 @@
                       <tr>
                         <td height="200" style="padding:20px 22px;text-align:center;vertical-align:middle;height:200px;">
                           <p style="margin:0 0 16px 0;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.6;">Looking for your next creative role?</p>
-                          <a href="https://clientapps.jobadder.com/67514/artisan?utm_source=brevo&utm_campaign=CONSULTANT&utm_medium=email" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:10px 20px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;">VIEW ALL JOBS &#8594;</a>
+                          <a href="https://clientapps.jobadder.com/67514/artisan?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:10px 20px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;">VIEW ALL JOBS &#8594;</a>
                         </td>
                       </tr>
                     </table>
@@ -639,7 +672,7 @@
                       <tr>
                         <td height="200" style="padding:20px 22px;text-align:center;vertical-align:middle;height:200px;">
                           <p style="margin:0 0 16px 0;font-size:13px;color:#666666;line-height:1.6;">Know someone who'd be perfect for a role?</p>
-                          <a href="https://artisan.com.au/refer-a-friend/?utm_source=brevo&utm_campaign=CONSULTANT&utm_medium=email" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:10px 20px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;">REFER A FRIEND &#8594;</a>
+                          <a href="https://artisan.com.au/refer-a-friend/?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:10px 20px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;">REFER A FRIEND &#8594;</a>
                         </td>
                       </tr>
                     </table>
@@ -651,7 +684,7 @@
               <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" style="margin-top:20px;">
                 <tr>
                   <td>
-                    <a href="https://clientapps.jobadder.com/67514/artisan?utm_source=brevo&utm_campaign=CONSULTANT&utm_medium=email" style="display:inline-block;background-color:#ffffff;color:#1b334d;border:2px solid #1b334d;padding:10px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 3px 10px rgba(27,51,77,0.1);">VIEW ALL OUR JOBS &#8594;</a>
+                    <a href="https://clientapps.jobadder.com/67514/artisan?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="display:inline-block;background-color:#ffffff;color:#1b334d;border:2px solid #1b334d;padding:10px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 3px 10px rgba(27,51,77,0.1);">VIEW ALL OUR JOBS &#8594;</a>
                   </td>
                 </tr>
               </table>
@@ -668,6 +701,7 @@
               {% for event in params.events %}
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;border:1px solid #e8e8e8;border-radius:12px;margin-bottom:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
                 <tr>
+                  <!-- DESKTOP FIX 1: Added vertical padding to date cell so border doesn't touch content -->
                   <td width="72" valign="middle" align="center" style="padding:20px 0 20px 20px;" class="event-date-cell">
                     <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);border-radius:10px;width:56px;text-align:center;">
                       {% if event.day %}
@@ -678,9 +712,10 @@
                       {% endif %}
                     </table>
                   </td>
-                        <td valign="middle" style="padding-left:20px;" class="cal-text-cell mobile-center">
-                    <h3 style="margin:0 0 4px 0;font-size:16px;font-weight:900;color:#1b334d;line-height:1.3;">{{ event.title }}</h3>
-                    <p style="margin:0 0 10px 0;font-size:13px;line-height:1.6;color:#666666;">{{ event.description }}</p>
+                  <!-- MOBILE FIX 3 + DESKTOP FIX 1: Added event-text-cell class for mobile right-align; added padding top/bottom for desktop -->
+                  <td valign="middle" style="padding:20px 20px 20px 20px;text-align:left;" class="event-text-cell">
+                    <h3 style="margin:0 0 4px 0;font-size:16px;font-weight:900;color:#1b334d;line-height:1.3;text-align:left;">{{ event.title }}</h3>
+                    <p style="margin:0 0 10px 0;font-size:13px;line-height:1.6;color:#666666;text-align:left;">{{ event.description }}</p>
                     {% if event.link %}
                     <a href="{{ event.link }}" style="display:inline-block;background:linear-gradient(135deg,#1b334d 0%,#0f1f30 100%);color:#ffffff;padding:7px 16px;border-radius:8px;text-decoration:none;font-weight:700;font-size:11px;letter-spacing:0.5px;">FIND OUT MORE &#8594;</a>
                     {% endif %}
@@ -704,13 +739,13 @@
                 <tr>
                   {% for article in params.articles %}
                   <td width="33%" valign="top" style="padding:0 6px;" class="article-col">
-                    <a href="{{ article.link }}?utm_source=brevo&utm_campaign=CONSULTANT&utm_medium=email" style="text-decoration:none;display:block;">
+                    <a href="{{ article.link }}?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="text-decoration:none;display:block;">
                       <img src="{{ article.image }}" alt="{{ article.title }}" style="display:block;width:100%;height:150px;border-radius:8px;border:1px solid #e0e0e0;object-fit:cover;">
                     </a>
                     <p style="margin:8px 0 3px 0;font-size:11px;font-weight:700;color:#1b334d;line-height:1.4;text-align:center;">
-                      <a href="{{ article.link }}?utm_source=brevo&utm_campaign=CONSULTANT&utm_medium=email" style="color:#1b334d;text-decoration:none;">{{ article.title }}</a>
+                      <a href="{{ article.link }}?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="color:#1b334d;text-decoration:none;">{{ article.title }}</a>
                     </p>
-                    <p style="margin:0;text-align:center;"><a href="{{ article.link }}?utm_source=brevo&utm_campaign=CONSULTANT&utm_medium=email" style="font-size:10px;color:#bd203d;font-weight:700;text-decoration:none;">READ &#8594;</a></p>
+                    <p style="margin:0;text-align:center;"><a href="{{ article.link }}?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="font-size:10px;color:#bd203d;font-weight:700;text-decoration:none;">READ &#8594;</a></p>
                   </td>
                   {% endfor %}
                 </tr>
@@ -718,7 +753,7 @@
               <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" style="margin-top:24px;">
                 <tr>
                   <td>
-                    <a href="https://artisan.com.au/creative-community/?utm_source=brevo&utm_campaign=CONSULTANT&utm_medium=email" style="display:inline-block;background-color:#ffffff;color:#1b334d;border:2px solid #1b334d;padding:10px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 3px 10px rgba(27,51,77,0.1);">VISIT THE CREATIVE COMMUNITY &#8594;</a>
+                    <a href="https://artisan.com.au/creative-community/?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="display:inline-block;background-color:#ffffff;color:#1b334d;border:2px solid #1b334d;padding:10px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 3px 10px rgba(27,51,77,0.1);">VISIT THE CREATIVE COMMUNITY &#8594;</a>
                   </td>
                 </tr>
               </table>
@@ -781,10 +816,10 @@
                     <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" class="cta-btn-row">
                       <tr>
                         <td style="padding:0 10px;">
-                          <a href="https://artisan.com.au/looking-for-talent/?utm_source=brevo&utm_campaign=CONSULTANT&utm_medium=email" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:13px 22px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;letter-spacing:0.5px;box-shadow:0 4px 14px rgba(189,32,61,0.4);white-space:nowrap;">I'M LOOKING FOR TALENT &#8594;</a>
+                          <a href="https://artisan.com.au/looking-for-talent/?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:13px 22px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;letter-spacing:0.5px;box-shadow:0 4px 14px rgba(189,32,61,0.4);white-space:nowrap;">I'M LOOKING FOR TALENT &#8594;</a>
                         </td>
                         <td style="padding:0 10px;">
-                          <a href="https://clientapps.jobadder.com/67514/artisan?utm_source=brevo&utm_campaign=CONSULTANT&utm_medium=email" style="display:inline-block;background-color:transparent;color:#ffffff;border:2px solid rgba(255,255,255,0.4);padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;letter-spacing:0.5px;white-space:nowrap;">I'M LOOKING FOR WORK &#8594;</a>
+                          <a href="https://clientapps.jobadder.com/67514/artisan?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="display:inline-block;background-color:transparent;color:#ffffff;border:2px solid rgba(255,255,255,0.4);padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;letter-spacing:0.5px;white-space:nowrap;">I'M LOOKING FOR WORK &#8594;</a>
                         </td>
                       </tr>
                     </table>
@@ -804,7 +839,7 @@
                   <td align="center" style="padding-bottom:18px;">
                     <h3 style="margin:0 0 4px 0;font-size:17px;font-weight:900;color:#1b334d;letter-spacing:0.5px;">ARTISAN</h3>
                     <p style="margin:0;font-size:13px;color:#999999;">
-                      <a href="https://artisan.com.au?utm_source=brevo&utm_campaign=CONSULTANT&utm_medium=email" style="color:#bd203d;text-decoration:none;font-weight:600;">www.artisan.com.au</a>
+                      <a href="https://artisan.com.au?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="color:#bd203d;text-decoration:none;font-weight:600;">www.artisan.com.au</a>
                     </p>
                   </td>
                 </tr>
@@ -823,10 +858,10 @@
                   <td align="center" style="padding-bottom:18px;">
                     <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
                       <tr>
-                        <td style="padding:0 8px;"><a href="https://artisan.com.au/about/?utm_source=brevo&utm_campaign=CONSULTANT&utm_medium=email" style="font-size:11px;color:#888888;text-decoration:none;">About</a></td>
-                        <td style="padding:0 8px;"><a href="https://artisan.com.au/creative-community/?utm_source=brevo&utm_campaign=CONSULTANT&utm_medium=email" style="font-size:11px;color:#888888;text-decoration:none;">Creative Community</a></td>
-                        <td style="padding:0 8px;"><a href="https://artisan.com.au/contact/?utm_source=brevo&utm_campaign=CONSULTANT&utm_medium=email" style="font-size:11px;color:#888888;text-decoration:none;">Contact</a></td>
-                        <td style="padding:0 8px;"><a href="https://clientapps.jobadder.com/67514/artisan?utm_source=brevo&utm_campaign=CONSULTANT&utm_medium=email" style="font-size:11px;color:#888888;text-decoration:none;">Jobs</a></td>
+                        <td style="padding:0 8px;"><a href="https://artisan.com.au/about/?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="font-size:11px;color:#888888;text-decoration:none;">About</a></td>
+                        <td style="padding:0 8px;"><a href="https://artisan.com.au/creative-community/?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="font-size:11px;color:#888888;text-decoration:none;">Creative Community</a></td>
+                        <td style="padding:0 8px;"><a href="https://artisan.com.au/contact/?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="font-size:11px;color:#888888;text-decoration:none;">Contact</a></td>
+                        <td style="padding:0 8px;"><a href="https://clientapps.jobadder.com/67514/artisan?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="font-size:11px;color:#888888;text-decoration:none;">Jobs</a></td>
                       </tr>
                     </table>
                   </td>
