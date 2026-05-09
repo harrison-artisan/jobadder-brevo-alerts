@@ -754,19 +754,19 @@ state.content.instagram_caption = String(rawCaption);                state.conte
         }
         
         // 3. Update Arrays with safety stripping of base64 data: URLs (Brevo doesn\'t support them)
-        if (events) {
-            state.content.events = events.map(e => ({
-                ...e,
-                image: (e.image && e.image.startsWith(\'data:\')) ? \'\' : e.image
-            }));
-        }
-        if (media) {
-            state.content.media = media.map(m => ({
-                ...m,
-                url: (m.url && m.url.startsWith('data:')) ? '' : m.url,
-                thumbnail: (m.thumbnail && m.thumbnail.startsWith('data:')) ? '' : m.thumbnail
-            }));
-        }
+  if (events) {
+    state.content.events = events.map(e => ({
+        ...e,
+        image: (e.image && e.image.startsWith('data:')) ? '' : e.image
+    }));
+}
+if (media) {
+    state.content.media = media.map(m => ({
+        ...m,
+        url: (m.url && m.url.startsWith('data:')) ? '' : m.url,
+        thumbnail: (m.thumbnail && m.thumbnail.startsWith('data:')) ? '' : m.thumbnail
+    }));
+}
 
         state.content.life_update_images = (life_update_images || state.content.life_update_images || []).filter(url => url && !url.startsWith("data:"));
 
