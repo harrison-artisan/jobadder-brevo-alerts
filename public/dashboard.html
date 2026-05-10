@@ -2018,6 +2018,16 @@
             </div>
         </div>
         </div>
+
+                <!-- Content Marketing Tab -->
+        <div id="content-marketing-content" class="tab-content">
+            <div id="contentMarketingApp" style="padding: 0;">
+                <!-- ... paste the 1,000 lines of Content Marketing HTML here ... -->
+            </div>
+        </div>
+
+
+        
         <!-- Schedule Tab -->
         <div id="schedule-content" class="tab-content">
             <div class="actions-card">
@@ -2070,54 +2080,42 @@
         // Switch between main category tabs
         let emailContentBackup = null;
         
-        function switchMainTab(mainTabName) {
-            const emailTabs = document.getElementById('emailTabs');
-            const mainContent = document.querySelector('.main-content');
-            const mainTabButtons = document.querySelectorAll('#mainTabs .tab');
-            
-            // Update active state
-            mainTabButtons.forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.classList.contains(mainTabName)) {
-                    btn.classList.add('active');
-                }
-            });
-            
-            if (mainTabName === 'email-marketing') {
-                // Show email type tabs and restore content
-                emailTabs.style.display = 'flex';
-                
-                if (emailContentBackup) {
-                    mainContent.innerHTML = emailContentBackup;
-                    emailContentBackup = null;
-                }
-            } else if (mainTabName === 'content-marketing') {
-                // Save current email content before hiding
-                if (emailTabs.style.display !== 'none') {
-                    emailContentBackup = mainContent.innerHTML;
-                }
-                // Hide email type tabs
-                emailTabs.style.display = 'none';
+  function switchMainTab(mainTabName) {
+    const emailTabs = document.getElementById('emailTabs');
+    const mainTabButtons = document.querySelectorAll('#mainTabs .tab');
+    
+    // Update active button state
+    mainTabButtons.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.classList.contains(mainTabName)) btn.classList.add('active');
+    });
+    
+    // Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.style.display = 'none';
+        content.classList.remove('active');
+    });
 
-                // Hide all main tab content divs
-                document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
-                // Show the content-marketing tab content
-                document.getElementById('content-marketing').style.display = 'block';
-            } else if (mainTabName === 'schedule') {
-                // Save current email content before hiding
-                if (emailTabs.style.display !== 'none') {
-                    emailContentBackup = mainContent.innerHTML;
-                }
-                // Hide email type tabs
-                emailTabs.style.display = 'none';
+    if (mainTabName === 'email-marketing') {
+        emailTabs.style.display = 'flex';
+        // Show the default email sub-tab
+        document.getElementById('job-alerts-content').style.display = 'block';
+        document.getElementById('job-alerts-content').classList.add('active');
+    } else {
+        emailTabs.style.display = 'none';
+        // Show the selected main tab (content-marketing-content or schedule-content)
+        const targetId = mainTabName + '-content';
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+            targetEl.style.display = 'block';
+            targetEl.classList.add('active');
+        }
+        if (mainTabName === 'schedule') renderCalendar();
+    }
+}
 
-                // Hide all main tab content divs
-                document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
-                // Show the schedule tab content
-                document.getElementById('schedule').style.display = 'block';
-                renderCalendar(); // Render the calendar when the schedule tab is active
-                mainContent.innerHTML = `
-                <div id="contentMarketingApp" style="padding: 0;">
+            
+         
 
                     <!-- ===== CM Sub-Tab Bar ===== -->
                     <div class="tabs" id="cmSubTabs">
