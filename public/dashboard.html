@@ -190,6 +190,26 @@
             background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
             box-shadow: 0 4px 15px rgba(41, 128, 185, 0.4);
         }
+
+        .tab.email-marketing { flex: 0 0 40%; max-width: 40%; }
+        .tab.content-marketing { flex: 0 0 40%; max-width: 40%; }
+        .tab.schedule { flex: 0 0 20%; max-width: 20%; }
+
+        .tab.schedule.active {
+            background: linear-gradient(135deg, #87CEEB 0%, #ADD8E6 100%); /* Light blue gradient */
+            box-shadow: 0 4px 15px rgba(135, 206, 235, 0.4);
+            color: #1b334d; /* Darker text for contrast */
+        }
+
+        .tab.email-marketing { flex: 0 0 40%; max-width: 40%; }
+        .tab.content-marketing { flex: 0 0 40%; max-width: 40%; }
+        .tab.schedule { flex: 0 0 20%; max-width: 20%; }
+
+        .tab.schedule.active {
+            background: linear-gradient(135deg, #87CEEB 0%, #ADD8E6 100%); /* Light blue gradient */
+            box-shadow: 0 4px 15px rgba(135, 206, 235, 0.4);
+            color: #1b334d; /* Darker text for contrast */
+        }
         
         /* Tab Content */
         .tab-content {
@@ -1221,26 +1241,27 @@
         
         <!-- Main Category Tabs -->
         <div class="tabs" id="mainTabs">
-            <button class="tab active" onclick="switchMainTab('email-marketing', event)">
+            <button class="tab active" onclick="switchMainTab('email-marketing')">
                 Email Marketing
-            </button>
-            <button class="tab" onclick="switchMainTab('content-marketing', event)">
+            </button>            <button class="tab" onclick="switchMainTab(\'content-marketing\')">
                 Content Marketing
             </button>
-        </div>
+            <button class="tab schedule" onclick="switchMainTab(\'schedule\')">
+                Schedule
+            </button>        </div>
         
         <!-- Email Type Tabs (shown when Email Marketing is active) -->
         <div class="tabs" id="emailTabs">
-            <button class="tab active" onclick="switchTab('job-alerts', event)">
+            <button class="tab active" onclick="switchTab('job-alerts')">
                 Job Alerts
             </button>
-            <button class="tab alist" onclick="switchTab('alist', event)">
+            <button class="tab alist" onclick="switchTab('alist')">
                 A-List
             </button>
-            <button class="tab xpose" onclick="switchTab('xpose', event)">
+            <button class="tab xpose" onclick="switchTab('xpose')">
                 Xpose
             </button>
-            <button class="tab consultant" onclick="switchTab('consultant', event)">
+            <button class="tab consultant" onclick="switchTab('consultant')">
                 Consultant Newsletters
             </button>
         </div>
@@ -1551,6 +1572,7 @@
         
         <!-- Xpose Tab -->
         <div id="xpose-content" class="tab-content">
+
             <!-- Message Area -->
             <div class="message" id="xposeMessage"></div>
             
@@ -1907,152 +1929,12 @@
 
                 <div class="btn-group" style="display: flex; gap: 12px; margin-top: 12px;">
                     <button class="btn btn-secondary" onclick="uploadConsultantCsv()" id="btnParseConsultant" disabled>
-                        Build &amp; Edit
+                        Build &amp; Preview
                     </button>
                     <button class="btn" style="background: rgba(231,76,60,0.3); color: white;" onclick="resetConsultantState()" id="btnResetConsultant">
                         Reset
                     </button>
                 </div>
-
-                <div id="consultantEditSectionsPanel" style="display:none; margin-top:20px; padding:20px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:10px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                        <h3 style="margin:0; color:white; font-size:16px; font-weight:700;">Edit & Customize Newsletter</h3>
-                    </div>
-                    
-                    <!-- INDUSTRY INSIGHT SECTION -->
-                    <div style="margin-bottom:24px; padding:16px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:8px;">
-                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:rgba(255,255,255,0.9); font-size:13px; font-weight:600; margin-bottom:12px;">
-                            <input type="checkbox" id="toggleIndustryInsight" checked style="cursor:pointer; width:18px; height:18px;">
-                            <span>Industry Insight</span>
-                        </label>
-                        <div style="margin-bottom:10px;">
-                            <label style="display:block; color:rgba(255,255,255,0.5); font-size:11px; margin-bottom:4px; text-transform:uppercase;">Heading</label>
-                            <input type="text" id="editIndustryInsightHeading" style="width:100%; padding:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:13px; box-sizing:border-box;">
-                        </div>
-                        <div>
-                            <label style="display:block; color:rgba(255,255,255,0.5); font-size:11px; margin-bottom:4px; text-transform:uppercase;">Content</label>
-                            <textarea id="editIndustryInsightBody" rows="3" style="width:100%; padding:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:13px; box-sizing:border-box; resize:vertical;"></textarea>
-                        </div>
-                    </div>
-
-                    <!-- PERSONAL UPDATE SECTION -->
-                    <div style="margin-bottom:24px; padding:16px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:8px;">
-                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:rgba(255,255,255,0.9); font-size:13px; font-weight:600; margin-bottom:12px;">
-                            <input type="checkbox" id="toggleLifeUpdate" checked style="cursor:pointer; width:18px; height:18px;">
-                            <span>Personal Update</span>
-                        </label>
-                        <div style="margin-bottom:10px;">
-                            <label style="display:block; color:rgba(255,255,255,0.5); font-size:11px; margin-bottom:4px; text-transform:uppercase;">Heading</label>
-                            <input type="text" id="editLifeUpdateHeading" style="width:100%; padding:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:13px; box-sizing:border-box;">
-                        </div>
-                        <div style="margin-bottom:10px;">
-                            <label style="display:block; color:rgba(255,255,255,0.5); font-size:11px; margin-bottom:4px; text-transform:uppercase;">Content</label>
-                            <textarea id="editLifeUpdateBody" rows="3" style="width:100%; padding:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:13px; box-sizing:border-box; resize:vertical;"></textarea>
-                        </div>
-                        <div>
-                            <label style="display:block; color:rgba(255,255,255,0.5); font-size:11px; margin-bottom:8px; text-transform:uppercase;">Add Photos (Optional)</label>
-                            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px;">
-                                <div style="text-align:center;">
-                                    <input type="file" id="lifeUpdateImage1" accept="image/*" style="display:none;" onchange="previewLifeUpdateImage(1)">
-                                    <div id="lifeUpdatePreview1" onclick="document.getElementById('lifeUpdateImage1').click();" style="width:100%; aspect-ratio:1; max-width:80px; margin:0 auto; background:rgba(255,255,255,0.08); border:2px dashed rgba(255,255,255,0.2); border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:20px; color:rgba(255,255,255,0.3);">+</div>
-                                </div>
-                                <div style="text-align:center;">
-                                    <input type="file" id="lifeUpdateImage2" accept="image/*" style="display:none;" onchange="previewLifeUpdateImage(2)">
-                                    <div id="lifeUpdatePreview2" onclick="document.getElementById('lifeUpdateImage2').click();" style="width:100%; aspect-ratio:1; max-width:80px; margin:0 auto; background:rgba(255,255,255,0.08); border:2px dashed rgba(255,255,255,0.2); border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:20px; color:rgba(255,255,255,0.3);">+</div>
-                                </div>
-                                <div style="text-align:center;">
-                                    <input type="file" id="lifeUpdateImage3" accept="image/*" style="display:none;" onchange="previewLifeUpdateImage(3)">
-                                    <div id="lifeUpdatePreview3" onclick="document.getElementById('lifeUpdateImage3').click();" style="width:100%; aspect-ratio:1; max-width:80px; margin:0 auto; background:rgba(255,255,255,0.08); border:2px dashed rgba(255,255,255,0.2); border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:20px; color:rgba(255,255,255,0.3);">+</div>
-                                </div>
-                            </div>
-                            <label style="display:block; color:rgba(255,255,255,0.5); font-size:11px; margin-bottom:4px; text-transform:uppercase;">Or Paste Image URLs</label>
-                            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
-                                <input type="text" id="lifeUpdateUrl1" placeholder="Image URL 1" style="width:100%; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:12px; box-sizing:border-box;">
-                                <input type="text" id="lifeUpdateUrl2" placeholder="Image URL 2" style="width:100%; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:12px; box-sizing:border-box;">
-                                <input type="text" id="lifeUpdateUrl3" placeholder="Image URL 3" style="width:100%; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:12px; box-sizing:border-box;">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- INSTAGRAM SECTION -->
-                    <div style="margin-bottom:24px; padding:16px; background:rgba(189,32,61,0.1); border:1px solid rgba(189,32,61,0.3); border-radius:8px;">
-                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:rgba(255,255,255,0.9); font-size:13px; font-weight:600; margin-bottom:12px;">
-                            <input type="checkbox" id="toggleInstagram" style="cursor:pointer; width:18px; height:18px;">
-                            <span>Instagram Grid</span>
-                        </label>
-                        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; margin-bottom:12px;">
-                            <div style="text-align:center;">
-                                <input type="file" id="igImage1" accept="image/*" style="display:none;" onchange="previewInstagramImage(1)">
-                                <div id="igPreview1" onclick="document.getElementById('igImage1').click();" style="width:100%; aspect-ratio:1; max-width:60px; margin:0 auto; background:rgba(255,255,255,0.08); border:2px dashed rgba(255,255,255,0.2); border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:18px; color:rgba(255,255,255,0.3);">+</div>
-                            </div>
-                            <div style="text-align:center;">
-                                <input type="file" id="igImage2" accept="image/*" style="display:none;" onchange="previewInstagramImage(2)">
-                                <div id="igPreview2" onclick="document.getElementById('igImage2').click();" style="width:100%; aspect-ratio:1; max-width:60px; margin:0 auto; background:rgba(255,255,255,0.08); border:2px dashed rgba(255,255,255,0.2); border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:18px; color:rgba(255,255,255,0.3);">+</div>
-                            </div>
-                            <div style="text-align:center;">
-                                <input type="file" id="igImage3" accept="image/*" style="display:none;" onchange="previewInstagramImage(3)">
-                                <div id="igPreview3" onclick="document.getElementById('igImage3').click();" style="width:100%; aspect-ratio:1; max-width:60px; margin:0 auto; background:rgba(255,255,255,0.08); border:2px dashed rgba(255,255,255,0.2); border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:18px; color:rgba(255,255,255,0.3);">+</div>
-                            </div>
-                            <div style="text-align:center;">
-                                <input type="file" id="igImage4" accept="image/*" style="display:none;" onchange="previewInstagramImage(4)">
-                                <div id="igPreview4" onclick="document.getElementById('igImage4').click();" style="width:100%; aspect-ratio:1; max-width:60px; margin:0 auto; background:rgba(255,255,255,0.08); border:2px dashed rgba(255,255,255,0.2); border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:18px; color:rgba(255,255,255,0.3);">+</div>
-                            </div>
-                        </div>
-                        <label style="display:block; color:rgba(255,255,255,0.5); font-size:11px; margin-bottom:4px; text-transform:uppercase;">Or Paste Image URLs</label>
-                        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; margin-bottom:12px;">
-                            <input type="text" id="igUrl1" placeholder="Image URL 1" style="width:100%; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:12px; box-sizing:border-box;">
-                            <input type="text" id="igUrl2" placeholder="Image URL 2" style="width:100%; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:12px; box-sizing:border-box;">
-                            <input type="text" id="igUrl3" placeholder="Image URL 3" style="width:100%; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:12px; box-sizing:border-box;">
-                            <input type="text" id="igUrl4" placeholder="Image URL 4" style="width:100%; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:12px; box-sizing:border-box;">
-                        </div>
-                        <div>
-                            <label style="display:block; color:rgba(255,255,255,0.5); font-size:11px; margin-bottom:4px; text-transform:uppercase;">Caption (All 4 Images)</label>
-                            <textarea id="igCaption" rows="6" placeholder="Add a caption for the Instagram grid (supports line breaks)" style="width:100%; padding:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:13px; box-sizing:border-box;"></textarea>
-                        </div>
-                    </div>
-
-                    <!-- ARTICLES SECTION (Non-editable) -->
-                    <div style="margin-bottom:24px; padding:16px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:8px;">
-                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:rgba(255,255,255,0.9); font-size:13px; font-weight:600; margin-bottom:12px;">
-                            <input type="checkbox" id="toggleArticles" checked style="cursor:pointer; width:18px; height:18px;">
-                            <span>Articles</span>
-                        </label>
-                        <div id="articlesEditContainer" style="color:rgba(255,255,255,0.6); font-size:12px;">Articles will be auto-populated from WordPress</div>
-                    </div>
-
-                    <!-- EVENTS SECTION -->
-                    <div style="margin-bottom:24px; padding:16px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:8px;">
-                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:rgba(255,255,255,0.9); font-size:13px; font-weight:600; margin-bottom:12px;">
-                            <input type="checkbox" id="toggleEvents" checked style="cursor:pointer; width:18px; height:18px;">
-                            <span>Events</span>
-                        </label>
-                        <div id="eventsEditContainer" style="display:grid; gap:10px;"></div>
-                    </div>
-
-                      <!-- MEDIA SECTION (WORTH READING) -->
-                    <div style="margin-bottom:24px; padding:16px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:8px;">
-                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:rgba(255,255,255,0.9); font-size:13px; font-weight:600; margin-bottom:12px;">
-                            <input type="checkbox" id="toggleMedia" checked style="cursor:pointer; width:18px; height:18px;">
-                            <span>Worth Reading / Media</span>
-                        </label>
-                        <div id="mediaEditContainer">
-                            <!-- Populated by JS -->
-                        </div>
-                    </div>
-
-                 <!-- SAVE BUTTON AT BOTTOM -->
-                    <div style="margin-top:20px; border-top:1px solid rgba(255,255,255,0.1); padding-top:20px; text-align:right;">
-                        <button id="btnSaveConsultantChanges" onclick="updateConsultantSectionVisibility()" class="btn btn-primary" style="background: #27ae60; color: white; font-weight: bold; padding: 12px 24px; border-radius: 8px; display: flex; align-items: center; gap: 8px; margin-left: auto;">Save All Changes</button>
-                    </div>                </div>
-            </div>
-            <!-- Articles Section Hidden (Kept for legacy function compatibility) -->
-            <div id="articlesSection" style="display:none;">
-                <div id="articlesEditContainerLegacy"></div>
-            </div>
-            <div class="actions-card" id="articlesSectionLegacy" style="display:none;">
-                <h2>Creative Community Articles</h2>
-                <div id="articlesEditContainerLegacy2"></div>
-                <button class="btn btn-info" onclick="addArticleField()" style="margin-top:15px;">Add Article</button>
             </div>
 
             <!-- Step 2: Recipient Selector + Actions -->
@@ -2135,20 +2017,25 @@
             </div>
         </div>
         </div>
+        <!-- Schedule Tab -->
+        <div id="schedule-content" class="tab-content">
+            <div class="actions-card">
+                <h2>Scheduled Items</h2>
+                <div id="calendar-container">
+                    <div id="calendar-header">
+                        <button id="prevWeek">&lt; Prev</button>
+                        <span id="currentWeek"></span>
+                        <button id="nextWeek">Next &gt;</button>
+                    </div>
+                    <div id="calendar-grid"></div>
+                </div>
+            </div>
+        </div>
         </div>
         <!-- End Main Content -->
     
-    <script src="/consultant_js_functions.js"></script>
     <script>
-        // Global State
-        let _csvFile = null;
-        let consultantParsed = false;
-        let consultantSegment = null;
-        let consultantState = null;
         let alistState = null;
-        let selectedConsultantId = null;
-        let currentProfile = null;
-        let profileEditOpen = false;
         
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
@@ -2159,6 +2046,7 @@
             loadDailyAlertsStatus();
             loadRoundupScheduleState();
             loadSingleJobScheduleState();
+            renderCalendar(); // Initial render of the calendar
             // Check Instagram connection status on page load
             if (typeof igCheckStatus === 'function') igCheckStatus();
 
@@ -2181,7 +2069,7 @@
         // Switch between main category tabs
         let emailContentBackup = null;
         
-        function switchMainTab(mainTabName, event) {
+        function switchMainTab(mainTabName) {
             const emailTabs = document.getElementById('emailTabs');
             const mainContent = document.querySelector('.main-content');
             const mainTabButtons = document.querySelectorAll('#mainTabs .tab');
@@ -2189,13 +2077,10 @@
             // Update active state
             mainTabButtons.forEach(btn => {
                 btn.classList.remove('active');
+                if (btn.classList.contains(mainTabName)) {
+                    btn.classList.add('active');
+                }
             });
-            
-            if (event && event.target) {
-                event.target.classList.add('active');
-            } else if (window.event && window.event.target) {
-                window.event.target.classList.add('active');
-            }
             
             if (mainTabName === 'email-marketing') {
                 // Show email type tabs and restore content
@@ -2207,12 +2092,29 @@
                 }
             } else if (mainTabName === 'content-marketing') {
                 // Save current email content before hiding
-                emailContentBackup = mainContent.innerHTML;
-                
-                // Hide email tabs
+                if (emailTabs.style.display !== 'none') {
+                    emailContentBackup = mainContent.innerHTML;
+                }
+                // Hide email type tabs
                 emailTabs.style.display = 'none';
-                
-                // Inject the full Content Marketing UI
+
+                // Hide all main tab content divs
+                document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+                // Show the content-marketing tab content
+                document.getElementById('content-marketing').style.display = 'block';
+            } else if (mainTabName === 'schedule') {
+                // Save current email content before hiding
+                if (emailTabs.style.display !== 'none') {
+                    emailContentBackup = mainContent.innerHTML;
+                }
+                // Hide email type tabs
+                emailTabs.style.display = 'none';
+
+                // Hide all main tab content divs
+                document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+                // Show the schedule tab content
+                document.getElementById('schedule').style.display = 'block';
+                renderCalendar(); // Render the calendar when the schedule tab is active
                 mainContent.innerHTML = `
                 <div id="contentMarketingApp" style="padding: 0;">
 
@@ -3218,7 +3120,7 @@
             }
         }
         
-        function switchTab(tabName, event) {
+        function switchTab(tabName) {
             // Hide all tab contents
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.remove('active');
@@ -3230,14 +3132,10 @@
             });
             
             // Show selected tab content
-            const content = document.getElementById(tabName + '-content');
-            if (content) content.classList.add('active');
+            document.getElementById(tabName + '-content').classList.add('active');
             
-            if (event && event.target) {
-                event.target.classList.add('active');
-            } else if (window.event && window.event.target) {
-                window.event.target.classList.add('active');
-            }
+            // Add active class to clicked tab
+            event.target.classList.add('active');
             
             // Load articles when switching to Xpose tab
             if (tabName === 'xpose') {
@@ -6241,77 +6139,23 @@
 
         function renderCandidates(candidates) {
             const preview = document.getElementById('candidatesPreview');
-            preview.innerHTML = `
-                <div class="candidates-grid">
-                    ${candidates.map((c, i) => `
-                        <div class="candidate-card" data-index="${i + 1}">
-                            <div class="candidate-header">
-                                <div>
-                                    <div class="candidate-number">#${i + 1}</div>
-                                </div>
-                                <div style="flex: 1; margin-left: 20px;">
-                                    <div class="candidate-name" style="color: #111; font-weight: 700;">${c.name}</div>
-                                    <div style="margin-top: 8px;">
-                                        <label style="font-size: 11px; color: #666; text-transform: uppercase; font-weight: bold;">Job Title</label>
-                                        <input type="text" class="candidate-title-input" value="${c.title}" 
-                                            style="width: 100%; border-radius: 4px; color: #111; font-weight: 600; padding: 8px; margin-top: 2px; background: #fff; border: 1px solid #999; box-sizing: border-box; font-size: 14px;">
-                                    </div>
-                                    <div class="candidate-experience" style="margin-top: 4px; color: #444; font-size: 12px;">${c.experience}</div>
-                                </div>
+            preview.innerHTML = '<div class="candidates-grid">' + 
+                candidates.map((c, i) => `
+                    <div class="candidate-card">
+                        <div class="candidate-header">
+                            <div>
+                                <div class="candidate-number">#${i + 1}</div>
                             </div>
-                            <div style="margin-top: 15px;">
-                                <label style="font-size: 11px; color: #666; text-transform: uppercase; font-weight: bold;">Description</label>
-                                <textarea class="candidate-summary-input" 
-                                    style="width: 100%; border-radius: 4px; color: #333; font-weight: 400; padding: 8px; margin-top: 2px; min-height: 100px; resize: vertical; line-height: 1.5; background: #fff; border: 1px solid #999; box-sizing: border-box; font-size: 13px;">${c.summary}</textarea>
+                            <div style="flex: 1; margin-left: 20px;">
+                                <div class="candidate-name">${c.name}</div>
+                                <div class="candidate-title">${c.title}</div>
+                                <div class="candidate-experience">${c.experience}</div>
                             </div>
                         </div>
-                    `).join('')}
-                </div>
-                <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: flex-end;">
-                    <button class="btn btn-success" id="btnSaveAlistEdits" onclick="saveAlistEdits()">
-                        Save All Changes
-                    </button>
-                </div>
-            `;
-        }
-
-        async function saveAlistEdits() {
-            const btn = document.getElementById('btnSaveAlistEdits');
-            const originalText = btn.textContent;
-            btn.disabled = true;
-            btn.textContent = 'Saving...';
-
-            const candidateCards = document.querySelectorAll('.candidate-card');
-            const candidates = Array.from(candidateCards).map(card => {
-                return {
-                    index: parseInt(card.getAttribute('data-index')),
-                    title: card.querySelector('.candidate-title-input').value,
-                    summary: card.querySelector('.candidate-summary-input').value
-                };
-            });
-
-            try {
-                const response = await fetch('/api/alist/update-candidates', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ candidates })
-                });
-
-                const data = await response.json();
-                if (response.ok) {
-                    showToast('✅ A-List edits saved successfully!', 'success');
-                    showMessage('Edits saved! Preview or send to see changes.', 'success');
-                    // Reload state to ensure everything is synced
-                    await loadAListState();
-                } else {
-                    showToast('❌ Error: ' + (data.message || 'Failed to save edits'), 'error');
-                }
-            } catch (error) {
-                showToast('❌ Error: ' + error.message, 'error');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = originalText;
-            }
+                        <div class="candidate-summary">${c.summary}</div>
+                    </div>
+                `).join('') + 
+            '</div>';
         }
 
         async function generateAList() {
@@ -7859,7 +7703,11 @@
 
         // ========== CONSULTANT NEWSLETTER FUNCTIONS (Gemini JSON Paste Workflow) ==========
 
-        // Global variables moved to the top of the script block
+        let consultantParsed = false; // true once JSON has been successfully parsed
+        let consultantSegment = null; // { type, id, name } once confirmed
+        let selectedConsultantId = null; // currently selected consultant ID
+        let currentProfile = null; // loaded profile from config
+        let profileEditOpen = false;
 
         // Segment keyword map — used for auto-selecting the right Brevo segment
         const SEGMENT_KEYWORDS = {
@@ -8016,6 +7864,7 @@
         }
 
         // ---- CSV Upload helpers ----
+        let _csvFile = null;
 
         function onCsvFileSelected(event) {
             const file = event.target.files && event.target.files[0];
@@ -8067,9 +7916,6 @@
             try {
                 const formData = new FormData();
                 formData.append('csv', _csvFile);
-                if (selectedConsultantId) {
-                    formData.append('consultantId', selectedConsultantId);
-                }
                 const response = await fetch('/api/consultant/parse-csv', {
                     method: 'POST',
                     body: formData
@@ -8099,63 +7945,12 @@
                 }
                 loadPreview('/api/preview/consultant');
                 showToast('Newsletter built for ' + data.consultant + '!', 'success');
-
-                // Show the edit panel first so elements exist
-                if (typeof showConsultantEditPanel === 'function') showConsultantEditPanel();
-
-                // Use data.state which is the full parsed object
-                const stateObj = data.state;
-                if (stateObj && stateObj.content) {
-                    const content = stateObj.content;
-                    
-                    // Populate text fields
-                    const ih = document.getElementById('editIndustryInsightHeading');
-                    const ib = document.getElementById('editIndustryInsightBody');
-                    if (ih) ih.value = (content.industry_insight && content.industry_insight.heading) || '';
-                    if (ib) ib.value = (content.industry_insight && content.industry_insight.body) || '';
-                    
-                    const lh = document.getElementById('editLifeUpdateHeading');
-                    const lb = document.getElementById('editLifeUpdateBody');
-                    if (lh) lh.value = (content.life_update && content.life_update.heading) || '';
-                    if (lb) lb.value = (content.life_update && content.life_update.body) || '';
-                    
-                    const igCap = document.getElementById('igCaption');
-                    if (igCap) igCap.value = (content.instagram && content.instagram.caption) || content.instagram_caption || '';
-                    
-                    // Set toggles
-                    const sections = content.sections || {};
-                    if (document.getElementById('toggleIndustryInsight')) document.getElementById('toggleIndustryInsight').checked = sections.industry_insight !== false;
-                    if (document.getElementById('toggleLifeUpdate')) document.getElementById('toggleLifeUpdate').checked = sections.life_update !== false;
-                    if (document.getElementById('toggleInstagram')) document.getElementById('toggleInstagram').checked = sections.instagram_grid !== false;
-                    if (document.getElementById('toggleEvents')) document.getElementById('toggleEvents').checked = sections.events !== false;
-                    if (document.getElementById('toggleMedia')) document.getElementById('toggleMedia').checked = sections.media !== false;
-                    
-                    // Populate Lists
-                    if (typeof populateEventsEditor === 'function') {
-                        const evs = content.events || [];
-                        populateEventsEditor(evs.map(e => ({
-                            title: e.title || '',
-                            date: (e.day && e.month) ? `${e.day} ${e.month}` : (e.date || ''),
-                            url: e.link || e.url || ''
-                        })));
-                    }
-                    if (typeof populateMediaEditor === 'function') {
-                        const meds = content.media || [];
-                        populateMediaEditor(meds.map(m => ({
-                            title: m.title || m.caption || '',
-                            url: m.url || '',
-                            type: m.type || 'link'
-                        })));
-                    }
-                    
-                    showToast('Edit suite populated with CSV data.', 'info');
-                }
             } catch (error) {
                 errorDiv.textContent = 'Error: ' + error.message;
                 errorDiv.style.display = 'block';
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = 'Build & Edit';
+                btn.innerHTML = 'Build &amp; Preview';
             }
         }
 
@@ -8164,10 +7959,6 @@
         async function parseConsultantJSON() { await uploadConsultantCsv(); }
 
         // Reset state
-        function addArticleField() {
-            console.log('addArticleField called - articles are now automatic');
-        }
-
         async function resetConsultantState() {
             if (!confirm('Reset the consultant newsletter? This will clear the current content.')) return;
             try {
@@ -8219,46 +8010,6 @@
                 return;
             }
             loadPreview('/api/preview/consultant');
-        }
-
-        // Image upload handlers for Life Update
-        function previewLifeUpdateImage(index) {
-            const fileInput = document.getElementById('lifeUpdateImage' + index);
-            if (!fileInput || !fileInput.files || !fileInput.files[0]) return;
-            
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                const previewElement = document.getElementById('lifeUpdatePreview' + index);
-                if (previewElement) {
-                    previewElement.style.backgroundImage = 'url(' + e.target.result + ')';
-                    previewElement.style.backgroundSize = 'cover';
-                    previewElement.style.backgroundPosition = 'center';
-                }
-            };
-            
-            reader.readAsDataURL(file);
-        }
-
-        // Image upload handlers for Instagram Grid
-        function previewInstagramImage(index) {
-            const fileInput = document.getElementById('igImage' + index);
-            if (!fileInput || !fileInput.files || !fileInput.files[0]) return;
-            
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                const previewElement = document.getElementById('igPreview' + index);
-                if (previewElement) {
-                    previewElement.style.backgroundImage = 'url(' + e.target.result + ')';
-                    previewElement.style.backgroundSize = 'cover';
-                    previewElement.style.backgroundPosition = 'center';
-                }
-            };
-            
-            reader.readAsDataURL(file);
         }
 
         // Load consultant recipients — delegates to generic loader (handles segmentName correctly)
@@ -8536,6 +8287,250 @@
                 btn.innerHTML = 'Send Now';
             }
         }
+        // ========== SCHEDULE TAB LOGIC ==========
+        let currentWeekStart = moment().startOf(\'week\'); // Start of the current week
+
+        function renderCalendar() {
+            const calendarDiv = document.getElementById(\'weekly-calendar\');
+            calendarDiv.innerHTML = \'\'; // Clear previous days
+            const currentWeekRange = document.getElementById(\'currentWeekRange\');
+
+            const weekEnd = currentWeekStart.clone().endOf(\'week\');
+            currentWeekRange.textContent = `${currentWeekStart.format(\'MMM D, YYYY\')} - ${weekEnd.format(\'MMM D, YYYY\')}`;
+
+            for (let i = 0; i < 7; i++) {
+                const day = currentWeekStart.clone().add(i, \'days\');
+                const dayDiv = document.createElement(\'div\');
+                dayDiv.classList.add(\'calendar-day\');
+                dayDiv.innerHTML = `
+                    <div class="day-header">
+                        <div class="day-name">${day.format(\'ddd\')}</div>
+                        <div class="day-date">${day.format(\'D\')}</div>
+                    </div>
+                    <div class="day-content" id="day-${day.format(\'YYYY-MM-DD\')}">
+                        <!-- Scheduled items will go here -->
+                    </div>
+                `;
+                calendarDiv.appendChild(dayDiv);
+            }
+            fetchAndDisplayScheduledItems();
+        }
+
+        function nextWeek() {
+            currentWeekStart.add(1, \'week\');
+            renderCalendar();
+        }
+
+        function prevWeek() {
+            currentWeekStart.subtract(1, \'week\');
+            renderCalendar();
+        }
+
+        async function fetchAndDisplayScheduledItems() {
+            // Clear existing items
+            document.querySelectorAll(\".day-content\").forEach(dayContent => dayContent.innerHTML = \'\');
+
+            const start = currentWeekStart.format(\'YYYY-MM-DD\');
+            const end = currentWeekStart.clone().endOf(\'week\').format(\'YYYY-MM-DD\');
+
+            // Fetch all scheduled items from backend (this will be a new API endpoint)
+            // For now, mock data or call individual endpoints
+            // This will require a new backend endpoint to aggregate all schedules
+            // For now, let\'s just add a placeholder and assume a /api/schedules endpoint will exist
+            try {
+                const response = await fetch(`/api/schedules?start=${start}&end=${end}`);
+                const schedules = await response.json();
+
+                schedules.forEach(item => {
+                    const itemDate = moment(item.scheduledAt).format(\'YYYY-MM-DD\');
+                    const dayContentDiv = document.getElementById(`day-${itemDate}`);
+                    if (dayContentDiv) {
+                        const itemDiv = document.createElement(\'div\');
+                        itemDiv.classList.add(\'scheduled-item\');
+                        itemDiv.innerHTML = `
+                            <div class="item-title">${item.title}</div>
+                            <div class="item-time">${moment(item.scheduledAt).format(\'h:mm A\')}</div>
+                            <div class="item-type">${item.type}</div>
+                        `;
+                        dayContentDiv.appendChild(itemDiv);
+                    }
+                });
+            } catch (error) {
+                console.error(\'Error fetching schedules:\', error);
+                showToast(\'Error loading schedules.\', \'error\');
+            }
+        }
+
+        // Event Listeners for navigation
+        document.getElementById(\'prevWeek\').addEventListener(\'click\', prevWeek);
+        document.getElementById(\'nextWeek\').addEventListener(\'click\', nextWeek);
+
+        // Add moment.js for date manipulation
+        const script = document.createElement(\'script\');
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js";
+        script.onload = function() {
+            renderCalendar(); // Initial render once moment.js is loaded
+        };
+        document.head.appendChild(script);
+
+        // Add CSS for calendar
+        const style = document.createElement(\'style\');
+        style.textContent = `
+            .calendar-day {
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                padding: 15px;
+                text-align: center;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                min-height: 150px;
+                display: flex;
+                flex-direction: column;
+            }
+            .day-header {
+                margin-bottom: 10px;
+            }
+            .day-name {
+                font-size: 14px;
+                color: rgba(255, 255, 255, 0.7);
+                font-weight: 600;
+            }
+            .day-date {
+                font-size: 24px;
+                color: white;
+                font-weight: 700;
+            }
+            .day-content {
+                flex-grow: 1;
+                overflow-y: auto;
+                padding-top: 10px;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                margin-top: 10px;
+            }
+            .scheduled-item {
+                background: rgba(255, 255, 255, 0.15);
+                border-radius: 5px;
+                padding: 8px;
+                margin-bottom: 8px;
+                text-align: left;
+                font-size: 12px;
+                color: white;
+            }
+            .item-title {
+                font-weight: 600;
+                margin-bottom: 2px;
+            }
+            .item-time {
+                font-size: 11px;
+                color: rgba(255, 255, 255, 0.7);
+            }
+            .item-type {
+                font-size: 10px;
+                color: rgba(255, 255, 255, 0.5);
+                text-transform: uppercase;
+                margin-top: 4px;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // ========== SCHEDULE TAB CALENDAR ==========
+        let currentWeekStart = new Date();
+        currentWeekStart.setHours(0, 0, 0, 0);
+        // Adjust to Monday
+        const day = currentWeekStart.getDay();
+        const diff = currentWeekStart.getDate() - day + (day === 0 ? -6 : 1);
+        currentWeekStart.setDate(diff);
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-grid');
+            const weekLabel = document.getElementById('currentWeek');
+            grid.innerHTML = '';
+
+            const weekEnd = new Date(currentWeekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+
+            const options = { month: 'short', day: 'numeric' };
+            weekLabel.textContent = `${currentWeekStart.toLocaleDateString('en-AU', options)} - ${weekEnd.toLocaleDateString('en-AU', options)}`;
+
+            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            
+            // Fetch all schedules
+            Promise.all([
+                fetch('/api/job-alerts/roundup/schedule').then(res => res.json()).catch(() => ({})),
+                fetch('/api/job-alerts/single/schedule').then(res => res.json()).catch(() => ({})),
+                fetch('/api/alist/state').then(res => res.json()).catch(() => ({})),
+                fetch('/api/xpose/article-schedule').then(res => res.json()).catch(() => ({})),
+                fetch('/api/xpose/state').then(res => res.json()).catch(() => ({}))
+            ]).then(([roundup, singleJob, alist, article, xpose]) => {
+                const schedules = [];
+
+                if (roundup.scheduledAt) {
+                    schedules.push({ title: 'Daily Roundup', date: new Date(roundup.scheduledAt), type: 'Job Alerts' });
+                }
+                if (singleJob.scheduledAt) {
+                    schedules.push({ title: `Single Job (${singleJob.adId})`, date: new Date(singleJob.scheduledAt), type: 'Job Alerts' });
+                }
+                if (alist.state === 'SCHEDULED' && alist.scheduledAt) {
+                    schedules.push({ title: 'A-List', date: new Date(alist.scheduledAt), type: 'A-List' });
+                }
+                if (article.scheduledAt) {
+                    schedules.push({ title: `Article (${article.articleId})`, date: new Date(article.scheduledAt), type: 'Xpose' });
+                }
+                if (xpose.state === 'SCHEDULED' && xpose.scheduledAt) {
+                    schedules.push({ title: 'Xpose Newsletter', date: new Date(xpose.scheduledAt), type: 'Xpose' });
+                }
+
+                for (let i = 0; i < 7; i++) {
+                    const currentDay = new Date(currentWeekStart);
+                    currentDay.setDate(currentDay.getDate() + i);
+                    
+                    const dayCol = document.createElement('div');
+                    dayCol.className = 'calendar-day';
+                    
+                    const isToday = new Date().toDateString() === currentDay.toDateString();
+                    if (isToday) dayCol.classList.add('today');
+
+                    const header = document.createElement('div');
+                    header.className = 'day-header';
+                    header.innerHTML = `
+                        <div class="day-name">${days[i]}</div>
+                        <div class="day-date">${currentDay.getDate()}</div>
+                    `;
+                    dayCol.appendChild(header);
+
+                    const content = document.createElement('div');
+                    content.className = 'day-content';
+
+                    // Filter and render items for this day
+                    const daySchedules = schedules.filter(s => s.date.toDateString() === currentDay.toDateString());
+                    daySchedules.sort((a, b) => a.date - b.date);
+
+                    daySchedules.forEach(item => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'scheduled-item';
+                        itemDiv.innerHTML = `
+                            <div class="item-title">${item.title}</div>
+                            <div class="item-time">${item.date.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })}</div>
+                            <div class="item-type">${item.type}</div>
+                        `;
+                        content.appendChild(itemDiv);
+                    });
+
+                    dayCol.appendChild(content);
+                    grid.appendChild(dayCol);
+                }
+            });
+        }
+
+        document.getElementById('prevWeek').addEventListener('click', () => {
+            currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+            renderCalendar();
+        });
+
+        document.getElementById('nextWeek').addEventListener('click', () => {
+            currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+            renderCalendar();
+        });
+
     </script>
 </body>
 </html>
