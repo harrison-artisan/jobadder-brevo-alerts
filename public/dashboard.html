@@ -2069,55 +2069,55 @@
         // Switch between main category tabs
         let emailContentBackup = null;
         
-        function switchMainTab(mainTabName) {
-            const emailTabs = document.getElementById('emailTabs');
-            const mainContent = document.querySelector('.main-content');
-            const mainTabButtons = document.querySelectorAll('#mainTabs .tab');
-            
-            // Update active state
-            mainTabButtons.forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.classList.contains(mainTabName)) {
-                    btn.classList.add('active');
-                }
-            });
-            
-            if (mainTabName === 'email-marketing') {
-                // Show email type tabs and restore content
-                emailTabs.style.display = 'flex';
-                
-                if (emailContentBackup) {
-                    mainContent.innerHTML = emailContentBackup;
-                    emailContentBackup = null;
-                }
-            } else if (mainTabName === 'content-marketing') {
-                // Save current email content before hiding
-                if (emailTabs.style.display !== 'none') {
-                    emailContentBackup = mainContent.innerHTML;
-                }
-                // Hide email type tabs
-                emailTabs.style.display = 'none';
+function switchMainTab(mainTabName) {
+    const emailTabs = document.getElementById('emailTabs');
+    const mainContent = document.querySelector('.main-content');
+    const mainTabButtons = document.querySelectorAll('#mainTabs .tab');
 
-                // Hide all main tab content divs
-                document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
-                // Show the content-marketing tab content
-                document.getElementById('content-marketing').style.display = 'block';
-            } else if (mainTabName === 'schedule') {
-                // Save current email content before hiding
-                if (emailTabs.style.display !== 'none') {
-                    emailContentBackup = mainContent.innerHTML;
-                }
-                // Hide email type tabs
-                emailTabs.style.display = 'none';
+    // Update active state on main tab buttons
+    mainTabButtons.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.classList.contains(mainTabName)) {
+            btn.classList.add('active');
+        }
+    });
 
-                // Hide all main tab content divs
-                document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
-                // Show the schedule tab content
-                document.getElementById('schedule').style.display = 'block';
-                renderCalendar(); // Render the calendar when the schedule tab is active
-                mainContent.innerHTML = `
+    if (mainTabName === 'email-marketing') {
+        // Show email sub-tabs
+        emailTabs.style.display = 'flex';
+        // Show the currently active email tab content, hide others
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.style.display = 'none';
+        });
+        const activeEmailTab = document.querySelector('#emailTabs .tab.active');
+        if (activeEmailTab) {
+            const tabName = activeEmailTab.getAttribute('onclick').match(/'([^']+)'/)[1];
+            const activeContent = document.getElementById(tabName + '-content');
+            if (activeContent) activeContent.style.display = 'block';
+        } else {
+            const firstContent = document.getElementById('job-alerts-content');
+            if (firstContent) firstContent.style.display = 'block';
+        }
+        // Hide CM and Schedule containers
+        const cmApp = document.getElementById('contentMarketingApp');
+        if (cmApp) cmApp.style.display = 'none';
+        const scheduleContent = document.getElementById('schedule-content');
+        if (scheduleContent) scheduleContent.style.display = 'none';
+
+    } else if (mainTabName === 'content-marketing') {
+        // Hide email sub-tabs and all email content
+        emailTabs.style.display = 'none';
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.style.display = 'none';
+        });
+        // Hide schedule
+        const scheduleContent = document.getElementById('schedule-content');
+        if (scheduleContent) scheduleContent.style.display = 'none';
+        // Show or build content marketing app
+        let cmApp = document.getElementById('contentMarketingApp');
+        if (!cmApp) {
+            mainContent.insertAdjacentHTML('beforeend', `
                 <div id="contentMarketingApp" style="padding: 0;">
-
                     <!-- ===== CM Sub-Tab Bar ===== -->
                     <div class="tabs" id="cmSubTabs">
                         <button id="cmSubTabArticle" class="tab active" onclick="cmSwitchSubTab('article')">
@@ -2127,11 +2127,8 @@
                             Social Media Posting
                         </button>
                     </div>
-
                     <!-- ===== ARTICLE GENERATION PANEL ===== -->
                     <div id="cmPanelArticle">
-
-                        <!-- Progress Steps Indicator -->
                         <div style="display:flex; align-items:center; margin-bottom:28px; gap:0;">
                             <div id="cmProgressStep1" style="display:flex; align-items:center; gap:8px; padding:8px 16px; border-radius:8px; background:rgba(52,152,219,0.25); border:1px solid rgba(52,152,219,0.5);">
                                 <span style="background:#3498db; color:white; border-radius:50%; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0;">1</span>
@@ -2148,96 +2145,20 @@
                                 <span style="color:rgba(255,255,255,0.5); font-size:13px; font-weight:500;">Finalise &amp; Post</span>
                             </div>
                         </div>
-
-                        <!-- Message banner -->
                         <div id="cmMessage" style="display:none; padding:12px 16px; border-radius:8px; margin-bottom:16px; font-size:14px;"></div>
-
-                        <!-- ===== STEP 1: Topic + Prompt Settings ===== -->
                         <div class="actions-card" id="cmStep1">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                                 <h2 style="margin:0;">Step 1 - Generate Article</h2>
                                 <button onclick="cmReset()" id="btnCmReset" style="display:none; padding:7px 14px; background:rgba(127,140,141,0.3); border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:rgba(255,255,255,0.7); font-size:12px; cursor:pointer;">Start Over</button>
                             </div>
-
-                            <!-- Prompt Settings Panel -->
-                            <div id="cmSettingsPanel" style="margin-bottom:20px; border:1px solid rgba(255,255,255,0.12); border-radius:10px; overflow:hidden;">
-                                <div onclick="cmToggleSettings()" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:rgba(255,255,255,0.06); cursor:pointer;">
-                                    <span style="color:white; font-weight:600; font-size:14px;">Prompt Settings</span>
-                                    <span id="cmSettingsToggleIcon" style="color:rgba(255,255,255,0.5); font-size:18px; line-height:1;">-</span>
-                                </div>
-                                <div id="cmSettingsBody" style="padding:16px; background:rgba(255,255,255,0.03);">
-                                    <p style="color:rgba(255,255,255,0.45); font-size:12px; margin:0 0 14px;">These settings are injected into every article generation. Leave blank to use Artisan defaults.</p>
-                                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:14px;">
-                                        <div>
-                                            <label style="display:block; color:rgba(255,255,255,0.7); font-size:12px; margin-bottom:5px;">Target Keywords</label>
-                                            <input type="text" id="cmSettingsKeywords" placeholder="e.g. creative recruitment, marketing jobs, Sydney" style="width:100%; padding:9px 11px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:7px; color:white; font-size:12px; box-sizing:border-box;">
-                                        </div>
-                                        <div>
-                                            <label style="display:block; color:rgba(255,255,255,0.7); font-size:12px; margin-bottom:5px;">Tone</label>
-                                            <input type="text" id="cmSettingsTone" placeholder="confident, direct, empathetic" style="width:100%; padding:9px 11px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:7px; color:white; font-size:12px; box-sizing:border-box;">
-                                        </div>
-                                        <div>
-                                            <label style="display:block; color:rgba(255,255,255,0.7); font-size:12px; margin-bottom:5px;">Voice / Perspective</label>
-                                            <input type="text" id="cmSettingsVoice" placeholder="Artisan speaking to hiring managers" style="width:100%; padding:9px 11px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:7px; color:white; font-size:12px; box-sizing:border-box;">
-                                        </div>
-                                    </div>
-                                    <!-- SEO Keyword Library -->
-                                    <div style="margin-bottom:14px;">
-                                        <label style="display:block; color:rgba(255,255,255,0.7); font-size:12px; margin-bottom:7px;">SEO Keyword Library <span style="color:rgba(255,255,255,0.35); font-weight:400;">(click to add)</span></label>
-                                        <div id="cmKeywordLibrary" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
-                                    </div>
-                                    <!-- Advanced Settings -->
-                                    <div style="border-top:1px solid rgba(255,255,255,0.1); padding-top:12px;">
-                                        <div onclick="cmToggleAdvanced()" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer; margin-bottom:10px;">
-                                            <span style="color:rgba(255,255,255,0.6); font-size:12px; font-weight:600;">Advanced Settings (override defaults)</span>
-                                            <span id="cmAdvToggleIcon" style="color:rgba(255,255,255,0.4); font-size:14px;">+</span>
-                                        </div>
-                                        <div id="cmAdvBody" style="display:none;">
-                                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                                                <div>
-                                                    <label style="display:block; color:rgba(255,255,255,0.6); font-size:11px; margin-bottom:5px;">Writing Style</label>
-                                                    <textarea id="cmAdvStyle" rows="3" placeholder="Default: Short, punchy, declarative sentences. Paragraphs rarely exceed 3 sentences. Open with a bold statement that names a real tension." style="width:100%; padding:9px 11px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:7px; color:white; font-size:11px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
-                                                </div>
-                                                <div>
-                                                    <label style="display:block; color:rgba(255,255,255,0.6); font-size:11px; margin-bottom:5px;">Article Structure</label>
-                                                    <textarea id="cmAdvStructure" rows="3" placeholder="Default: H1 title, 4-6 H2 sections as observations/statements, H3 sparingly, 750-1000 words, final section titled Where Artisan Comes In." style="width:100%; padding:9px 11px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:7px; color:white; font-size:11px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
-                                                </div>
-                                                <div>
-                                                    <label style="display:block; color:rgba(255,255,255,0.6); font-size:11px; margin-bottom:5px;">SEO / AEO / GEO Instructions</label>
-                                                    <textarea id="cmAdvSeo" rows="3" placeholder="Default: Primary keyword in H1, opening para, and one H2. Answer the search question in first 100 words. Inverted pyramid structure. Include specific Australian context." style="width:100%; padding:9px 11px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:7px; color:white; font-size:11px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
-                                                </div>
-                                                <div>
-                                                    <label style="display:block; color:rgba(255,255,255,0.6); font-size:11px; margin-bottom:5px;">Additional Instructions</label>
-                                                    <textarea id="cmAdvExtra" rows="3" placeholder="Any other specific instructions for this article..." style="width:100%; padding:9px 11px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:7px; color:white; font-size:11px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Topic Input -->
                             <div style="margin-bottom:16px;">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                                     <label style="display:block; color:white; font-weight:500; font-size:14px; margin:0;">Article Topic</label>
                                     <div style="display:flex; gap:8px; align-items:center;">
-                                        <button onclick="cmGenerateIdeas()" id="btnCmIdeas"
-                                            style="display:flex; align-items:center; gap:6px; padding:5px 12px; background:rgba(46,204,113,0.15); border:1px solid rgba(46,204,113,0.4); border-radius:6px; color:#2ecc71; cursor:pointer; font-size:12px; font-weight:600; transition:all 0.2s;">
-                                            Generate Ideas
-                                        </button>
-                                        <button onclick="cmOpenPollPicker()" id="btnChoosePoll"
-                                            style="display:flex; align-items:center; gap:6px; padding:5px 12px; background:rgba(0,119,181,0.2); border:1px solid rgba(0,119,181,0.5); border-radius:6px; color:#5dade2; cursor:pointer; font-size:12px; font-weight:600; transition:all 0.2s;">
-                                            Choose Recent Poll
-                                        </button>
+                                        <button onclick="cmGenerateIdeas()" id="btnCmIdeas" style="display:flex; align-items:center; gap:6px; padding:5px 12px; background:rgba(46,204,113,0.15); border:1px solid rgba(46,204,113,0.4); border-radius:6px; color:#2ecc71; cursor:pointer; font-size:12px; font-weight:600;">Generate Ideas</button>
                                     </div>
                                 </div>
                                 <textarea id="cmTopic" rows="3" placeholder="e.g. How to attract top creative talent in Australia in 2025" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px; resize:vertical; box-sizing:border-box;"></textarea>
-                                <!-- Ideas loading spinner -->
-                                <div id="cmIdeasLoading" style="display:none; margin-top:12px; display:none; align-items:center; gap:10px;">
-                                    <div style="width:16px; height:16px; border:2px solid rgba(255,255,255,0.2); border-top-color:#2ecc71; border-radius:50%; animation:spin 0.8s linear infinite; flex-shrink:0;"></div>
-                                    <span style="color:rgba(255,255,255,0.7); font-size:13px;">Generating ideas with AI...</span>
-                                </div>
-                                <!-- Ideas panel -->
                                 <div id="cmIdeasPanel" style="display:none; margin-top:12px; padding:14px 16px; background:rgba(46,204,113,0.06); border:1px solid rgba(46,204,113,0.2); border-radius:8px;">
                                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                                         <span style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600;">Click an idea to use it as your topic</span>
@@ -2245,47 +2166,9 @@
                                     </div>
                                     <div id="cmIdeasList" style="display:flex; flex-direction:column; gap:6px;"></div>
                                 </div>
-                                <!-- Poll context badge (shown when a poll is selected) -->
-                                <div id="cmPollBadge" style="display:none; margin-top:8px; padding:10px 14px; background:rgba(0,119,181,0.12); border:1px solid rgba(0,119,181,0.3); border-radius:8px; display:none;">
-                                    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
-                                        <div>
-                                            <div style="font-size:11px; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:4px;">Poll context attached</div>
-                                            <div id="cmPollBadgeQuestion" style="color:white; font-size:13px; font-weight:600;"></div>
-                                            <div id="cmPollBadgeResults" style="color:rgba(255,255,255,0.6); font-size:12px; margin-top:3px;"></div>
-                                        </div>
-                                        <button onclick="cmClearPollContext()" style="padding:3px 8px; background:rgba(231,76,60,0.15); border:1px solid rgba(231,76,60,0.3); border-radius:5px; color:#e74c3c; cursor:pointer; font-size:11px; flex-shrink:0;">Remove</button>
-                                    </div>
-                                </div>
                             </div>
                             <div class="button-group">
                                 <button class="btn btn-info" id="btnCmGenArticle" onclick="cmStep1Generate()">Generate Article</button>
-                            </div>
-
-                            <!-- ===== Poll Picker Modal ===== -->
-                            <div id="cmPollPickerModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; display:none; align-items:center; justify-content:center;">
-                                <div style="background:#1a2332; border:1px solid rgba(255,255,255,0.12); border-radius:14px; width:560px; max-width:95vw; max-height:80vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
-                                    <!-- Modal Header -->
-                                    <div style="padding:20px 24px 16px; border-bottom:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center;">
-                                        <div>
-                                            <div style="display:flex; align-items:center; gap:10px;">
-                                                <div style="background:#0077b5; border-radius:5px; padding:3px 10px; font-size:12px; font-weight:700; color:white;">in</div>
-                                                <h3 style="margin:0; font-size:16px; color:white; font-weight:700;">Choose a Recent Poll</h3>
-                                            </div>
-                                            <p style="margin:4px 0 0; color:rgba(255,255,255,0.5); font-size:12px;">Select a poll to use its results as article context</p>
-                                        </div>
-                                        <button onclick="cmClosePollPicker()" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:white; cursor:pointer; font-size:18px; padding:4px 10px; line-height:1;">&#10005;</button>
-                                    </div>
-                                    <!-- Modal Body -->
-                                    <div style="padding:16px 24px; overflow-y:auto; flex:1;">
-                                        <div id="cmPollPickerLoading" style="text-align:center; padding:30px 0; color:rgba(255,255,255,0.5); font-size:14px;">
-                                            <div style="width:24px; height:24px; border:3px solid rgba(255,255,255,0.15); border-top-color:#0077b5; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 12px;"></div>
-                                            Fetching polls from LinkedIn...
-                                        </div>
-                                        <div id="cmPollPickerError" style="display:none; padding:16px; background:rgba(231,76,60,0.1); border:1px solid rgba(231,76,60,0.3); border-radius:8px; color:#e74c3c; font-size:13px;"></div>
-                                        <div id="cmPollPickerList" style="display:none; display:flex; flex-direction:column; gap:10px;"></div>
-                                        <div id="cmPollPickerEmpty" style="display:none; text-align:center; padding:30px 0; color:rgba(255,255,255,0.4); font-size:14px;">No polls found on the Artisan LinkedIn Page.</div>
-                                    </div>
-                                </div>
                             </div>
                             <div id="cmStep1Loading" style="display:none; padding:20px 0;">
                                 <div style="display:flex; align-items:center; gap:12px;">
@@ -2294,18 +2177,9 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- ===== STEP 2: Review Article + Image ===== -->
                         <div class="actions-card" id="cmStep2" style="display:none;">
                             <h2 style="margin-top:0; margin-bottom:6px;">Step 2 - Review &amp; Edit Article</h2>
-                            <p style="color:rgba(255,255,255,0.65); margin-bottom:20px; font-size:14px; line-height:1.6;">
-                                Review and edit the article below. The preview on the right shows how it will read. When you are happy with the copy, move to the header image.
-                            </p>
-
-                            <!-- Two-column layout: edit left, preview right -->
                             <div style="display:flex; gap:24px; flex-wrap:wrap; margin-bottom:20px;">
-
-                                <!-- LEFT: Edit fields -->
                                 <div style="flex:1; min-width:280px;">
                                     <div style="margin-bottom:14px;">
                                         <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Article Title</label>
@@ -2316,38 +2190,27 @@
                                         <textarea id="cmExcerpt" rows="2" oninput="cmUpdatePreview()" style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box;"></textarea>
                                     </div>
                                     <div>
-                                        <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Article Body - use the toolbar to format, embed images or videos</label>
+                                        <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Article Body</label>
                                         <textarea id="cmContent"></textarea>
                                     </div>
                                 </div>
-
-                                <!-- RIGHT: Live white preview -->
                                 <div style="flex:1; min-width:280px;">
                                     <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Article Preview</label>
-                                    <div id="cmArticlePreview" style="background:#ffffff; border-radius:8px; padding:32px 28px; min-height:520px; overflow-y:auto; font-family:'Source Sans Pro', 'Segoe UI', sans-serif; color:#1a1a1a; font-size:15px; line-height:1.8; box-shadow:0 2px 12px rgba(0,0,0,0.25);">
+                                    <div id="cmArticlePreview" style="background:#ffffff; border-radius:8px; padding:32px 28px; min-height:520px; overflow-y:auto; font-family:'Source Sans Pro','Segoe UI',sans-serif; color:#1a1a1a; font-size:15px; line-height:1.8; box-shadow:0 2px 12px rgba(0,0,0,0.25);">
                                         <p style="color:#aaa; font-style:italic;">Your article preview will appear here as you type.</p>
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Divider -->
                             <hr style="border:none; border-top:1px solid rgba(255,255,255,0.1); margin:24px 0;">
-
-                            <!-- Header Image section -->
                             <h3 style="color:white; margin-top:0; margin-bottom:6px; font-size:16px;">Header Image</h3>
-                            <p style="color:rgba(255,255,255,0.65); margin-bottom:16px; font-size:14px;">Generate an AI image with DALL-E 3, or upload your own.</p>
-
-                            <!-- Toggle: Generate vs Upload -->
                             <div style="display:flex; gap:0; margin-bottom:18px; border:1px solid rgba(255,255,255,0.2); border-radius:8px; overflow:hidden; width:fit-content;">
                                 <button id="btnImgModeGenerate" onclick="cmSetImageMode('generate')" style="padding:9px 20px; font-size:13px; font-weight:600; border:none; cursor:pointer; background:#3498db; color:white;">Generate with AI</button>
                                 <button id="btnImgModeUpload" onclick="cmSetImageMode('upload')" style="padding:9px 20px; font-size:13px; font-weight:600; border:none; cursor:pointer; background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.7);">Upload Image</button>
                             </div>
-
-                            <!-- Generate panel -->
                             <div id="cmImageGeneratePanel">
                                 <div style="margin-bottom:14px;">
-                                    <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Image Prompt (leave blank to use article title)</label>
-                                    <input type="text" id="cmImagePrompt" placeholder="e.g. Abstract concept of creative talent and opportunity, navy and gold palette" style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:13px; box-sizing:border-box;">
+                                    <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Image Prompt</label>
+                                    <input type="text" id="cmImagePrompt" placeholder="e.g. Abstract concept of creative talent" style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:13px; box-sizing:border-box;">
                                 </div>
                                 <div class="button-group">
                                     <button class="btn btn-info" id="btnCmGenImage" onclick="cmStep2GenerateImage()">Generate Header Image</button>
@@ -2356,69 +2219,39 @@
                                 <div id="cmStep2Loading" style="display:none; padding:16px 0;">
                                     <div style="display:flex; align-items:center; gap:12px;">
                                         <div style="width:18px; height:18px; border:3px solid rgba(255,255,255,0.2); border-top-color:#e67e22; border-radius:50%; animation:spin 0.8s linear infinite; flex-shrink:0;"></div>
-                                        <span style="color:rgba(255,255,255,0.8); font-size:14px;">Generating with DALL-E 3 - usually 10-15 seconds...</span>
+                                        <span style="color:rgba(255,255,255,0.8); font-size:14px;">Generating with DALL-E 3...</span>
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Upload panel -->
                             <div id="cmImageUploadPanel" style="display:none;">
-                                <div style="margin-bottom:14px;">
-                                    <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Select Image File (JPG, PNG, GIF - max 5 MB)</label>
-                                    <input type="file" id="cmImageUploadInput" accept="image/jpeg,image/png,image/gif" onchange="cmHandleImageUpload(event)" style="color:white; font-size:13px;">
-                                </div>
+                                <input type="file" id="cmImageUploadInput" accept="image/jpeg,image/png,image/gif" onchange="cmHandleImageUpload(event)" style="color:white; font-size:13px;">
                             </div>
-
-                            <!-- Image Preview fixed 1000x666 aspect ratio -->
                             <div id="cmImagePreviewWrap" style="display:none; margin-top:16px; margin-bottom:20px;">
-                                <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:13px;">Header Image Preview (1000 x 666 px)</label>
                                 <div style="width:100%; max-width:500px; aspect-ratio:1000/666; overflow:hidden; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:#111;">
                                     <img id="cmHeaderImage" src="" alt="Header image" style="width:100%; height:100%; object-fit:cover; display:block;">
                                 </div>
                             </div>
-
-                            <!-- Continue button shown after image is ready -->
                             <div id="cmStep2Continue" style="display:none; margin-top:20px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1);">
                                 <button class="btn btn-success" onclick="cmShowStep3()">Continue to Finalise &amp; Post</button>
                             </div>
                         </div>
-
-                        <!-- ===== STEP 3: Finalise & Post to WordPress ===== -->
                         <div class="actions-card" id="cmStep3" style="display:none;">
                             <h2 style="margin-top:0; margin-bottom:6px;">Step 3 - Finalise &amp; Post to WordPress</h2>
-                            <p style="color:rgba(255,255,255,0.65); margin-bottom:20px; font-size:14px; line-height:1.6;">
-                                Review the final article and image, select a category, set the publish status, then post to WordPress.
-                            </p>
-
-                            <!-- Final preview: image + title side by side -->
                             <div style="display:flex; gap:20px; margin-bottom:20px; flex-wrap:wrap;">
                                 <div style="flex:1; min-width:220px;">
-                                    <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:13px;">Header Image</label>
                                     <div style="width:100%; aspect-ratio:1000/666; overflow:hidden; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:#111;">
                                         <img id="cmFinalImage" src="" alt="Header image" style="width:100%; height:100%; object-fit:cover; display:block;">
                                     </div>
                                 </div>
                                 <div style="flex:2; min-width:260px;">
-                                    <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:13px;">Title</label>
                                     <p id="cmFinalTitle" style="color:white; font-size:16px; font-weight:600; margin:0 0 12px 0;"></p>
-                                    <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Excerpt</label>
                                     <p id="cmFinalExcerpt" style="color:rgba(255,255,255,0.7); font-size:13px; margin:0; line-height:1.5;"></p>
                                 </div>
                             </div>
-
-                            <!-- Tags -->
-                            <div style="margin-bottom:16px;">
-                                <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:14px;">Tags (comma separated)</label>
-                                <input type="text" id="cmTags" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px; box-sizing:border-box;" placeholder="tag1, tag2, tag3">
-                            </div>
-
-                            <!-- Category + Status row -->
                             <div style="display:flex; gap:16px; margin-bottom:16px; flex-wrap:wrap;">
                                 <div style="flex:1; min-width:200px;">
                                     <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:14px;">WordPress Category</label>
-                                    <select id="cmCategory" style="width:100%; padding:12px 14px; background:rgba(30,40,60,0.95); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px;">
-                                        <option value="">Loading categories...</option>
-                                    </select>
+                                    <select id="cmCategory" style="width:100%; padding:12px 14px; background:rgba(30,40,60,0.95); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px;"><option value="">Loading categories...</option></select>
                                 </div>
                                 <div style="flex:1; min-width:200px;">
                                     <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:14px;">Publish Status</label>
@@ -2429,14 +2262,6 @@
                                     </select>
                                 </div>
                             </div>
-
-                            <!-- Schedule date/time picker Melbourne time shown only when status=future -->
-                            <div id="cmScheduleRow" style="display:none; margin-bottom:20px; padding:14px 16px; background:rgba(52,152,219,0.1); border:1px solid rgba(52,152,219,0.3); border-radius:8px;">
-                                <label style="display:block; color:white; font-weight:500; margin-bottom:8px; font-size:14px;">Schedule Date &amp; Time (Melbourne / AEDT)</label>
-                                <input type="datetime-local" id="cmScheduleDate" style="padding:10px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:14px; min-width:260px; color-scheme:dark;">
-                                <p style="color:rgba(255,255,255,0.45); font-size:12px; margin:8px 0 0;">Times are in Melbourne local time (AEDT/AEST). WordPress will publish at the scheduled time.</p>
-                            </div>
-
                             <div class="button-group">
                                 <button class="btn btn-success" id="btnCmPublish" onclick="cmPublish()">Post to WordPress</button>
                                 <button class="btn" onclick="cmShowStep2()" style="background:rgba(255,255,255,0.1);">Back to Edit</button>
@@ -2444,33 +2269,24 @@
                             <div id="cmStep3Loading" style="display:none; padding:20px 0;">
                                 <div style="display:flex; align-items:center; gap:12px;">
                                     <div style="width:18px; height:18px; border:3px solid rgba(255,255,255,0.2); border-top-color:#27ae60; border-radius:50%; animation:spin 0.8s linear infinite; flex-shrink:0;"></div>
-                                    <span style="color:rgba(255,255,255,0.8); font-size:14px;">Uploading image and creating post in WordPress...</span>
+                                    <span style="color:rgba(255,255,255,0.8); font-size:14px;">Uploading image and creating post...</span>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- ===== STEP 4: Post-publish confirmation ===== -->
                         <div class="actions-card" id="cmStep4" style="display:none;">
                             <h2 style="margin-top:0; margin-bottom:16px;">Posted to WordPress</h2>
                             <div style="margin-bottom:24px; padding:16px 18px; background:rgba(39,174,96,0.15); border:1px solid rgba(39,174,96,0.4); border-radius:8px;">
                                 <p style="color:white; margin:0 0 6px 0; font-size:15px; font-weight:600;" id="cmPublishConfirmMsg">Your article has been posted successfully.</p>
                                 <p style="color:rgba(255,255,255,0.7); margin:0; font-size:14px;"><a id="cmPostUrl" href="#" target="_blank" style="color:#2ecc71;">View article on WordPress</a></p>
                             </div>
-                            <p style="color:rgba(255,255,255,0.65); margin-bottom:20px; font-size:14px; line-height:1.6;">
-                                Ready to share this article on social media? Head to the Social Media Posting tab to generate and manage your posts.
-                            </p>
                             <div class="button-group">
                                 <button class="btn btn-info" onclick="cmSwitchSubTab('social')">Post on Social Media</button>
                                 <button class="btn" onclick="cmReset()" style="background:#7f8c8d;">Start New Article</button>
                             </div>
                         </div>
-
                     </div>
-
                     <!-- ===== SOCIAL MEDIA POSTING PANEL ===== -->
                     <div id="cmPanelSocial" style="display:none;">
-
-                        <!-- ---- LinkedIn Connection Card ---- -->
                         <div class="actions-card" style="margin-bottom:24px;">
                             <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
                                 <div style="display:flex; align-items:center; gap:14px;">
@@ -2483,642 +2299,60 @@
                                 <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
                                     <span id="liStatusBadge" style="padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; display:none;"></span>
                                     <a id="liConnectBtn" href="/auth/linkedin" style="display:none; padding:8px 18px; background:#0077b5; color:white; border-radius:6px; font-size:13px; font-weight:600; text-decoration:none;">Connect LinkedIn</a>
-                                    <a id="liReconnectBtn" href="/auth/linkedin" style="display:none; padding:8px 18px; background:#e67e22; color:white; border-radius:6px; font-size:13px; font-weight:600; text-decoration:none;">Reconnect</a>
                                     <button id="liDisconnectBtn" onclick="cmLinkedInDisconnect()" style="display:none; padding:8px 18px; background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.4); color:#e74c3c; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer;">Disconnect</button>
                                 </div>
                             </div>
-                            <div id="liExpiryWarning" style="display:none; margin-top:14px; padding:10px 14px; background:rgba(230,126,34,0.15); border:1px solid rgba(230,126,34,0.35); border-radius:8px;">
-                                <p id="liExpiryMsg" style="margin:0; color:#e67e22; font-size:13px;"></p>
-                            </div>
                         </div>
-
-                        <!-- ---- Instagram Connection Card ---- -->
-                        <div class="actions-card" style="margin-bottom:24px;">
-                            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
-                                <div style="display:flex; align-items:center; gap:14px;">
-                                    <div style="background:linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); width:42px; height:42px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;">&#128247;</div>
-                                    <div>
-                                        <div style="color:white; font-weight:600; font-size:15px; margin-bottom:2px;">Instagram</div>
-                                        <div id="igStatusText" style="font-size:13px; color:rgba(255,255,255,0.6);">Checking connection...</div>
-                                    </div>
-                                </div>
-                                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                                    <span id="igStatusBadge" style="padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; display:none;"></span>
-                                    <a id="igConnectBtn" href="/instagram-connect" style="display:none; padding:8px 18px; background:linear-gradient(135deg,#f09433,#bc1888); color:white; border-radius:6px; font-size:13px; font-weight:600; text-decoration:none;">Connect Instagram</a>
-                                    <a id="igReconnectBtn" href="/instagram-connect" style="display:none; padding:8px 18px; background:#e67e22; color:white; border-radius:6px; font-size:13px; font-weight:600; text-decoration:none;">Reconnect</a>
-                                    <button id="igDisconnectBtn" onclick="igDisconnect()" style="display:none; padding:8px 18px; background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.4); color:#e74c3c; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer;">Disconnect</button>
-                                </div>
-                            </div>
-                            <div id="igExpiryWarning" style="display:none; margin-top:14px; padding:10px 14px; background:rgba(230,126,34,0.15); border:1px solid rgba(230,126,34,0.35); border-radius:8px;">
-                                <p id="igExpiryMsg" style="margin:0; color:#e67e22; font-size:13px;"></p>
-                            </div>
-                        </div>
-
-                        <!-- ---- Social Posts Card ---- -->
                         <div class="actions-card">
                             <h2 style="margin-top:0; margin-bottom:6px;">Social Media Posting</h2>
-                            <p style="color:rgba(255,255,255,0.65); margin-bottom:20px; font-size:14px; line-height:1.6;">
-                                AI-generated social posts based on your published article. Edit as needed, then post directly or copy.
-                            </p>
-                            <!-- Published article link shown when available -->
-                            <div id="cmSocialArticleRef" style="display:none; margin-bottom:20px; padding:12px 16px; background:rgba(52,152,219,0.1); border:1px solid rgba(52,152,219,0.3); border-radius:8px;">
-                                <p style="color:white; margin:0; font-size:13px;">Article: <a id="cmSocialPostUrl" href="#" target="_blank" style="color:#3498db;"></a></p>
-                            </div>
-                            <!-- No article yet message -->
                             <div id="cmSocialNoArticle" style="padding:24px; text-align:center; background:rgba(255,255,255,0.04); border-radius:8px; margin-bottom:20px;">
-                                <p style="color:rgba(255,255,255,0.5); margin:0 0 14px; font-size:14px;">No published article found. Generate and post an article first, then come back here to create social posts.</p>
+                                <p style="color:rgba(255,255,255,0.5); margin:0 0 14px; font-size:14px;">No published article found. Generate and post an article first.</p>
                                 <button class="btn btn-info" onclick="cmSwitchSubTab('article')">Go to Article Generation</button>
                             </div>
-                            <!-- Social post generation shown when article is published -->
                             <div id="cmSocialContent" style="display:none;">
-                                <div id="cmSocialLoading" style="display:none; padding:16px 0; margin-bottom:16px;">
-                                    <div style="display:flex; align-items:center; gap:12px;">
-                                        <div style="width:18px; height:18px; border:3px solid rgba(255,255,255,0.2); border-top-color:#9b59b6; border-radius:50%; animation:spin 0.8s linear infinite; flex-shrink:0;"></div>
-                                        <span style="color:rgba(255,255,255,0.8); font-size:14px;">Generating social posts...</span>
-                                    </div>
-                                </div>
-                                <!-- LinkedIn -->
                                 <div style="margin-bottom:20px;">
                                     <label style="display:flex; align-items:center; gap:8px; color:white; font-weight:600; margin-bottom:10px; font-size:14px;">
                                         <span style="background:#0077b5; padding:3px 10px; border-radius:4px; font-size:12px;">in</span> LinkedIn
                                     </label>
                                     <textarea id="cmLinkedin" rows="8" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
-                                    <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; align-items:center;">
+                                    <div style="display:flex; gap:8px; margin-top:8px;">
                                         <button onclick="cmCopyText('cmLinkedin')" style="padding:6px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; cursor:pointer; font-size:12px;">Copy</button>
                                         <button id="liPostBtn" onclick="cmPostToLinkedIn()" style="padding:6px 18px; background:#0077b5; border:none; border-radius:6px; color:white; cursor:pointer; font-size:12px; font-weight:600;">Post to LinkedIn</button>
-                                        <span id="liPostStatus" style="font-size:12px; color:rgba(255,255,255,0.6);"></span>
                                     </div>
                                 </div>
-                                <!-- Facebook -->
-                                <div style="margin-bottom:20px;">
-                                    <label style="display:flex; align-items:center; gap:8px; color:white; font-weight:600; margin-bottom:10px; font-size:14px;">
-                                        <span style="background:#1877f2; padding:3px 10px; border-radius:4px; font-size:12px;">f</span> Facebook
-                                    </label>
-                                    <textarea id="cmFacebook" rows="5" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
-                                    <button onclick="cmCopyText('cmFacebook')" style="margin-top:8px; padding:6px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; cursor:pointer; font-size:12px;">Copy</button>
-                                </div>
-
-                                <!-- X / Twitter -->
-                                <div style="margin-bottom:24px;">
-                                    <label style="display:flex; align-items:center; gap:8px; color:white; font-weight:600; margin-bottom:10px; font-size:14px;">
-                                        <span style="background:#000; padding:3px 10px; border-radius:4px; font-size:12px;">X</span> X / Twitter
-                                    </label>
-                                    <textarea id="cmTwitter" rows="3" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
-                                    <button onclick="cmCopyText('cmTwitter')" style="margin-top:8px; padding:6px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; cursor:pointer; font-size:12px;">Copy</button>
-                                </div>
-
                                 <div class="button-group">
                                     <button class="btn btn-info" onclick="cmRegenerateSocial()">Regenerate Social Posts</button>
-                                    <button class="btn" onclick="cmSwitchSubTab('article')" style="background:#7f8c8d;">Back to Article</button>
                                 </div>
                             </div>
-                        </div>
-                        <!-- ---- Standalone Post Composer ---- -->
-                        <div class="actions-card" id="cmStandaloneComposer" style="padding:0; overflow:hidden;">
-                            <!-- Header -->
-                            <div style="padding:24px 28px 20px; border-bottom:1px solid rgba(255,255,255,0.08);">
-                                <div style="display:flex; align-items:center; gap:12px; margin-bottom:6px;">
-                                    <div style="background:#0077b5; border-radius:6px; padding:4px 12px; font-size:12px; font-weight:700; color:white; letter-spacing:0.5px;">in</div>
-                                    <h2 style="margin:0; font-size:18px; font-weight:700; color:white;">Create a LinkedIn Post</h2>
-                                </div>
-                                <p style="color:rgba(255,255,255,0.5); font-size:13px; margin:0;">Post directly to the Artisan Company Page — independent of any article.</p>
-                            </div>
-
-                            <!-- Post Type Selector -->
-                            <div style="padding:20px 28px 0;">
-                                <p style="color:rgba(255,255,255,0.6); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:1px; margin:0 0 12px;">Post Type</p>
-                                <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr 1fr; gap:10px; margin-bottom:24px;">
-                                    <button onclick="cmSetPostType('standard')" id="cmPostTypeStandard"
-                                        style="padding:14px 10px; border-radius:10px; border:2px solid #0077b5; background:rgba(0,119,181,0.15); color:white; cursor:pointer; font-size:13px; font-weight:600; text-align:center; transition:all 0.2s;">
-                                        <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:5px;">POST</div>
-                                        <div>Standard Post</div>
-                                        <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:3px;">Text + optional image</div>
-                                    </button>
-                                    <button onclick="cmSetPostType('job')" id="cmPostTypeJob"
-                                        style="padding:14px 10px; border-radius:10px; border:2px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:white; cursor:pointer; font-size:13px; font-weight:600; text-align:center; transition:all 0.2s;">
-                                        <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:5px;">JOB</div>
-                                        <div>Job Listing</div>
-                                        <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:3px;">Share a role with rich card</div>
-                                    </button>
-                                    <button onclick="cmSetPostType('poll')" id="cmPostTypePoll"
-                                        style="padding:14px 10px; border-radius:10px; border:2px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:white; cursor:pointer; font-size:13px; font-weight:600; text-align:center; transition:all 0.2s;">
-                                        <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:5px;">POLL</div>
-                                        <div>Poll</div>
-                                        <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:3px;">Ask your audience</div>
-                                    </button>
-                                    <button onclick="cmSetPostType('articlepost')" id="cmPostTypeArticlepost"
-                                        style="padding:14px 10px; border-radius:10px; border:2px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:white; cursor:pointer; font-size:13px; font-weight:600; text-align:center; transition:all 0.2s;">
-                                        <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:5px;">ARTICLE</div>
-                                        <div>From Article</div>
-                                        <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:3px;">Post from live article</div>
-                                    </button>
-                                    <button onclick="cmSetPostType('alistpost')" id="cmPostTypeAlistpost"
-                                        style="padding:14px 10px; border-radius:10px; border:2px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:white; cursor:pointer; font-size:13px; font-weight:600; text-align:center; transition:all 0.2s;">
-                                        <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:5px;">A-LIST</div>
-                                        <div>From A-List</div>
-                                        <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:3px;">Showcase top candidates</div>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- ===== STANDARD POST PANEL ===== -->
-                            <div id="cmPanelStandard" style="padding:0 28px 28px;">
-                                <div style="margin-bottom:16px;">
-                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                                        <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600;">Post Copy</label>
-                                        <button onclick="cmAIWriteStandalone()" style="padding:5px 12px; background:linear-gradient(135deg,#3498db,#2980b9); border:none; border-radius:5px; color:white; cursor:pointer; font-size:12px; font-weight:600;">Write with AI</button>
-                                    </div>
-                                    <textarea id="cmStandaloneLinkedin" rows="7" placeholder="Write your LinkedIn post here..." style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
-                                    <div style="text-align:right; font-size:11px; color:rgba(255,255,255,0.35); margin-top:4px;" id="cmStandaloneCharCount">0 characters</div>
-                                </div>
-
-                                <!-- AI Panel -->
-                                <div id="cmStandaloneAIPanel" style="display:none; margin-bottom:16px; padding:16px; background:rgba(255,255,255,0.06); border-radius:8px; border:1px solid rgba(255,255,255,0.12);">
-                                    <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:8px;">What should the post be about?</label>
-                                    <input id="cmStandalonePrompt" type="text" placeholder="e.g. Tips for creative professionals navigating a career change" style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:white; font-size:13px; box-sizing:border-box; margin-bottom:10px;">
-                                    <div style="display:flex; gap:8px;">
-                                        <button onclick="cmGenerateStandalonePost()" style="padding:8px 18px; background:linear-gradient(135deg,#3498db,#2980b9); border:none; border-radius:6px; color:white; cursor:pointer; font-size:13px; font-weight:600;">Generate</button>
-                                        <button onclick="document.getElementById('cmStandaloneAIPanel').style.display='none'" style="padding:8px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:white; cursor:pointer; font-size:12px;">Cancel</button>
-                                    </div>
-                                    <div id="cmStandaloneAILoading" style="display:none; margin-top:10px; color:rgba(255,255,255,0.6); font-size:13px;">Generating post...</div>
-                                </div>
-
-                                <!-- Media Attachment -->
-                                <div style="margin-bottom:20px;">
-                                    <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:8px;">Attach Image or Video <span style="font-weight:400; color:rgba(255,255,255,0.4);">(optional)</span></label>
-                                    <div onclick="document.getElementById('cmStandaloneMediaInput').click()"
-                                        style="border:2px dashed rgba(255,255,255,0.2); border-radius:10px; padding:20px; text-align:center; cursor:pointer; transition:all 0.2s; background:rgba(255,255,255,0.04);"
-                                        ondragover="event.preventDefault(); this.style.borderColor='#0077b5';"
-                                        ondragleave="this.style.borderColor='rgba(255,255,255,0.2)';"
-                                        ondrop="cmHandleMediaDrop(event,'cmStandaloneMedia')">
-                                        <div id="cmStandaloneMediaPreviewWrap" style="display:none; margin-bottom:10px;">
-                                            <img id="cmStandaloneMediaImgPreview" style="max-height:160px; max-width:100%; border-radius:8px; object-fit:cover; display:none;" />
-                                            <video id="cmStandaloneMediaVidPreview" style="max-height:160px; max-width:100%; border-radius:8px; display:none;" controls></video>
-                                            <div id="cmStandaloneMediaFileName" style="color:rgba(255,255,255,0.7); font-size:12px; margin-top:6px;"></div>
-                                        </div>
-                                        <div id="cmStandaloneMediaPlaceholder">
-                                            <div style="color:rgba(255,255,255,0.5); font-size:13px;">Click or drag image/video here</div>
-                                            <div style="color:rgba(255,255,255,0.3); font-size:11px; margin-top:4px;">Images: JPG, PNG, GIF &mdash; Videos: MP4, MOV &mdash; max 100 MB</div>
-                                        </div>
-                                    </div>
-                                    <input type="file" id="cmStandaloneMediaInput" accept="image/*,video/*" style="display:none;" onchange="cmHandleMediaSelect(event,'cmStandaloneMedia')">
-                                    <div id="cmStandaloneMediaClearWrap" style="display:none; margin-top:8px;">
-                                        <button onclick="cmClearMedia('cmStandaloneMedia')" style="padding:4px 12px; background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.4); border-radius:5px; color:#e74c3c; cursor:pointer; font-size:12px;">Remove Media</button>
-                                    </div>
-                                </div>
-
-                                <!-- Actions -->
-                                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                                    <button onclick="cmPostStandaloneLinkedIn()" style="padding:10px 24px; background:#0077b5; border:none; border-radius:8px; color:white; cursor:pointer; font-size:14px; font-weight:700; letter-spacing:0.3px;">Post to LinkedIn</button>
-                                    <button onclick="cmCopyText('cmStandaloneLinkedin')" style="padding:10px 16px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; cursor:pointer; font-size:13px;">Copy Text</button>
-                                    <span id="cmStandaloneStatus" style="font-size:13px; color:rgba(255,255,255,0.6);"></span>
-                                </div>
-                            </div>
-
-                            <!-- ===== JOB LISTING PANEL ===== -->
-                            <div id="cmPanelJob" style="display:none; padding:0 28px 28px;">
-
-                                <!-- Mode toggle -->
-                                <div style="display:flex; gap:8px; margin-bottom:20px;">
-                                    <button id="cmJobModeSingle" onclick="cmSetJobMode('single')" style="padding:8px 18px; border-radius:8px; border:2px solid #0077b5; background:rgba(0,119,181,0.15); color:white; cursor:pointer; font-size:13px; font-weight:600;">Single Job</button>
-                                    <button id="cmJobModeMulti" onclick="cmSetJobMode('multi')" style="padding:8px 18px; border-radius:8px; border:2px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:white; cursor:pointer; font-size:13px; font-weight:600;">Multiple Jobs</button>
-                                </div>
-
-                                <!-- SINGLE MODE -->
-                                <div id="cmJobSingleMode">
-                                    <div style="margin-bottom:20px;">
-                                        <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:8px;">Select Job from JobAdder</label>
-                                        <select id="cmJobDropdown" onchange="cmOnJobDropdownChange(this)" style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; box-sizing:border-box; cursor:pointer;">
-                                            <option value="">Loading jobs...</option>
-                                        </select>
-                                        <div id="cmJobDropdownError" style="display:none; margin-top:6px; font-size:12px; color:#e74c3c;"></div>
-                                    </div>
-                                    <div style="margin-bottom:16px;">
-                                        <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:8px;">Post Copy <span style="color:rgba(255,255,255,0.4); font-weight:400;">(introduce the role)</span></label>
-                                        <textarea id="cmJobPostText" rows="5" placeholder="We're looking for a talented Creative Director to join a leading agency in Melbourne..." style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
-                                    </div>
-                                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px;">
-                                        <div>
-                                            <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:6px;">Job Title</label>
-                                            <input id="cmJobTitle" type="text" placeholder="e.g. Senior Art Director" style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; box-sizing:border-box;">
-                                        </div>
-                                        <div>
-                                            <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:6px;">Job URL</label>
-                                            <input id="cmJobUrl" type="url" placeholder="https://artisan.com.au/job/..." style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; box-sizing:border-box;">
-                                        </div>
-                                    </div>
-                                    <div style="margin-bottom:20px;">
-                                        <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:6px;">Short Description <span style="color:rgba(255,255,255,0.4); font-weight:400;">(shown in the link card)</span></label>
-                                        <input id="cmJobDescription" type="text" placeholder="e.g. Full-time, Melbourne CBD — apply via Artisan" style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; box-sizing:border-box;">
-                                    </div>
-                                    <div id="cmJobPreviewCard" style="display:none; margin-bottom:20px; padding:14px 16px; background:rgba(255,255,255,0.06); border-radius:10px; border:1px solid rgba(255,255,255,0.12);">
-                                        <div style="font-size:11px; color:rgba(255,255,255,0.4); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.8px;">Link Preview</div>
-                                        <div style="display:flex; align-items:center; gap:12px;">
-                                            <div style="background:#0077b5; border-radius:6px; padding:8px 12px; font-size:14px; font-weight:800; color:white; flex-shrink:0;">A</div>
-                                            <div>
-                                                <div id="cmJobPreviewTitle" style="color:white; font-weight:600; font-size:14px;"></div>
-                                                <div id="cmJobPreviewDesc" style="color:rgba(255,255,255,0.5); font-size:12px; margin-top:2px;"></div>
-                                                <div style="color:rgba(255,255,255,0.3); font-size:11px; margin-top:2px;">artisan.com.au</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!-- Media Attachment -->
-                                    <div style="margin-bottom:20px;">
-                                        <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:8px;">Attach Image or Video <span style="font-weight:400; color:rgba(255,255,255,0.4);">(optional)</span></label>
-                                        <div id="cmJobSingleMediaDrop" onclick="document.getElementById('cmJobSingleMediaInput').click()"
-                                            style="border:2px dashed rgba(255,255,255,0.2); border-radius:10px; padding:16px; text-align:center; cursor:pointer; background:rgba(255,255,255,0.04);"
-                                            ondragover="event.preventDefault(); this.style.borderColor='#0077b5';"
-                                            ondragleave="this.style.borderColor='rgba(255,255,255,0.2)';"
-                                            ondrop="cmHandleMediaDrop(event,'cmJobSingleMedia')">
-                                            <div id="cmJobSingleMediaPreviewWrap" style="display:none; margin-bottom:8px;">
-                                                <img id="cmJobSingleMediaPreviewImg" style="max-height:120px; max-width:100%; border-radius:6px; object-fit:cover; display:none;" />
-                                                <video id="cmJobSingleMediaPreviewVid" style="max-height:120px; max-width:100%; border-radius:6px; display:none;" controls muted></video>
-                                            </div>
-                                            <div id="cmJobSingleMediaPlaceholder" style="color:rgba(255,255,255,0.5); font-size:13px;">Click or drag an image or video here<br><span style="font-size:11px; color:rgba(255,255,255,0.3);">JPG, PNG, GIF, MP4, MOV — max 100 MB</span></div>
-                                        </div>
-                                        <input type="file" id="cmJobSingleMediaInput" accept="image/*,video/*" style="display:none;" onchange="cmHandleMediaSelect(event,'cmJobSingleMedia')">
-                                        <div id="cmJobSingleMediaClearWrap" style="display:none; margin-top:8px;">
-                                            <button onclick="cmClearMedia('cmJobSingleMedia')" style="padding:4px 12px; background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.4); border-radius:5px; color:#e74c3c; cursor:pointer; font-size:12px;">Remove Media</button>
-                                        </div>
-                                    </div>
-
-                                    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                                        <button onclick="cmPostJobListing()" style="padding:10px 24px; background:#0077b5; border:none; border-radius:8px; color:white; cursor:pointer; font-size:14px; font-weight:700;">Post Job to LinkedIn</button>
-                                        <button onclick="cmPreviewJobCard()" style="padding:10px 16px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; cursor:pointer; font-size:13px;">Preview Card</button>
-                                        <button onclick="cmToggleJobSchedule('single')" style="padding:10px 16px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; cursor:pointer; font-size:13px;">Schedule Post</button>
-                                        <span id="cmJobPostStatus" style="font-size:13px; color:rgba(255,255,255,0.6);"></span>
-                                    </div>
-                                    <div id="cmJobSingleScheduleRow" style="display:none; margin-top:14px; padding:14px 16px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px;">
-                                        <label style="color:rgba(255,255,255,0.7); font-size:13px; display:block; margin-bottom:8px;">Schedule for (Melbourne time)</label>
-                                        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                                            <input type="datetime-local" id="cmJobSingleScheduleAt" style="padding:8px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; cursor:pointer;">
-                                            <button onclick="cmConfirmJobSchedule('single')" style="padding:8px 18px; background:#0077b5; border:none; border-radius:8px; color:white; cursor:pointer; font-size:13px; font-weight:700;">Confirm Schedule</button>
-                                            <button onclick="cmToggleJobSchedule('single')" style="padding:8px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.6); cursor:pointer; font-size:12px;">Cancel</button>
-                                        </div>
-                                    </div>
-                                    <div id="cmJobSingleScheduledBox" style="display:none; margin-top:14px; padding:12px 16px; background:rgba(0,119,181,0.15); border:1px solid rgba(0,119,181,0.3); border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
-                                        <span id="cmJobSingleScheduledLabel" style="color:rgba(255,255,255,0.9); font-size:13px;"></span>
-                                        <button onclick="cmCancelJobSchedule('single')" style="padding:6px 14px; background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.4); border-radius:6px; color:#e74c3c; cursor:pointer; font-size:12px;">Cancel Schedule</button>
-                                    </div>
-                                </div>
-
-                                <!-- MULTI MODE -->
-                                <div id="cmJobMultiMode" style="display:none;">
-                                    <div style="margin-bottom:16px;">
-                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                                            <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600;">Select Jobs to Include</label>
-                                            <div style="display:flex; gap:8px;">
-                                                <button onclick="cmJobSelectAll()" style="padding:4px 10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:5px; color:rgba(255,255,255,0.7); cursor:pointer; font-size:11px;">Select All</button>
-                                                <button onclick="cmJobSelectNone()" style="padding:4px 10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:5px; color:rgba(255,255,255,0.7); cursor:pointer; font-size:11px;">Clear</button>
-                                            </div>
-                                        </div>
-                                        <div id="cmJobMultiList" style="max-height:220px; overflow-y:auto; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:8px 12px;">
-                                            <div style="color:rgba(255,255,255,0.4); font-size:13px;">Loading jobs...</div>
-                                        </div>
-                                        <div style="font-size:11px; color:rgba(255,255,255,0.35); margin-top:6px;"><span id="cmJobMultiCount">0</span> job(s) selected</div>
-                                    </div>
-                                    <!-- Generated post editor -->
-                                    <div id="cmJobMultiEditor" style="display:none; margin-bottom:20px;">
-                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                                            <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600;">LinkedIn Post Copy</label>
-                                            <button onclick="cmGenerateMultiJobPost()" style="padding:4px 12px; background:rgba(0,119,181,0.15); border:1px solid rgba(0,119,181,0.3); border-radius:5px; color:#0077b5; cursor:pointer; font-size:12px; font-weight:600;">Regenerate</button>
-                                        </div>
-                                        <textarea id="cmJobMultiPostText" rows="10" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;" oninput="document.getElementById('cmJobMultiCharCount').textContent=this.value.length+' characters'"></textarea>
-                                        <div style="text-align:right; font-size:11px; color:rgba(255,255,255,0.35); margin-top:4px;" id="cmJobMultiCharCount">0 characters</div>
-                                    </div>
-                                    <!-- Media Attachment -->
-                                    <div style="margin-bottom:20px;">
-                                        <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:8px;">Attach Image or Video <span style="font-weight:400; color:rgba(255,255,255,0.4);">(optional)</span></label>
-                                        <div id="cmJobMultiMediaDrop" onclick="document.getElementById('cmJobMultiMediaInput').click()"
-                                            style="border:2px dashed rgba(255,255,255,0.2); border-radius:10px; padding:16px; text-align:center; cursor:pointer; background:rgba(255,255,255,0.04);"
-                                            ondragover="event.preventDefault(); this.style.borderColor='#0077b5';"
-                                            ondragleave="this.style.borderColor='rgba(255,255,255,0.2)';"
-                                            ondrop="cmHandleMediaDrop(event,'cmJobMultiMedia')">
-                                            <div id="cmJobMultiMediaPreviewWrap" style="display:none; margin-bottom:8px;">
-                                                <img id="cmJobMultiMediaPreviewImg" style="max-height:120px; max-width:100%; border-radius:6px; object-fit:cover; display:none;" />
-                                                <video id="cmJobMultiMediaPreviewVid" style="max-height:120px; max-width:100%; border-radius:6px; display:none;" controls muted></video>
-                                            </div>
-                                            <div id="cmJobMultiMediaPlaceholder" style="color:rgba(255,255,255,0.5); font-size:13px;">Click or drag an image or video here<br><span style="font-size:11px; color:rgba(255,255,255,0.3);">JPG, PNG, GIF, MP4, MOV — max 100 MB</span></div>
-                                        </div>
-                                        <input type="file" id="cmJobMultiMediaInput" accept="image/*,video/*" style="display:none;" onchange="cmHandleMediaSelect(event,'cmJobMultiMedia')">
-                                        <div id="cmJobMultiMediaClearWrap" style="display:none; margin-top:8px;">
-                                            <button onclick="cmClearMedia('cmJobMultiMedia')" style="padding:4px 12px; background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.4); border-radius:5px; color:#e74c3c; cursor:pointer; font-size:12px;">Remove Media</button>
-                                        </div>
-                                    </div>
-
-                                    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                                        <button onclick="cmGenerateMultiJobPost()" id="cmJobMultiGenerateBtn" style="padding:10px 20px; background:linear-gradient(135deg,#0077b5,#005f8e); border:none; border-radius:8px; color:white; cursor:pointer; font-size:13px; font-weight:700;">Generate Post with AI</button>
-                                        <button onclick="cmPostMultiJobListing()" id="cmJobMultiPostBtn" style="display:none; padding:10px 24px; background:#0077b5; border:none; border-radius:8px; color:white; cursor:pointer; font-size:14px; font-weight:700;">Post to LinkedIn</button>
-                                        <button onclick="cmToggleJobSchedule('multi')" id="cmJobMultiScheduleBtn" style="display:none; padding:10px 16px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; cursor:pointer; font-size:13px;">Schedule Post</button>
-                                        <button onclick="cmCopyText('cmJobMultiPostText')" id="cmJobMultiCopyBtn" style="display:none; padding:10px 16px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; cursor:pointer; font-size:13px;">Copy</button>
-                                        <span id="cmJobMultiStatus" style="font-size:13px; color:rgba(255,255,255,0.6);"></span>
-                                    </div>
-                                    <div id="cmJobMultiLoading" style="display:none; margin-top:12px; align-items:center; gap:10px;">
-                                        <div style="width:16px; height:16px; border:3px solid rgba(255,255,255,0.2); border-top-color:#0077b5; border-radius:50%; animation:spin 0.8s linear infinite; flex-shrink:0;"></div>
-                                        <span style="color:rgba(255,255,255,0.7); font-size:13px;">Generating post with AI...</span>
-                                    </div>
-                                    <div id="cmJobMultiScheduleRow" style="display:none; margin-top:14px; padding:14px 16px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px;">
-                                        <label style="color:rgba(255,255,255,0.7); font-size:13px; display:block; margin-bottom:8px;">Schedule for (Melbourne time)</label>
-                                        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                                            <input type="datetime-local" id="cmJobMultiScheduleAt" style="padding:8px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; cursor:pointer;">
-                                            <button onclick="cmConfirmJobSchedule('multi')" style="padding:8px 18px; background:#0077b5; border:none; border-radius:8px; color:white; cursor:pointer; font-size:13px; font-weight:700;">Confirm Schedule</button>
-                                            <button onclick="cmToggleJobSchedule('multi')" style="padding:8px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.6); cursor:pointer; font-size:12px;">Cancel</button>
-                                        </div>
-                                    </div>
-                                    <div id="cmJobMultiScheduledBox" style="display:none; margin-top:14px; padding:12px 16px; background:rgba(0,119,181,0.15); border:1px solid rgba(0,119,181,0.3); border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
-                                        <span id="cmJobMultiScheduledLabel" style="color:rgba(255,255,255,0.9); font-size:13px;"></span>
-                                        <button onclick="cmCancelJobSchedule('multi')" style="padding:6px 14px; background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.4); border-radius:6px; color:#e74c3c; cursor:pointer; font-size:12px;">Cancel Schedule</button>
-                                    </div>
-                                </div>
-
-                            </div>
-
-                            <!-- ===== POLL PANEL ===== -->
-                            <div id="cmPanelPoll" style="padding:0 28px 28px; display:none;">
-
-                                <!-- AI Poll Generator -->
-                                <div style="margin-bottom:20px; padding:16px; background:rgba(52,152,219,0.08); border:1px solid rgba(52,152,219,0.2); border-radius:10px;">
-                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                                        <div>
-                                            <div style="color:white; font-size:13px; font-weight:700;">Generate Poll with AI</div>
-                                            <div style="color:rgba(255,255,255,0.45); font-size:11px; margin-top:2px;">AI will write the question, options and post copy</div>
-                                        </div>
-                                        <button onclick="cmGeneratePollIdeas()" id="btnCmPollIdeas"
-                                            style="display:flex; align-items:center; gap:6px; padding:5px 12px; background:rgba(46,204,113,0.15); border:1px solid rgba(46,204,113,0.4); border-radius:6px; color:#2ecc71; cursor:pointer; font-size:12px; font-weight:600; transition:all 0.2s;">
-                                            Generate Ideas
-                                        </button>
-                                    </div>
-                                    <!-- Poll ideas loading spinner -->
-                                    <div id="cmPollIdeasLoading" style="display:none; margin-bottom:10px; align-items:center; gap:10px;">
-                                        <div style="width:14px; height:14px; border:2px solid rgba(255,255,255,0.2); border-top-color:#2ecc71; border-radius:50%; animation:spin 0.8s linear infinite; flex-shrink:0;"></div>
-                                        <span style="color:rgba(255,255,255,0.7); font-size:13px;">Generating poll ideas with AI...</span>
-                                    </div>
-                                    <!-- Poll ideas panel -->
-                                    <div id="cmPollIdeasPanel" style="display:none; margin-bottom:14px; padding:12px 14px; background:rgba(46,204,113,0.06); border:1px solid rgba(46,204,113,0.2); border-radius:8px;">
-                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                                            <span style="color:rgba(255,255,255,0.8); font-size:12px; font-weight:600;">Click an idea to use it as your poll topic</span>
-                                            <button onclick="cmClearPollIdeas()" style="padding:3px 8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:5px; color:rgba(255,255,255,0.5); cursor:pointer; font-size:11px;">Clear</button>
-                                        </div>
-                                        <div id="cmPollIdeasList" style="display:flex; flex-direction:column; gap:5px;"></div>
-                                    </div>
-                                    <div style="display:flex; gap:8px; margin-bottom:10px;">
-                                        <input id="cmPollAiPrompt" type="text" placeholder="Optional: topic or angle (e.g. remote work, career pivots, AI tools)" style="flex:1; padding:9px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:7px; color:white; font-size:13px; box-sizing:border-box;">
-                                        <button onclick="cmGeneratePollWithAI()" id="btnCmGenPoll" style="padding:9px 18px; background:linear-gradient(135deg,#3498db,#2980b9); border:none; border-radius:7px; color:white; cursor:pointer; font-size:13px; font-weight:600; white-space:nowrap;">Generate</button>
-                                    </div>
-                                    <div id="cmPollAiLoading" style="display:none; padding:8px 0; color:rgba(255,255,255,0.5); font-size:13px; display:none;">
-                                        <div style="display:flex; align-items:center; gap:8px;">
-                                            <div style="width:14px; height:14px; border:2px solid rgba(255,255,255,0.2); border-top-color:#3498db; border-radius:50%; animation:spin 0.8s linear infinite;"></div>
-                                            Generating poll...
-                                        </div>
-                                    </div>
-                                    <div id="cmPollAiError" style="display:none; color:#e74c3c; font-size:12px; margin-top:6px;"></div>
-                                </div>
-
-                                <div style="margin-bottom:16px;">
-                                    <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:8px;">Post Copy <span style="color:rgba(255,255,255,0.4); font-weight:400;">(context above the poll)</span></label>
-                                    <textarea id="cmPollText" rows="4" placeholder="We want to hear from the creative community..." style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
-                                </div>
-                                <div style="margin-bottom:16px;">
-                                    <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:6px;">Poll Question</label>
-                                    <input id="cmPollQuestion" type="text" placeholder="e.g. What's the biggest challenge you face as a creative professional?" style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; box-sizing:border-box;">
-                                </div>
-                                <div style="margin-bottom:16px;">
-                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                                        <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600;">Poll Options <span style="color:rgba(255,255,255,0.4); font-weight:400;">(2–4 options)</span></label>
-                                        <button onclick="cmAddPollOption()" id="cmAddPollOptionBtn" style="padding:4px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:5px; color:white; cursor:pointer; font-size:12px;">+ Add Option</button>
-                                    </div>
-                                    <div id="cmPollOptions" style="display:flex; flex-direction:column; gap:8px;">
-                                        <div class="poll-option-row" style="display:flex; gap:8px; align-items:center;">
-                                            <input type="text" placeholder="Option 1" maxlength="30" style="flex:1; padding:10px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; box-sizing:border-box;">
-                                            <span style="color:rgba(255,255,255,0.3); font-size:11px; min-width:30px; text-align:right;">30</span>
-                                        </div>
-                                        <div class="poll-option-row" style="display:flex; gap:8px; align-items:center;">
-                                            <input type="text" placeholder="Option 2" maxlength="30" style="flex:1; padding:10px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; box-sizing:border-box;">
-                                            <span style="color:rgba(255,255,255,0.3); font-size:11px; min-width:30px; text-align:right;">30</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div style="margin-bottom:20px;">
-                                    <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:8px;">Poll Duration</label>
-                                    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px;">
-                                        <button onclick="cmSetPollDuration('ONE_DAY', this)" class="poll-duration-btn" style="padding:8px 6px; border-radius:7px; border:2px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.7); cursor:pointer; font-size:12px; font-weight:600;">1 Day</button>
-                                        <button onclick="cmSetPollDuration('THREE_DAYS', this)" class="poll-duration-btn" style="padding:8px 6px; border-radius:7px; border:2px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.7); cursor:pointer; font-size:12px; font-weight:600;">3 Days</button>
-                                        <button onclick="cmSetPollDuration('ONE_WEEK', this)" class="poll-duration-btn active-duration" style="padding:8px 6px; border-radius:7px; border:2px solid #0077b5; background:rgba(0,119,181,0.2); color:white; cursor:pointer; font-size:12px; font-weight:600;">1 Week</button>
-                                        <button onclick="cmSetPollDuration('TWO_WEEKS', this)" class="poll-duration-btn" style="padding:8px 6px; border-radius:7px; border:2px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.7); cursor:pointer; font-size:12px; font-weight:600;">2 Weeks</button>
-                                    </div>
-                                </div>
-                                <!-- Media Attachment -->
-                                <div style="margin-bottom:20px;">
-                                    <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:8px;">Attach Image or Video <span style="font-weight:400; color:rgba(255,255,255,0.4);">(optional)</span></label>
-                                    <div id="cmPollMediaDrop" onclick="document.getElementById('cmPollMediaInput').click()"
-                                        style="border:2px dashed rgba(255,255,255,0.2); border-radius:10px; padding:16px; text-align:center; cursor:pointer; background:rgba(255,255,255,0.04);"
-                                        ondragover="event.preventDefault(); this.style.borderColor='#0077b5';"
-                                        ondragleave="this.style.borderColor='rgba(255,255,255,0.2)';"
-                                        ondrop="cmHandleMediaDrop(event,'cmPollMedia')">
-                                        <div id="cmPollMediaPreviewWrap" style="display:none; margin-bottom:8px;">
-                                            <img id="cmPollMediaPreviewImg" style="max-height:120px; max-width:100%; border-radius:6px; object-fit:cover; display:none;" />
-                                            <video id="cmPollMediaPreviewVid" style="max-height:120px; max-width:100%; border-radius:6px; display:none;" controls muted></video>
-                                        </div>
-                                        <div id="cmPollMediaPlaceholder" style="color:rgba(255,255,255,0.5); font-size:13px;">Click or drag an image or video here<br><span style="font-size:11px; color:rgba(255,255,255,0.3);">JPG, PNG, GIF, MP4, MOV — max 100 MB</span></div>
-                                    </div>
-                                    <input type="file" id="cmPollMediaInput" accept="image/*,video/*" style="display:none;" onchange="cmHandleMediaSelect(event,'cmPollMedia')">
-                                    <div id="cmPollMediaClearWrap" style="display:none; margin-top:8px;">
-                                        <button onclick="cmClearMedia('cmPollMedia')" style="padding:4px 12px; background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.4); border-radius:5px; color:#e74c3c; cursor:pointer; font-size:12px;">Remove Media</button>
-                                    </div>
-                                </div>
-
-                                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                                    <button onclick="cmPostPoll()" style="padding:10px 24px; background:#0077b5; border:none; border-radius:8px; color:white; cursor:pointer; font-size:14px; font-weight:700;">Post Poll to LinkedIn</button>
-                                    <button onclick="cmShowPollScheduleRow()" id="btnSchedulePoll" style="padding:10px 18px; background:rgba(52,152,219,0.15); border:1px solid rgba(52,152,219,0.4); border-radius:8px; color:#5dade2; cursor:pointer; font-size:14px; font-weight:600;">Schedule Poll</button>
-                                    <span id="cmPollStatus" style="font-size:13px; color:rgba(255,255,255,0.6);"></span>
-                                </div>
-                                <!-- Schedule row -->
-                                <div id="cmPollScheduleRow" style="display:none; margin-top:14px; padding:14px 16px; background:rgba(52,152,219,0.08); border:1px solid rgba(52,152,219,0.2); border-radius:8px;">
-                                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                                        <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; white-space:nowrap;">Schedule for:</label>
-                                        <input type="datetime-local" id="cmPollScheduleDate" style="padding:8px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:7px; color:white; font-size:13px; flex:1; min-width:200px;">
-                                        <button onclick="cmConfirmPollSchedule()" id="btnConfirmPollSchedule" style="padding:8px 18px; background:#3498db; border:none; border-radius:7px; color:white; cursor:pointer; font-size:13px; font-weight:600; white-space:nowrap;">Confirm Schedule</button>
-                                        <button onclick="cmHidePollScheduleRow()" style="padding:8px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:7px; color:rgba(255,255,255,0.6); cursor:pointer; font-size:13px;">Cancel</button>
-                                    </div>
-                                </div>
-                                <!-- Scheduled status box -->
-                                <div id="cmPollScheduledBox" style="display:none; margin-top:12px;"></div>
-                            </div>
-
-                            <!-- ===== ARTICLE POST PANEL ===== -->
-                            <div id="cmPanelArticlepost" style="display:none; padding:0 28px 28px;">
-
-                                <!-- Article Picker -->
-                                <div style="margin-bottom:20px;">
-                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                                        <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600;">Select an Article</label>
-                                        <button onclick="cmLoadWpArticles()" style="padding:5px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:rgba(255,255,255,0.7); cursor:pointer; font-size:12px; font-weight:600;">Refresh</button>
-                                    </div>
-                                    <select id="cmArticlePicker" onchange="cmOnArticlePickerChange()" style="width:100%; padding:10px 12px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; box-sizing:border-box; cursor:pointer;">
-                                        <option value="">-- Select an article --</option>
-                                    </select>
-                                    <div id="cmArticlePickerError" style="display:none; margin-top:6px; font-size:12px; color:#e74c3c;"></div>
-
-                                    <!-- Selected article preview -->
-                                    <div id="cmArticleSelectedPreview" style="display:none; margin-top:12px; padding:12px 14px; background:rgba(52,152,219,0.08); border:1px solid rgba(52,152,219,0.2); border-radius:8px;">
-                                        <div style="font-size:11px; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:6px;">Selected Article</div>
-                                        <div id="cmArticleSelectedTitle" style="color:white; font-weight:600; font-size:14px; margin-bottom:4px;"></div>
-                                        <a id="cmArticleSelectedUrl" href="#" target="_blank" style="color:#3498db; font-size:12px;"></a>
-                                    </div>
-                                </div>
-
-                                <!-- Generate button -->
-                                <div style="margin-bottom:20px;">
-                                    <button onclick="cmGeneratePostFromArticle()" id="cmGenerateArticlePostBtn" disabled
-                                        style="padding:10px 24px; background:linear-gradient(135deg,#3498db,#2980b9); border:none; border-radius:8px; color:white; cursor:pointer; font-size:13px; font-weight:700; opacity:0.5; transition:opacity 0.2s;">Generate LinkedIn Post with AI</button>
-                                    <div id="cmArticlePostLoading" style="display:none; margin-top:12px; align-items:center; gap:10px;">
-                                        <div style="width:16px; height:16px; border:3px solid rgba(255,255,255,0.2); border-top-color:#3498db; border-radius:50%; animation:spin 0.8s linear infinite; flex-shrink:0;"></div>
-                                        <span style="color:rgba(255,255,255,0.7); font-size:13px;">Generating post with AI...</span>
-                                    </div>
-                                </div>
-
-                                <!-- Editable post textarea -->
-                                <div id="cmArticlePostEditor" style="display:none; margin-bottom:20px;">
-                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                                        <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600;">LinkedIn Post Copy</label>
-                                        <button onclick="cmGeneratePostFromArticle()" style="padding:4px 12px; background:rgba(52,152,219,0.15); border:1px solid rgba(52,152,219,0.3); border-radius:5px; color:#3498db; cursor:pointer; font-size:12px; font-weight:600;">Regenerate</button>
-                                    </div>
-                                    <textarea id="cmArticlePostText" rows="10" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;"></textarea>
-                                    <div style="text-align:right; font-size:11px; color:rgba(255,255,255,0.35); margin-top:4px;" id="cmArticlePostCharCount">0 characters</div>
-                                </div>
-
-                                <!-- Media Attachment -->
-                                <div style="margin-bottom:20px;">
-                                    <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:8px;">Attach Image or Video <span style="font-weight:400; color:rgba(255,255,255,0.4);">(optional)</span></label>
-                                    <div id="cmArticlePostMediaDrop" onclick="document.getElementById('cmArticlePostMediaInput').click()"
-                                        style="border:2px dashed rgba(255,255,255,0.2); border-radius:10px; padding:16px; text-align:center; cursor:pointer; background:rgba(255,255,255,0.04);"
-                                        ondragover="event.preventDefault(); this.style.borderColor='#0077b5';"
-                                        ondragleave="this.style.borderColor='rgba(255,255,255,0.2)';"
-                                        ondrop="cmHandleMediaDrop(event,'cmArticlePostMedia')">
-                                        <div id="cmArticlePostMediaPreviewWrap" style="display:none; margin-bottom:8px;">
-                                            <img id="cmArticlePostMediaPreviewImg" style="max-height:120px; max-width:100%; border-radius:6px; object-fit:cover; display:none;" />
-                                            <video id="cmArticlePostMediaPreviewVid" style="max-height:120px; max-width:100%; border-radius:6px; display:none;" controls muted></video>
-                                        </div>
-                                        <div id="cmArticlePostMediaPlaceholder" style="color:rgba(255,255,255,0.5); font-size:13px;">Click or drag an image or video here<br><span style="font-size:11px; color:rgba(255,255,255,0.3);">JPG, PNG, GIF, MP4, MOV — max 100 MB</span></div>
-                                    </div>
-                                    <input type="file" id="cmArticlePostMediaInput" accept="image/*,video/*" style="display:none;" onchange="cmHandleMediaSelect(event,'cmArticlePostMedia')">
-                                    <div id="cmArticlePostMediaClearWrap" style="display:none; margin-top:8px;">
-                                        <button onclick="cmClearMedia('cmArticlePostMedia')" style="padding:4px 12px; background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.4); border-radius:5px; color:#e74c3c; cursor:pointer; font-size:12px;">Remove Media</button>
-                                    </div>
-                                </div>
-
-                                <!-- Actions -->
-                                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                                    <button onclick="cmPostArticlePostNow()" id="cmArticlePostNowBtn" style="padding:10px 24px; background:#0077b5; border:none; border-radius:8px; color:white; cursor:pointer; font-size:14px; font-weight:700;">Post to LinkedIn</button>
-                                    <button onclick="cmToggleArticlePostSchedule()" id="cmArticlePostScheduleBtn" style="padding:10px 18px; background:rgba(52,152,219,0.15); border:1px solid rgba(52,152,219,0.35); border-radius:8px; color:#3498db; cursor:pointer; font-size:13px; font-weight:600;">Schedule Post</button>
-                                    <button onclick="cmCopyText('cmArticlePostText')" style="padding:10px 16px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; cursor:pointer; font-size:13px;">Copy</button>
-                                    <span id="cmArticlePostStatus" style="font-size:13px; color:rgba(255,255,255,0.6);"></span>
-                                </div>
-
-                                <!-- Schedule row -->
-                                <div id="cmArticlePostScheduleRow" style="display:none; margin-top:14px; padding:14px 16px; background:rgba(52,152,219,0.08); border:1px solid rgba(52,152,219,0.2); border-radius:8px;">
-                                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                                        <label style="color:rgba(255,255,255,0.7); font-size:13px; font-weight:600; white-space:nowrap;">Schedule for:</label>
-                                        <input type="datetime-local" id="cmArticlePostScheduleDate" style="padding:8px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:7px; color:white; font-size:13px; flex:1; min-width:200px;">
-                                        <button onclick="cmConfirmArticlePostSchedule()" style="padding:8px 18px; background:#0077b5; border:none; border-radius:7px; color:white; cursor:pointer; font-size:13px; font-weight:600;">Confirm Schedule</button>
-                                        <button onclick="cmToggleArticlePostSchedule()" style="padding:8px 12px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:7px; color:rgba(255,255,255,0.6); cursor:pointer; font-size:12px;">Cancel</button>
-                                    </div>
-                                </div>
-
-                                <!-- Scheduled status box -->
-                                <div id="cmArticlePostScheduledBox" style="display:none; margin-top:12px;"></div>
-
-                            </div>
-
-                            <!-- ===== A-LIST POST PANEL ===== -->
-                            <div id="cmPanelAlistpost" style="display:none; padding:0 28px 28px;">
-
-                                <!-- A-List status box -->
-                                <div style="margin-bottom:20px; padding:14px 16px; background:rgba(52,152,219,0.08); border:1px solid rgba(52,152,219,0.2); border-radius:10px;">
-                                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                                        <div>
-                                            <div style="color:white; font-size:13px; font-weight:700;">Current A-List</div>
-                                            <div style="color:rgba(255,255,255,0.45); font-size:11px; margin-top:2px;">Pulled from the A-List tab — generate your A-List there first</div>
-                                        </div>
-                                        <button onclick="cmGenerateAListPost()" id="cmGenerateAListPostBtn"
-                                            style="padding:9px 20px; background:linear-gradient(135deg,#3498db,#2980b9); border:none; border-radius:8px; color:white; cursor:pointer; font-size:13px; font-weight:700;">Generate LinkedIn Post with AI</button>
-                                    </div>
-                                    <!-- Candidate preview list -->
-                                    <div id="cmAListCandidatePreview" style="display:none; margin-top:14px; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px;">
-                                        <div style="font-size:11px; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:8px;">Candidates on this A-List</div>
-                                        <div id="cmAListCandidateList" style="display:flex; flex-direction:column; gap:6px;"></div>
-                                    </div>
-                                    <div id="cmAListPostLoading" style="display:none; margin-top:12px; align-items:center; gap:10px;">
-                                        <div style="width:16px; height:16px; border:3px solid rgba(255,255,255,0.2); border-top-color:#3498db; border-radius:50%; animation:spin 0.8s linear infinite; flex-shrink:0;"></div>
-                                        <span style="color:rgba(255,255,255,0.7); font-size:13px;">Generating post with AI...</span>
-                                    </div>
-                                </div>
-
-                                <!-- Editable post textarea -->
-                                <div id="cmAListPostEditor" style="display:none; margin-bottom:20px;">
-                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                                        <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600;">LinkedIn Post Copy</label>
-                                        <button onclick="cmGenerateAListPost()" style="padding:4px 12px; background:rgba(52,152,219,0.15); border:1px solid rgba(52,152,219,0.3); border-radius:5px; color:#3498db; cursor:pointer; font-size:12px; font-weight:600;">Regenerate</button>
-                                    </div>
-                                    <textarea id="cmAListPostText" rows="10" style="width:100%; padding:12px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; font-size:13px; resize:vertical; box-sizing:border-box; line-height:1.6;" oninput="document.getElementById('cmAListPostCharCount').textContent=this.value.length+' characters'"></textarea>
-                                    <div style="text-align:right; font-size:11px; color:rgba(255,255,255,0.35); margin-top:4px;" id="cmAListPostCharCount">0 characters</div>
-                                </div>
-
-                                <!-- Media Attachment -->
-                                <div style="margin-bottom:20px;">
-                                    <label style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600; display:block; margin-bottom:8px;">Attach Image or Video <span style="font-weight:400; color:rgba(255,255,255,0.4);">(optional)</span></label>
-                                    <div id="cmAListPostMediaDrop" onclick="document.getElementById('cmAListPostMediaInput').click()"
-                                        style="border:2px dashed rgba(255,255,255,0.2); border-radius:10px; padding:16px; text-align:center; cursor:pointer; background:rgba(255,255,255,0.04);"
-                                        ondragover="event.preventDefault(); this.style.borderColor='#0077b5';"
-                                        ondragleave="this.style.borderColor='rgba(255,255,255,0.2)';"
-                                        ondrop="cmHandleMediaDrop(event,'cmAListPostMedia')">
-                                        <div id="cmAListPostMediaPreviewWrap" style="display:none; margin-bottom:8px;">
-                                            <img id="cmAListPostMediaPreviewImg" style="max-height:120px; max-width:100%; border-radius:6px; object-fit:cover; display:none;" />
-                                            <video id="cmAListPostMediaPreviewVid" style="max-height:120px; max-width:100%; border-radius:6px; display:none;" controls muted></video>
-                                        </div>
-                                        <div id="cmAListPostMediaPlaceholder" style="color:rgba(255,255,255,0.5); font-size:13px;">Click or drag an image or video here<br><span style="font-size:11px; color:rgba(255,255,255,0.3);">JPG, PNG, GIF, MP4, MOV — max 100 MB</span></div>
-                                    </div>
-                                    <input type="file" id="cmAListPostMediaInput" accept="image/*,video/*" style="display:none;" onchange="cmHandleMediaSelect(event,'cmAListPostMedia')">
-                                    <div id="cmAListPostMediaClearWrap" style="display:none; margin-top:8px;">
-                                        <button onclick="cmClearMedia('cmAListPostMedia')" style="padding:4px 12px; background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.4); border-radius:5px; color:#e74c3c; cursor:pointer; font-size:12px;">Remove Media</button>
-                                    </div>
-                                </div>
-
-                                <!-- Actions -->
-                                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                                    <button onclick="cmPostAListNow()" id="cmAListPostNowBtn" style="padding:10px 24px; background:#0077b5; border:none; border-radius:8px; color:white; cursor:pointer; font-size:14px; font-weight:700;">Post to LinkedIn</button>
-                                    <button onclick="cmToggleAListPostSchedule()" id="cmAListPostScheduleBtn" style="padding:10px 18px; background:rgba(52,152,219,0.15); border:1px solid rgba(52,152,219,0.35); border-radius:8px; color:#3498db; cursor:pointer; font-size:13px; font-weight:600;">Schedule Post</button>
-                                    <button onclick="cmCopyText('cmAListPostText')" style="padding:10px 16px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:white; cursor:pointer; font-size:13px;">Copy</button>
-                                    <span id="cmAListPostStatus" style="font-size:13px; color:rgba(255,255,255,0.6);"></span>
-                                </div>
-
-                                <!-- Schedule row -->
-                                <div id="cmAListPostScheduleRow" style="display:none; margin-top:14px; padding:14px 16px; background:rgba(52,152,219,0.08); border:1px solid rgba(52,152,219,0.2); border-radius:8px;">
-                                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                                        <label style="color:rgba(255,255,255,0.7); font-size:13px; font-weight:600; white-space:nowrap;">Schedule for:</label>
-                                        <input type="datetime-local" id="cmAListPostScheduleDate" style="padding:8px 12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:7px; color:white; font-size:13px; flex:1; min-width:200px;">
-                                        <button onclick="cmConfirmAListPostSchedule()" style="padding:8px 18px; background:#0077b5; border:none; border-radius:7px; color:white; cursor:pointer; font-size:13px; font-weight:600;">Confirm Schedule</button>
-                                        <button onclick="cmToggleAListPostSchedule()" style="padding:8px 12px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); border-radius:7px; color:rgba(255,255,255,0.6); cursor:pointer; font-size:12px;">Cancel</button>
-                                    </div>
-                                </div>
-
-                                <!-- Scheduled status box -->
-                                <div id="cmAListPostScheduledBox" style="display:none; margin-top:12px;"></div>
-
-                            </div>
-
                         </div>
                     </div>
-                `;
-                // Load any existing state
-                cmLoadState();
-                cmLoadPollScheduleState();
-                cmLoadArticlePostScheduleState();
-                cmLoadAListPostScheduleState();
-                cmLoadJobScheduleState();
-
-            }
+                </div>
+            `);
+            cmApp = document.getElementById('contentMarketingApp');
+            cmLoadState();
+            cmLoadPollScheduleState();
+            cmLoadArticlePostScheduleState();
+            cmLoadAListPostScheduleState();
+            cmLoadJobScheduleState();
+        } else {
+            cmApp.style.display = 'block';
         }
+
+    } else if (mainTabName === 'schedule') {
+        // Hide email sub-tabs and all email content
+        emailTabs.style.display = 'none';
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.style.display = 'none';
+        });
+        // Hide CM app
+        const cmApp = document.getElementById('contentMarketingApp');
+        if (cmApp) cmApp.style.display = 'none';
+        // Show schedule content
+        const scheduleContent = document.getElementById('schedule-content');
+        if (scheduleContent) scheduleContent.style.display = 'block';
+        renderCalendar();
+    }
+}
         
         function switchTab(tabName) {
             // Hide all tab contents
