@@ -240,14 +240,6 @@ async function parseJSON(req, res) {
         content: { ...parsed, articles, alist_candidate: alistCandidate, live_job: liveJob },
         templateParams
     };
-
-
-
-    console.log('DEBUG instagram_grid:', JSON.stringify(state.content.instagram_grid));
-    console.log('DEBUG instagram_caption:', state.content.instagram_caption);
-    console.log('DEBUG templateParams.instagram:', JSON.stringify(state.templateParams.instagram));
-
-    
     writeState(state);
     res.json({ success: true, state });
 }
@@ -493,15 +485,7 @@ async function parseCsv(req, res) {
         const alistCandidate = getAListCandidateFromState() || await fetchAListCandidateLive();
         const liveJob = await fetchLiveJob();
 
-        const instagram_grid = [];
-        for (let i = 1; i <= 4; i++) {
-            if (data[`insta_img_${i}`]) {
-                instagram_grid.push(data[`insta_img_${i}`]);
-            }
-        }
-        const instagram_caption = data.instagram_caption || '';
-
-        const templateParams = buildTemplateParams(consultantConfig, parsed, [], articles, alistCandidate, liveJob, parsed.sections, instagram_grid, instagram_caption);
+        const templateParams = buildTemplateParams(consultantConfig, parsed, [], articles, alistCandidate, liveJob);
         const state = {
             state: 'GENERATED',
             generatedAt: new Date().toISOString(),
@@ -542,13 +526,9 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
 
     const preheader_text = parsed.preheader_text || (industry_insight_heading ? `${industry_insight_heading} — from ${consultant.name} at Artisan` : '');
 
-    const instagram_grid_raw = (instagram_grid && instagram_grid.length > 0) ? instagram_grid : (parsed.instagram_grid || (parsed.instagram && parsed.instagram.images) || []);
-    const instagram_grid_final = instagram_grid_raw.filter(url => url && url.trim() !== '');
-    const rawCap = (instagram_caption && instagram_caption !== true && instagram_caption !== false)
-    ? instagram_caption
-    : (parsed.instagram_caption || (parsed.instagram && parsed.instagram.caption) || '');
-    const instagram_caption_final = String(rawCap || '').replace(/\n/g, "<br>");
-    
+    const instagram_grid_final = (instagram_grid && instagram_grid.length > 0) ? instagram_grid : (parsed.instagram_grid || (parsed.instagram && parsed.instagram.images) || []);
+    const instagram_caption_final = ((instagram_caption !== undefined && instagram_caption !== null) ? String(instagram_caption) : (parsed.instagram_caption || (parsed.instagram && parsed.instagram.caption) || '')).replace(/\n/g, "<br>");
+
     return {
         sections: finalSections,
         consultant: {
@@ -581,19 +561,15 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
                 return item;
             })
         },
-
-
-      instagram: {
-    caption: instagram_caption_final,
-    grid: instagram_grid_final,
-    insta_img_1: instagram_grid_final[0] || "",
-    insta_img_2: instagram_grid_final[1] || "",
-    insta_img_3: instagram_grid_final[2] || "",
-    insta_img_4: instagram_grid_final[3] || ""
-},
-instagram_grid: instagram_grid_final,
-instagram_caption: instagram_caption_final,
-    
+        instagram_grid: instagram_grid_final,
+        insta_img_1: instagram_grid_final[0] || "",
+        insta_img_2: instagram_grid_final[1] || "",
+        insta_img_3: instagram_grid_final[2] || "",
+        insta_img_4: instagram_grid_final[3] || "",
+        instagram: {
+            caption: instagram_caption_final,
+            grid: instagram_grid_final
+        },
         job: {
             has_job: !!(job.title),
             title: job.title || '',
@@ -711,7 +687,7 @@ async function sendToAll(req, res) {
 
 async function updateSections(req, res) {
     try {
-        const { sections, content, events, media, instagram_grid, instagram_caption, life_update_images } = req.body;
+        const { sections, content, events, media, instagram_grid, life_update_images } = req.body;
         const state = readState();
         if (state.state === 'EMPTY') return res.status(400).json({ success: false, message: 'Empty state' });
 
@@ -721,7 +697,7 @@ async function updateSections(req, res) {
                 industry_insight: !!sections.industry_insight,
                 life_update: !!sections.life_update,
                 media: !!sections.media,
-instagram: !!(sections.instagram === true || sections.instagram_grid),
+                instagram: !!sections.instagram || !!sections.instagram_grid,
                 events: !!sections.events,
                 alist: !!sections.alist,
                 job: !!sections.job,
@@ -743,22 +719,18 @@ instagram: !!(sections.instagram === true || sections.instagram_grid),
             }
             if (content.personal_update) {
                 state.content.life_update_heading = content.personal_update.title || content.personal_update.heading || '';
-state.content.life_update_body = content.personal_update.body || '';
+                state.content.life_update_body = content.personal_update.body || '';
+                // Sync legacy objects for buildTemplateParams
                 state.content.life_update = {
                     heading: state.content.life_update_heading,
                     body: state.content.life_update_body,
                     images: state.content.life_update_images || []
                 };
             }
-            if (content.instagram || instagram_caption !== undefined || instagram_grid !== undefined) {
-const rawCaption = (instagram_caption !== undefined && instagram_caption !== true && instagram_caption !== false)
-    ? instagram_caption
-    : (content.instagram && content.instagram.caption) || state.content.instagram_caption || '';
-state.content.instagram_caption = String(rawCaption);                state.content.instagram_grid = (instagram_grid && instagram_grid.length > 0) ? instagram_grid : (state.content.instagram_grid || []);
-                // Ensure individual insta_img_x are also updated for direct access if needed
-                for (let i = 0; i < 4; i++) {
-                    state.content[`insta_img_${i + 1}`] = state.content.instagram_grid[i] || '';
-                }
+            if (content.instagram) {
+                state.content.instagram_caption = String(content.instagram.caption || '');
+                state.content.instagram_grid = (instagram_grid && instagram_grid.length > 0) ? instagram_grid : (state.content.instagram_grid || []);
+                // Sync legacy objects for buildTemplateParams
                 state.content.instagram = {
                     caption: state.content.instagram_caption,
                     images: state.content.instagram_grid,
@@ -767,40 +739,46 @@ state.content.instagram_caption = String(rawCaption);                state.conte
             }
         }
         
-        // 3. Update Arrays with safety stripping of base64 data: URLs (Brevo doesn\'t support them)
-  if (events) {
-    state.content.events = events.map(e => ({
-        ...e,
-        image: (e.image && e.image.startsWith('data:')) ? '' : e.image
-    }));
-}
-if (media) {
-    state.content.media = media.map(m => ({
-        ...m,
-        url: (m.url && m.url.startsWith('data:')) ? '' : m.url,
-        thumbnail: (m.thumbnail && m.thumbnail.startsWith('data:')) ? '' : m.thumbnail
-    }));
-}
-
+        // 3. Update Arrays with safety stripping of base64 data: URLs (Brevo doesn't support them)
+        if (events) {
+            state.content.events = events.map(e => ({
+                ...e,
+                image: (e.image && e.image.startsWith('data:')) ? '' : e.image
+            }));
+        }
+        if (media) {
+            state.content.media = media.map(m => ({
+                ...m,
+                url: (m.url && m.url.startsWith('data:')) ? '' : m.url,
+                thumbnail: (m.thumbnail && m.thumbnail.startsWith('data:')) ? '' : m.thumbnail
+            }));
+        }
+        state.content.instagram_grid = (instagram_grid || state.content.instagram_grid || []).filter(url => url && !url.startsWith("data:"));
         state.content.life_update_images = (life_update_images || state.content.life_update_images || []).filter(url => url && !url.startsWith("data:"));
 
         // 4. Rebuild templateParams using the same logic as initial build
-            state.templateParams = buildTemplateParams(
-                state.consultant,
-                state.content,
-                state.content.media,
-                state.content.articles,
-                state.content.alist_candidate,
-                state.content.live_job,
-                state.sections,
-                state.content.instagram_grid,
-                state.content.instagram_caption
-            );
-
-
+        state.templateParams = buildTemplateParams(
+            state.consultant,
+            state.content,
+            state.content.media,
+            state.content.articles,
+            state.content.alist_candidate,
+            state.content.live_job,
+            state.sections,
+            state.content.instagram_grid,
+            state.content.instagram_caption
+        );
         
-
-
+        // Final sync for templateParams
+        state.templateParams.instagram_grid = state.content.instagram_grid;
+        state.templateParams.instagram_caption = state.content.instagram_caption;
+        state.templateParams.instagram = {
+            caption: state.content.instagram_caption,
+            images: state.content.instagram_grid,
+            grid: state.content.instagram_grid
+        };
+        state.templateParams.instagram_caption = state.content.instagram_caption;
+        state.templateParams.instagram_grid = state.content.instagram_grid;
 
         writeState(state);
         res.json({ success: true, state });
