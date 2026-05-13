@@ -308,4 +308,3 @@ class EmailPreviewService {
 }
 
 module.exports = new EmailPreviewService();
-
