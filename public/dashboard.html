@@ -2361,7 +2361,6 @@
 
                             <!-- ===== Poll Picker Modal ===== -->
                             <div id="cmPollPickerModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center;">
-
                                 <div style="background:#1a2332; border:1px solid rgba(255,255,255,0.12); border-radius:14px; width:560px; max-width:95vw; max-height:80vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
                                     <!-- Modal Header -->
                                     <div style="padding:20px 24px 16px; border-bottom:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center;">
@@ -2380,8 +2379,8 @@
                                             <div style="width:24px; height:24px; border:3px solid rgba(255,255,255,0.15); border-top-color:#0077b5; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 12px;"></div>
                                             Fetching polls from LinkedIn...
                                         </div>
-                                        <div id="cmPollPickerError" style="display:none; flex-direction:column; gap:10px;"></div>
-                                        <div id="cmPollPickerList" style="display:none; display:flex; flex-direction:column; gap:10px;"></div>
+                                        <div id="cmPollPickerError" style="display:none; padding:16px; background:rgba(231,76,60,0.1); border:1px solid rgba(231,76,60,0.3); border-radius:8px; color:#e74c3c; font-size:13px;"></div>
+                                        <div id="cmPollPickerList" style="display:none; flex-direction:column; gap:10px;"></div>
                                         <div id="cmPollPickerEmpty" style="display:none; text-align:center; padding:30px 0; color:rgba(255,255,255,0.4); font-size:14px;">No polls found on the Artisan LinkedIn Page.</div>
                                     </div>
                                 </div>
@@ -2462,16 +2461,14 @@
 
                             <!-- Upload panel -->
                             <div id="cmImageUploadPanel" style="display:none;">
-
-                              <div style="margin-bottom:14px;">
-    <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Select Image File (JPG, PNG, GIF - max 5 MB)</label>
-    <input type="file" id="cmImageUploadInput" accept="image/jpeg,image/png,image/gif" onchange="cmHandleImageUpload(event)" style="display:none;">
-    <button onclick="document.getElementById('cmImageUploadInput').click()" style="padding:10px 20px; background:#3498db; color:white; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">
-        📁 Choose Image File
-    </button>
-    <span id="cmUploadFileName" style="color:rgba(255,255,255,0.6); font-size:12px; margin-left:10px;"></span>
-</div>
-
+                                <div style="margin-bottom:14px;">
+                                    <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Select Image File (JPG, PNG, GIF - max 5 MB)</label>
+                                    <input type="file" id="cmImageUploadInput" accept="image/jpeg,image/png,image/gif" onchange="cmHandleImageUpload(event)" style="display:none;">
+                                    <button onclick="document.getElementById('cmImageUploadInput').click()" style="padding:10px 20px; background:#3498db; color:white; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">
+                                        📁 Choose Image File
+                                    </button>
+                                    <span id="cmUploadFileName" style="color:rgba(255,255,255,0.6); font-size:12px; margin-left:10px;"></span>
+                                </div>
                             </div>
 
                             <!-- Image Preview fixed 1000x666 aspect ratio -->
@@ -3941,29 +3938,33 @@
 
         // ---- Handle image file upload ----
 
-function cmHandleImageUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-        cmShowMessage('Image must be under 5 MB.', 'error');
-        return;
-    }
-    // Show filename
-    const nameEl = document.getElementById('cmUploadFileName');
-    if (nameEl) nameEl.textContent = file.name;
+        function cmHandleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) {
+                cmShowMessage('Image must be under 5 MB.', 'error');
+                return;
+            }
 
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const dataUrl = e.target.result;
-        cmState.imageDataUrl = dataUrl;
-        cmState.imageUploadMimeType = file.type;
-        document.getElementById('cmHeaderImage').src = dataUrl;
-        document.getElementById('cmImagePreviewWrap').style.display = 'block';
-        document.getElementById('cmStep2Continue').style.display = 'block';
-        cmShowMessage('Image uploaded successfully.', 'success');
-    };
-    reader.readAsDataURL(file);
-}
+            // Show filename next to button
+            const nameEl = document.getElementById('cmUploadFileName');
+            if (nameEl) nameEl.textContent = file.name;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const dataUrl = e.target.result;
+
+                // Store locally — sent to server at publish time
+                cmState.imageDataUrl = dataUrl;
+                cmState.imageUploadMimeType = file.type;
+
+                document.getElementById('cmHeaderImage').src = dataUrl;
+                document.getElementById('cmImagePreviewWrap').style.display = 'block';
+                document.getElementById('cmStep2Continue').style.display = 'block';
+                cmShowMessage('Image uploaded successfully.', 'success');
+            };
+            reader.readAsDataURL(file);
+        }
 
         // ---- STEP 1: Generate Ideas ----
 
@@ -7231,18 +7232,15 @@ function cmHandleImageUpload(event) {
         let currentIframe = null;
         
         function loadPreview(url) {
-            // Simple approach: Open preview in new tab
             console.log('Opening preview in new tab:', url);
-            const newWindow = window.open(url, '_blank');
-            
-            if (newWindow) {
-                showToast('✅ Preview opened in new tab', 'success');
-            } else {
-                showToast('❌ Please allow popups to view preview', 'error');
-            }
-            
-            // Old complex iframe code removed for simplicity
-            // No need for preview panel, timeout, or iframe management
+            const a = document.createElement('a');
+            a.href = url;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            showToast('✅ Preview opened in new tab', 'success');
         }
         
         // cancelPreview function removed - no preview panel
@@ -7253,55 +7251,37 @@ function cmHandleImageUpload(event) {
         
         // ========== PREVIEW BUTTON FUNCTIONS ==========
         function previewXposeNewsletter() {
-            console.log('=== PREVIEW XPOSE NEWSLETTER ===');
             if (!xposeState || xposeState.state === 'EMPTY') {
                 showToast('❌ Generate newsletter first', 'error');
                 return;
             }
-            showToast('Loading preview...', 'info');
-            const url = '/api/preview/xpose-newsletter';
-            console.log('Preview URL:', url);
-            loadPreview(url);
+            loadPreview('/api/preview/xpose-newsletter');
         }
         
         function previewSingleArticle() {
-            console.log('=== PREVIEW SINGLE ARTICLE ===');
             const articleId = document.getElementById('articleSelector').value;
-            console.log('Article ID:', articleId);
             if (!articleId) {
                 showToast('❌ Select an article first', 'error');
                 return;
             }
-            showToast('Loading preview...', 'info');
-            const url = `/api/preview/xpose-article/${articleId}`;
-            console.log('Preview URL:', url);
-            loadPreview(url);
+            loadPreview(`/api/preview/xpose-article/${articleId}`);
         }
         
         function previewAlist() {
-            console.log('=== PREVIEW A-LIST ===');
             if (!alistState || alistState.state === 'EMPTY') {
                 showToast('❌ Generate A-List first', 'error');
                 return;
             }
-            showToast('Loading preview...', 'info');
-            const url = '/api/preview/alist';
-            console.log('Preview URL:', url);
-            loadPreview(url);
+            loadPreview('/api/preview/alist');
         }
         
         function previewSingleJob() {
-            console.log('=== PREVIEW SINGLE JOB ===');
             const jobId = document.getElementById('jobSelector').value;
-            console.log('Job ID:', jobId);
             if (!jobId) {
                 showToast('❌ Select a job first', 'error');
                 return;
             }
-            showToast('Loading preview...', 'info');
-            const url = `/api/preview/job/${jobId}`;
-            console.log('Preview URL:', url);
-            loadPreview(url);
+            loadPreview(`/api/preview/job/${jobId}`);
         }
 
         // ========== RECIPIENT SELECTOR FUNCTIONS ==========
@@ -8202,8 +8182,6 @@ function cmHandleImageUpload(event) {
                 document.getElementById('btnRemoveConsultantRecipient').style.display = 'none';
                 // Clear scheduled box
                 updateConsultantScheduledBox(null);
-                // Clear preview
-                loadPreview(null);
                 showToast('Consultant state reset.', 'info');
             } catch (e) {
                 showToast('Reset failed: ' + e.message, 'error');
