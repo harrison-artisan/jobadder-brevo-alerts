@@ -2360,7 +2360,8 @@
                             </div>
 
                             <!-- ===== Poll Picker Modal ===== -->
-                            <div id="cmPollPickerModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; display:none; align-items:center; justify-content:center;">
+                            <div id="cmPollPickerModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center;">
+
                                 <div style="background:#1a2332; border:1px solid rgba(255,255,255,0.12); border-radius:14px; width:560px; max-width:95vw; max-height:80vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
                                     <!-- Modal Header -->
                                     <div style="padding:20px 24px 16px; border-bottom:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center;">
@@ -2379,7 +2380,7 @@
                                             <div style="width:24px; height:24px; border:3px solid rgba(255,255,255,0.15); border-top-color:#0077b5; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 12px;"></div>
                                             Fetching polls from LinkedIn...
                                         </div>
-                                        <div id="cmPollPickerError" style="display:none; padding:16px; background:rgba(231,76,60,0.1); border:1px solid rgba(231,76,60,0.3); border-radius:8px; color:#e74c3c; font-size:13px;"></div>
+                                        <div id="cmPollPickerError" style="display:none; flex-direction:column; gap:10px;"></div>
                                         <div id="cmPollPickerList" style="display:none; display:flex; flex-direction:column; gap:10px;"></div>
                                         <div id="cmPollPickerEmpty" style="display:none; text-align:center; padding:30px 0; color:rgba(255,255,255,0.4); font-size:14px;">No polls found on the Artisan LinkedIn Page.</div>
                                     </div>
