@@ -3934,38 +3934,28 @@
 
         // ---- Handle image file upload ----
 
-        function cmHandleImageUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            if (file.size > 5 * 1024 * 1024) {
-                cmShowMessage('Image must be under 5 MB.', 'error');
-                return;
-            }
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                const dataUrl = e.target.result;
-                const mimeType = file.type;
+ function cmHandleImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+        cmShowMessage('Image must be under 5 MB.', 'error');
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const dataUrl = e.target.result;
 
-                try {
-                    const resp = await fetch('/api/content/generate-image', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ uploadedImageDataUrl: dataUrl, uploadedImageMimeType: mimeType })
-                    });
-                    const data = await resp.json();
-                    if (!data.success) throw new Error(data.message);
+        // Store locally — the API will receive it at publish time
+        cmState.imageDataUrl = dataUrl;
+        cmState.imageUploadMimeType = file.type;
 
-                    cmState.imageDataUrl = dataUrl;
-                    document.getElementById('cmHeaderImage').src = dataUrl;
-                    document.getElementById('cmImagePreviewWrap').style.display = 'block';
-                    document.getElementById('cmStep2Continue').style.display = 'block';
-                    cmShowMessage('Image uploaded successfully.', 'success');
-                } catch (err) {
-                    cmShowMessage('Upload error: ' + err.message, 'error');
-                }
-            };
-            reader.readAsDataURL(file);
-        }
+        document.getElementById('cmHeaderImage').src = dataUrl;
+        document.getElementById('cmImagePreviewWrap').style.display = 'block';
+        document.getElementById('cmStep2Continue').style.display = 'block';
+        cmShowMessage('Image uploaded successfully.', 'success');
+    };
+    reader.readAsDataURL(file);
+}
 
         // ---- STEP 1: Generate Ideas ----
 
