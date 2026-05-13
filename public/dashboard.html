@@ -7232,15 +7232,15 @@
         let currentIframe = null;
         
         function loadPreview(url) {
-            console.log('Opening preview in new tab:', url);
-            const a = document.createElement('a');
-            a.href = url;
-            a.target = '_blank';
-            a.rel = 'noopener noreferrer';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            showToast('✅ Preview opened in new tab', 'success');
+            // Open blank tab immediately (synchronous, satisfies Chrome's gesture requirement)
+            // then set the URL — this bypasses Chrome's popup blocker entirely
+            const tab = window.open('', '_blank');
+            if (tab) {
+                tab.location.href = url;
+                showToast('✅ Preview opened in new tab', 'success');
+            } else {
+                showToast('❌ Please allow popups for this site in Chrome settings', 'error');
+            }
         }
         
         // cancelPreview function removed - no preview panel
@@ -8512,6 +8512,82 @@
                 btn.innerHTML = 'Send Now';
             }
         }
+    </script>
+
+    <!-- ===== FULLSCREEN PREVIEW MODAL ===== -->
+    <div id="previewModal" style="display:none; position:fixed; inset:0; z-index:99999; background:rgba(0,0,0,0.85); flex-direction:column;">
+        <!-- Toolbar -->
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 20px; background:#1b334d; flex-shrink:0;">
+            <span style="color:white; font-size:15px; font-weight:600;">📧 Email Preview</span>
+            <div style="display:flex; gap:10px;">
+                <button onclick="closePreviewModal()" style="padding:8px 20px; background:#e74c3c; color:white; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">✕ Close</button>
+            </div>
+        </div>
+        <!-- Loading state -->
+        <div id="previewModalLoading" style="flex:1; display:flex; align-items:center; justify-content:center; color:white; font-size:16px;">
+            <div style="text-align:center;">
+                <div style="width:36px; height:36px; border:4px solid rgba(255,255,255,0.2); border-top-color:white; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 16px;"></div>
+                Loading preview...
+            </div>
+        </div>
+        <!-- iframe to render the HTML -->
+        <iframe id="previewModalFrame" style="display:none; flex:1; width:100%; border:none; background:white;"></iframe>
+        <!-- Error state -->
+        <div id="previewModalError" style="display:none; flex:1; align-items:center; justify-content:center; color:#e74c3c; font-size:15px; text-align:center; padding:40px;"></div>
+    </div>
+
+    <script>
+        function openPreviewModal(url) {
+            const modal = document.getElementById('previewModal');
+            const loading = document.getElementById('previewModalLoading');
+            const frame = document.getElementById('previewModalFrame');
+            const error = document.getElementById('previewModalError');
+
+            // Reset state
+            modal.style.display = 'flex';
+            loading.style.display = 'flex';
+            frame.style.display = 'none';
+            error.style.display = 'none';
+            frame.src = '';
+
+            // Fetch the preview HTML and write into iframe
+            fetch(url)
+                .then(res => {
+                    if (!res.ok) throw new Error('Server returned ' + res.status);
+                    return res.text();
+                })
+                .then(html => {
+                    loading.style.display = 'none';
+                    frame.style.display = 'block';
+                    // Write HTML into iframe
+                    const doc = frame.contentDocument || frame.contentWindow.document;
+                    doc.open();
+                    doc.write(html);
+                    doc.close();
+                })
+                .catch(err => {
+                    loading.style.display = 'none';
+                    error.style.display = 'flex';
+                    error.textContent = '❌ Failed to load preview: ' + err.message;
+                });
+        }
+
+        function closePreviewModal() {
+            const modal = document.getElementById('previewModal');
+            const frame = document.getElementById('previewModalFrame');
+            modal.style.display = 'none';
+            frame.src = '';
+        }
+
+        // Close on backdrop click
+        document.getElementById('previewModal').addEventListener('click', function(e) {
+            if (e.target === this) closePreviewModal();
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closePreviewModal();
+        });
     </script>
 </body>
 </html>
