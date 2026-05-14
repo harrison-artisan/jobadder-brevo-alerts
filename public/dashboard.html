@@ -2463,11 +2463,7 @@
                             <div id="cmImageUploadPanel" style="display:none;">
                                 <div style="margin-bottom:14px;">
                                     <label style="display:block; color:white; font-weight:500; margin-bottom:6px; font-size:13px;">Select Image File (JPG, PNG, GIF - max 5 MB)</label>
-                                    <input type="file" id="cmImageUploadInput" accept="image/jpeg,image/png,image/gif" onchange="cmHandleImageUpload(event)" style="display:none;">
-                                    <button onclick="document.getElementById('cmImageUploadInput').click()" style="padding:10px 20px; background:#3498db; color:white; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">
-                                        📁 Choose Image File
-                                    </button>
-                                    <span id="cmUploadFileName" style="color:rgba(255,255,255,0.6); font-size:12px; margin-left:10px;"></span>
+                                    <input type="file" id="cmImageUploadInput" accept="image/jpeg,image/png,image/gif" onchange="cmHandleImageUpload(event)" style="color:white; font-size:13px;">
                                 </div>
                             </div>
 
@@ -3945,23 +3941,28 @@
                 cmShowMessage('Image must be under 5 MB.', 'error');
                 return;
             }
-
-            // Show filename next to button
-            const nameEl = document.getElementById('cmUploadFileName');
-            if (nameEl) nameEl.textContent = file.name;
-
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 const dataUrl = e.target.result;
+                const mimeType = file.type;
 
-                // Store locally — sent to server at publish time
-                cmState.imageDataUrl = dataUrl;
-                cmState.imageUploadMimeType = file.type;
+                try {
+                    const resp = await fetch('/api/content/generate-image', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ uploadedImageDataUrl: dataUrl, uploadedImageMimeType: mimeType })
+                    });
+                    const data = await resp.json();
+                    if (!data.success) throw new Error(data.message);
 
-                document.getElementById('cmHeaderImage').src = dataUrl;
-                document.getElementById('cmImagePreviewWrap').style.display = 'block';
-                document.getElementById('cmStep2Continue').style.display = 'block';
-                cmShowMessage('Image uploaded successfully.', 'success');
+                    cmState.imageDataUrl = dataUrl;
+                    document.getElementById('cmHeaderImage').src = dataUrl;
+                    document.getElementById('cmImagePreviewWrap').style.display = 'block';
+                    document.getElementById('cmStep2Continue').style.display = 'block';
+                    cmShowMessage('Image uploaded successfully.', 'success');
+                } catch (err) {
+                    cmShowMessage('Upload error: ' + err.message, 'error');
+                }
             };
             reader.readAsDataURL(file);
         }
