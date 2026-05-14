@@ -35,7 +35,11 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'supersecretkey',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: process.env.NODE_ENV === 'production' }
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  },
+  proxy: process.env.NODE_ENV === 'production' // Required for some hosting providers like Railway
 }));
 
 // Simple authentication middleware
@@ -50,7 +54,7 @@ const isAuthenticated = (req, res, next) => {
 // Dashboard route
 // Login route
 app.get("/login", (req, res) => {
-  res.sendFile(__dirname + "/public/login.html");
+  res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
 app.post("/login", async (req, res) => {
@@ -75,7 +79,7 @@ app.get("/logout", (req, res) => {
 
 // Dashboard route (protected)
 app.get("/dashboard", isAuthenticated, (req, res) => {
-  res.sendFile(__dirname + "/public/dashboard.html");
+  res.sendFile(path.join(__dirname, "public", "dashboard.html"));
 });
 
 // Health check endpoint
