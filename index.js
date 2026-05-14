@@ -1,6 +1,8 @@
 require('dotenv').config();
 const path = require('path');
 const express = require('express');
+const session = require('express-session');
+const bcrypt = require('bcrypt');
 const cron = require('node-cron');
 const jobAlertsController = require('./controllers/jobAlertsController');
 const candidateAlertsController = require('./controllers/candidateAlertsController');
@@ -28,9 +30,52 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static('public'));
 
+// Session middleware configuration
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'supersecretkey',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: process.env.NODE_ENV === 'production' }
+}));
+
+// Simple authentication middleware
+const isAuthenticated = (req, res, next) => {
+  if (req.session.isAuthenticated) {
+    return next();
+  }
+  res.redirect('/login');
+};
+
+
 // Dashboard route
-app.get('/dashboard', (req, res) => {
-  res.sendFile(__dirname + '/public/dashboard.html');
+// Login route
+app.get("/login", (req, res) => {
+  res.sendFile(__dirname + "/public/login.html");
+});
+
+app.post("/login", async (req, res) => {
+  const { username, password } = req.body;
+  const users = require("./users.json");
+  const user = users.find(u => u.username === username);
+
+  if (user && await bcrypt.compare(password, user.passwordHash)) {
+    req.session.isAuthenticated = true;
+    res.redirect("/dashboard");
+  } else {
+    res.redirect("/login?error=invalid");
+  }
+});
+
+// Logout route
+app.get("/logout", (req, res) => {
+  req.session.destroy(() => {
+    res.redirect("/login");
+  });
+});
+
+// Dashboard route (protected)
+app.get("/dashboard", isAuthenticated, (req, res) => {
+  res.sendFile(__dirname + "/public/dashboard.html");
 });
 
 // Health check endpoint

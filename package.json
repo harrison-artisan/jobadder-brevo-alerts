@@ -19,6 +19,8 @@
     "form-data": "^4.0.5",
     "multer": "^2.1.1",
     "node-cron": "^4.2.1",
-    "openai": "^4.77.0"
+    "openai": "^4.77.0",
+    "express-session": "^1.18.1",
+    "bcrypt": "^5.1.1"
   }
 }
