@@ -177,6 +177,7 @@ class JobAdderService {
       const token = await this.getAccessToken();
       
       const response = await axios.get(`${this.baseUrl}/jobboards/${boardId}/ads`, {
+        params: { fields: 'portal.fields' },
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -380,11 +381,27 @@ class JobAdderService {
     if (location === 'Location TBD' || !jobType) {
       if (ad.portal && ad.portal.fields) {
         const fields = ad.portal.fields;
-        const locF = fields.find(f => /location|city|area/i.test(f.fieldName || f.name || ''));
-        const typF = fields.find(f => /type|employment|work/i.test(f.fieldName || f.name || ''));
         
-        if (location === 'Location TBD' && locF) location = locF.value || locF.text || location;
-        if (!jobType && typF) jobType = this.mapWorkType(typF.value || typF.text);
+        // Find Location field (often fieldName contains 'Location' or 'Area')
+        const locF = fields.find(f => /location|city|area/i.test(f.fieldName || ''));
+        if (location === 'Location TBD' && locF) {
+          // If it's a List type, the display value is in 'value', if Text type it's in 'value'
+          location = locF.value || locF.externalValue || location;
+        }
+        
+        // Find Work Type field
+        const typF = fields.find(f => /type|employment|work/i.test(f.fieldName || ''));
+        if (!jobType && typF) {
+          jobType = this.mapWorkType(typF.value || typF.externalValue);
+        }
+      }
+      
+      // FINAL FALLBACK: Regex extraction from summary/bullet points
+      if (location === 'Location TBD') {
+        location = this.extractLocation(ad.summary, ad.bulletPoints);
+      }
+      if (!jobType) {
+        jobType = this.extractJobType(ad.summary, ad.bulletPoints);
       }
     }
 
