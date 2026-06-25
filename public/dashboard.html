@@ -8930,6 +8930,55 @@
         });
     }
 
+    // Map each event label to { contentType, channel, mainTab, emailTab, cmTab }
+    const SCHED_NAV_MAP = {
+        'A-List Email':       { contentType: 'Email',     channel: 'A-List Candidates',       mainTab: 'email-marketing',   emailTab: 'alist'      },
+        'Xpose Newsletter':   { contentType: 'Email',     channel: 'Xpose Newsletter',         mainTab: 'email-marketing',   emailTab: 'xpose'      },
+        'Job Alert Roundup':  { contentType: 'Email',     channel: 'Job Alerts — Daily Roundup', mainTab: 'email-marketing', emailTab: 'job-alerts' },
+        'Job Alert Single':   { contentType: 'Email',     channel: 'Job Alerts — On Demand',   mainTab: 'email-marketing',   emailTab: 'job-alerts' },
+        'Xpose Article':      { contentType: 'Article',   channel: 'Xpose Content Marketing',  mainTab: 'content-marketing', cmTab: 'article'       },
+        'LinkedIn Poll':      { contentType: 'LinkedIn',  channel: 'LinkedIn Poll',             mainTab: 'content-marketing', cmTab: 'social'        },
+        'LinkedIn Article':   { contentType: 'LinkedIn',  channel: 'LinkedIn Article Post',     mainTab: 'content-marketing', cmTab: 'social'        },
+        'LinkedIn Job':       { contentType: 'LinkedIn',  channel: 'LinkedIn Job Listing',      mainTab: 'content-marketing', cmTab: 'social'        },
+        'LinkedIn A-List':    { contentType: 'LinkedIn',  channel: 'LinkedIn A-List Post',      mainTab: 'content-marketing', cmTab: 'social'        }
+    };
+
+    function schedGetNav(ev) {
+        // Consultant events have dynamic labels like "Consultant: Debbie Younger"
+        if (ev.label.startsWith('Consultant')) {
+            return { contentType: 'Email', channel: ev.label, mainTab: 'email-marketing', emailTab: 'consultant' };
+        }
+        return SCHED_NAV_MAP[ev.label] || null;
+    }
+
+    function schedNavigateTo(evLabel, evMainTab, evEmailTab, evCmTab) {
+        // Switch to the correct main tab
+        const mainTabBtns = document.querySelectorAll('#mainTabs .tab');
+        mainTabBtns.forEach(b => b.classList.remove('active'));
+        // Find and activate the correct main tab button
+        mainTabBtns.forEach(b => {
+            const onclick = b.getAttribute('onclick') || '';
+            if (onclick.includes("'" + evMainTab + "'")) b.classList.add('active');
+        });
+        // Use the existing switchMainTab logic
+        switchMainTab(evMainTab, null);
+        // Then switch sub-tab if needed
+        if (evEmailTab) {
+            setTimeout(() => {
+                switchTab(evEmailTab, null);
+                // Also activate the correct email tab button
+                document.querySelectorAll('#emailTabs .tab').forEach(b => {
+                    const onclick = b.getAttribute('onclick') || '';
+                    b.classList.toggle('active', onclick.includes("'" + evEmailTab + "'"));
+                });
+            }, 50);
+        } else if (evCmTab) {
+            setTimeout(() => {
+                if (typeof cmSwitchSubTab === 'function') cmSwitchSubTab(evCmTab);
+            }, 50);
+        }
+    }
+
     function schedShowDay(year, month, day) {
         const panel = document.getElementById('schedDayPanel');
         const title = document.getElementById('schedDayPanelTitle');
@@ -8943,14 +8992,23 @@
         if (dayEvents.length === 0) {
             items.innerHTML = `<p style="color:rgba(255,255,255,0.45); font-size:14px;">No scheduled items on this day.</p>`;
         } else {
-            items.innerHTML = dayEvents.map(ev => `
-                <div style="display:flex; align-items:center; gap:14px; padding:12px 16px; background:rgba(255,255,255,0.05); border-radius:12px; margin-bottom:10px; border-left:4px solid ${ev.colour};">
-                    <div style="flex:1;">
-                        <div style="font-size:15px; font-weight:700; color:white;">${ev.label}</div>
-                        <div style="font-size:13px; color:rgba(255,255,255,0.55); margin-top:3px;">&#128337; ${ev.scheduledFor}</div>
+            items.innerHTML = dayEvents.map(ev => {
+                const nav = schedGetNav(ev);
+                const goToBtn = nav
+                    ? `<button onclick="schedNavigateTo('${ev.label.replace(/'/g, "\\'")}',${'\'' + nav.mainTab + '\''},${nav.emailTab ? '\'' + nav.emailTab + '\'' : 'null'},${nav.cmTab ? '\'' + nav.cmTab + '\'' : 'null'})" style="background:${ev.colour}; color:white; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; flex-shrink:0;">Go to &rarr;</button>`
+                    : '';
+                return `
+                <div style="display:flex; align-items:center; gap:14px; padding:14px 16px; background:rgba(255,255,255,0.05); border-radius:12px; margin-bottom:10px; border-left:4px solid ${ev.colour};">
+                    <div style="flex:1; min-width:0;">
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px;">
+                            <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:${ev.colour}; background:${ev.colour}22; padding:2px 8px; border-radius:20px;">${nav ? nav.contentType : 'Scheduled'}</span>
+                        </div>
+                        <div style="font-size:15px; font-weight:700; color:white; margin-bottom:3px;">${nav ? nav.channel : ev.label}</div>
+                        <div style="font-size:12px; color:rgba(255,255,255,0.5);">${ev.scheduledFor}</div>
                     </div>
-                    <div style="width:12px; height:12px; border-radius:50%; background:${ev.colour}; flex-shrink:0;"></div>
-                </div>`).join('');
+                    ${goToBtn}
+                </div>`;
+            }).join('');
         }
         panel.style.display = 'block';
         panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
