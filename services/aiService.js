@@ -29,24 +29,60 @@ class AIService {
 
       console.log("    🤖 Generating 10 article ideas with OpenAI (gpt-4o-mini)...");
 
+      // Inject current date so ideas are anchored to now, not training data
+      const now = new Date();
+      const monthYear = now.toLocaleString('en-AU', { month: 'long', year: 'numeric' });
+
+      // Rotating angle pools — picked by week number so each call has a different structural lens
+      const weekNum = Math.floor(now.getDate() / 7);
+      const anglePools = [
+        ['salary transparency', 'the freelance economy', 'AI tools replacing creative roles', 'portfolio vs degree debate', 'burnout in agency life'],
+        ['remote vs in-office creative teams', 'personal branding for creatives', 'the rise of the fractional CMO', 'hiring for culture fit vs skill', 'career pivots into UX'],
+        ['pay gap in creative industries', 'how brands are building in-house agencies', 'the death of the job description', 'creative directors on TikTok', 'what clients actually want from agencies'],
+        ['neurodiversity in creative teams', 'the contractor vs permanent debate', 'side projects and career growth', 'AI-generated content and creative jobs', 'what makes a great creative brief']
+      ];
+      const angles = anglePools[weekNum % anglePools.length];
+
+      // Random seed string to prevent the model caching identical responses
+      const seed = Math.random().toString(36).substring(2, 8);
+
       const response = await client.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
-            content: 'You are a creative content strategist for a recruitment agency specializing in creative, digital, and marketing roles. Generate 10 distinct and engaging article ideas for a blog, focusing on current trends, career advice, industry insights, or success stories relevant to these fields. Each idea should be a concise title or a very short phrase. Output them as a numbered list.'
+            content: `You are the content strategist for Artisan, a specialist Australian recruitment agency with 27 years of experience placing creative, digital, and marketing professionals. You write for the Artisan Creative Community blog (artisan.com.au/creative-community).
+
+Today is ${monthYear}. All ideas must be relevant to RIGHT NOW — current industry climate, current conversations, current challenges facing Australian creative and marketing professionals in ${now.getFullYear()}.
+
+Your job is to generate 10 article title ideas that are genuinely diverse — different angles, different audiences, different formats. The 10 ideas must span at least 6 of these categories:
+- Opinion / hot take (a strong, debatable point of view)
+- Data or trend-led (based on something measurable happening now)
+- Career advice (practical, specific — not generic)
+- Hiring manager perspective (what clients and employers are actually thinking)
+- Industry critique (something broken or changing in the creative/marketing world)
+- Candidate story angle (what talent is experiencing right now)
+- Salary / money (rates, negotiation, market shifts)
+- Technology impact (AI, tools, automation — specific, not vague)
+
+RULES:
+- Every title must be specific and opinionated — not generic
+- BANNED titles: anything with "Navigating", "In Today's World", "The Future of", "Unlocking", "Mastering", "Tips for", "How to Succeed"
+- No two ideas can cover the same broad topic
+- Ideas must feel like they were written in ${monthYear}, not 2022
+- Australian context and spelling throughout
+- Output as a numbered list of titles only — no explanations`
           },
           {
             role: 'user',
-            content: 'Generate 10 article ideas for a recruitment agency blog.'
+            content: `Generate 10 fresh, diverse article ideas for the Artisan blog. This session's angle seeds to inspire variety (you don't have to use these directly, but let them push your thinking in different directions): ${angles.join(', ')}. Seed: ${seed}`
           }
         ],
-        temperature: 0.7,
-        max_tokens: 500
+        temperature: 1.1,
+        max_tokens: 600
       });
 
       const ideasText = response.choices[0].message.content.trim();
-      // Parse the numbered list into an array of strings
       const ideas = ideasText.split('\n').map(line => line.replace(/^\d+\.\s*/, '').trim()).filter(line => line.length > 0);
 
       console.log(`    ✅ AI generated ${ideas.length} article ideas.`);
@@ -68,20 +104,59 @@ class AIService {
 
       console.log('    🤖 Generating 10 poll ideas with OpenAI (gpt-4o-mini)...');
 
+      // Inject current date so polls are anchored to now
+      const now = new Date();
+      const monthYear = now.toLocaleString('en-AU', { month: 'long', year: 'numeric' });
+
+      // Rotating theme pools — ensures structural variety across calls
+      const weekNum = Math.floor(now.getDate() / 7);
+      const themePools = [
+        ['salary negotiation', 'AI in creative work', 'agency vs in-house', 'portfolio requirements', 'interview processes'],
+        ['remote work expectations', 'job title inflation', 'contractor rates', 'creative burnout', 'LinkedIn culture'],
+        ['hiring bias', 'cover letters in 2025', 'four-day work week', 'side hustles', 'performance reviews'],
+        ['spec work', 'AI-generated portfolios', 'culture fit vs skill', 'redundancy experiences', 'career change at 40+']
+      ];
+      const themes = themePools[weekNum % themePools.length];
+
+      // Random seed to prevent cached responses
+      const seed = Math.random().toString(36).substring(2, 8);
+
       const response = await client.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
-            content: `You are a social media strategist for Artisan, a specialist Australian recruitment agency with 27 years of experience placing creative, digital, and marketing professionals. Generate 10 distinct LinkedIn poll topic ideas that will spark genuine conversation among creative, digital, and marketing professionals in Australia. Each idea should be a short, specific topic or angle — not a full question. Topics should be timely, opinionated, and relevant to the Australian market. No emojis. Output as a numbered list only.`
+            content: `You are the LinkedIn strategist for Artisan, a specialist Australian recruitment agency with 27 years of experience placing creative, digital, and marketing professionals.
+
+Today is ${monthYear}. Generate 10 LinkedIn poll topic ideas for Artisan's audience of creative, digital, and marketing professionals in Australia. These polls must spark real debate and get people voting.
+
+Each idea is a SHORT TOPIC ANGLE (5-10 words max) — not a full question. The platform writes the question; you just give the topic.
+
+The 10 topics MUST be genuinely different from each other. Spread across these dimensions:
+- Work preferences (remote, hybrid, hours, flexibility)
+- Career decisions (pivots, seniority, agency vs in-house)
+- Money (rates, salary transparency, negotiation)
+- Technology (AI tools, automation, new platforms)
+- Industry opinions (hot takes, things that are broken)
+- Hiring process (interviews, portfolios, job ads)
+- Culture (team dynamics, management, workplace norms)
+
+RULES:
+- Every topic must be specific and debatable — not vague
+- Must feel relevant to ${now.getFullYear()} — not evergreen fluff
+- Australian context and market
+- No emojis
+- No two topics can be about the same thing
+- BANNED: anything that sounds like it could have been written in 2020
+- Output as a numbered list of topic angles only — no explanations`
           },
           {
             role: 'user',
-            content: 'Generate 10 LinkedIn poll topic ideas for Artisan.'
+            content: `Generate 10 fresh, diverse LinkedIn poll topic ideas for Artisan. Theme seeds for this session (use them to push your thinking into different territory): ${themes.join(', ')}. Seed: ${seed}`
           }
         ],
-        temperature: 0.8,
-        max_tokens: 400
+        temperature: 1.1,
+        max_tokens: 500
       });
 
       const text = response.choices[0].message.content.trim();
