@@ -1266,6 +1266,9 @@
             <button class="tab tab-schedule" onclick="switchMainTab('schedule', event)" style="flex:1; background: linear-gradient(135deg, #0e7490 0%, #0891b2 100%); color: white;">
                 Schedule
             </button>
+            <button class="tab tab-reporting" onclick="switchMainTab('reporting', event)" style="flex:1; background: linear-gradient(135deg, #166534 0%, #16a34a 100%); color: white;">
+                Reporting
+            </button>
         </div>
         
         <!-- Email Type Tabs (shown when Email Marketing is active) -->
@@ -3323,10 +3326,17 @@
                 </div>
                 `;
 
-                schedCalInit();
+                                schedCalInit();
+            }
+
+            } else if (mainTabName === 'reporting') {
+                // Always save email content backup
+                if (!emailContentBackup) emailContentBackup = mainContent.innerHTML;
+                emailTabs.style.display = 'none';
+                mainContent.innerHTML = rptBuildUI();
+                rptInit();
             }
         }
-        
         function switchTab(tabName, event) {
             // Hide all tab contents
             document.querySelectorAll('.tab-content').forEach(content => {
@@ -9052,5 +9062,543 @@
 
     // ===== END SCHEDULE CALENDAR JS =====
     </script>
+
+<!-- ===== REPORTING TAB JS ===== -->
+<script>
+// ============================================================
+// REPORTING TAB — self-contained, no dependencies on existing JS
+// ============================================================
+
+const RPT_TAG_LABELS = {
+    'alist': 'A-List Email',
+    'xpose-newsletter': 'Xpose Newsletter',
+    'xpose-article': 'Xpose Article',
+    'job-alert-roundup': 'Job Alert Roundup',
+    'job-alert-ondemand': 'On Demand Job Alert',
+    'consultant': 'Consultant Newsletter'
+};
+
+const RPT_TAG_COLOURS = {
+    'alist': '#e74c3c',
+    'xpose-newsletter': '#3498db',
+    'xpose-article': '#9b59b6',
+    'job-alert-roundup': '#1a3a5c',
+    'job-alert-ondemand': '#2980b9',
+    'consultant': '#0e7490'
+};
+
+let rptState = {
+    stats: null,
+    clicks: null,
+    dateRange: '30',
+    tag: 'all',
+    loading: false,
+    chartInstance: null
+};
+
+function rptBuildUI() {
+    return `
+    <div id="reportingApp" style="padding:0;">
+
+        <!-- Header -->
+        <div style="background:rgba(255,255,255,0.07); backdrop-filter:blur(20px); border-radius:16px; padding:24px 28px 20px; margin-bottom:20px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 32px rgba(0,0,0,0.15);">
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px;">
+                <div>
+                    <h2 style="margin:0 0 4px; color:white; font-size:22px; font-weight:700;">Email Reporting</h2>
+                    <p style="margin:0; color:rgba(255,255,255,0.55); font-size:13px;">Live performance data from Brevo transactional email</p>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                    <!-- Date Range -->
+                    <select id="rptDateRange" onchange="rptChangeDateRange(this.value)" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; padding:8px 12px; font-size:13px; cursor:pointer;">
+                        <option value="7">Last 7 days</option>
+                        <option value="30" selected>Last 30 days</option>
+                        <option value="90">Last 90 days</option>
+                        <option value="365">This year</option>
+                    </select>
+                    <!-- Tag Filter -->
+                    <select id="rptTagFilter" onchange="rptChangeTag(this.value)" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; padding:8px 12px; font-size:13px; cursor:pointer;">
+                        <option value="all">All Email Types</option>
+                        <option value="alist">A-List Email</option>
+                        <option value="xpose-newsletter">Xpose Newsletter</option>
+                        <option value="xpose-article">Xpose Article</option>
+                        <option value="job-alert-roundup">Job Alert Roundup</option>
+                        <option value="job-alert-ondemand">On Demand Job Alert</option>
+                        <option value="consultant">Consultant Newsletter</option>
+                    </select>
+                    <button onclick="rptLoad()" style="background:linear-gradient(135deg,#166534,#16a34a); border:none; border-radius:8px; color:white; padding:9px 18px; font-size:13px; font-weight:600; cursor:pointer;">Refresh</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sub-tabs -->
+        <div style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;">
+            <button id="rptSubOverview" onclick="rptSwitchSub('overview')" style="background:rgba(22,163,74,0.3); border:1px solid rgba(22,163,74,0.6); border-radius:8px; color:white; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer;">Overview</button>
+            <button id="rptSubByType" onclick="rptSwitchSub('bytype')" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.7); padding:8px 16px; font-size:13px; cursor:pointer;">By Email Type</button>
+            <button id="rptSubClicks" onclick="rptSwitchSub('clicks')" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.7); padding:8px 16px; font-size:13px; cursor:pointer;">Top Clicked Links</button>
+            <button id="rptSubTrend" onclick="rptSwitchSub('trend')" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.7); padding:8px 16px; font-size:13px; cursor:pointer;">Trends</button>
+            <button id="rptSubInsight" onclick="rptSwitchSub('insight')" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.7); padding:8px 16px; font-size:13px; cursor:pointer;">AI Insight</button>
+            <button id="rptSubSocial" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; color:rgba(255,255,255,0.3); padding:8px 16px; font-size:13px; cursor:not-allowed;" title="Coming soon">Social (Coming Soon)</button>
+        </div>
+
+        <!-- Loading bar -->
+        <div id="rptLoadingBar" style="display:none; text-align:center; padding:40px; color:rgba(255,255,255,0.5); font-size:15px;">
+            <div style="width:48px; height:48px; border:3px solid rgba(22,163,74,0.3); border-top-color:#16a34a; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 16px;"></div>
+            Loading data from Brevo...
+        </div>
+
+        <!-- Error bar -->
+        <div id="rptError" style="display:none; background:rgba(231,76,60,0.15); border:1px solid rgba(231,76,60,0.4); border-radius:12px; padding:16px 20px; color:#e74c3c; margin-bottom:20px;"></div>
+
+        <!-- ===== OVERVIEW PANEL ===== -->
+        <div id="rptPanelOverview">
+            <!-- Summary cards -->
+            <div id="rptCards" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-bottom:20px;"></div>
+            <!-- Industry benchmark bar -->
+            <div id="rptBenchmark" style="background:rgba(255,255,255,0.05); border-radius:12px; padding:16px 20px; margin-bottom:20px; border:1px solid rgba(255,255,255,0.08);"></div>
+        </div>
+
+        <!-- ===== BY EMAIL TYPE PANEL ===== -->
+        <div id="rptPanelBytype" style="display:none;">
+            <div style="background:rgba(255,255,255,0.05); border-radius:14px; border:1px solid rgba(255,255,255,0.1); overflow:hidden;">
+                <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                    <thead>
+                        <tr style="background:rgba(255,255,255,0.08);">
+                            <th style="padding:12px 16px; text-align:left; color:rgba(255,255,255,0.7); font-weight:600;">Email Type</th>
+                            <th style="padding:12px 16px; text-align:right; color:rgba(255,255,255,0.7); font-weight:600;">Delivered</th>
+                            <th style="padding:12px 16px; text-align:right; color:rgba(255,255,255,0.7); font-weight:600;">Open Rate</th>
+                            <th style="padding:12px 16px; text-align:right; color:rgba(255,255,255,0.7); font-weight:600;">Click Rate</th>
+                            <th style="padding:12px 16px; text-align:right; color:rgba(255,255,255,0.7); font-weight:600;">Bounces</th>
+                            <th style="padding:12px 16px; text-align:right; color:rgba(255,255,255,0.7); font-weight:600;">Unsubscribes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rptByTypeBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== TOP CLICKED LINKS PANEL ===== -->
+        <div id="rptPanelClicks" style="display:none;">
+            <!-- Link category filter -->
+            <div style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
+                <span style="color:rgba(255,255,255,0.6); font-size:13px; align-self:center;">Filter by:</span>
+                <button onclick="rptFilterLinks('all')" id="rptLinkFilterAll" style="background:rgba(22,163,74,0.3); border:1px solid rgba(22,163,74,0.5); border-radius:6px; color:white; padding:5px 12px; font-size:12px; cursor:pointer;">All Links</button>
+                <button onclick="rptFilterLinks('job')" id="rptLinkFilterJob" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:rgba(255,255,255,0.7); padding:5px 12px; font-size:12px; cursor:pointer;">Job Apply</button>
+                <button onclick="rptFilterLinks('article')" id="rptLinkFilterArticle" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:rgba(255,255,255,0.7); padding:5px 12px; font-size:12px; cursor:pointer;">Articles</button>
+                <button onclick="rptFilterLinks('talent')" id="rptLinkFilterTalent" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:rgba(255,255,255,0.7); padding:5px 12px; font-size:12px; cursor:pointer;">Looking for Talent</button>
+                <button onclick="rptFilterLinks('register')" id="rptLinkFilterRegister" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:rgba(255,255,255,0.7); padding:5px 12px; font-size:12px; cursor:pointer;">Register</button>
+                <button onclick="rptFilterLinks('social')" id="rptLinkFilterSocial" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:rgba(255,255,255,0.7); padding:5px 12px; font-size:12px; cursor:pointer;">Social</button>
+            </div>
+            <div style="background:rgba(255,255,255,0.05); border-radius:14px; border:1px solid rgba(255,255,255,0.1); overflow:hidden;">
+                <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                    <thead>
+                        <tr style="background:rgba(255,255,255,0.08);">
+                            <th style="padding:12px 16px; text-align:left; color:rgba(255,255,255,0.7); font-weight:600;">#</th>
+                            <th style="padding:12px 16px; text-align:left; color:rgba(255,255,255,0.7); font-weight:600;">URL</th>
+                            <th style="padding:12px 16px; text-align:right; color:rgba(255,255,255,0.7); font-weight:600;">Clicks</th>
+                            <th style="padding:12px 16px; text-align:right; color:rgba(255,255,255,0.7); font-weight:600;">Unique</th>
+                            <th style="padding:12px 16px; text-align:left; color:rgba(255,255,255,0.7); font-weight:600;">Category</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rptClicksBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== TREND PANEL ===== -->
+        <div id="rptPanelTrend" style="display:none;">
+            <div style="background:rgba(255,255,255,0.05); border-radius:14px; border:1px solid rgba(255,255,255,0.1); padding:20px;">
+                <h3 style="margin:0 0 16px; color:white; font-size:16px;">Open Rate &amp; Click Rate Over Time</h3>
+                <canvas id="rptTrendChart" style="max-height:320px;"></canvas>
+            </div>
+        </div>
+
+        <!-- ===== AI INSIGHT PANEL ===== -->
+        <div id="rptPanelInsight" style="display:none;">
+            <div style="background:rgba(255,255,255,0.05); border-radius:14px; border:1px solid rgba(255,255,255,0.1); padding:24px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+                    <div>
+                        <h3 style="margin:0 0 4px; color:white; font-size:18px;">AI Strategic Insight</h3>
+                        <p style="margin:0; color:rgba(255,255,255,0.5); font-size:13px;">Powered by GPT-4o — reads your actual Brevo data and writes a strategic brief</p>
+                    </div>
+                    <button onclick="rptGenerateInsight()" id="rptInsightBtn" style="background:linear-gradient(135deg,#166534,#16a34a); border:none; border-radius:10px; color:white; padding:11px 22px; font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 4px 15px rgba(22,163,74,0.3);">Generate Insight</button>
+                </div>
+                <div id="rptInsightLoading" style="display:none; text-align:center; padding:40px; color:rgba(255,255,255,0.5);">
+                    <div style="width:40px; height:40px; border:3px solid rgba(22,163,74,0.3); border-top-color:#16a34a; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 14px;"></div>
+                    Analysing your data and generating strategic insight...
+                </div>
+                <div id="rptInsightContent" style="color:rgba(255,255,255,0.88); line-height:1.75; font-size:14px;"></div>
+            </div>
+        </div>
+
+    </div>
+    `;
+}
+
+let rptCurrentSub = 'overview';
+let rptAllLinks = [];
+let rptLinkFilter = 'all';
+
+function rptSwitchSub(sub) {
+    rptCurrentSub = sub;
+    const panels = ['overview','bytype','clicks','trend','insight'];
+    panels.forEach(p => {
+        const el = document.getElementById('rptPanel' + p.charAt(0).toUpperCase() + p.slice(1));
+        if (el) el.style.display = p === sub ? 'block' : 'none';
+    });
+    const btns = ['Overview','Bytype','Clicks','Trend','Insight'];
+    btns.forEach(b => {
+        const btn = document.getElementById('rptSub' + b);
+        if (!btn) return;
+        const active = b.toLowerCase() === sub;
+        btn.style.background = active ? 'rgba(22,163,74,0.3)' : 'rgba(255,255,255,0.08)';
+        btn.style.borderColor = active ? 'rgba(22,163,74,0.6)' : 'rgba(255,255,255,0.15)';
+        btn.style.color = active ? 'white' : 'rgba(255,255,255,0.7)';
+        btn.style.fontWeight = active ? '600' : '400';
+    });
+    // Draw chart when switching to trend
+    if (sub === 'trend' && rptState.stats) rptDrawTrendChart();
+}
+
+function rptChangeDateRange(val) {
+    rptState.dateRange = val;
+    rptLoad();
+}
+
+function rptChangeTag(val) {
+    rptState.tag = val;
+    rptLoad();
+}
+
+function rptGetDateRange() {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - parseInt(rptState.dateRange));
+    const fmt = d => d.toISOString().split('T')[0];
+    return { startDate: fmt(start), endDate: fmt(end) };
+}
+
+async function rptLoad() {
+    const loadingBar = document.getElementById('rptLoadingBar');
+    const errorEl = document.getElementById('rptError');
+    if (!loadingBar) return;
+    loadingBar.style.display = 'block';
+    if (errorEl) errorEl.style.display = 'none';
+
+    const { startDate, endDate } = rptGetDateRange();
+    const tag = rptState.tag !== 'all' ? rptState.tag : '';
+
+    try {
+        const [statsRes, clicksRes] = await Promise.all([
+            fetch(`/api/reporting/stats?startDate=${startDate}&endDate=${endDate}${tag ? '&tag=' + tag : ''}`).then(r => r.json()),
+            fetch(`/api/reporting/clicks?startDate=${startDate}&endDate=${endDate}${tag ? '&tag=' + tag : ''}`).then(r => r.json())
+        ]);
+
+        rptState.stats = statsRes;
+        rptState.clicks = clicksRes;
+        rptAllLinks = clicksRes.topLinks || [];
+
+        rptRenderCards();
+        rptRenderBenchmark();
+        rptRenderByType();
+        rptRenderClicks();
+        if (rptCurrentSub === 'trend') rptDrawTrendChart();
+
+    } catch (err) {
+        if (errorEl) {
+            errorEl.style.display = 'block';
+            errorEl.textContent = 'Failed to load data: ' + err.message;
+        }
+    } finally {
+        if (loadingBar) loadingBar.style.display = 'none';
+    }
+}
+
+function rptCard(label, value, sub, colour, icon) {
+    return `
+    <div style="background:rgba(255,255,255,0.06); border-radius:14px; padding:18px 16px; border:1px solid rgba(255,255,255,0.1); border-top:3px solid ${colour};">
+        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.6px; color:rgba(255,255,255,0.5); margin-bottom:8px; font-weight:600;">${label}</div>
+        <div style="font-size:28px; font-weight:700; color:white; margin-bottom:4px;">${value}</div>
+        <div style="font-size:12px; color:rgba(255,255,255,0.45);">${sub}</div>
+    </div>`;
+}
+
+function rptRenderCards() {
+    const el = document.getElementById('rptCards');
+    if (!el || !rptState.stats) return;
+    const agg = rptState.stats.aggregated || {};
+    const delivered = agg.delivered || 0;
+    const opens = agg.uniqueOpens || agg.opens || 0;
+    const clicks = agg.uniqueClicks || agg.clicks || 0;
+    const hardB = agg.hardBounces || 0;
+    const softB = agg.softBounces || 0;
+    const unsubs = agg.unsubscribed || 0;
+    const spam = agg.spamReports || 0;
+    const openRate = delivered > 0 ? ((opens / delivered) * 100).toFixed(1) + '%' : '—';
+    const clickRate = delivered > 0 ? ((clicks / delivered) * 100).toFixed(1) + '%' : '—';
+    const bounceRate = delivered > 0 ? (((hardB + softB) / delivered) * 100).toFixed(1) + '%' : '—';
+    const unsubRate = delivered > 0 ? ((unsubs / delivered) * 100).toFixed(2) + '%' : '—';
+
+    el.innerHTML = [
+        rptCard('Delivered', delivered.toLocaleString(), 'Emails delivered', '#16a34a', ''),
+        rptCard('Open Rate', openRate, opens.toLocaleString() + ' unique opens', '#3b82f6', ''),
+        rptCard('Click Rate', clickRate, clicks.toLocaleString() + ' unique clicks', '#8b5cf6', ''),
+        rptCard('Bounces', (hardB + softB).toLocaleString(), hardB + ' hard / ' + softB + ' soft', '#f59e0b', ''),
+        rptCard('Unsubscribes', unsubs.toLocaleString(), unsubRate + ' of delivered', '#ef4444', ''),
+        rptCard('Spam Reports', spam.toLocaleString(), 'Marked as spam', '#6b7280', '')
+    ].join('');
+}
+
+function rptRenderBenchmark() {
+    const el = document.getElementById('rptBenchmark');
+    if (!el || !rptState.stats) return;
+    const agg = rptState.stats.aggregated || {};
+    const delivered = agg.delivered || 0;
+    const opens = agg.uniqueOpens || agg.opens || 0;
+    const clicks = agg.uniqueClicks || agg.clicks || 0;
+    const openRate = delivered > 0 ? ((opens / delivered) * 100) : 0;
+    const clickRate = delivered > 0 ? ((clicks / delivered) * 100) : 0;
+
+    const orVsBench = openRate - 30; // industry avg ~30%
+    const crVsBench = clickRate - 4;  // industry avg ~4%
+    const orColour = orVsBench >= 0 ? '#16a34a' : '#ef4444';
+    const crColour = crVsBench >= 0 ? '#16a34a' : '#ef4444';
+    const orArrow = orVsBench >= 0 ? '&#9650;' : '&#9660;';
+    const crArrow = crVsBench >= 0 ? '&#9650;' : '&#9660;';
+
+    el.innerHTML = `
+        <div style="font-size:12px; text-transform:uppercase; letter-spacing:0.6px; color:rgba(255,255,255,0.5); margin-bottom:12px; font-weight:600;">vs Industry Benchmark (Recruitment, AU)</div>
+        <div style="display:flex; gap:32px; flex-wrap:wrap;">
+            <div>
+                <span style="color:rgba(255,255,255,0.6); font-size:13px;">Open Rate: </span>
+                <span style="color:white; font-weight:700; font-size:15px;">${openRate.toFixed(1)}%</span>
+                <span style="color:${orColour}; font-size:13px; margin-left:6px;">${orArrow} ${Math.abs(orVsBench).toFixed(1)}pp vs 30% avg</span>
+            </div>
+            <div>
+                <span style="color:rgba(255,255,255,0.6); font-size:13px;">Click Rate: </span>
+                <span style="color:white; font-weight:700; font-size:15px;">${clickRate.toFixed(1)}%</span>
+                <span style="color:${crColour}; font-size:13px; margin-left:6px;">${crArrow} ${Math.abs(crVsBench).toFixed(1)}pp vs 4% avg</span>
+            </div>
+        </div>
+    `;
+}
+
+function rptRenderByType() {
+    const el = document.getElementById('rptByTypeBody');
+    if (!el || !rptState.stats) return;
+    const rows = rptState.stats.tagBreakdown || [];
+    if (!rows.length) {
+        el.innerHTML = '<tr><td colspan="6" style="padding:24px; text-align:center; color:rgba(255,255,255,0.4);">No data — add tags to your Brevo templates to see per-type breakdown</td></tr>';
+        return;
+    }
+    el.innerHTML = rows.map(t => {
+        const d = t.delivered || 0;
+        const o = t.uniqueOpens || t.opens || 0;
+        const c = t.uniqueClicks || t.clicks || 0;
+        const b = (t.hardBounces || 0) + (t.softBounces || 0);
+        const u = t.unsubscribed || 0;
+        const or = d > 0 ? ((o / d) * 100).toFixed(1) + '%' : '—';
+        const cr = d > 0 ? ((c / d) * 100).toFixed(1) + '%' : '—';
+        const colour = RPT_TAG_COLOURS[t.tag] || '#6b7280';
+        const label = RPT_TAG_LABELS[t.tag] || t.tag;
+        return `<tr style="border-top:1px solid rgba(255,255,255,0.06);">
+            <td style="padding:12px 16px;">
+                <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:${colour}; margin-right:8px;"></span>
+                <span style="color:white; font-weight:600;">${label}</span>
+            </td>
+            <td style="padding:12px 16px; text-align:right; color:rgba(255,255,255,0.8);">${d.toLocaleString()}</td>
+            <td style="padding:12px 16px; text-align:right; color:${parseFloat(or) >= 30 ? '#16a34a' : '#f59e0b'}; font-weight:600;">${or}</td>
+            <td style="padding:12px 16px; text-align:right; color:${parseFloat(cr) >= 4 ? '#16a34a' : '#f59e0b'}; font-weight:600;">${cr}</td>
+            <td style="padding:12px 16px; text-align:right; color:rgba(255,255,255,0.6);">${b}</td>
+            <td style="padding:12px 16px; text-align:right; color:${u > 5 ? '#ef4444' : 'rgba(255,255,255,0.6)'};">${u}</td>
+        </tr>`;
+    }).join('');
+}
+
+function rptGetLinkCategory(url) {
+    if (!url || url === 'unknown') return 'other';
+    const u = url.toLowerCase();
+    if (u.includes('apply') || u.includes('job') || u.includes('jobadder') || u.includes('/jobs/')) return 'job';
+    if (u.includes('article') || u.includes('blog') || u.includes('news') || u.includes('post')) return 'article';
+    if (u.includes('looking-for-talent') || u.includes('talent') || u.includes('hire')) return 'talent';
+    if (u.includes('register') || u.includes('signup') || u.includes('forms.jobadder') || u.includes('candidate')) return 'register';
+    if (u.includes('linkedin') || u.includes('instagram') || u.includes('facebook') || u.includes('twitter')) return 'social';
+    return 'other';
+}
+
+function rptFilterLinks(filter) {
+    rptLinkFilter = filter;
+    ['all','job','article','talent','register','social'].forEach(f => {
+        const btn = document.getElementById('rptLinkFilter' + f.charAt(0).toUpperCase() + f.slice(1));
+        if (!btn) return;
+        const active = f === filter;
+        btn.style.background = active ? 'rgba(22,163,74,0.3)' : 'rgba(255,255,255,0.08)';
+        btn.style.borderColor = active ? 'rgba(22,163,74,0.5)' : 'rgba(255,255,255,0.15)';
+        btn.style.color = active ? 'white' : 'rgba(255,255,255,0.7)';
+    });
+    rptRenderClicks();
+}
+
+function rptRenderClicks() {
+    const el = document.getElementById('rptClicksBody');
+    if (!el) return;
+    let links = rptAllLinks || [];
+    if (rptLinkFilter !== 'all') {
+        links = links.filter(l => rptGetLinkCategory(l.url) === rptLinkFilter);
+    }
+    if (!links.length) {
+        el.innerHTML = '<tr><td colspan="5" style="padding:24px; text-align:center; color:rgba(255,255,255,0.4);">No click data for this filter</td></tr>';
+        return;
+    }
+    const catColours = { job:'#3b82f6', article:'#8b5cf6', talent:'#16a34a', register:'#f59e0b', social:'#0077b5', other:'#6b7280' };
+    el.innerHTML = links.slice(0, 30).map((l, i) => {
+        const cat = rptGetLinkCategory(l.url);
+        const catColour = catColours[cat] || '#6b7280';
+        const shortUrl = l.url.length > 60 ? l.url.substring(0, 60) + '...' : l.url;
+        return `<tr style="border-top:1px solid rgba(255,255,255,0.06);">
+            <td style="padding:10px 16px; color:rgba(255,255,255,0.5); font-size:12px;">${i + 1}</td>
+            <td style="padding:10px 16px;"><a href="${l.url}" target="_blank" style="color:#60a5fa; text-decoration:none; font-size:12px; word-break:break-all;" title="${l.url}">${shortUrl}</a></td>
+            <td style="padding:10px 16px; text-align:right; color:white; font-weight:700;">${l.count}</td>
+            <td style="padding:10px 16px; text-align:right; color:rgba(255,255,255,0.6);">${l.uniqueClickers || '—'}</td>
+            <td style="padding:10px 16px;"><span style="background:${catColour}22; color:${catColour}; border-radius:20px; padding:2px 10px; font-size:11px; font-weight:600; text-transform:uppercase;">${cat}</span></td>
+        </tr>`;
+    }).join('');
+}
+
+function rptDrawTrendChart() {
+    const canvas = document.getElementById('rptTrendChart');
+    if (!canvas || !rptState.stats) return;
+    const daily = rptState.stats.daily || [];
+    if (!daily.length) {
+        canvas.parentElement.innerHTML += '<p style="color:rgba(255,255,255,0.4); text-align:center; font-size:13px;">No daily trend data available for this period</p>';
+        return;
+    }
+
+    // Destroy previous chart instance if exists
+    if (rptState.chartInstance) {
+        rptState.chartInstance.destroy();
+        rptState.chartInstance = null;
+    }
+
+    if (typeof Chart === 'undefined') {
+        // Load Chart.js dynamically
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+        script.onload = () => rptDrawTrendChart();
+        document.head.appendChild(script);
+        return;
+    }
+
+    const labels = daily.map(d => d.date || d.day || '');
+    const openRates = daily.map(d => {
+        const del = d.delivered || 0;
+        const op = d.uniqueOpens || d.opens || 0;
+        return del > 0 ? parseFloat(((op / del) * 100).toFixed(1)) : 0;
+    });
+    const clickRates = daily.map(d => {
+        const del = d.delivered || 0;
+        const cl = d.uniqueClicks || d.clicks || 0;
+        return del > 0 ? parseFloat(((cl / del) * 100).toFixed(1)) : 0;
+    });
+
+    rptState.chartInstance = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: 'Open Rate %',
+                    data: openRates,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59,130,246,0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 3
+                },
+                {
+                    label: 'Click Rate %',
+                    data: clickRates,
+                    borderColor: '#16a34a',
+                    backgroundColor: 'rgba(22,163,74,0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { labels: { color: 'rgba(255,255,255,0.7)', font: { size: 12 } } },
+                tooltip: { mode: 'index', intersect: false }
+            },
+            scales: {
+                x: { ticks: { color: 'rgba(255,255,255,0.5)', maxTicksLimit: 12 }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                y: { ticks: { color: 'rgba(255,255,255,0.5)', callback: v => v + '%' }, grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true }
+            }
+        }
+    });
+}
+
+async function rptGenerateInsight() {
+    const btn = document.getElementById('rptInsightBtn');
+    const loading = document.getElementById('rptInsightLoading');
+    const content = document.getElementById('rptInsightContent');
+    if (!rptState.stats) {
+        alert('Please load data first by clicking Refresh');
+        return;
+    }
+    if (btn) { btn.disabled = true; btn.textContent = 'Generating...'; }
+    if (loading) loading.style.display = 'block';
+    if (content) content.innerHTML = '';
+
+    const { startDate, endDate } = rptGetDateRange();
+    const dateRangeLabel = `Last ${rptState.dateRange} days (${startDate} to ${endDate})`;
+
+    try {
+        const resp = await fetch('/api/reporting/insight', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                stats: rptState.stats,
+                topLinks: rptAllLinks,
+                dateRange: dateRangeLabel,
+                tag: rptState.tag
+            })
+        });
+        const data = await resp.json();
+        if (data.error) throw new Error(data.error);
+
+        // Render markdown-style insight
+        const html = (data.insight || '')
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            .replace(/^#{1,3}\s+(.+)$/gm, '<h4 style="color:#4ade80; margin:20px 0 8px; font-size:15px;">$1</h4>')
+            .replace(/^\d+\.\s+(.+)$/gm, '<div style="margin:6px 0 6px 16px; color:rgba(255,255,255,0.85);"><span style="color:#4ade80; font-weight:700; margin-right:6px;">&#8226;</span>$1</div>')
+            .replace(/^-\s+(.+)$/gm, '<div style="margin:4px 0 4px 16px; color:rgba(255,255,255,0.8);"><span style="color:#4ade80; margin-right:6px;">&#8250;</span>$1</div>')
+            .replace(/\n\n/g, '</p><p style="margin:10px 0;">')
+            .replace(/\n/g, '<br>');
+
+        if (content) content.innerHTML = '<p style="margin:0 0 10px;">' + html + '</p>';
+    } catch (err) {
+        if (content) content.innerHTML = '<p style="color:#ef4444;">Failed to generate insight: ' + err.message + '</p>';
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Generate Insight'; }
+        if (loading) loading.style.display = 'none';
+    }
+}
+
+function rptInit() {
+    rptCurrentSub = 'overview';
+    rptLinkFilter = 'all';
+    rptState.chartInstance = null;
+    // Sync filter dropdowns to current state
+    const dr = document.getElementById('rptDateRange');
+    const tf = document.getElementById('rptTagFilter');
+    if (dr) dr.value = rptState.dateRange;
+    if (tf) tf.value = rptState.tag;
+    rptLoad();
+}
+
+// ===== END REPORTING TAB JS =====
+</script>
 </body>
 </html>

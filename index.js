@@ -1571,6 +1571,208 @@ app.post('/api/instagram/disconnect', (req, res) => {
   res.json({ success: true });
 });
 
+// ============================================================
+// REPORTING ROUTES — read-only, Brevo transactional API proxy
+// These routes do not touch any existing state or functionality
+// ============================================================
+
+// GET /api/reporting/stats
+// Returns aggregated transactional email stats from Brevo
+// Query params: startDate, endDate, tag
+app.get('/api/reporting/stats', async (req, res) => {
+  try {
+    const { startDate, endDate, tag } = req.query;
+    const apiKey = process.env.BREVO_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: 'BREVO_API_KEY not configured' });
+
+    // Build aggregated report URL
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    if (tag) params.append('tags', tag);
+
+    const aggUrl = `https://api.brevo.com/v3/smtp/statistics/aggregatedReport?${params.toString()}`;
+    const aggResp = await fetch(aggUrl, { headers: { 'api-key': apiKey, 'accept': 'application/json' } });
+    const aggData = await aggResp.json();
+
+    // Also get daily breakdown for trend chart
+    const dailyParams = new URLSearchParams();
+    if (startDate) dailyParams.append('startDate', startDate);
+    if (endDate) dailyParams.append('endDate', endDate);
+    if (tag) dailyParams.append('tags', tag);
+    dailyParams.append('days', '90');
+
+    const dailyUrl = `https://api.brevo.com/v3/smtp/statistics/reports?${dailyParams.toString()}`;
+    const dailyResp = await fetch(dailyUrl, { headers: { 'api-key': apiKey, 'accept': 'application/json' } });
+    const dailyData = await dailyResp.json();
+
+    // Per-tag breakdown — fetch stats for each known tag
+    const knownTags = ['alist', 'xpose-newsletter', 'xpose-article', 'job-alert-roundup', 'job-alert-ondemand', 'consultant'];
+    const tagBreakdown = [];
+    for (const t of knownTags) {
+      try {
+        const tp = new URLSearchParams();
+        if (startDate) tp.append('startDate', startDate);
+        if (endDate) tp.append('endDate', endDate);
+        tp.append('tags', t);
+        const tr = await fetch(`https://api.brevo.com/v3/smtp/statistics/aggregatedReport?${tp.toString()}`, {
+          headers: { 'api-key': apiKey, 'accept': 'application/json' }
+        });
+        const td = await tr.json();
+        if (td && (td.requests > 0 || td.delivered > 0)) {
+          tagBreakdown.push({ tag: t, ...td });
+        }
+      } catch (e) { /* skip tag on error */ }
+    }
+
+    res.json({
+      aggregated: aggData,
+      daily: dailyData.reports || dailyData || [],
+      tagBreakdown
+    });
+  } catch (err) {
+    console.error('Reporting stats error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/reporting/clicks
+// Returns click events from Brevo transactional API
+// Query params: startDate, endDate, tag, limit (default 100)
+app.get('/api/reporting/clicks', async (req, res) => {
+  try {
+    const { startDate, endDate, tag, limit = 500 } = req.query;
+    const apiKey = process.env.BREVO_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: 'BREVO_API_KEY not configured' });
+
+    const params = new URLSearchParams();
+    params.append('event', 'clicks');
+    params.append('limit', Math.min(parseInt(limit), 500).toString());
+    params.append('offset', '0');
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    if (tag) params.append('tags', tag);
+
+    const url = `https://api.brevo.com/v3/smtp/statistics/events?${params.toString()}`;
+    const resp = await fetch(url, { headers: { 'api-key': apiKey, 'accept': 'application/json' } });
+    const data = await resp.json();
+
+    const events = data.events || [];
+
+    // Aggregate clicks by URL
+    const urlMap = {};
+    for (const ev of events) {
+      const url = ev.link || ev.url || ev.subject || 'unknown';
+      if (!urlMap[url]) urlMap[url] = { url, count: 0, tag: ev.tag || tag || 'unknown', emails: new Set() };
+      urlMap[url].count++;
+      if (ev.email) urlMap[url].emails.add(ev.email);
+    }
+
+    const topLinks = Object.values(urlMap)
+      .map(l => ({ ...l, uniqueClickers: l.emails.size, emails: undefined }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 50);
+
+    res.json({ events: events.slice(0, 200), topLinks, total: events.length });
+  } catch (err) {
+    console.error('Reporting clicks error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/reporting/insight
+// Generates an AI insight summary from the provided stats data
+app.post('/api/reporting/insight', async (req, res) => {
+  try {
+    const { stats, clicks, dateRange, tag } = req.body;
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: 'OPENAI_API_KEY not configured' });
+
+    const OpenAI = require('openai');
+    const client = new OpenAI({ apiKey });
+
+    const now = new Date();
+    const monthYear = now.toLocaleString('en-AU', { month: 'long', year: 'numeric' });
+    const weekDay = now.toLocaleString('en-AU', { weekday: 'long' });
+
+    // Format stats for the prompt
+    const agg = stats.aggregated || {};
+    const delivered = agg.delivered || 0;
+    const opens = agg.uniqueOpens || agg.opens || 0;
+    const clickCount = agg.uniqueClicks || agg.clicks || 0;
+    const bounces = (agg.hardBounces || 0) + (agg.softBounces || 0);
+    const unsubs = agg.unsubscribed || 0;
+    const openRate = delivered > 0 ? ((opens / delivered) * 100).toFixed(1) : '0';
+    const clickRate = delivered > 0 ? ((clickCount / delivered) * 100).toFixed(1) : '0';
+
+    const tagRows = (stats.tagBreakdown || []).map(t => {
+      const d = t.delivered || 0;
+      const or = d > 0 ? ((( t.uniqueOpens || t.opens || 0) / d) * 100).toFixed(1) : '0';
+      const cr = d > 0 ? (((t.uniqueClicks || t.clicks || 0) / d) * 100).toFixed(1) : '0';
+      return `- ${t.tag}: ${d} delivered, ${or}% open rate, ${cr}% click rate, ${t.unsubscribed || 0} unsubscribes`;
+    }).join('\n');
+
+    const topLinksText = (req.body.topLinks || []).slice(0, 10).map((l, i) =>
+      `${i + 1}. ${l.url} — clicked ${l.count} times by ${l.uniqueClickers} unique contacts`
+    ).join('\n');
+
+    const prompt = `You are the senior marketing strategist for Artisan Recruitment, a specialist creative and marketing recruitment agency in Australia. Today is ${weekDay}, ${monthYear}.
+
+You have been given the email marketing performance data for the period: ${dateRange || 'last 30 days'}.
+
+OVERALL PERFORMANCE:
+- Delivered: ${delivered}
+- Open Rate: ${openRate}% (industry avg for recruitment: 28-32%)
+- Click Rate: ${clickRate}% (industry avg for recruitment: 3-5%)
+- Bounces: ${bounces}
+- Unsubscribes: ${unsubs}
+
+PERFORMANCE BY EMAIL TYPE:
+${tagRows || 'No tag breakdown available'}
+
+TOP CLICKED LINKS:
+${topLinksText || 'No click data available'}
+
+Write a strategic email marketing insight report for the Artisan team. Be specific, direct, and actionable. Use the actual numbers. Structure your response with these exact sections:
+
+**This Week at a Glance**
+A sharp 2-3 sentence summary of overall performance vs benchmarks. Call out wins and concerns directly.
+
+**What Is Working**
+Specific email types, subject line patterns, or send times that are performing above average. Reference actual numbers.
+
+**What Needs Attention Next Week**
+Specific issues to address — low click rates, high unsubscribes, underperforming email types. Be direct about what needs to change and why.
+
+**Do More Of This**
+What should be scaled up or repeated based on the data. Be specific about which email types, content angles, or CTAs.
+
+**Industry Context**
+Briefly reference what is working in recruitment email marketing in Australia right now (${monthYear}) and how Artisan's performance compares. Include 1-2 specific, current trends relevant to creative/marketing recruitment.
+
+**Recommended Actions for Next Week**
+A numbered list of 4-6 specific, prioritised actions the team should take next week. Each action should be concrete and implementable.
+
+Tone: Sharp, confident, data-driven. Write like a senior strategist briefing a team — not a generic marketing report. No filler, no hedging.`;
+
+    const completion = await client.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: 'You are a senior email marketing strategist specialising in recruitment agency marketing in Australia. You write sharp, specific, data-driven insights that lead to real action.' },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.85,
+      max_tokens: 1200
+    });
+
+    const insight = completion.choices[0].message.content;
+    res.json({ insight });
+  } catch (err) {
+    console.error('Reporting insight error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   const isAuthorized = jobadderService.isAuthorized();
