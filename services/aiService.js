@@ -227,38 +227,47 @@ RULES:
 
       console.log(`    🤖 Generating LinkedIn A-List post for ${candidates.length} candidates`);
 
-      // Build a candidate list for the prompt — title + condensed punchy snippet from summary
+      // Build a rich candidate block — title + full summary for the model to distil
       const candidateLines = candidates.map((c, i) => {
-        // Trim summary to first ~120 chars at a word boundary for a punchy snippet
-        let snippet = (c.summary || '').trim();
-        if (snippet.length > 120) {
-          snippet = snippet.substring(0, 120).replace(/\s+\S*$/, '') + '...';
-        }
-        return `${i + 1}. ${c.title} — ${snippet}`;
-      }).join('\n');
+        const summary = (c.summary || '').trim();
+        return `${i + 1}. ${c.title}\n   ${summary}`;
+      }).join('\n\n');
+
+      // Random seed to prevent cached responses
+      const seed = Math.random().toString(36).substring(2, 8);
 
       const response = await client.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
-            content: `You are a social media copywriter for Artisan, a specialist Australian recruitment agency with 27 years of experience placing creative, digital, and marketing professionals. Write a compelling LinkedIn post that showcases Artisan's current A-List — a curated selection of exceptional candidates available for placement. The post should:
-- Open with a strong, attention-grabbing intro (no generic openers like "Excited to share...")
-- Briefly introduce the concept of the A-List (exceptional talent, ready now)
-- For each candidate, include their job title followed by a single punchy sentence (max 15 words) distilled from their description — make it sharp, specific, and compelling. No names.
-- End with a clear CTA directing hiring managers to https://artisan.com.au/looking-for-talent/ to find out more
-- Include 3-5 relevant hashtags at the end
-- Be professional, confident, and direct
-- No emojis in the body text
-- Between 180-280 words total`
+            content: `You are the LinkedIn copywriter for Artisan, a specialist Australian recruitment agency with 27 years of experience placing creative, digital, and marketing professionals.
+
+Write a compelling LinkedIn post showcasing this week's Artisan A-List — a hand-picked selection of exceptional creative, digital, and marketing talent available for placement right now.
+
+STRUCTURE (follow exactly):
+1. HOOK (1-2 lines): A sharp, specific opening that makes hiring managers stop scrolling. No generic openers. No "Excited to share". Make it feel urgent and real.
+2. INTRO (1-2 sentences): Briefly set up the A-List concept — curated talent, available now, ready to make an impact.
+3. CANDIDATE LIST: For each candidate, write their job title in bold (use ** around it) followed by a single punchy sentence (max 18 words) distilled from their description. Make each line feel different — vary the angle, the tone, the hook. No names.
+4. HIRING MANAGER CTA: One clear, direct sentence driving hiring managers to: https://artisan.com.au/looking-for-talent/
+5. CANDIDATE CTA: One sentence inviting creative professionals who want to be featured on a future A-List to register at: https://v2.forms.jobadder.com/f/yGwxPONEk5baN1q0M32arXA79
+6. HASHTAGS: 4-5 relevant hashtags on the final line.
+
+RULES:
+- No emojis anywhere in the body text
+- No clichés: no "passionate", "results-driven", "dynamic", "go-to", "proven track record"
+- Australian spelling throughout
+- Professional, confident, and direct tone
+- Between 200-300 words total (not counting hashtags)
+- Both URLs must appear exactly as written above`
           },
           {
             role: 'user',
-            content: `Here are the ${candidates.length} candidates on this week's A-List:\n\n${candidateLines}\n\nWrite the LinkedIn post, giving each candidate a job title + one punchy sentence.`
+            content: `Here are this week's ${candidates.length} A-List candidates:\n\n${candidateLines}\n\nWrite the LinkedIn post. Seed: ${seed}`
           }
         ],
-        temperature: 0.75,
-        max_tokens: 500
+        temperature: 0.9,
+        max_tokens: 650
       });
 
       const post = response.choices[0].message.content.trim();
