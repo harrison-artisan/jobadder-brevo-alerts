@@ -1264,7 +1264,7 @@
                 Content Marketing
             </button>
             <button class="tab tab-schedule" onclick="switchMainTab('schedule', event)" style="flex:1; background: linear-gradient(135deg, #0e7490 0%, #0891b2 100%); color: white;">
-                &#128197; Schedule
+                Schedule
             </button>
         </div>
         
@@ -2245,8 +2245,8 @@
                     emailContentBackup = null;
                 }
             } else if (mainTabName === 'content-marketing') {
-                // Save current email content before hiding
-                emailContentBackup = mainContent.innerHTML;
+                // Save current email content before hiding (only if coming from email tab)
+                if (!emailContentBackup) emailContentBackup = mainContent.innerHTML;
                 
                 // Hide email tabs
                 emailTabs.style.display = 'none';
@@ -3255,8 +3255,7 @@
                 cmLoadJobScheduleState();
 
             } else if (mainTabName === 'schedule') {
-                // Save current email content before hiding
-                if (!emailContentBackup) emailContentBackup = mainContent.innerHTML;
+                // Hide the second-tier email tabs — they must not show under Schedule
                 emailTabs.style.display = 'none';
 
                 mainContent.innerHTML = `
@@ -3266,7 +3265,7 @@
                     <div style="background:rgba(255,255,255,0.07); backdrop-filter:blur(20px); border-radius:16px; padding:24px 28px 20px; margin-bottom:24px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 32px rgba(0,0,0,0.15);">
                         <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
                             <div>
-                                <h2 style="margin:0 0 4px; color:white; font-size:22px; font-weight:700;">&#128197; Schedule Overview</h2>
+                                <h2 style="margin:0 0 4px; color:white; font-size:22px; font-weight:700;">Schedule Overview</h2>
                                 <p style="margin:0; color:rgba(255,255,255,0.55); font-size:13px;">All scheduled emails, newsletters &amp; posts in one view</p>
                             </div>
                             <div style="display:flex; align-items:center; gap:10px;">
