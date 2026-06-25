@@ -2226,26 +2226,27 @@
             const mainTabButtons = document.querySelectorAll('#mainTabs .tab');
             
             // Update active state
-            mainTabButtons.forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
+            mainTabButtons.forEach(btn => btn.classList.remove('active'));
+            // Activate the clicked button (or find it by name when called programmatically)
             if (event && event.target) {
                 event.target.classList.add('active');
-            } else if (window.event && window.event.target) {
-                window.event.target.classList.add('active');
+            } else {
+                mainTabButtons.forEach(btn => {
+                    const oc = btn.getAttribute('onclick') || '';
+                    if (oc.includes("'" + mainTabName + "'")) btn.classList.add('active');
+                });
             }
             
             if (mainTabName === 'email-marketing') {
-                // Show email type tabs and restore content
+                // Show email type tabs
                 emailTabs.style.display = 'flex';
-                
+                // Restore email content if we have a backup, otherwise the DOM already has it
                 if (emailContentBackup) {
                     mainContent.innerHTML = emailContentBackup;
                     emailContentBackup = null;
                 }
             } else if (mainTabName === 'content-marketing') {
-                // Save current email content before hiding (only if coming from email tab)
+                // Save email content backup only when leaving email tab
                 if (!emailContentBackup) emailContentBackup = mainContent.innerHTML;
                 
                 // Hide email tabs
@@ -3255,7 +3256,9 @@
                 cmLoadJobScheduleState();
 
             } else if (mainTabName === 'schedule') {
-                // Hide the second-tier email tabs — they must not show under Schedule
+                // Always save the email content backup so returning to Email Marketing works
+                if (!emailContentBackup) emailContentBackup = mainContent.innerHTML;
+                // Hide the second-tier email tabs
                 emailTabs.style.display = 'none';
 
                 mainContent.innerHTML = `
@@ -8768,15 +8771,20 @@
             const ep = endpoints[i];
 
             if (ep.parseConsultant) {
-                // Returns { schedules: [ { consultantId, consultantName, scheduledAt, scheduledFor } ] }
+                // Returns { schedules: [ { consultantId, consultantName, scheduledAt, scheduledFor, recipientType, recipientId } ] }
                 const schedules = data.schedules || [];
                 schedules.forEach(s => {
                     if (s.scheduledAt) {
+                        const recipientLabel = s.recipientType === 'all' ? 'All subscribers'
+                            : s.recipientType === 'list' ? 'List ' + s.recipientId
+                            : s.recipientType === 'contact' ? 'Contact ' + s.recipientId
+                            : s.recipientType || 'All subscribers';
                         schedEvents.push({
                             label: 'Consultant: ' + (s.consultantName || s.consultantId),
                             colour: ep.colour,
                             scheduledAt: s.scheduledAt,
-                            scheduledFor: s.scheduledFor || s.scheduledAt
+                            scheduledFor: s.scheduledFor || s.scheduledAt,
+                            dataset: recipientLabel
                         });
                     }
                 });
@@ -8784,10 +8792,11 @@
             }
 
             if (ep.parsePoll) {
-                // Returns { state: { scheduledAt, scheduledFor } } or { scheduledAt, scheduledFor }
+                // Returns { state: { scheduledAt, scheduledFor, poll: { question } } } or flat
                 const inner = data.state || data;
                 if (inner && inner.scheduledAt) {
-                    schedEvents.push({ label: ep.label, colour: ep.colour, scheduledAt: inner.scheduledAt, scheduledFor: inner.scheduledFor || inner.scheduledAt });
+                    const question = (inner.poll && inner.poll.question) ? inner.poll.question : null;
+                    schedEvents.push({ label: ep.label, colour: ep.colour, scheduledAt: inner.scheduledAt, scheduledFor: inner.scheduledFor || inner.scheduledAt, dataset: question ? '"' + question + '"' : null });
                 }
                 return;
             }
@@ -8795,14 +8804,26 @@
             if (ep.parseState) {
                 // Returns full state object — only add if state === 'SCHEDULED'
                 if (data.state === 'SCHEDULED' && data.scheduledAt) {
-                    schedEvents.push({ label: ep.label, colour: ep.colour, scheduledAt: data.scheduledAt, scheduledFor: data.scheduledFor || data.scheduledAt });
+                    // scheduledOptions may contain recipientType/recipientId
+                    const opts = data.scheduledOptions || data.options || {};
+                    const recip = opts.recipientType === 'all' ? 'All subscribers'
+                        : opts.recipientType === 'list' ? 'List ' + opts.recipientId
+                        : opts.recipientType === 'contact' ? 'Contact ' + opts.recipientId
+                        : opts.recipientType || null;
+                    schedEvents.push({ label: ep.label, colour: ep.colour, scheduledAt: data.scheduledAt, scheduledFor: data.scheduledFor || data.scheduledAt, dataset: recip });
                 }
                 return;
             }
 
-            // Standard: { scheduledAt, scheduledFor }
+            // Standard: { scheduledAt, scheduledFor, options? }
             if (data && data.scheduledAt) {
-                schedEvents.push({ label: ep.label, colour: ep.colour, scheduledAt: data.scheduledAt, scheduledFor: data.scheduledFor || data.scheduledAt });
+                const opts = data.options || {};
+                const recip = opts.recipientType === 'all' ? 'All subscribers'
+                    : opts.recipientType === 'list' ? 'List ' + opts.recipientId
+                    : opts.recipientType === 'contact' ? 'Contact ' + opts.recipientId
+                    : opts.recipientType || null;
+                const extra = data.jobTitle || data.title || null;
+                schedEvents.push({ label: ep.label, colour: ep.colour, scheduledAt: data.scheduledAt, scheduledFor: data.scheduledFor || data.scheduledAt, dataset: extra || recip });
             }
         });
 
@@ -8952,30 +8973,26 @@
     }
 
     function schedNavigateTo(evLabel, evMainTab, evEmailTab, evCmTab) {
-        // Switch to the correct main tab
-        const mainTabBtns = document.querySelectorAll('#mainTabs .tab');
-        mainTabBtns.forEach(b => b.classList.remove('active'));
-        // Find and activate the correct main tab button
-        mainTabBtns.forEach(b => {
-            const onclick = b.getAttribute('onclick') || '';
-            if (onclick.includes("'" + evMainTab + "'")) b.classList.add('active');
-        });
-        // Use the existing switchMainTab logic
+        // When navigating to email-marketing from schedule, clear the backup
+        // so switchMainTab restores the real email DOM (not the schedule page)
+        if (evMainTab === 'email-marketing') {
+            emailContentBackup = null;
+        }
+        // Trigger the main tab switch (this also sets active state on the button)
         switchMainTab(evMainTab, null);
-        // Then switch sub-tab if needed
+        // Then switch the sub-tab after a short delay to let the DOM settle
         if (evEmailTab) {
             setTimeout(() => {
                 switchTab(evEmailTab, null);
-                // Also activate the correct email tab button
                 document.querySelectorAll('#emailTabs .tab').forEach(b => {
-                    const onclick = b.getAttribute('onclick') || '';
-                    b.classList.toggle('active', onclick.includes("'" + evEmailTab + "'"));
+                    const oc = b.getAttribute('onclick') || '';
+                    b.classList.toggle('active', oc.includes("'" + evEmailTab + "'"));
                 });
-            }, 50);
+            }, 80);
         } else if (evCmTab) {
             setTimeout(() => {
                 if (typeof cmSwitchSubTab === 'function') cmSwitchSubTab(evCmTab);
-            }, 50);
+            }, 80);
         }
     }
 
@@ -8997,14 +9014,16 @@
                 const goToBtn = nav
                     ? `<button onclick="schedNavigateTo('${ev.label.replace(/'/g, "\\'")}',${'\'' + nav.mainTab + '\''},${nav.emailTab ? '\'' + nav.emailTab + '\'' : 'null'},${nav.cmTab ? '\'' + nav.cmTab + '\'' : 'null'})" style="background:${ev.colour}; color:white; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; flex-shrink:0;">Go to &rarr;</button>`
                     : '';
+                const datasetRow = ev.dataset ? `<div style="font-size:12px; color:rgba(255,255,255,0.45); margin-top:2px;">Sending to: ${ev.dataset}</div>` : '';
                 return `
                 <div style="display:flex; align-items:center; gap:14px; padding:14px 16px; background:rgba(255,255,255,0.05); border-radius:12px; margin-bottom:10px; border-left:4px solid ${ev.colour};">
                     <div style="flex:1; min-width:0;">
-                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px;">
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px;">
                             <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:${ev.colour}; background:${ev.colour}22; padding:2px 8px; border-radius:20px;">${nav ? nav.contentType : 'Scheduled'}</span>
                         </div>
                         <div style="font-size:15px; font-weight:700; color:white; margin-bottom:3px;">${nav ? nav.channel : ev.label}</div>
-                        <div style="font-size:12px; color:rgba(255,255,255,0.5);">${ev.scheduledFor}</div>
+                        <div style="font-size:12px; color:rgba(255,255,255,0.5); margin-bottom:2px;">Scheduled: ${ev.scheduledFor}</div>
+                        ${datasetRow}
                     </div>
                     ${goToBtn}
                 </div>`;
