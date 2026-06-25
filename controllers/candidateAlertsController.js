@@ -18,8 +18,8 @@ class CandidateAlertsController {
     console.log('\n🎲 ========== GENERATING A-LIST ==========');
     
     try {
-      // 1. Fetch candidates interviewed in last 3 weeks
-      const allCandidates = await candidateService.getRecentlyInterviewedCandidates(3);
+      // 1. Fetch candidates interviewed in last 4 weeks
+      const allCandidates = await candidateService.getRecentlyInterviewedCandidates(4);
       
       if (allCandidates.length === 0) {
         return {
@@ -285,7 +285,12 @@ class CandidateAlertsController {
       candidates.forEach(edit => {
         const idx = edit.index - 1; // index is 1-based from frontend
         if (state.candidates[idx]) {
-          if (edit.title !== undefined) state.candidates[idx].title = edit.title;
+          if (edit.title !== undefined) {
+            state.candidates[idx].title = edit.title;
+            // Rebuild mailto_link so the email subject reflects the updated title
+            const mailtoSubject = `Send me more information about ${edit.title} - Candidate #${state.candidates[idx].candidateId}`;
+            state.candidates[idx].mailto_link = `mailto:artisan@artisan.com.au?subject=${encodeURIComponent(mailtoSubject)}&body=`;
+          }
           if (edit.summary !== undefined) state.candidates[idx].summary = edit.summary;
         }
       });

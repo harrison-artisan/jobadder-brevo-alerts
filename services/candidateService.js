@@ -219,7 +219,7 @@ class CandidateService {
   async filterQualifiedCandidates(candidates) {
     const excludeKeywords = [
       'junior', 'intern', 'internship', 'graduate', 'trainee', 'student',
-      'entry level', 'entry-level', 'assistant'
+      'entry level', 'entry-level'
     ];
     
     const hasExcludedKeyword = (text) => {
@@ -328,7 +328,7 @@ class CandidateService {
   async getCurrentTitle(candidate) {
     const genericTitles = [
       'freelance', 'freelancer', 'owner', 'consultant', 'contractor',
-      'self-employed', 'independent', 'director', 'partner', 'designer',
+      'self-employed', 'independent',
       'creative', 'professional', 'founder', 'creator', 'ceo', 'principal',
       'managing director', 'md', 'co-founder', 'business owner'
     ];
