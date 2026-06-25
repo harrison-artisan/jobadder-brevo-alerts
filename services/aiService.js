@@ -289,51 +289,52 @@ ${isMultiple ? '- List each role with its title, location, and a punchy one-line
       
       if (hasBio) {
         // Prompt for candidates WITH a bio
-        prompt = `Rewrite this candidate bio into a compelling 3-4 sentence professional summary for a recruitment email.
+        prompt = `You are writing a candidate spotlight for Artisan's A-List — a curated weekly email sent to senior hiring managers across Australia's creative, digital, and marketing industry. Each spotlight must read like it was written by a sharp recruiter who genuinely knows this person's value, not a template.
+
+Rewrite this candidate's bio into a punchy 3-sentence professional summary. It must sound human, specific, and compelling — not like every other recruitment email.
 
 CANDIDATE INFO:
-Job Title: ${title || 'Professional'}
+Job Title: ${title || 'Creative Professional'}
 Experience: ${expText}
 Skills: ${skills || 'various professional skills'}
-Bio: ${bio.substring(0, 600)}
+Bio: ${bio.substring(0, 800)}
 
-REQUIREMENTS:
-- Write EXACTLY 3-4 sentences (MAX 300 characters total)
-- Remove ALL names (first names, last names, any proper names)
-- Remove ALL company names and business names - do not mention any companies at all
-- Use gender-neutral language (they/their/them instead of he/she/his/her)
-- Use Australian spelling: specialising, recognised, organised, analyse, realise
-- Use Title Case for job titles (e.g., "Senior Designer" not "senior designer")
-- Make it compelling and exciting - sell this candidate!
-- Focus on achievements, skills, and impact from their bio
-- Keep the real content from their bio, just clean it up
-- Vary the opening - don't always start with "A [title] with..."
-- No grammar errors, no business names, no overly specific language
+RULES:
+- Exactly 3 sentences. No more, no less.
+- Each sentence must do real work — no filler, no padding
+- BANNED openers: "A [title] with", "With X years", "They bring", "This candidate", "An experienced"
+- Start with something specific and interesting — a capability, an achievement, a sharp observation about what makes them good
+- Remove ALL names (first, last, any proper names) and ALL company names
+- Gender-neutral language: they/their/them
+- Australian spelling: specialising, recognised, organised, analyse, realise
+- No clichés: no "proven track record", "passionate about", "results-driven", "dynamic", "go-to"
+- Make a hiring manager want to pick up the phone
 
-OUTPUT ONLY THE SUMMARY - NO EXPLANATIONS OR EXTRA TEXT.`;
+OUTPUT ONLY THE 3-SENTENCE SUMMARY. NO PREAMBLE, NO LABELS, NO EXTRA TEXT.`;
       } else {
         // Prompt for candidates WITHOUT a bio - build from available data
-        prompt = `Create a compelling 3-4 sentence professional summary for this candidate for a recruitment email.
+        prompt = `You are writing a candidate spotlight for Artisan's A-List — a curated weekly email sent to senior hiring managers across Australia's creative, digital, and marketing industry. Each spotlight must read like it was written by a sharp recruiter who genuinely knows this person's value, not a template.
+
+Create a punchy 3-sentence professional summary for this candidate. It must sound human, specific, and compelling — not like every other recruitment email.
 
 CANDIDATE INFO:
-Job Title: ${title || 'Professional'}
+Job Title: ${title || 'Creative Professional'}
 Experience: ${expText}
 Skills: ${skills || 'various professional skills'}
 Work History: ${workHistory || 'diverse professional background'}
 
-REQUIREMENTS:
-- Write EXACTLY 3-4 sentences (MAX 300 characters total)
-- Use the job title, experience, and skills to create a compelling narrative
-- Make them sound amazing and professional - sell this candidate!
-- Use gender-neutral language (they/their/them)
-- Use Australian spelling: specialising, recognised, organised, analyse, realise
-- Use Title Case for job titles (e.g., "Senior Designer" not "senior designer")
-- Focus on their expertise, capabilities, and professional strengths
-- Vary the opening - don't always start with "A [title] with..."
-- No grammar errors, no business names, no overly specific language
-- Create a unique summary that stands out
+RULES:
+- Exactly 3 sentences. No more, no less.
+- Each sentence must do real work — no filler, no padding
+- BANNED openers: "A [title] with", "With X years", "They bring", "This candidate", "An experienced"
+- Start with something specific and interesting — lead with their strongest skill or what sets them apart
+- Gender-neutral language: they/their/them
+- Australian spelling: specialising, recognised, organised, analyse, realise
+- No clichés: no "proven track record", "passionate about", "results-driven", "dynamic", "go-to"
+- Use the job title, experience, skills, and work history to paint a picture of real capability
+- Make a hiring manager want to pick up the phone
 
-OUTPUT ONLY THE SUMMARY - NO EXPLANATIONS OR EXTRA TEXT.`;
+OUTPUT ONLY THE 3-SENTENCE SUMMARY. NO PREAMBLE, NO LABELS, NO EXTRA TEXT.`;
       }
 
       console.log(`    🤖 Generating with OpenAI (gpt-4o-mini)...`);
@@ -343,15 +344,15 @@ OUTPUT ONLY THE SUMMARY - NO EXPLANATIONS OR EXTRA TEXT.`;
         messages: [
           {
             role: 'system',
-            content: 'You are an expert recruitment copywriter specialising in creating compelling, anonymized candidate summaries.'
+            content: 'You are a senior copywriter for Artisan, a specialist Australian recruitment agency. You write sharp, specific, human candidate spotlights for the Artisan A-List email. Your writing is direct, confident, and never generic. You never use clichés or stock recruitment phrases.'
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        temperature: 0.8,
-        max_tokens: 250
+        temperature: 0.9,
+        max_tokens: 350
       });
       
       let summary = response.choices[0].message.content.trim();
@@ -652,82 +653,180 @@ OUTPUT ONLY THE SUMMARY - NO EXPLANATIONS OR EXTRA TEXT.`;
    */
   createManualSummary(candidate) {
     const title = this.generalizeJobTitle(
-      candidate.employment?.current?.position || 
-      candidate.employment?.ideal?.position || 
+      candidate.employment?.current?.position ||
+      candidate.employment?.ideal?.position ||
       ''
     );
-    
+
     const yearsExp = this.calculateYearsOfExperience(candidate);
     const skills = candidate.skillTags?.slice(0, 5) || [];
-    
+
     let sentences = [];
-    
-    // Opening sentence
-    if (title && yearsExp > 0) {
-      const expText = yearsExp >= 15 ? `over ${yearsExp} years` :
-                      yearsExp >= 10 ? `${yearsExp}+ years` :
-                      `${yearsExp} years`;
-      sentences.push(`A ${title} with ${expText} of professional experience.`);
-    } else if (title) {
-      sentences.push(`An experienced ${title} with a proven track record.`);
-    } else {
-      sentences.push(`An experienced professional with a proven track record.`);
-    }
-    
-    // Extract from bio if available
+
+    // Extract from bio first — real content beats templates
     if (candidate.summary && candidate.summary.trim().length > 50) {
       let bio = candidate.summary.trim();
       bio = this.removeNames(bio, candidate);
       bio = this.removeCompanyNames(bio, candidate);
       bio = this.removeGenderPronouns(bio);
-      
+
       const bioSentences = bio.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 20);
       if (bioSentences.length > 0) {
-        sentences.push(...bioSentences.slice(0, 2));
+        sentences.push(...bioSentences.slice(0, 3));
       }
     }
-    
-    // Add skills if needed
-    if (sentences.length < 3 && skills.length >= 3) {
-      const skillList = skills.slice(0, 3).join(', ');
-      sentences.push(`Specialises in ${skillList} with a focus on delivering exceptional results.`);
+
+    // Build from structured data if bio was short or missing
+    if (sentences.length === 0) {
+      if (title && yearsExp > 0) {
+        const expText = yearsExp >= 15 ? `over ${yearsExp} years` :
+                        yearsExp >= 10 ? `${yearsExp}+ years` :
+                        `${yearsExp} years`;
+        sentences.push(`${title} with ${expText} of industry experience across creative and marketing disciplines.`);
+      } else if (title) {
+        sentences.push(`${title} with deep expertise across creative and marketing disciplines.`);
+      } else {
+        sentences.push(`A versatile creative professional with cross-disciplinary expertise.`);
+      }
+
+      if (skills.length >= 2) {
+        const skillList = skills.slice(0, 3).join(', ');
+        sentences.push(`Their core strengths span ${skillList}.`);
+      }
+
+      sentences.push(`Available now and open to the right opportunity.`);
     }
-    
-    // Final sentence if needed
-    if (sentences.length < 3) {
-      sentences.push(`Brings strong analytical skills and a commitment to excellence.`);
-    }
-    
-    let summary = sentences.slice(0, 4).join(' ');
+
+    let summary = sentences.slice(0, 3).join(' ');
     summary = this.applyAustralianSpelling(summary);
     summary = summary.replace(/\s+/g, ' ').trim();
-    
+
     if (!summary.match(/[.!?]$/)) {
       summary += '.';
     }
-    
+
     return summary;
   }
 
   /**
-   * Generate summaries for multiple candidates in parallel
+   * Generate summaries for multiple candidates in a single batch call.
+   * Sending all candidates together lets the model vary tone, angle, and
+   * sentence structure across the set so no two spotlights sound the same.
    */
   async generateBatchSummaries(candidates) {
     const client = this.getClient();
-    
+
     if (!client) {
       console.log(`\n⚠️  OPENAI_API_KEY not configured - using manual summaries for all candidates`);
-    } else {
-      console.log(`\n🤖 Generating AI summaries for ${candidates.length} candidates using OpenAI...`);
+      return candidates.map(c => this.createManualSummary(c));
     }
-    
-    const summaries = await Promise.all(
-      candidates.map(candidate => this.generateCandidateSummary(candidate))
-    );
-    
-    console.log('✅ All summaries generated\n');
-    
-    return summaries;
+
+    console.log(`\n🤖 Generating AI summaries for ${candidates.length} candidates in a single batch call...`);
+
+    try {
+      // Build a rich profile block for each candidate
+      const profiles = candidates.map((candidate, i) => {
+        const rawTitle = candidate.employment?.current?.position ||
+                         candidate.employment?.ideal?.position || '';
+        const title = this.generalizeJobTitle(rawTitle, candidate.summary || '') || 'Creative Professional';
+        const yearsExp = this.calculateYearsOfExperience(candidate);
+        const expText = yearsExp >= 15 ? `over ${yearsExp} years` :
+                        yearsExp >= 10 ? `${yearsExp}+ years` :
+                        yearsExp > 0  ? `${yearsExp} years` : 'extensive experience';
+        const skills = candidate.skillTags?.slice(0, 5).join(', ') || '';
+        const workHistory = candidate.employment?.history?.slice(0, 3).map(job => {
+          return `${job.position || ''}${job.employer ? ' at ' + job.employer : ''}`;
+        }).filter(h => h.trim()).join(', ') || '';
+
+        let bio = candidate.summary?.trim() || '';
+        if (bio.length >= 50) {
+          bio = this.removeNames(bio, candidate);
+          bio = this.removeCompanyNames(bio, candidate);
+          bio = bio.substring(0, 600);
+        }
+
+        return `--- CANDIDATE ${i + 1} ---
+Title: ${title}
+Experience: ${expText}
+Skills: ${skills || 'not listed'}
+Work History: ${workHistory || 'not listed'}
+${bio ? 'Bio: ' + bio : '(No bio available — use title, skills, and work history only)'}`;
+      }).join('\n\n');
+
+      const batchPrompt = `You are writing candidate spotlights for Artisan's A-List — a curated weekly email sent to senior hiring managers across Australia's creative, digital, and marketing industry.
+
+Write a 3-sentence professional summary for EACH of the ${candidates.length} candidates below. Each summary must:
+- Sound like it was written by a sharp recruiter who genuinely knows this person's value
+- Be specific, human, and compelling — not templated
+- Be DIFFERENT in structure and tone from the others — vary your opening angle for every candidate
+- BANNED openers: "A [title] with", "With X years", "They bring", "This candidate", "An experienced"
+- Lead with something specific: a capability, a strength, what makes them stand out
+- Remove ALL names and ALL company names
+- Use gender-neutral language: they/their/them
+- Australian spelling: specialising, recognised, organised, analyse, realise
+- No clichés: no "proven track record", "passionate about", "results-driven", "dynamic", "go-to"
+- Make a hiring manager want to pick up the phone
+
+OUTPUT FORMAT — follow exactly:
+CANDIDATE 1:
+[3-sentence summary]
+
+CANDIDATE 2:
+[3-sentence summary]
+
+(and so on for each candidate)
+
+Here are the candidates:
+
+${profiles}`;
+
+      const response = await client.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a senior copywriter for Artisan, a specialist Australian recruitment agency. You write sharp, specific, human candidate spotlights for the Artisan A-List email. Your writing is direct, confident, and never generic. Each spotlight you write is deliberately different in tone and structure from the others.'
+          },
+          {
+            role: 'user',
+            content: batchPrompt
+          }
+        ],
+        temperature: 0.9,
+        max_tokens: 1200
+      });
+
+      const raw = response.choices[0].message.content.trim();
+
+      // Parse out each candidate block
+      const summaries = candidates.map((candidate, i) => {
+        const num = i + 1;
+        // Match "CANDIDATE N:" block up to the next "CANDIDATE" or end of string
+        const regex = new RegExp(`CANDIDATE\\s+${num}:\\s*([\\s\\S]*?)(?=CANDIDATE\\s+${num + 1}:|$)`, 'i');
+        const match = raw.match(regex);
+        let summary = match ? match[1].trim() : '';
+
+        if (!summary) {
+          console.warn(`  ⚠️  Could not parse summary for candidate ${num}, falling back to individual generation`);
+          return this.generateCandidateSummary(candidate);
+        }
+
+        summary = this.cleanupSummary(summary, candidate);
+        console.log(`    ✅ Candidate ${num} summary (${summary.length} chars)`);
+        return summary;
+      });
+
+      // Resolve any fallback promises
+      const resolved = await Promise.all(summaries);
+      console.log('✅ All summaries generated\n');
+      return resolved;
+
+    } catch (error) {
+      console.error('❌ Batch summary generation failed, falling back to individual generation:', error.message);
+      const summaries = await Promise.all(candidates.map(c => this.generateCandidateSummary(c)));
+      console.log('✅ All summaries generated (individual fallback)\n');
+      return summaries;
+    }
   }
 
   // ============================================================
