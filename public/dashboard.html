@@ -9100,22 +9100,30 @@ function rptBuildUI() {
     <div id="reportingApp" style="padding:0;">
 
         <!-- Header -->
-        <div style="background:rgba(255,255,255,0.07); backdrop-filter:blur(20px); border-radius:16px; padding:24px 28px 20px; margin-bottom:20px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 32px rgba(0,0,0,0.15);">
-            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px;">
+        <div style="background:rgba(255,255,255,0.07); backdrop-filter:blur(20px); border-radius:14px; padding:14px 20px; margin-bottom:16px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 4px 20px rgba(0,0,0,0.12);">
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
                 <div>
-                    <h2 style="margin:0 0 4px; color:white; font-size:22px; font-weight:700;">Email Reporting</h2>
-                    <p style="margin:0; color:rgba(255,255,255,0.55); font-size:13px;">Live performance data from Brevo transactional email</p>
+                    <h2 style="margin:0 0 1px; color:white; font-size:18px; font-weight:700;">Email Reporting</h2>
+                    <p style="margin:0; color:rgba(255,255,255,0.5); font-size:12px;">Live performance data from Brevo transactional email</p>
                 </div>
-                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                    <!-- Date Range -->
-                    <select id="rptDateRange" onchange="rptChangeDateRange(this.value)" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; padding:8px 12px; font-size:13px; cursor:pointer;">
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <!-- Preset Date Range -->
+                    <select id="rptDateRange" onchange="rptChangeDateRange(this.value)" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; padding:7px 10px; font-size:12px; cursor:pointer;">
                         <option value="7">Last 7 days</option>
                         <option value="30" selected>Last 30 days</option>
                         <option value="90">Last 90 days</option>
                         <option value="365">This year</option>
+                        <option value="custom">Custom range...</option>
                     </select>
+                    <!-- Custom date pickers (hidden until custom selected) -->
+                    <div id="rptCustomDates" style="display:none; align-items:center; gap:6px;">
+                        <input type="date" id="rptCustomStart" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; padding:6px 10px; font-size:12px; cursor:pointer;" />
+                        <span style="color:rgba(255,255,255,0.5); font-size:12px;">to</span>
+                        <input type="date" id="rptCustomEnd" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; padding:6px 10px; font-size:12px; cursor:pointer;" />
+                        <button onclick="rptApplyCustomRange()" style="background:rgba(22,163,74,0.3); border:1px solid rgba(22,163,74,0.5); border-radius:8px; color:white; padding:6px 12px; font-size:12px; cursor:pointer;">Apply</button>
+                    </div>
                     <!-- Tag Filter -->
-                    <select id="rptTagFilter" onchange="rptChangeTag(this.value)" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; padding:8px 12px; font-size:13px; cursor:pointer;">
+                    <select id="rptTagFilter" onchange="rptChangeTag(this.value)" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; padding:7px 10px; font-size:12px; cursor:pointer;">
                         <option value="all">All Email Types</option>
                         <option value="alist">A-List Email</option>
                         <option value="xpose-newsletter">Xpose Newsletter</option>
@@ -9124,7 +9132,7 @@ function rptBuildUI() {
                         <option value="job-alert-ondemand">On Demand Job Alert</option>
                         <option value="consultant">Consultant Newsletter</option>
                     </select>
-                    <button onclick="rptLoad()" style="background:linear-gradient(135deg,#166534,#16a34a); border:none; border-radius:8px; color:white; padding:9px 18px; font-size:13px; font-weight:600; cursor:pointer;">Refresh</button>
+                    <button onclick="rptLoad()" style="background:linear-gradient(135deg,#166534,#16a34a); border:none; border-radius:8px; color:white; padding:7px 14px; font-size:12px; font-weight:600; cursor:pointer;">Refresh</button>
                 </div>
             </div>
         </div>
@@ -9277,6 +9285,31 @@ function rptSwitchSub(sub) {
 
 function rptChangeDateRange(val) {
     rptState.dateRange = val;
+    const customDates = document.getElementById('rptCustomDates');
+    if (customDates) {
+        customDates.style.display = val === 'custom' ? 'flex' : 'none';
+        // Pre-fill custom dates with sensible defaults
+        if (val === 'custom') {
+            const end = new Date();
+            const start = new Date();
+            start.setDate(start.getDate() - 30);
+            const fmt = d => d.toISOString().split('T')[0];
+            const s = document.getElementById('rptCustomStart');
+            const e = document.getElementById('rptCustomEnd');
+            if (s && !s.value) s.value = fmt(start);
+            if (e && !e.value) e.value = fmt(end);
+            return; // Don't auto-load — wait for Apply
+        }
+    }
+    rptLoad();
+}
+
+function rptApplyCustomRange() {
+    const s = document.getElementById('rptCustomStart');
+    const e = document.getElementById('rptCustomEnd');
+    if (!s || !e || !s.value || !e.value) return;
+    rptState.customStart = s.value;
+    rptState.customEnd = e.value;
     rptLoad();
 }
 
@@ -9286,10 +9319,13 @@ function rptChangeTag(val) {
 }
 
 function rptGetDateRange() {
+    const fmt = d => d.toISOString().split('T')[0];
+    if (rptState.dateRange === 'custom' && rptState.customStart && rptState.customEnd) {
+        return { startDate: rptState.customStart, endDate: rptState.customEnd };
+    }
     const end = new Date();
     const start = new Date();
-    start.setDate(start.getDate() - parseInt(rptState.dateRange));
-    const fmt = d => d.toISOString().split('T')[0];
+    start.setDate(start.getDate() - parseInt(rptState.dateRange || 30));
     return { startDate: fmt(start), endDate: fmt(end) };
 }
 
