@@ -1596,15 +1596,18 @@ app.get('/api/reporting/stats', async (req, res) => {
     const aggData = await aggResp.json();
 
     // Also get daily breakdown for trend chart
+    // Note: Brevo rejects mixing startDate/endDate with days param — use only date range
     const dailyParams = new URLSearchParams();
     if (startDate) dailyParams.append('startDate', startDate);
     if (endDate) dailyParams.append('endDate', endDate);
     if (tag) dailyParams.append('tags', tag);
-    dailyParams.append('days', '90');
 
-    const dailyUrl = `https://api.brevo.com/v3/smtp/statistics/reports?${dailyParams.toString()}`;
-    const dailyResp = await fetch(dailyUrl, { headers: { 'api-key': apiKey, 'accept': 'application/json' } });
-    const dailyData = await dailyResp.json();
+    let dailyData = { reports: [] };
+    try {
+      const dailyUrl = `https://api.brevo.com/v3/smtp/statistics/reports?${dailyParams.toString()}`;
+      const dailyResp = await fetch(dailyUrl, { headers: { 'api-key': apiKey, 'accept': 'application/json' } });
+      dailyData = await dailyResp.json();
+    } catch (e) { /* non-fatal — trend chart will be empty */ }
 
     // Per-tag breakdown — fetch stats for each known tag
     const knownTags = ['alist', 'xpose-newsletter', 'xpose-article', 'job-alert-roundup', 'job-alert-ondemand', 'consultant'];
@@ -1625,14 +1628,25 @@ app.get('/api/reporting/stats', async (req, res) => {
       } catch (e) { /* skip tag on error */ }
     }
 
-    // All-time totals — pass startDate=2020-01-01 to force Brevo to return full history
-    // (without a date param Brevo silently defaults to last 30 days)
+    // All-time totals — try 2020-01-01 first, fall back to 365 days if Brevo rejects it
     let allTimeData = {};
     try {
       const atResp = await fetch('https://api.brevo.com/v3/smtp/statistics/aggregatedReport?startDate=2020-01-01', {
         headers: { 'api-key': apiKey, 'accept': 'application/json' }
       });
-      allTimeData = await atResp.json();
+      const atJson = await atResp.json();
+      // If Brevo returned an error object, fall back to 365-day window
+      if (atJson && !atJson.code && !atJson.message) {
+        allTimeData = atJson;
+      } else {
+        const fallbackStart = new Date();
+        fallbackStart.setFullYear(fallbackStart.getFullYear() - 1);
+        const fallbackDate = fallbackStart.toISOString().split('T')[0];
+        const fbResp = await fetch(`https://api.brevo.com/v3/smtp/statistics/aggregatedReport?startDate=${fallbackDate}`, {
+          headers: { 'api-key': apiKey, 'accept': 'application/json' }
+        });
+        allTimeData = await fbResp.json();
+      }
     } catch (e) { /* non-fatal */ }
 
     // Campaign email stats (separate Brevo system)
