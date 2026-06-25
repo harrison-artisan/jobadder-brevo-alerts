@@ -9150,7 +9150,12 @@ function rptBuildUI() {
 
         <!-- ===== OVERVIEW PANEL ===== -->
         <div id="rptPanelOverview">
-            <!-- Summary cards -->
+            <!-- All-time + campaign headline -->
+            <div id="rptAllTimeBar" style="background:rgba(22,163,74,0.08); border:1px solid rgba(22,163,74,0.2); border-radius:12px; padding:14px 20px; margin-bottom:16px; display:flex; flex-wrap:wrap; gap:24px; align-items:center;">
+                <span style="font-size:11px; text-transform:uppercase; letter-spacing:0.6px; color:rgba(22,163,74,0.8); font-weight:700; white-space:nowrap;">All Time</span>
+                <div id="rptAllTimeStats" style="display:flex; flex-wrap:wrap; gap:24px;"></div>
+            </div>
+            <!-- Summary cards (date-filtered) -->
             <div id="rptCards" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-bottom:20px;"></div>
             <!-- Industry benchmark bar -->
             <div id="rptBenchmark" style="background:rgba(255,255,255,0.05); border-radius:12px; padding:16px 20px; margin-bottom:20px; border:1px solid rgba(255,255,255,0.08);"></div>
@@ -9296,6 +9301,7 @@ async function rptLoad() {
         rptState.clicks = clicksRes;
         rptAllLinks = clicksRes.topLinks || [];
 
+        rptRenderAllTime();
         rptRenderCards();
         rptRenderBenchmark();
         rptRenderByType();
@@ -9319,6 +9325,34 @@ function rptCard(label, value, sub, colour, icon) {
         <div style="font-size:28px; font-weight:700; color:white; margin-bottom:4px;">${value}</div>
         <div style="font-size:12px; color:rgba(255,255,255,0.45);">${sub}</div>
     </div>`;
+}
+
+function rptRenderAllTime() {
+    const el = document.getElementById('rptAllTimeStats');
+    if (!el || !rptState.stats) return;
+    const at = rptState.stats.allTime || {};
+    const cs = rptState.stats.campaignStats || {};
+    const atDel = at.delivered || 0;
+    const atOpens = at.uniqueOpens || at.opens || 0;
+    const atClicks = at.uniqueClicks || at.clicks || 0;
+    const atOpenRate = atDel > 0 ? ((atOpens / atDel) * 100).toFixed(1) + '%' : '—';
+    const atClickRate = atDel > 0 ? ((atClicks / atDel) * 100).toFixed(1) + '%' : '—';
+
+    const stat = (label, value) =>
+        `<div><span style="color:rgba(255,255,255,0.45); font-size:12px;">${label}: </span><span style="color:white; font-weight:700; font-size:14px;">${value}</span></div>`;
+
+    let html = [
+        stat('Delivered', atDel.toLocaleString()),
+        stat('Avg Open Rate', atOpenRate),
+        stat('Avg Click Rate', atClickRate),
+        stat('Unsubscribes', (at.unsubscribed || 0).toLocaleString()),
+    ];
+    if (cs.totalCampaigns > 0) {
+        html.push(stat('Campaigns Sent', cs.totalCampaigns.toLocaleString()));
+        html.push(stat('Campaign Avg Open', cs.avgOpenRate + '%'));
+        html.push(stat('Campaign Avg Click', cs.avgClickRate + '%'));
+    }
+    el.innerHTML = html.join('');
 }
 
 function rptRenderCards() {

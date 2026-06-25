@@ -1625,10 +1625,45 @@ app.get('/api/reporting/stats', async (req, res) => {
       } catch (e) { /* skip tag on error */ }
     }
 
+    // All-time totals (no date filter)
+    let allTimeData = {};
+    try {
+      const atResp = await fetch('https://api.brevo.com/v3/smtp/statistics/aggregatedReport', {
+        headers: { 'api-key': apiKey, 'accept': 'application/json' }
+      });
+      allTimeData = await atResp.json();
+    } catch (e) { /* non-fatal */ }
+
+    // Campaign email stats (separate Brevo system)
+    let campaignStats = { totalCampaigns: 0, totalSent: 0, avgOpenRate: 0, avgClickRate: 0 };
+    try {
+      const campParams = new URLSearchParams();
+      campParams.append('status', 'sent');
+      campParams.append('limit', '50');
+      campParams.append('offset', '0');
+      const campResp = await fetch(`https://api.brevo.com/v3/emailCampaigns?${campParams.toString()}`, {
+        headers: { 'api-key': apiKey, 'accept': 'application/json' }
+      });
+      const campData = await campResp.json();
+      const campaigns = campData.campaigns || [];
+      if (campaigns.length) {
+        campaignStats.totalCampaigns = campData.count || campaigns.length;
+        campaignStats.totalSent = campaigns.reduce((s, c) => s + (c.statistics?.globalStats?.sent || 0), 0);
+        const openRates = campaigns.filter(c => c.statistics?.globalStats?.sent > 0)
+          .map(c => (c.statistics.globalStats.uniqueOpens || 0) / c.statistics.globalStats.sent * 100);
+        const clickRates = campaigns.filter(c => c.statistics?.globalStats?.sent > 0)
+          .map(c => (c.statistics.globalStats.uniqueClicks || 0) / c.statistics.globalStats.sent * 100);
+        campaignStats.avgOpenRate = openRates.length ? (openRates.reduce((a, b) => a + b, 0) / openRates.length).toFixed(1) : 0;
+        campaignStats.avgClickRate = clickRates.length ? (clickRates.reduce((a, b) => a + b, 0) / clickRates.length).toFixed(1) : 0;
+      }
+    } catch (e) { /* non-fatal */ }
+
     res.json({
       aggregated: aggData,
       daily: dailyData.reports || dailyData || [],
-      tagBreakdown
+      tagBreakdown,
+      allTime: allTimeData,
+      campaignStats
     });
   } catch (err) {
     console.error('Reporting stats error:', err.message);
@@ -1750,10 +1785,10 @@ What should be scaled up or repeated based on the data. Be specific about which 
 **Industry Context**
 Briefly reference what is working in recruitment email marketing in Australia right now (${monthYear}) and how Artisan's performance compares. Include 1-2 specific, current trends relevant to creative/marketing recruitment.
 
-**Recommended Actions for Next Week**
-A numbered list of 4-6 specific, prioritised actions the team should take next week. Each action should be concrete and implementable.
+**Recommendations to Consider**
+A numbered list of 4-6 suggestions worth exploring, each framed as an option rather than a directive. For each, briefly explain the potential benefit and why it might work specifically for Artisan's audience of creative and marketing professionals. These are informed recommendations, not mandates.
 
-Tone: Sharp, confident, data-driven. Write like a senior strategist briefing a team — not a generic marketing report. No filler, no hedging.`;
+Tone: Confident but advisory — write like a trusted strategist offering informed perspective, not orders. Be specific and data-driven, but acknowledge that the team knows their audience best. No generic filler.`;
 
     const completion = await client.chat.completions.create({
       model: 'gpt-4o',
