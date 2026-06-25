@@ -9098,15 +9098,56 @@ let rptState = {
 function rptBuildUI() {
     return `
     <div id="reportingApp" style="padding:0;">
+    <style>
+    /* ===== REPORTING MOBILE OPTIMISATION ===== */
+    @media (max-width: 640px) {
+        /* Header: stack title and filters vertically */
+        #reportingApp .rpt-header-inner { flex-direction: column !important; align-items: flex-start !important; }
+        #reportingApp .rpt-filter-row { flex-direction: column !important; align-items: stretch !important; width: 100%; }
+        #reportingApp .rpt-filter-row select,
+        #reportingApp .rpt-filter-row button { width: 100% !important; box-sizing: border-box; }
+        /* Sub-tabs: scroll horizontally on mobile */
+        #reportingApp .rpt-subtabs { overflow-x: auto; flex-wrap: nowrap !important; padding-bottom: 4px; }
+        #reportingApp .rpt-subtabs button { white-space: nowrap; flex-shrink: 0; }
+        /* All-time bar: stack stats vertically */
+        #rptAllTimeBar { flex-direction: column !important; gap: 10px !important; }
+        #rptAllTimeStats { flex-direction: column !important; gap: 8px !important; }
+        /* Summary cards: 2 columns on mobile */
+        #rptCards { grid-template-columns: repeat(2, 1fr) !important; }
+        /* Benchmark: stack vertically */
+        #rptBenchmark > div:last-child { flex-direction: column !important; gap: 10px !important; }
+        /* By Email Type table: horizontal scroll */
+        #rptPanelBytype > div { overflow-x: auto !important; }
+        #rptPanelBytype table { min-width: 480px; }
+        /* Top Clicked Links: already has overflow-x:auto, reduce min-width */
+        #rptPanelClicks table { min-width: 520px !important; }
+        /* Link category filter buttons: wrap tightly */
+        #rptPanelClicks > div:first-child { gap: 6px !important; }
+        /* Consultant cards: 2-col stat grid on mobile */
+        #rptConsultantContent .rpt-con-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        /* Consultant top links table: scroll */
+        #rptConsultantContent .rpt-con-links { overflow-x: auto !important; }
+        #rptConsultantContent .rpt-con-links table { min-width: 340px; }
+        /* AI Insight panel: stack header vertically */
+        #rptPanelInsight > div > div:first-child { flex-direction: column !important; align-items: flex-start !important; }
+        #rptPanelInsight button { width: 100% !important; }
+        /* Trend chart: full width */
+        #rptTrendChart { max-height: 220px !important; }
+    }
+    @media (max-width: 400px) {
+        #rptCards { grid-template-columns: 1fr 1fr !important; }
+        #rptPanelBytype table { min-width: 380px; }
+    }
+    </style>
 
         <!-- Header -->
         <div style="background:rgba(255,255,255,0.07); backdrop-filter:blur(20px); border-radius:14px; padding:14px 28px; margin-bottom:16px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 4px 20px rgba(0,0,0,0.12);">
-            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+            <div class="rpt-header-inner" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
                 <div>
                     <h2 style="margin:0 0 1px; color:white; font-size:18px; font-weight:700;">Email Reporting</h2>
                     <p style="margin:0; color:rgba(255,255,255,0.5); font-size:12px;">Live performance data from Brevo transactional email</p>
                 </div>
-                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <div class="rpt-filter-row" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                     <!-- Preset Date Range -->
                     <select id="rptDateRange" onchange="rptChangeDateRange(this.value)" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; padding:7px 10px; font-size:12px; cursor:pointer;">
                         <option value="7">Last 7 days</option>
@@ -9138,7 +9179,7 @@ function rptBuildUI() {
         </div>
 
         <!-- Sub-tabs -->
-        <div style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;">
+        <div class="rpt-subtabs" style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;">
             <button id="rptSubOverview" onclick="rptSwitchSub('overview')" style="background:rgba(22,163,74,0.3); border:1px solid rgba(22,163,74,0.6); border-radius:8px; color:white; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer;">Overview</button>
             <button id="rptSubByType" onclick="rptSwitchSub('bytype')" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.7); padding:8px 16px; font-size:13px; cursor:pointer;">By Email Type</button>
             <button id="rptSubConsultant" onclick="rptSwitchSub('consultant')" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.7); padding:8px 16px; font-size:13px; cursor:pointer;">Consultant Reports</button>
@@ -9591,7 +9632,7 @@ async function rptLoadConsultant() {
                         <p style="margin:0; color:rgba(255,255,255,0.5); font-size:13px;">${c.newsletter} &nbsp;&bull;&nbsp; Template #${c.templateId}</p>
                     </div>
                 </div>
-                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:12px; margin-bottom:18px;">
+                <div class="rpt-con-grid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:12px; margin-bottom:18px;">
                     <div style="background:rgba(255,255,255,0.06); border-radius:10px; padding:12px 14px;">
                         <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-bottom:4px;">Sent</div>
                         <div style="font-size:22px; font-weight:700; color:white;">${c.requests.toLocaleString()}</div>
@@ -9627,7 +9668,7 @@ async function rptLoadConsultant() {
                 </div>
                 <div>
                     <h4 style="margin:0 0 10px; color:rgba(255,255,255,0.7); font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Top Clicked Links</h4>
-                    <div style="background:rgba(255,255,255,0.04); border-radius:10px; overflow:hidden;">
+                    <div class="rpt-con-links" style="background:rgba(255,255,255,0.04); border-radius:10px; overflow:hidden;">
                         <table style="width:100%; border-collapse:collapse; font-size:12px;">
                             <thead><tr style="background:rgba(255,255,255,0.06);">
                                 <th style="padding:8px 12px; text-align:left; color:rgba(255,255,255,0.5); font-weight:600;">#</th>
