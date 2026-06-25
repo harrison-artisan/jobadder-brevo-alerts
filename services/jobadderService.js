@@ -377,32 +377,31 @@ class JobAdderService {
       if (rawWorkType) jobType = this.mapWorkType(rawWorkType);
     }
 
-    // FALLBACK: If Job Record failed, check the Ad's Portal Fields
-    if (location === 'Location TBD' || !jobType) {
-      if (ad.portal && ad.portal.fields) {
-        const fields = ad.portal.fields;
-        
-        // Find Location field (often fieldName contains 'Location' or 'Area')
-        const locF = fields.find(f => /location|city|area/i.test(f.fieldName || ''));
-        if (location === 'Location TBD' && locF) {
-          // If it's a List type, the display value is in 'value', if Text type it's in 'value'
-          location = locF.value || locF.externalValue || location;
-        }
-        
-        // Find Work Type field
-        const typF = fields.find(f => /type|employment|work/i.test(f.fieldName || ''));
-        if (!jobType && typF) {
-          jobType = this.mapWorkType(typF.value || typF.externalValue);
-        }
+    // Portal fields represent what was actually posted on the job board — always
+    // use them to set Work Type (overrides Master Job Record which can differ),
+    // and use them for Location only if still missing.
+    if (ad.portal && ad.portal.fields) {
+      const fields = ad.portal.fields;
+
+      // Work Type: portal is the source of truth — always override
+      const typF = fields.find(f => /type|employment|work/i.test(f.fieldName || ''));
+      if (typF) {
+        jobType = this.mapWorkType(typF.value || typF.externalValue);
       }
-      
-      // FINAL FALLBACK: Regex extraction from summary/bullet points
+
+      // Location: only fill in if still missing from Master Job Record
       if (location === 'Location TBD') {
-        location = this.extractLocation(ad.summary, ad.bulletPoints);
+        const locF = fields.find(f => /location|city|area/i.test(f.fieldName || ''));
+        if (locF) location = locF.value || locF.externalValue || location;
       }
-      if (!jobType) {
-        jobType = this.extractJobType(ad.summary, ad.bulletPoints);
-      }
+    }
+
+    // FINAL FALLBACK: Regex extraction from summary/bullet points
+    if (location === 'Location TBD') {
+      location = this.extractLocation(ad.summary, ad.bulletPoints);
+    }
+    if (!jobType) {
+      jobType = this.extractJobType(ad.summary, ad.bulletPoints);
     }
 
 
