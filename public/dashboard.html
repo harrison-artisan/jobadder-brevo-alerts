@@ -9133,6 +9133,7 @@ function rptBuildUI() {
         <div style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;">
             <button id="rptSubOverview" onclick="rptSwitchSub('overview')" style="background:rgba(22,163,74,0.3); border:1px solid rgba(22,163,74,0.6); border-radius:8px; color:white; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer;">Overview</button>
             <button id="rptSubByType" onclick="rptSwitchSub('bytype')" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.7); padding:8px 16px; font-size:13px; cursor:pointer;">By Email Type</button>
+            <button id="rptSubConsultant" onclick="rptSwitchSub('consultant')" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.7); padding:8px 16px; font-size:13px; cursor:pointer;">Consultant Reports</button>
             <button id="rptSubClicks" onclick="rptSwitchSub('clicks')" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.7); padding:8px 16px; font-size:13px; cursor:pointer;">Top Clicked Links</button>
             <button id="rptSubTrend" onclick="rptSwitchSub('trend')" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.7); padding:8px 16px; font-size:13px; cursor:pointer;">Trends</button>
             <button id="rptSubInsight" onclick="rptSwitchSub('insight')" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:rgba(255,255,255,0.7); padding:8px 16px; font-size:13px; cursor:pointer;">Insights & Suggestions</button>
@@ -9180,6 +9181,12 @@ function rptBuildUI() {
             </div>
         </div>
 
+        <!-- ===== CONSULTANT REPORTS PANEL ===== -->
+        <div id="rptPanelConsultant" style="display:none;">
+            <div id="rptConsultantLoading" style="text-align:center; padding:30px; color:rgba(255,255,255,0.5); font-size:14px;">Loading consultant data...</div>
+            <div id="rptConsultantContent"></div>
+        </div>
+
         <!-- ===== TOP CLICKED LINKS PANEL ===== -->
         <div id="rptPanelClicks" style="display:none;">
             <!-- Link category filter -->
@@ -9192,12 +9199,15 @@ function rptBuildUI() {
                 <button onclick="rptFilterLinks('register')" id="rptLinkFilterRegister" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:rgba(255,255,255,0.7); padding:5px 12px; font-size:12px; cursor:pointer;">Register</button>
                 <button onclick="rptFilterLinks('social')" id="rptLinkFilterSocial" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:rgba(255,255,255,0.7); padding:5px 12px; font-size:12px; cursor:pointer;">Social</button>
             </div>
-            <div style="background:rgba(255,255,255,0.05); border-radius:14px; border:1px solid rgba(255,255,255,0.1); overflow:hidden;">
-                <table style="width:100%; border-collapse:collapse; font-size:13px;">
+            <div style="background:rgba(255,255,255,0.05); border-radius:14px; border:1px solid rgba(255,255,255,0.1); overflow:hidden; overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse; font-size:12px; min-width:700px;">
                     <thead>
                         <tr style="background:rgba(255,255,255,0.08);">
                             <th style="padding:12px 16px; text-align:left; color:rgba(255,255,255,0.7); font-weight:600;">#</th>
-                            <th style="padding:12px 16px; text-align:left; color:rgba(255,255,255,0.7); font-weight:600;">URL</th>
+                            <th style="padding:12px 16px; text-align:left; color:rgba(255,255,255,0.7); font-weight:600;">Destination URL</th>
+                            <th style="padding:12px 16px; text-align:left; color:rgba(255,255,255,0.7); font-weight:600;">UTM Campaign</th>
+                            <th style="padding:12px 16px; text-align:left; color:rgba(255,255,255,0.7); font-weight:600;">Source</th>
+                            <th style="padding:12px 16px; text-align:left; color:rgba(255,255,255,0.7); font-weight:600;">Email Type</th>
                             <th style="padding:12px 16px; text-align:right; color:rgba(255,255,255,0.7); font-weight:600;">Clicks</th>
                             <th style="padding:12px 16px; text-align:right; color:rgba(255,255,255,0.7); font-weight:600;">Unique</th>
                             <th style="padding:12px 16px; text-align:left; color:rgba(255,255,255,0.7); font-weight:600;">Category</th>
@@ -9244,12 +9254,12 @@ let rptLinkFilter = 'all';
 
 function rptSwitchSub(sub) {
     rptCurrentSub = sub;
-    const panels = ['overview','bytype','clicks','trend','insight'];
+    const panels = ['overview','bytype','consultant','clicks','trend','insight'];
     panels.forEach(p => {
         const el = document.getElementById('rptPanel' + p.charAt(0).toUpperCase() + p.slice(1));
         if (el) el.style.display = p === sub ? 'block' : 'none';
     });
-    const btns = ['Overview','Bytype','Clicks','Trend','Insight'];
+    const btns = ['Overview','Bytype','Consultant','Clicks','Trend','Insight'];
     btns.forEach(b => {
         const btn = document.getElementById('rptSub' + b);
         if (!btn) return;
@@ -9261,6 +9271,8 @@ function rptSwitchSub(sub) {
     });
     // Draw chart when switching to trend
     if (sub === 'trend' && rptState.stats) rptDrawTrendChart();
+    // Load consultant data when switching to consultant tab
+    if (sub === 'consultant') rptLoadConsultant();
 }
 
 function rptChangeDateRange(val) {
@@ -9481,22 +9493,122 @@ function rptRenderClicks() {
         links = links.filter(l => rptGetLinkCategory(l.url) === rptLinkFilter);
     }
     if (!links.length) {
-        el.innerHTML = '<tr><td colspan="5" style="padding:24px; text-align:center; color:rgba(255,255,255,0.4);">No click data for this filter</td></tr>';
+        el.innerHTML = '<tr><td colspan="8" style="padding:24px; text-align:center; color:rgba(255,255,255,0.4);">No click data for this filter</td></tr>';
         return;
     }
     const catColours = { job:'#3b82f6', article:'#8b5cf6', talent:'#16a34a', register:'#f59e0b', social:'#0077b5', other:'#6b7280' };
     el.innerHTML = links.slice(0, 30).map((l, i) => {
-        const cat = rptGetLinkCategory(l.url);
+        const cat = rptGetLinkCategory(l.cleanUrl || l.url);
         const catColour = catColours[cat] || '#6b7280';
-        const shortUrl = l.url.length > 60 ? l.url.substring(0, 60) + '...' : l.url;
+        const cleanUrl = l.cleanUrl || l.url;
+        const shortUrl = cleanUrl.length > 55 ? cleanUrl.substring(0, 55) + '...' : cleanUrl;
+        const campaign = l.utmCampaign || '\u2014';
+        const source = l.utmSource || '\u2014';
+        const emailType = l.emailType && l.emailType !== 'unknown' ? l.emailType : '\u2014';
         return `<tr style="border-top:1px solid rgba(255,255,255,0.06);">
-            <td style="padding:10px 16px; color:rgba(255,255,255,0.5); font-size:12px;">${i + 1}</td>
-            <td style="padding:10px 16px;"><a href="${l.url}" target="_blank" style="color:#60a5fa; text-decoration:none; font-size:12px; word-break:break-all;" title="${l.url}">${shortUrl}</a></td>
+            <td style="padding:10px 16px; color:rgba(255,255,255,0.5); font-size:11px;">${i + 1}</td>
+            <td style="padding:10px 16px;"><a href="${l.url}" target="_blank" style="color:#60a5fa; text-decoration:none; font-size:11px; word-break:break-all;" title="${l.url}">${shortUrl}</a></td>
+            <td style="padding:10px 16px; color:rgba(255,255,255,0.7); font-size:11px;">${campaign}</td>
+            <td style="padding:10px 16px; color:rgba(255,255,255,0.6); font-size:11px;">${source}</td>
+            <td style="padding:10px 16px; color:rgba(255,255,255,0.6); font-size:11px;">${emailType}</td>
             <td style="padding:10px 16px; text-align:right; color:white; font-weight:700;">${l.count}</td>
-            <td style="padding:10px 16px; text-align:right; color:rgba(255,255,255,0.6);">${l.uniqueClickers || '—'}</td>
+            <td style="padding:10px 16px; text-align:right; color:rgba(255,255,255,0.6);">${l.uniqueClickers || '\u2014'}</td>
             <td style="padding:10px 16px;"><span style="background:${catColour}22; color:${catColour}; border-radius:20px; padding:2px 10px; font-size:11px; font-weight:600; text-transform:uppercase;">${cat}</span></td>
         </tr>`;
     }).join('');
+}
+
+async function rptLoadConsultant() {
+    const loadingEl = document.getElementById('rptConsultantLoading');
+    const contentEl = document.getElementById('rptConsultantContent');
+    if (!contentEl) return;
+    if (loadingEl) loadingEl.style.display = 'block';
+    contentEl.innerHTML = '';
+    const { startDate, endDate } = rptGetDateRange();
+    try {
+        const res = await fetch(`/api/reporting/consultant?startDate=${startDate}&endDate=${endDate}`);
+        const data = await res.json();
+        if (loadingEl) loadingEl.style.display = 'none';
+        const consultants = data.consultants || [];
+        if (!consultants.length) {
+            contentEl.innerHTML = '<p style="color:rgba(255,255,255,0.4); text-align:center; padding:30px;">No consultant data available for this period.</p>';
+            return;
+        }
+        contentEl.innerHTML = consultants.map(c => {
+            const topLinksHtml = c.topLinks && c.topLinks.length ? c.topLinks.map((l, i) => {
+                const shortUrl = l.url.length > 60 ? l.url.substring(0, 60) + '...' : l.url;
+                return `<tr style="border-top:1px solid rgba(255,255,255,0.05);">
+                    <td style="padding:7px 12px; color:rgba(255,255,255,0.5); font-size:11px;">${i+1}</td>
+                    <td style="padding:7px 12px;"><a href="${l.url}" target="_blank" style="color:#60a5fa; text-decoration:none; font-size:11px;" title="${l.url}">${shortUrl}</a></td>
+                    <td style="padding:7px 12px; text-align:right; color:white; font-size:12px; font-weight:700;">${l.count}</td>
+                    <td style="padding:7px 12px; text-align:right; color:rgba(255,255,255,0.6); font-size:11px;">${l.uniqueClickers}</td>
+                </tr>`;
+            }).join('') : '<tr><td colspan="4" style="padding:12px; color:rgba(255,255,255,0.3); font-size:12px;">No clicks recorded</td></tr>';
+
+            const openRateColour = parseFloat(c.openRate) >= 30 ? '#22c55e' : parseFloat(c.openRate) >= 20 ? '#f59e0b' : '#ef4444';
+            const clickRateColour = parseFloat(c.clickRate) >= 4 ? '#22c55e' : parseFloat(c.clickRate) >= 2 ? '#f59e0b' : '#ef4444';
+
+            return `<div style="background:rgba(255,255,255,0.05); border-radius:14px; border:1px solid rgba(255,255,255,0.1); padding:20px; margin-bottom:20px;">
+                <div style="display:flex; align-items:center; gap:14px; margin-bottom:16px; flex-wrap:wrap;">
+                    <div>
+                        <h3 style="margin:0 0 2px; color:white; font-size:17px;">${c.name}</h3>
+                        <p style="margin:0; color:rgba(255,255,255,0.5); font-size:13px;">${c.newsletter} &nbsp;&bull;&nbsp; Template #${c.templateId}</p>
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:12px; margin-bottom:18px;">
+                    <div style="background:rgba(255,255,255,0.06); border-radius:10px; padding:12px 14px;">
+                        <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-bottom:4px;">Sent</div>
+                        <div style="font-size:22px; font-weight:700; color:white;">${c.requests.toLocaleString()}</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.06); border-radius:10px; padding:12px 14px;">
+                        <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-bottom:4px;">Delivered</div>
+                        <div style="font-size:22px; font-weight:700; color:white;">${c.delivered.toLocaleString()}</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.06); border-radius:10px; padding:12px 14px;">
+                        <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-bottom:4px;">Open Rate</div>
+                        <div style="font-size:22px; font-weight:700; color:${openRateColour};">${c.openRate}%</div>
+                        <div style="font-size:11px; color:rgba(255,255,255,0.4);">${c.uniqueOpens} unique</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.06); border-radius:10px; padding:12px 14px;">
+                        <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-bottom:4px;">Click Rate</div>
+                        <div style="font-size:22px; font-weight:700; color:${clickRateColour};">${c.clickRate}%</div>
+                        <div style="font-size:11px; color:rgba(255,255,255,0.4);">${c.uniqueClicks} unique</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.06); border-radius:10px; padding:12px 14px;">
+                        <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-bottom:4px;">Repeat Opens</div>
+                        <div style="font-size:22px; font-weight:700; color:white;">${c.repeatOpenRate}x</div>
+                        <div style="font-size:11px; color:rgba(255,255,255,0.4);">avg per opener</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.06); border-radius:10px; padding:12px 14px;">
+                        <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-bottom:4px;">Bounces</div>
+                        <div style="font-size:22px; font-weight:700; color:${(c.hardBounces+c.softBounces)>0?'#f59e0b':'white'};">${(c.hardBounces+c.softBounces).toLocaleString()}</div>
+                        <div style="font-size:11px; color:rgba(255,255,255,0.4);">${c.hardBounces} hard / ${c.softBounces} soft</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.06); border-radius:10px; padding:12px 14px;">
+                        <div style="font-size:11px; color:rgba(255,255,255,0.5); margin-bottom:4px;">Unsubscribes</div>
+                        <div style="font-size:22px; font-weight:700; color:${c.unsubscribed>0?'#ef4444':'white'};">${c.unsubscribed}</div>
+                    </div>
+                </div>
+                <div>
+                    <h4 style="margin:0 0 10px; color:rgba(255,255,255,0.7); font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Top Clicked Links</h4>
+                    <div style="background:rgba(255,255,255,0.04); border-radius:10px; overflow:hidden;">
+                        <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                            <thead><tr style="background:rgba(255,255,255,0.06);">
+                                <th style="padding:8px 12px; text-align:left; color:rgba(255,255,255,0.5); font-weight:600;">#</th>
+                                <th style="padding:8px 12px; text-align:left; color:rgba(255,255,255,0.5); font-weight:600;">Link</th>
+                                <th style="padding:8px 12px; text-align:right; color:rgba(255,255,255,0.5); font-weight:600;">Clicks</th>
+                                <th style="padding:8px 12px; text-align:right; color:rgba(255,255,255,0.5); font-weight:600;">Unique</th>
+                            </tr></thead>
+                            <tbody>${topLinksHtml}</tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    } catch (e) {
+        if (loadingEl) loadingEl.style.display = 'none';
+        contentEl.innerHTML = '<p style="color:#ef4444; padding:20px;">Error loading consultant data: ' + e.message + '</p>';
+    }
 }
 
 function rptDrawTrendChart() {

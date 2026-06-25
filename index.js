@@ -1713,13 +1713,32 @@ app.get('/api/reporting/clicks', async (req, res) => {
 
     const events = data.events || [];
 
-    // Aggregate clicks by URL
+    // Helper: parse UTM params from a URL
+    const parseUtm = (rawUrl) => {
+      try {
+        const u = new URL(rawUrl);
+        return {
+          cleanUrl: u.origin + u.pathname,
+          utmSource: u.searchParams.get('utm_source') || '',
+          utmMedium: u.searchParams.get('utm_medium') || '',
+          utmCampaign: u.searchParams.get('utm_campaign') || '',
+          utmContent: u.searchParams.get('utm_content') || ''
+        };
+      } catch (e) {
+        return { cleanUrl: rawUrl, utmSource: '', utmMedium: '', utmCampaign: '', utmContent: '' };
+      }
+    };
+
+    // Aggregate clicks by full URL, storing UTM breakdown and email type
     const urlMap = {};
     for (const ev of events) {
-      const url = ev.link || ev.url || ev.subject || 'unknown';
-      if (!urlMap[url]) urlMap[url] = { url, count: 0, tag: ev.tag || tag || 'unknown', emails: new Set() };
-      urlMap[url].count++;
-      if (ev.email) urlMap[url].emails.add(ev.email);
+      const rawUrl = ev.link || ev.url || ev.subject || 'unknown';
+      const utm = parseUtm(rawUrl);
+      const key = rawUrl; // key on full URL to preserve UTM grouping
+      const emailType = (ev.tags && ev.tags[0]) || ev.tag || tag || 'unknown';
+      if (!urlMap[key]) urlMap[key] = { url: rawUrl, ...utm, count: 0, emailType, emails: new Set() };
+      urlMap[key].count++;
+      if (ev.email) urlMap[key].emails.add(ev.email);
     }
 
     const topLinks = Object.values(urlMap)
@@ -1766,9 +1785,25 @@ app.post('/api/reporting/insight', async (req, res) => {
       return `- ${t.tag}: ${d} delivered, ${or}% open rate, ${cr}% click rate, ${t.unsubscribed || 0} unsubscribes`;
     }).join('\n');
 
-    const topLinksText = (req.body.topLinks || []).slice(0, 10).map((l, i) =>
-      `${i + 1}. ${l.url} — clicked ${l.count} times by ${l.uniqueClickers} unique contacts`
-    ).join('\n');
+    // Build top links text with UTM and email type context
+    const topLinksText = (req.body.topLinks || []).slice(0, 10).map((l, i) => {
+      const cleanUrl = l.cleanUrl || l.url;
+      const campaign = l.utmCampaign ? ` [campaign: ${l.utmCampaign}]` : '';
+      const source = l.utmSource ? ` [source: ${l.utmSource}]` : '';
+      const emailType = l.emailType && l.emailType !== 'unknown' ? ` [email type: ${l.emailType}]` : '';
+      return `${i + 1}. ${cleanUrl}${campaign}${source}${emailType} — clicked ${l.count} times by ${l.uniqueClickers} unique contacts`;
+    }).join('\n');
+
+    // Group top links by email type for AI context
+    const linksByType = {};
+    for (const l of (req.body.topLinks || [])) {
+      const t = l.emailType || 'unknown';
+      if (!linksByType[t]) linksByType[t] = [];
+      if (linksByType[t].length < 3) linksByType[t].push(`${l.cleanUrl || l.url} (${l.count} clicks)`);
+    }
+    const linksByTypeText = Object.entries(linksByType)
+      .map(([t, links]) => `- ${t}: ${links.join(', ')}`)
+      .join('\n') || 'No breakdown available';
 
     const prompt = `You are the senior marketing strategist for Artisan Recruitment, a specialist creative and marketing recruitment agency in Australia. Today is ${weekDay}, ${monthYear}.
 
@@ -1787,6 +1822,9 @@ ${tagRows || 'No tag breakdown available'}
 TOP CLICKED LINKS:
 ${topLinksText || 'No click data available'}
 
+TOP CLICKED LINKS BY EMAIL TYPE:
+${linksByTypeText}
+
 Write a strategic email marketing insight report for the Artisan team. Be specific, direct, and actionable. Use the actual numbers. Structure your response with these exact sections:
 
 **This Week at a Glance**
@@ -1804,6 +1842,9 @@ What should be scaled up or repeated based on the data. Be specific about which 
 **Industry Context**
 Briefly reference what is working in recruitment email marketing in Australia right now (${monthYear}) and how Artisan's performance compares. Include 1-2 specific, current trends relevant to creative/marketing recruitment.
 
+**Link Performance Insights**
+Analyse the top clicked links and what they reveal about audience intent. Which email types are driving the most link engagement? What do the most-clicked destinations tell you about what this audience wants? If UTM campaign data is available, reference it specifically. Note any patterns across email types.
+
 **Recommendations to Consider**
 A numbered list of 4-6 suggestions worth exploring, each framed as an option rather than a directive. For each, briefly explain the potential benefit and why it might work specifically for Artisan's audience of creative and marketing professionals. These are informed recommendations, not mandates.
 
@@ -1816,13 +1857,108 @@ Tone: Confident but advisory — write like a trusted strategist offering inform
         { role: 'user', content: prompt }
       ],
       temperature: 0.85,
-      max_tokens: 1200
+      max_tokens: 1600
     });
 
     const insight = completion.choices[0].message.content;
     res.json({ insight });
   } catch (err) {
     console.error('Reporting insight error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/reporting/consultant
+// Returns per-consultant open/click/bounce stats using template IDs from consultants.json
+app.get('/api/reporting/consultant', async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const apiKey = process.env.BREVO_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: 'BREVO_API_KEY not configured' });
+
+    const consultantsPath = require('path').join(__dirname, 'config', 'consultants.json');
+    const consultants = JSON.parse(require('fs').readFileSync(consultantsPath, 'utf8'));
+
+    const results = [];
+    for (const [id, c] of Object.entries(consultants)) {
+      const templateId = c.brevo_template_id;
+      if (!templateId) continue;
+
+      // Fetch events for this template: sent, opened, clicked, bounced, unsubscribed
+      const eventTypes = ['requests', 'delivered', 'opens', 'uniqueOpens', 'clicks', 'uniqueClicks', 'hardBounces', 'softBounces', 'unsubscribed'];
+      const aggParams = new URLSearchParams();
+      if (startDate) aggParams.append('startDate', startDate);
+      if (endDate) aggParams.append('endDate', endDate);
+      aggParams.append('templateId', templateId);
+
+      let stats = {};
+      try {
+        const aggResp = await fetch(`https://api.brevo.com/v3/smtp/statistics/aggregatedReport?${aggParams.toString()}`, {
+          headers: { 'api-key': apiKey, 'accept': 'application/json' }
+        });
+        stats = await aggResp.json();
+      } catch (e) { stats = {}; }
+
+      // Fetch click events to get top links for this consultant
+      const clickParams = new URLSearchParams();
+      clickParams.append('event', 'clicks');
+      clickParams.append('limit', '200');
+      clickParams.append('offset', '0');
+      clickParams.append('templateId', templateId);
+      if (startDate) clickParams.append('startDate', startDate);
+      if (endDate) clickParams.append('endDate', endDate);
+
+      let topLinks = [];
+      try {
+        const clickResp = await fetch(`https://api.brevo.com/v3/smtp/statistics/events?${clickParams.toString()}`, {
+          headers: { 'api-key': apiKey, 'accept': 'application/json' }
+        });
+        const clickData = await clickResp.json();
+        const events = clickData.events || [];
+        const urlMap = {};
+        for (const ev of events) {
+          const rawUrl = ev.link || ev.url || 'unknown';
+          if (!urlMap[rawUrl]) urlMap[rawUrl] = { url: rawUrl, count: 0, clickers: new Set() };
+          urlMap[rawUrl].count++;
+          if (ev.email) urlMap[rawUrl].clickers.add(ev.email);
+        }
+        topLinks = Object.values(urlMap)
+          .map(l => ({ url: l.url, count: l.count, uniqueClickers: l.clickers.size }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 10);
+      } catch (e) { topLinks = []; }
+
+      const delivered = stats.delivered || 0;
+      const opens = stats.opens || 0;
+      const uniqueOpens = stats.uniqueOpens || 0;
+      const clicks = stats.clicks || 0;
+      const uniqueClicks = stats.uniqueClicks || 0;
+      const repeatOpenRate = uniqueOpens > 0 ? (opens / uniqueOpens).toFixed(2) : '1.00';
+
+      results.push({
+        id,
+        name: c.name,
+        newsletter: c.newsletter_name,
+        templateId,
+        requests: stats.requests || 0,
+        delivered,
+        opens,
+        uniqueOpens,
+        clicks,
+        uniqueClicks,
+        hardBounces: stats.hardBounces || 0,
+        softBounces: stats.softBounces || 0,
+        unsubscribed: stats.unsubscribed || 0,
+        openRate: delivered > 0 ? ((uniqueOpens / delivered) * 100).toFixed(1) : '0',
+        clickRate: delivered > 0 ? ((uniqueClicks / delivered) * 100).toFixed(1) : '0',
+        repeatOpenRate,
+        topLinks
+      });
+    }
+
+    res.json({ consultants: results });
+  } catch (err) {
+    console.error('Consultant reporting error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
