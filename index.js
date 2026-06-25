@@ -1625,10 +1625,11 @@ app.get('/api/reporting/stats', async (req, res) => {
       } catch (e) { /* skip tag on error */ }
     }
 
-    // All-time totals (no date filter)
+    // All-time totals — pass startDate=2020-01-01 to force Brevo to return full history
+    // (without a date param Brevo silently defaults to last 30 days)
     let allTimeData = {};
     try {
-      const atResp = await fetch('https://api.brevo.com/v3/smtp/statistics/aggregatedReport', {
+      const atResp = await fetch('https://api.brevo.com/v3/smtp/statistics/aggregatedReport?startDate=2020-01-01', {
         headers: { 'api-key': apiKey, 'accept': 'application/json' }
       });
       allTimeData = await atResp.json();
@@ -1648,11 +1649,15 @@ app.get('/api/reporting/stats', async (req, res) => {
       const campaigns = campData.campaigns || [];
       if (campaigns.length) {
         campaignStats.totalCampaigns = campData.count || campaigns.length;
-        campaignStats.totalSent = campaigns.reduce((s, c) => s + (c.statistics?.globalStats?.sent || 0), 0);
-        const openRates = campaigns.filter(c => c.statistics?.globalStats?.sent > 0)
-          .map(c => (c.statistics.globalStats.uniqueOpens || 0) / c.statistics.globalStats.sent * 100);
-        const clickRates = campaigns.filter(c => c.statistics?.globalStats?.sent > 0)
-          .map(c => (c.statistics.globalStats.uniqueClicks || 0) / c.statistics.globalStats.sent * 100);
+        // Brevo campaign stats live under statistics.campaignStats (not globalStats)
+        const getStats = c => c.statistics?.campaignStats || c.statistics?.globalStats || {};
+        campaignStats.totalSent = campaigns.reduce((s, c) => s + (getStats(c).delivered || getStats(c).sent || 0), 0);
+        const openRates = campaigns
+          .map(c => { const st = getStats(c); const d = st.delivered || st.sent || 0; return d > 0 ? (st.uniqueOpens || st.openUniqueClicks || 0) / d * 100 : null; })
+          .filter(r => r !== null);
+        const clickRates = campaigns
+          .map(c => { const st = getStats(c); const d = st.delivered || st.sent || 0; return d > 0 ? (st.uniqueClicks || st.clickers || 0) / d * 100 : null; })
+          .filter(r => r !== null);
         campaignStats.avgOpenRate = openRates.length ? (openRates.reduce((a, b) => a + b, 0) / openRates.length).toFixed(1) : 0;
         campaignStats.avgClickRate = clickRates.length ? (clickRates.reduce((a, b) => a + b, 0) / clickRates.length).toFixed(1) : 0;
       }

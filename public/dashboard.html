@@ -9359,6 +9359,7 @@ function rptRenderCards() {
     const el = document.getElementById('rptCards');
     if (!el || !rptState.stats) return;
     const agg = rptState.stats.aggregated || {};
+    const requests = agg.requests || 0;
     const delivered = agg.delivered || 0;
     const opens = agg.uniqueOpens || agg.opens || 0;
     const clicks = agg.uniqueClicks || agg.clicks || 0;
@@ -9366,13 +9367,14 @@ function rptRenderCards() {
     const softB = agg.softBounces || 0;
     const unsubs = agg.unsubscribed || 0;
     const spam = agg.spamReports || 0;
+    const deliveryRate = requests > 0 ? ((delivered / requests) * 100).toFixed(1) + '%' : '—';
     const openRate = delivered > 0 ? ((opens / delivered) * 100).toFixed(1) + '%' : '—';
     const clickRate = delivered > 0 ? ((clicks / delivered) * 100).toFixed(1) + '%' : '—';
-    const bounceRate = delivered > 0 ? (((hardB + softB) / delivered) * 100).toFixed(1) + '%' : '—';
     const unsubRate = delivered > 0 ? ((unsubs / delivered) * 100).toFixed(2) + '%' : '—';
 
     el.innerHTML = [
-        rptCard('Delivered', delivered.toLocaleString(), 'Emails delivered', '#16a34a', ''),
+        rptCard('Total Sent', requests.toLocaleString(), deliveryRate + ' delivery rate', '#16a34a', ''),
+        rptCard('Delivered', delivered.toLocaleString(), 'Successfully delivered', '#22c55e', ''),
         rptCard('Open Rate', openRate, opens.toLocaleString() + ' unique opens', '#3b82f6', ''),
         rptCard('Click Rate', clickRate, clicks.toLocaleString() + ' unique clicks', '#8b5cf6', ''),
         rptCard('Bounces', (hardB + softB).toLocaleString(), hardB + ' hard / ' + softB + ' soft', '#f59e0b', ''),
