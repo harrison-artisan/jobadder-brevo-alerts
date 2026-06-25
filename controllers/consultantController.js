@@ -793,6 +793,187 @@ function resetState(req, res) {
     res.json({ success: true });
 }
 
+// ============================================================
+// Consultant Schedule Functions
+// Each consultant gets its own schedule file so all three can
+// be scheduled independently.
+// ============================================================
+
+const cron = require('node-cron');
+const CONSULTANT_SCHEDULE_DIR = path.join(__dirname, '..');
+const _consultantScheduledTasks = {}; // { consultantId: cronTask }
+
+function consultantScheduleFile(consultantId) {
+    return path.join(CONSULTANT_SCHEDULE_DIR, `.consultant-schedule-${consultantId}.json`);
+}
+
+function readConsultantSchedule(consultantId) {
+    const file = consultantScheduleFile(consultantId);
+    try {
+        if (fs.existsSync(file)) return JSON.parse(fs.readFileSync(file, 'utf8'));
+    } catch (e) {}
+    return null;
+}
+
+function writeConsultantSchedule(consultantId, data) {
+    const file = consultantScheduleFile(consultantId);
+    if (data === null) {
+        if (fs.existsSync(file)) fs.unlinkSync(file);
+    } else {
+        fs.writeFileSync(file, JSON.stringify(data, null, 2));
+    }
+}
+
+function _registerConsultantCron(consultantId, sendDate, options) {
+    const min = sendDate.getUTCMinutes();
+    const hr = sendDate.getUTCHours();
+    const dom = sendDate.getUTCDate();
+    const mon = sendDate.getUTCMonth() + 1;
+    const cronExpr = `${min} ${hr} ${dom} ${mon} *`;
+    if (_consultantScheduledTasks[consultantId]) {
+        _consultantScheduledTasks[consultantId].stop();
+        delete _consultantScheduledTasks[consultantId];
+    }
+    _consultantScheduledTasks[consultantId] = cron.schedule(cronExpr, async () => {
+        console.log(`📅 Executing scheduled consultant newsletter for ${consultantId}...`);
+        try {
+            const state = readState();
+            if (!state || state.state === 'EMPTY') {
+                console.warn(`⚠️  No consultant state found for scheduled send (${consultantId})`);
+            } else {
+                const templateId = state.consultant && state.consultant.brevo_template_id;
+                if (templateId && state.templateParams) {
+                    let recipients = [];
+                    if (options.recipientType === 'segment') recipients = await brevoService.getSegmentContacts(options.recipientId);
+                    else if (options.recipientType === 'list') recipients = await brevoService.getListContacts(options.recipientId);
+                    if (recipients.length > 0) {
+                        await brevoService.sendBatchEmail(recipients, parseInt(templateId), state.templateParams);
+                        console.log(`✅ Scheduled consultant newsletter sent for ${consultantId} to ${recipients.length} recipients.`);
+                    } else {
+                        console.warn(`⚠️  No recipients found for scheduled consultant send (${consultantId})`);
+                    }
+                }
+            }
+        } catch (e) {
+            console.error(`❌ Scheduled consultant send failed (${consultantId}):`, e.message);
+        }
+        writeConsultantSchedule(consultantId, null);
+        if (_consultantScheduledTasks[consultantId]) {
+            _consultantScheduledTasks[consultantId].stop();
+            delete _consultantScheduledTasks[consultantId];
+        }
+    }, { timezone: 'UTC' });
+    return cronExpr;
+}
+
+async function scheduleConsultant(req, res) {
+    try {
+        const { consultantId, scheduledAt, recipientType, recipientId } = req.body;
+        if (!consultantId) return res.status(400).json({ success: false, message: 'consultantId is required.' });
+        if (!scheduledAt) return res.status(400).json({ success: false, message: 'scheduledAt is required.' });
+        const sendDate = new Date(scheduledAt);
+        if (isNaN(sendDate.getTime())) return res.status(400).json({ success: false, message: 'Invalid scheduledAt date.' });
+        if (sendDate <= new Date()) return res.status(400).json({ success: false, message: 'Scheduled time must be in the future.' });
+        const scheduledFor = sendDate.toLocaleString('en-AU', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+            hour: '2-digit', minute: '2-digit', hour12: true,
+            timeZone: 'Australia/Melbourne'
+        }) + ' (Melbourne time)';
+        const cronExpr = _registerConsultantCron(consultantId, sendDate, { recipientType, recipientId });
+        writeConsultantSchedule(consultantId, { consultantId, scheduledAt: sendDate.toISOString(), scheduledFor, cronExpr, options: { recipientType, recipientId } });
+        console.log(`📅 Consultant newsletter (${consultantId}) scheduled for ${scheduledFor}`);
+        res.json({ success: true, scheduledFor, message: `Consultant newsletter scheduled for ${scheduledFor}` });
+    } catch (e) {
+        console.error('Error in scheduleConsultant:', e);
+        res.status(500).json({ success: false, message: e.message });
+    }
+}
+
+function cancelConsultantSchedule(req, res) {
+    try {
+        const { consultantId } = req.body;
+        if (!consultantId) return res.status(400).json({ success: false, message: 'consultantId is required.' });
+        if (_consultantScheduledTasks[consultantId]) {
+            _consultantScheduledTasks[consultantId].stop();
+            delete _consultantScheduledTasks[consultantId];
+        }
+        writeConsultantSchedule(consultantId, null);
+        res.json({ success: true, message: `Schedule cancelled for ${consultantId}` });
+    } catch (e) {
+        res.status(500).json({ success: false, message: e.message });
+    }
+}
+
+async function batchSchedule(req, res) {
+    try {
+        const { schedules } = req.body; // array of { consultantId, scheduledAt, recipientType, recipientId }
+        if (!Array.isArray(schedules) || schedules.length === 0) {
+            return res.status(400).json({ success: false, message: 'schedules array is required.' });
+        }
+        const results = [];
+        for (const s of schedules) {
+            try {
+                const sendDate = new Date(s.scheduledAt);
+                if (isNaN(sendDate.getTime()) || sendDate <= new Date()) {
+                    results.push({ consultantId: s.consultantId, success: false, message: 'Invalid or past scheduledAt' });
+                    continue;
+                }
+                const scheduledFor = sendDate.toLocaleString('en-AU', {
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit', hour12: true,
+                    timeZone: 'Australia/Melbourne'
+                }) + ' (Melbourne time)';
+                const cronExpr = _registerConsultantCron(s.consultantId, sendDate, { recipientType: s.recipientType, recipientId: s.recipientId });
+                writeConsultantSchedule(s.consultantId, { consultantId: s.consultantId, scheduledAt: sendDate.toISOString(), scheduledFor, cronExpr, options: { recipientType: s.recipientType, recipientId: s.recipientId } });
+                results.push({ consultantId: s.consultantId, success: true, scheduledFor });
+            } catch (e) {
+                results.push({ consultantId: s.consultantId, success: false, message: e.message });
+            }
+        }
+        res.json({ success: true, results });
+    } catch (e) {
+        res.status(500).json({ success: false, message: e.message });
+    }
+}
+
+function getActiveSchedules(req, res) {
+    try {
+        const consultants = loadConsultants();
+        const active = [];
+        for (const id of Object.keys(consultants)) {
+            const saved = readConsultantSchedule(id);
+            if (saved && saved.scheduledAt) {
+                const sendDate = new Date(saved.scheduledAt);
+                if (sendDate > new Date()) {
+                    active.push({ ...saved, consultantName: consultants[id].name });
+                } else {
+                    // Expired — clean up
+                    writeConsultantSchedule(id, null);
+                }
+            }
+        }
+        res.json({ success: true, schedules: active });
+    } catch (e) {
+        res.status(500).json({ success: false, message: e.message });
+    }
+}
+
+function restoreConsultantSchedule() {
+    const consultants = loadConsultants();
+    for (const id of Object.keys(consultants)) {
+        const saved = readConsultantSchedule(id);
+        if (!saved || !saved.scheduledAt) continue;
+        const sendDate = new Date(saved.scheduledAt);
+        if (sendDate <= new Date()) {
+            console.warn(`⚠️  Consultant schedule for ${id} has passed, clearing.`);
+            writeConsultantSchedule(id, null);
+            continue;
+        }
+        _registerConsultantCron(id, sendDate, saved.options || {});
+        console.log(`📅 Consultant schedule restored for ${id}: ${saved.scheduledFor}`);
+    }
+}
+
 module.exports = {
     getState,
     getConsultantList,
@@ -804,5 +985,10 @@ module.exports = {
     sendTest,
     sendToAll,
     resetState,
-    updateSections
+    updateSections,
+    scheduleConsultant,
+    cancelConsultantSchedule,
+    batchSchedule,
+    getActiveSchedules,
+    restoreConsultantSchedule
 };

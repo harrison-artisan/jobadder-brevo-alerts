@@ -1510,6 +1510,11 @@ app.get('/api/consultant/active-schedules', (req, res) => {
   consultantController.getActiveSchedules(req, res);
 });
 
+// GET /api/consultant/schedule-state - Return all active consultant schedules for the calendar
+app.get('/api/consultant/schedule-state', (req, res) => {
+  consultantController.getActiveSchedules(req, res);
+});
+
 // ============================================================
 // Instagram Session Routes
 // ============================================================

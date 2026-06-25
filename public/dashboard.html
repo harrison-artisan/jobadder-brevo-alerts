@@ -1257,11 +1257,14 @@
         
         <!-- Main Category Tabs -->
         <div class="tabs" id="mainTabs">
-            <button class="tab active" onclick="switchMainTab('email-marketing', event)">
+            <button class="tab active" onclick="switchMainTab('email-marketing', event)" style="flex:2;">
                 Email Marketing
             </button>
-            <button class="tab" onclick="switchMainTab('content-marketing', event)">
+            <button class="tab" onclick="switchMainTab('content-marketing', event)" style="flex:2;">
                 Content Marketing
+            </button>
+            <button class="tab tab-schedule" onclick="switchMainTab('schedule', event)" style="flex:1; background: linear-gradient(135deg, #0e7490 0%, #0891b2 100%); color: white;">
+                &#128197; Schedule
             </button>
         </div>
         
@@ -3251,6 +3254,74 @@
                 cmLoadAListPostScheduleState();
                 cmLoadJobScheduleState();
 
+            } else if (mainTabName === 'schedule') {
+                // Save current email content before hiding
+                if (!emailContentBackup) emailContentBackup = mainContent.innerHTML;
+                emailTabs.style.display = 'none';
+
+                mainContent.innerHTML = `
+                <div id="scheduleApp" style="padding:0;">
+
+                    <!-- ===== Schedule Header ===== -->
+                    <div style="background:rgba(255,255,255,0.07); backdrop-filter:blur(20px); border-radius:16px; padding:24px 28px 20px; margin-bottom:24px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 32px rgba(0,0,0,0.15);">
+                        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+                            <div>
+                                <h2 style="margin:0 0 4px; color:white; font-size:22px; font-weight:700;">&#128197; Schedule Overview</h2>
+                                <p style="margin:0; color:rgba(255,255,255,0.55); font-size:13px;">All scheduled emails, newsletters &amp; posts in one view</p>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <button onclick="schedCalPrev()" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; padding:8px 14px; cursor:pointer; font-size:16px; transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.18)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">&#8592;</button>
+                                <span id="schedCalLabel" style="color:white; font-size:16px; font-weight:600; min-width:150px; text-align:center;"></span>
+                                <button onclick="schedCalNext()" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; padding:8px 14px; cursor:pointer; font-size:16px; transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.18)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">&#8594;</button>
+                                <button onclick="schedCalToday()" style="background:rgba(8,145,178,0.3); border:1px solid rgba(8,145,178,0.5); border-radius:8px; color:white; padding:8px 14px; cursor:pointer; font-size:13px; font-weight:600;">Today</button>
+                                <button id="schedViewToggle" onclick="schedToggleView()" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white; padding:8px 14px; cursor:pointer; font-size:13px;">List View</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ===== Legend ===== -->
+                    <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px; padding:0 4px;">
+                        <span style="display:flex; align-items:center; gap:6px; font-size:12px; color:rgba(255,255,255,0.7);"><span style="width:12px;height:12px;border-radius:3px;background:#e74c3c;display:inline-block;"></span>A-List Email</span>
+                        <span style="display:flex; align-items:center; gap:6px; font-size:12px; color:rgba(255,255,255,0.7);"><span style="width:12px;height:12px;border-radius:3px;background:#2980b9;display:inline-block;"></span>Xpose Newsletter</span>
+                        <span style="display:flex; align-items:center; gap:6px; font-size:12px; color:rgba(255,255,255,0.7);"><span style="width:12px;height:12px;border-radius:3px;background:#1b334d;display:inline-block;"></span>Job Alerts</span>
+                        <span style="display:flex; align-items:center; gap:6px; font-size:12px; color:rgba(255,255,255,0.7);"><span style="width:12px;height:12px;border-radius:3px;background:#0077b5;display:inline-block;"></span>LinkedIn</span>
+                        <span style="display:flex; align-items:center; gap:6px; font-size:12px; color:rgba(255,255,255,0.7);"><span style="width:12px;height:12px;border-radius:3px;background:#0e7490;display:inline-block;"></span>Consultant</span>
+                        <span style="display:flex; align-items:center; gap:6px; font-size:12px; color:rgba(255,255,255,0.7);"><span style="width:12px;height:12px;border-radius:3px;background:#6f42c1;display:inline-block;"></span>Xpose Article</span>
+                    </div>
+
+                    <!-- ===== Calendar Grid View ===== -->
+                    <div id="schedCalendarView">
+                        <div style="background:rgba(255,255,255,0.07); backdrop-filter:blur(20px); border-radius:16px; border:1px solid rgba(255,255,255,0.12); overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.15);">
+                            <!-- Day headers -->
+                            <div style="display:grid; grid-template-columns:repeat(7,1fr); border-bottom:1px solid rgba(255,255,255,0.1);">
+                                ${ ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => `<div style="padding:10px 0; text-align:center; font-size:12px; font-weight:700; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:0.5px;">${d}</div>`).join('') }
+                            </div>
+                            <!-- Day cells -->
+                            <div id="schedCalGrid" style="display:grid; grid-template-columns:repeat(7,1fr);"></div>
+                        </div>
+                    </div>
+
+                    <!-- ===== List View ===== -->
+                    <div id="schedListView" style="display:none;">
+                        <div id="schedListContainer"></div>
+                    </div>
+
+                    <!-- ===== Day Detail Panel ===== -->
+                    <div id="schedDayPanel" style="display:none; margin-top:20px; background:rgba(255,255,255,0.07); backdrop-filter:blur(20px); border-radius:16px; padding:24px; border:1px solid rgba(255,255,255,0.12); box-shadow:0 8px 32px rgba(0,0,0,0.15);">
+                        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+                            <h3 id="schedDayPanelTitle" style="margin:0; color:white; font-size:17px; font-weight:700;"></h3>
+                            <button onclick="document.getElementById('schedDayPanel').style.display='none'" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:rgba(255,255,255,0.7); padding:6px 12px; cursor:pointer; font-size:13px;">Close</button>
+                        </div>
+                        <div id="schedDayPanelItems"></div>
+                    </div>
+
+                    <!-- ===== Loading Indicator ===== -->
+                    <div id="schedLoading" style="text-align:center; padding:40px; color:rgba(255,255,255,0.5); font-size:15px;">Loading schedule data...</div>
+
+                </div>
+                `;
+
+                schedCalInit();
             }
         }
         
@@ -8427,7 +8498,7 @@
                 const response = await fetch('/api/consultant/schedule', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ recipientType, recipientId, scheduledAt })
+                    body: JSON.stringify({ consultantId: selectedConsultantId, recipientType, recipientId, scheduledAt })
                 });
                 const result = await response.json();
                 if (result.success) {
@@ -8462,7 +8533,11 @@
 
         async function cancelConsultantScheduleNow() {
             try {
-                const response = await fetch('/api/consultant/cancel-schedule', { method: 'POST' });
+                const response = await fetch('/api/consultant/cancel-schedule', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ consultantId: selectedConsultantId })
+                });
                 const result = await response.json();
                 if (result.success) {
                     showToast('Schedule cancelled.', 'success');
@@ -8633,6 +8708,273 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') closePreviewModal();
         });
+    </script>
+
+    <!-- ===== SCHEDULE CALENDAR JS ===== -->
+    <script>
+    // ============================================================
+    // Schedule Calendar — reads all schedule state endpoints and
+    // renders a month-view calendar + list view.
+    // No writes — all scheduling is done from the existing tabs.
+    // ============================================================
+
+    let schedCalDate = new Date(); // currently displayed month
+    let schedEvents = [];          // all fetched events
+    let schedCalIsListView = false;
+
+    const SCHED_COLOURS = {
+        'A-List Email':       '#e74c3c',
+        'Xpose Newsletter':   '#2980b9',
+        'Job Alert Roundup':  '#1b334d',
+        'Job Alert Single':   '#2c5282',
+        'LinkedIn Poll':      '#0077b5',
+        'LinkedIn Article':   '#0056a0',
+        'LinkedIn Job':       '#003f7a',
+        'LinkedIn A-List':    '#0099cc',
+        'Consultant':         '#0e7490',
+        'Xpose Article':      '#6f42c1'
+    };
+
+    async function schedCalInit() {
+        schedCalDate = new Date();
+        schedEvents = [];
+        schedCalIsListView = window.innerWidth < 640; // default list on mobile
+        await schedFetchAllEvents();
+        schedRender();
+    }
+
+    async function schedFetchAllEvents() {
+        const loading = document.getElementById('schedLoading');
+        if (loading) loading.style.display = 'block';
+
+        const endpoints = [
+            { url: '/api/alist/state',                          label: 'A-List Email',      colour: SCHED_COLOURS['A-List Email'],      parseState: true },
+            { url: '/api/xpose/state',                          label: 'Xpose Newsletter',  colour: SCHED_COLOURS['Xpose Newsletter'],  parseState: true },
+            { url: '/api/job-alerts/roundup-schedule-state',    label: 'Job Alert Roundup', colour: SCHED_COLOURS['Job Alert Roundup'] },
+            { url: '/api/job-alerts/single-schedule-state',     label: 'Job Alert Single',  colour: SCHED_COLOURS['Job Alert Single']  },
+            { url: '/api/xpose/article-schedule-state',         label: 'Xpose Article',     colour: SCHED_COLOURS['Xpose Article']     },
+            { url: '/api/linkedin/poll-schedule-state',         label: 'LinkedIn Poll',     colour: SCHED_COLOURS['LinkedIn Poll'],     parsePoll: true },
+            { url: '/api/linkedin/article-post-schedule-state', label: 'LinkedIn Article',  colour: SCHED_COLOURS['LinkedIn Article']  },
+            { url: '/api/linkedin/job-listing-schedule-state',  label: 'LinkedIn Job',      colour: SCHED_COLOURS['LinkedIn Job']      },
+            { url: '/api/linkedin/alist-post-schedule-state',   label: 'LinkedIn A-List',   colour: SCHED_COLOURS['LinkedIn A-List']   },
+            { url: '/api/consultant/schedule-state',            label: 'Consultant',        colour: SCHED_COLOURS['Consultant'],        parseConsultant: true }
+        ];
+
+        const results = await Promise.allSettled(endpoints.map(ep => fetch(ep.url).then(r => r.json())));
+
+        schedEvents = [];
+        results.forEach((res, i) => {
+            if (res.status !== 'fulfilled') return;
+            const data = res.value;
+            const ep = endpoints[i];
+
+            if (ep.parseConsultant) {
+                // Returns { schedules: [ { consultantId, consultantName, scheduledAt, scheduledFor } ] }
+                const schedules = data.schedules || [];
+                schedules.forEach(s => {
+                    if (s.scheduledAt) {
+                        schedEvents.push({
+                            label: 'Consultant: ' + (s.consultantName || s.consultantId),
+                            colour: ep.colour,
+                            scheduledAt: s.scheduledAt,
+                            scheduledFor: s.scheduledFor || s.scheduledAt
+                        });
+                    }
+                });
+                return;
+            }
+
+            if (ep.parsePoll) {
+                // Returns { state: { scheduledAt, scheduledFor } } or { scheduledAt, scheduledFor }
+                const inner = data.state || data;
+                if (inner && inner.scheduledAt) {
+                    schedEvents.push({ label: ep.label, colour: ep.colour, scheduledAt: inner.scheduledAt, scheduledFor: inner.scheduledFor || inner.scheduledAt });
+                }
+                return;
+            }
+
+            if (ep.parseState) {
+                // Returns full state object — only add if state === 'SCHEDULED'
+                if (data.state === 'SCHEDULED' && data.scheduledAt) {
+                    schedEvents.push({ label: ep.label, colour: ep.colour, scheduledAt: data.scheduledAt, scheduledFor: data.scheduledFor || data.scheduledAt });
+                }
+                return;
+            }
+
+            // Standard: { scheduledAt, scheduledFor }
+            if (data && data.scheduledAt) {
+                schedEvents.push({ label: ep.label, colour: ep.colour, scheduledAt: data.scheduledAt, scheduledFor: data.scheduledFor || data.scheduledAt });
+            }
+        });
+
+        if (loading) loading.style.display = 'none';
+    }
+
+    function schedRender() {
+        const labelEl = document.getElementById('schedCalLabel');
+        if (!labelEl) return;
+        labelEl.textContent = schedCalDate.toLocaleString('en-AU', { month: 'long', year: 'numeric' });
+
+        const toggleBtn = document.getElementById('schedViewToggle');
+        if (toggleBtn) toggleBtn.textContent = schedCalIsListView ? 'Calendar View' : 'List View';
+
+        const calView = document.getElementById('schedCalendarView');
+        const listView = document.getElementById('schedListView');
+        if (!calView || !listView) return;
+
+        if (schedCalIsListView) {
+            calView.style.display = 'none';
+            listView.style.display = 'block';
+            schedRenderList();
+        } else {
+            calView.style.display = 'block';
+            listView.style.display = 'none';
+            schedRenderGrid();
+        }
+    }
+
+    function schedRenderGrid() {
+        const grid = document.getElementById('schedCalGrid');
+        if (!grid) return;
+
+        const year = schedCalDate.getFullYear();
+        const month = schedCalDate.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const today = new Date();
+
+        // Monday-first: 0=Mon ... 6=Sun
+        let startOffset = (firstDay.getDay() + 6) % 7;
+        const totalCells = startOffset + lastDay.getDate();
+        const rows = Math.ceil(totalCells / 7);
+
+        let html = '';
+        let dayNum = 1;
+        for (let cell = 0; cell < rows * 7; cell++) {
+            const isBlank = cell < startOffset || dayNum > lastDay.getDate();
+            if (isBlank) {
+                html += `<div style="min-height:90px; border-right:1px solid rgba(255,255,255,0.06); border-bottom:1px solid rgba(255,255,255,0.06); background:rgba(0,0,0,0.05);"></div>`;
+                if (!isBlank) dayNum++;
+                continue;
+            }
+
+            const cellDate = new Date(year, month, dayNum);
+            const isToday = cellDate.toDateString() === today.toDateString();
+            const dayEvents = schedEventsForDate(cellDate);
+            const dayNumCopy = dayNum;
+
+            const todayStyle = isToday ? 'background:rgba(8,145,178,0.12);' : '';
+            const todayNumStyle = isToday ? 'background:#0891b2; color:white; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center;' : 'color:rgba(255,255,255,0.7);';
+
+            const pillsHtml = dayEvents.slice(0, 3).map(ev =>
+                `<div style="background:${ev.colour}; color:white; border-radius:4px; padding:2px 6px; font-size:10px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:2px; cursor:pointer;" title="${ev.scheduledFor}" onclick="schedShowDay(${year},${month},${dayNumCopy})">${ev.label}</div>`
+            ).join('');
+            const moreHtml = dayEvents.length > 3 ? `<div style="font-size:10px; color:rgba(255,255,255,0.5); padding:0 4px;">+${dayEvents.length - 3} more</div>` : '';
+
+            html += `<div style="min-height:90px; border-right:1px solid rgba(255,255,255,0.06); border-bottom:1px solid rgba(255,255,255,0.06); padding:6px; ${todayStyle} cursor:pointer; transition:background 0.15s;" onclick="schedShowDay(${year},${month},${dayNumCopy})" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='${isToday ? 'rgba(8,145,178,0.12)' : 'transparent'}'">
+                <div style="${todayNumStyle} font-size:13px; font-weight:700; margin-bottom:4px;">${dayNum}</div>
+                ${pillsHtml}${moreHtml}
+            </div>`;
+            dayNum++;
+        }
+        grid.innerHTML = html;
+    }
+
+    function schedRenderList() {
+        const container = document.getElementById('schedListContainer');
+        if (!container) return;
+
+        const year = schedCalDate.getFullYear();
+        const month = schedCalDate.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const today = new Date();
+
+        let html = '';
+        let hasAny = false;
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const cellDate = new Date(year, month, d);
+            const dayEvents = schedEventsForDate(cellDate);
+            if (dayEvents.length === 0) continue;
+            hasAny = true;
+
+            const isToday = cellDate.toDateString() === today.toDateString();
+            const dayLabel = cellDate.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' });
+            const todayBadge = isToday ? '<span style="background:#0891b2; color:white; border-radius:20px; padding:2px 10px; font-size:11px; font-weight:700; margin-left:10px;">Today</span>' : '';
+
+            html += `<div style="background:rgba(255,255,255,0.07); backdrop-filter:blur(20px); border-radius:14px; padding:18px 20px; margin-bottom:14px; border:1px solid rgba(255,255,255,0.12);">
+                <div style="font-size:15px; font-weight:700; color:white; margin-bottom:12px;">${dayLabel}${todayBadge}</div>
+                ${dayEvents.map(ev => `
+                <div style="display:flex; align-items:center; gap:12px; padding:10px 14px; background:rgba(255,255,255,0.05); border-radius:10px; margin-bottom:8px; border-left:4px solid ${ev.colour};">
+                    <div style="flex:1;">
+                        <div style="font-size:14px; font-weight:600; color:white;">${ev.label}</div>
+                        <div style="font-size:12px; color:rgba(255,255,255,0.55); margin-top:2px;">${ev.scheduledFor}</div>
+                    </div>
+                    <div style="width:10px; height:10px; border-radius:50%; background:${ev.colour}; flex-shrink:0;"></div>
+                </div>`).join('')}
+            </div>`;
+        }
+
+        if (!hasAny) {
+            html = `<div style="text-align:center; padding:60px 20px; color:rgba(255,255,255,0.4); font-size:15px;">No scheduled items this month</div>`;
+        }
+
+        container.innerHTML = html;
+    }
+
+    function schedEventsForDate(date) {
+        return schedEvents.filter(ev => {
+            const d = new Date(ev.scheduledAt);
+            return d.getFullYear() === date.getFullYear() &&
+                   d.getMonth() === date.getMonth() &&
+                   d.getDate() === date.getDate();
+        });
+    }
+
+    function schedShowDay(year, month, day) {
+        const panel = document.getElementById('schedDayPanel');
+        const title = document.getElementById('schedDayPanelTitle');
+        const items = document.getElementById('schedDayPanelItems');
+        if (!panel || !title || !items) return;
+
+        const cellDate = new Date(year, month, day);
+        const dayEvents = schedEventsForDate(cellDate);
+        title.textContent = cellDate.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+        if (dayEvents.length === 0) {
+            items.innerHTML = `<p style="color:rgba(255,255,255,0.45); font-size:14px;">No scheduled items on this day.</p>`;
+        } else {
+            items.innerHTML = dayEvents.map(ev => `
+                <div style="display:flex; align-items:center; gap:14px; padding:12px 16px; background:rgba(255,255,255,0.05); border-radius:12px; margin-bottom:10px; border-left:4px solid ${ev.colour};">
+                    <div style="flex:1;">
+                        <div style="font-size:15px; font-weight:700; color:white;">${ev.label}</div>
+                        <div style="font-size:13px; color:rgba(255,255,255,0.55); margin-top:3px;">&#128337; ${ev.scheduledFor}</div>
+                    </div>
+                    <div style="width:12px; height:12px; border-radius:50%; background:${ev.colour}; flex-shrink:0;"></div>
+                </div>`).join('');
+        }
+        panel.style.display = 'block';
+        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function schedCalPrev() {
+        schedCalDate.setMonth(schedCalDate.getMonth() - 1);
+        schedRender();
+    }
+    function schedCalNext() {
+        schedCalDate.setMonth(schedCalDate.getMonth() + 1);
+        schedRender();
+    }
+    function schedCalToday() {
+        schedCalDate = new Date();
+        schedRender();
+    }
+    function schedToggleView() {
+        schedCalIsListView = !schedCalIsListView;
+        schedRender();
+    }
+
+    // ===== END SCHEDULE CALENDAR JS =====
     </script>
 </body>
 </html>
