@@ -93,6 +93,9 @@ function populateEditor(state) {
         if (document.getElementById('igCaption')) {
             document.getElementById('igCaption').value = state.content.instagram.caption || '';
         }
+        if (document.getElementById('editEmailSubject')) {
+            document.getElementById('editEmailSubject').value = state.content.email_subject || '';
+        }
         for (let i = 1; i <= 4; i++) {
             const urlInput = document.getElementById('igUrl' + i);
             const preview = document.getElementById('igPreview' + i);
@@ -190,7 +193,8 @@ async function updateConsultantSectionVisibility() {
         },
         instagram: {
             caption: document.getElementById("igCaption") ? document.getElementById("igCaption").value : ""
-        }
+        },
+        email_subject: document.getElementById("editEmailSubject") ? document.getElementById("editEmailSubject").value.trim() : ""
     };
 
     const eventItems = document.querySelectorAll('.event-edit-item');

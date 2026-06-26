@@ -2091,8 +2091,14 @@
                         <div id="mediaEditContainer">
                             <!-- Populated by JS -->
                         </div>
+                        <button onclick="addMediaField()" style="margin-top:8px; padding:6px 14px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:rgba(255,255,255,0.8); font-size:11px; cursor:pointer; font-weight:600; letter-spacing:0.5px;">+ Add Media Item</button>
                     </div>
 
+                 <!-- SUBJECT LINE OVERRIDE -->
+                    <div style="margin-bottom:16px; padding:16px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:8px;">
+                        <label style="display:block; font-size:11px; font-weight:700; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Email Subject Line <span style="font-weight:400; color:rgba(255,255,255,0.35);">(leave blank to use Brevo template default)</span></label>
+                        <input type="text" id="editEmailSubject" placeholder="e.g. Mat's Market Insights — July 2026" style="width:100%; padding:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:white; font-size:13px; box-sizing:border-box;">
+                    </div>
                  <!-- SAVE BUTTON AT BOTTOM -->
                     <div style="margin-top:20px; border-top:1px solid rgba(255,255,255,0.1); padding-top:20px; text-align:right;">
                         <button id="btnSaveConsultantChanges" onclick="updateConsultantSectionVisibility()" class="btn btn-primary" style="background: #27ae60; color: white; font-weight: bold; padding: 12px 24px; border-radius: 8px; display: flex; align-items: center; gap: 8px; margin-left: auto;">Save All Changes</button>

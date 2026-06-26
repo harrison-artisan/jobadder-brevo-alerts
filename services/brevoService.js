@@ -61,7 +61,7 @@ class BrevoService {
    * For single recipients: uses direct to+params (more reliable)
    * For multiple recipients: uses messageVersions batch API
    */
-  async sendBatchEmail(recipients, templateId, params) {
+  async sendBatchEmail(recipients, templateId, params, subjectOverride) {
     if (!recipients || recipients.length === 0) {
       console.log('⚠️  No recipients to send email to');
       return;
@@ -86,6 +86,7 @@ class BrevoService {
           to: [{ email: recipient.email, name: recipient.name || recipient.email }],
 	          params: params
         };
+        if (subjectOverride) payload.subject = subjectOverride;
         if (this.senderEmail) {
           payload.sender = { email: this.senderEmail, name: this.senderName };
         }
@@ -119,6 +120,7 @@ class BrevoService {
           templateId: tid,
           messageVersions: messageVersions
         };
+        if (subjectOverride) payload.subject = subjectOverride;
         if (this.senderEmail) {
           payload.sender = { email: this.senderEmail, name: this.senderName };
         }

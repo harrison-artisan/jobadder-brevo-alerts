@@ -252,7 +252,7 @@
                     {% if params.content.industry_insight_heading %}
                     <h2 style="margin:0 0 16px 0;font-size:22px;font-weight:900;color:#1b334d;line-height:1.3;">{{ params.content.industry_insight_heading }}</h2>
                     {% endif %}
-                    <p style="margin:0;font-size:14px;line-height:1.8;color:#444444;">{{ params.content.industry_insight_body }}</p>
+                    <p style="margin:0;font-size:14px;line-height:1.8;color:#444444;">{{ params.content.industry_insight_body | safe }}</p>
                   </td>
                 </tr>
               </table>
@@ -267,7 +267,7 @@
                   <td style="padding:32px 32px 28px 32px;">
                     <p style="margin:0 0 10px 0;font-size:10px;font-weight:700;color:#1b334d;letter-spacing:2.5px;text-transform:uppercase;">From {{ params.consultant.name }}</p>
                     <h2 style="margin:0 0 16px 0;font-size:22px;font-weight:900;color:#1b334d;line-height:1.3;">{{ params.content.life_update_heading }}</h2>
-                    <p style="margin:0;font-size:14px;line-height:1.8;color:#444444;">{{ params.content.life_update_body }}</p>
+                    <p style="margin:0;font-size:14px;line-height:1.8;color:#444444;">{{ params.content.life_update_body | safe }}</p>
                     {% if params.content.life_update_images and params.content.life_update_images|length > 0 %}
                     <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-top:20px;">
                       <tr>
@@ -372,7 +372,7 @@
                   {% endif %}
                   <!-- Right: label, caption, button -->
                   <td valign="middle" style="padding:28px 28px 28px 24px;" class="yt-text-cell">
-                    <p style="margin:0 0 8px 0;font-size:10px;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:2px;text-transform:uppercase;">What I'm Listening To</p>
+                    <p style="margin:0 0 8px 0;font-size:10px;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:2px;text-transform:uppercase;">What I'm Watching</p>
                     {% if item.caption %}
                     <p style="margin:0 0 20px 0;font-size:15px;font-weight:600;color:#ffffff;line-height:1.6;">{{ item.caption }}</p>
                     {% endif %}
@@ -421,7 +421,7 @@
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#1b334d 0%,#2d5a8e 100%);border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(27,51,77,0.25);">
                 <tr>
                   <td style="padding:28px 32px;text-align:center;">
-                    <p style="margin:0 0 8px 0;font-size:10px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:2px;text-transform:uppercase;">&#127911; Podcast</p>
+                    <p style="margin:0 0 8px 0;font-size:10px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:2px;text-transform:uppercase;">&#127911; What I'm Listening To</p>
                     {% if item.title %}
                     <p style="margin:0 0 20px 0;font-size:16px;font-weight:700;color:#ffffff;line-height:1.5;">{{ item.title }}</p>
                     {% endif %}
@@ -900,9 +900,9 @@
                   <td align="center" style="padding-bottom:18px;">
                     <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
                       <tr>
-                        <td style="padding:0 8px;"><a href="https://artisan.com.au/about/?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="font-size:11px;color:#888888;text-decoration:none;">About</a></td>
+                        <td style="padding:0 8px;"><a href="https://artisan.com.au/about-us/?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="font-size:11px;color:#888888;text-decoration:none;">About</a></td>
                         <td style="padding:0 8px;"><a href="https://artisan.com.au/creative-community/?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="font-size:11px;color:#888888;text-decoration:none;">Creative Community</a></td>
-                        <td style="padding:0 8px;"><a href="https://artisan.com.au/contact/?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="font-size:11px;color:#888888;text-decoration:none;">Contact</a></td>
+                        <td style="padding:0 8px;"><a href="https://artisan.com.au/contact-us/?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="font-size:11px;color:#888888;text-decoration:none;">Contact</a></td>
                         <td style="padding:0 8px;"><a href="https://clientapps.jobadder.com/67514/artisan?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="font-size:11px;color:#888888;text-decoration:none;">Jobs</a></td>
                       </tr>
                     </table>

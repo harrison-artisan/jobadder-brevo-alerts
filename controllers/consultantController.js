@@ -755,7 +755,8 @@ async function sendTest(req, res) {
         // Your template uses {{ params.xxx }}. 
         // When we pass state.templateParams to Brevo, it automatically becomes the 'params' object.
         // So {{ params.consultant.name }} in the template will look for 'consultant.name' inside our object.
-        await brevoService.sendBatchEmail([{ email: testEmail }], parseInt(templateId), state.templateParams);
+        const subjectOverride = state.content && state.content.email_subject ? state.content.email_subject : null;
+        await brevoService.sendBatchEmail([{ email: testEmail }], parseInt(templateId), state.templateParams, subjectOverride);
         
         res.json({ success: true, message: `Test email sent to ${testEmail}` });
     } catch (e) {
@@ -784,7 +785,8 @@ async function sendToAll(req, res) {
         }
 
         // Your template uses {{ params.xxx }}.
-        await brevoService.sendBatchEmail(recipients, parseInt(templateId), state.templateParams);
+        const subjectOverrideAll = state.content && state.content.email_subject ? state.content.email_subject : null;
+        await brevoService.sendBatchEmail(recipients, parseInt(templateId), state.templateParams, subjectOverrideAll);
         
         res.json({ success: true, message: `Newsletter sent successfully to ${recipients.length} recipients.` });
     } catch (e) {
@@ -816,6 +818,10 @@ async function updateSections(req, res) {
         
         // 2. Update Content Fields (Mapping from dashboard fields)
         if (content) {
+            // Save subject line override if provided
+            if (content.email_subject !== undefined) {
+                state.content.email_subject = content.email_subject || '';
+            }
             if (content.industry_insight) {
                 state.content.industry_insight_heading = content.industry_insight.title || content.industry_insight.heading || '';
                 state.content.industry_insight_body = content.industry_insight.body || '';
@@ -836,7 +842,9 @@ async function updateSections(req, res) {
                 };
             }
             if (content.instagram) {
-                state.content.instagram_caption = String(content.instagram.caption || '');
+                // Guard: caption must be a string, never a boolean (sections.instagram_grid is boolean)
+                const rawCap = content.instagram.caption;
+                state.content.instagram_caption = (rawCap && typeof rawCap !== 'boolean') ? String(rawCap) : (state.content.instagram_caption || '');
                 state.content.instagram_grid = (instagram_grid && instagram_grid.length > 0) ? instagram_grid : (state.content.instagram_grid || []);
                 // Sync legacy objects for buildTemplateParams
                 state.content.instagram = {
