@@ -301,9 +301,15 @@ const LABEL_TO_KEY = {
     'consultant': 'consultant',
     'your name': 'consultant',
     'industry insight body text': 'industry_insight_body',
+    'industry insight heading': 'industry_insight_heading',
+    'industry insight title': 'industry_insight_heading',
     'industry insight': 'industry_insight_body',
     'personal update body text': 'life_update_body',
     'life update body text': 'life_update_body',
+    'personal update heading': 'life_update_heading',
+    'personal update title': 'life_update_heading',
+    'life update heading': 'life_update_heading',
+    'life update title': 'life_update_heading',
     'personal update': 'life_update_body',
     'life update': 'life_update_body',
     'youtube url': 'youtube_url',
@@ -463,8 +469,8 @@ async function parseCsv(req, res) {
         if (!consultantConfig) return res.status(400).json({ success: false, message: `Unknown consultant: ${consultantId}` });
 
         const parsed = {
-            industry_insight: { heading: data.industry_insight_heading || 'Industry Insight', body: data.industry_insight_body || '' },
-            life_update: { heading: data.life_update_heading || 'Life Update', body: data.life_update_body || '' },
+            industry_insight: { heading: data.industry_insight_heading || '', body: data.industry_insight_body || '' },
+            life_update: { heading: data.life_update_heading || '', body: data.life_update_body || '' },
             events: []
         };
         for (let i = 1; i <= 3; i++) {
@@ -529,6 +535,52 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
     const instagram_grid_final = (instagram_grid && instagram_grid.length > 0) ? instagram_grid : (parsed.instagram_grid || (parsed.instagram && parsed.instagram.images) || []);
     const instagram_caption_final = ((instagram_caption !== undefined && instagram_caption !== null) ? String(instagram_caption) : (parsed.instagram_caption || (parsed.instagram && parsed.instagram.caption) || '')).replace(/\n/g, "<br>");
 
+    // Issue #5: Convert newlines to <br> in body fields for HTML rendering
+    const industry_insight_body_html = (industry_insight_body || '').replace(/\n/g, '<br>');
+    const life_update_body_html = (life_update_body || '').replace(/\n/g, '<br>');
+
+    // Build media items array once (reused for both nested and flat keys)
+    const mediaItemsArray = (Array.isArray(mediaArray) ? mediaArray : []).map(item => {
+        if (item.type === 'youtube' && item.url && !item.thumbnail) {
+            const videoIdMatch = item.url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
+            if (videoIdMatch && videoIdMatch[1]) {
+                item = { ...item, thumbnail: `https://img.youtube.com/vi/${videoIdMatch[1]}/maxresdefault.jpg` };
+            }
+        }
+        return item;
+    });
+
+    // Build articles array once
+    const articlesArr = (articles || []).slice(0, 3).map(a => ({
+        title: a.title || '',
+        image: a.image || fallbackImg,
+        link: a.link || 'https://artisan.com.au/creative-community/'
+    }));
+
+    // Issue #3: Build events array with robust date parsing via parseEventDate
+    const eventsArr = (Array.isArray(parsed.events) ? parsed.events : []).map(e => {
+        const day = e.day || '';
+        const month = (e.month || '').toUpperCase();
+        const link = e.link || e.url || '';
+        let finalDay = day;
+        let finalMonth = month;
+        if (e.date && (!day || !month)) {
+            const dateInfo = parseEventDate(e.date);
+            if (dateInfo) { finalDay = dateInfo.day; finalMonth = dateInfo.month; }
+            else {
+                const parts = e.date.trim().split(/\s+/);
+                if (parts.length >= 2) { finalDay = parts[0]; finalMonth = parts[1].toUpperCase(); }
+            }
+        }
+        // Issue #9: Truncate description to ~180 chars (~3 lines) with ellipsis for email clients
+        const rawDesc = e.description || '';
+        const truncDesc = rawDesc.length > 180 ? rawDesc.slice(0, 177).replace(/\s+\S*$/, '') + '...' : rawDesc;
+        return { ...e, day: finalDay, month: finalMonth, link, url: link, description: truncDesc };
+    });
+
+    // Job description helper (strip HTML, truncate)
+    const jobDesc = (() => { const d = (job.description || '').replace(/<[^>]+>/g, '').trim(); return d.length > 120 ? d.slice(0, 117) + '...' : d; })();
+
     return {
         sections: finalSections,
         consultant: {
@@ -544,28 +596,20 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
         content: {
             preheader_text,
             industry_insight_heading,
-            industry_insight_body,
+            industry_insight_body: industry_insight_body_html,
             life_update_heading,
-            life_update_body,
+            life_update_body: life_update_body_html,
             life_update_images
         },
         media: {
-            has_media: Array.isArray(mediaArray) && mediaArray.length > 0,
-            items: (Array.isArray(mediaArray) ? mediaArray : []).map(item => {
-                if (item.type === 'youtube' && item.url && !item.thumbnail) {
-                    const videoIdMatch = item.url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
-                    if (videoIdMatch && videoIdMatch[1]) {
-                        item.thumbnail = `https://img.youtube.com/vi/${videoIdMatch[1]}/maxresdefault.jpg`;
-                    }
-                }
-                return item;
-            })
+            has_media: mediaItemsArray.length > 0,
+            items: mediaItemsArray
         },
         instagram_grid: instagram_grid_final,
-        insta_img_1: instagram_grid_final[0] || "",
-        insta_img_2: instagram_grid_final[1] || "",
-        insta_img_3: instagram_grid_final[2] || "",
-        insta_img_4: instagram_grid_final[3] || "",
+        insta_img_1: instagram_grid_final[0] || '',
+        insta_img_2: instagram_grid_final[1] || '',
+        insta_img_3: instagram_grid_final[2] || '',
+        insta_img_4: instagram_grid_final[3] || '',
         instagram: {
             caption: instagram_caption_final,
             grid: instagram_grid_final
@@ -575,7 +619,7 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
             title: job.title || '',
             type: job.type || 'Full Time',
             location: job.location || '',
-            description: (() => { const d = (job.description || '').replace(/<[^>]+>/g, '').trim(); return d.length > 120 ? d.slice(0, 117) + '...' : d; })(),
+            description: jobDesc,
             link: job.link || 'https://clientapps.jobadder.com/67514/artisan'
         },
         alist: {
@@ -584,36 +628,47 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
             image: alistCandidate ? (alistCandidate.image_url || fallbackImg) : fallbackImg,
             link: alistCandidate ? alistCandidate.mailto_link : ''
         },
-        articles: (articles || []).slice(0, 3).map(a => ({
-            title: a.title || '',
-            image: a.image || fallbackImg,
-            link: a.link || 'https://artisan.com.au/creative-community/'
-        })),
-        events: (Array.isArray(parsed.events) ? parsed.events : []).map(e => {
-            // Normalize event data for template
-            const day = e.day || '';
-            const month = (e.month || '').toUpperCase();
-            const link = e.link || e.url || '';
-            
-            // If date is provided but day/month are missing, try to parse
-            let finalDay = day;
-            let finalMonth = month;
-            if (e.date && (!day || !month)) {
-                const parts = e.date.trim().split(/\s+/);
-                if (parts.length >= 2) {
-                    finalDay = parts[0];
-                    finalMonth = parts[1].toUpperCase();
-                }
-            }
-
-            return {
-                ...e,
-                day: finalDay,
-                month: finalMonth,
-                link: link,
-                url: link // Ensure both are present for safety
-            };
-        })
+        articles: articlesArr,
+        events: eventsArr,
+        // ── FLAT KEY ALIASES FOR LOCAL PREVIEW RENDERER ──────────────────────
+        // The template uses flat names ({{ consultant_name }}, {{ job_title }}, etc.)
+        // The local preview renderer resolves paths from the root data object so
+        // we must expose flat keys here. Brevo's send engine uses the nested paths.
+        newsletter_name: consultant.newsletter_name || consultant.name,
+        consultant_name: consultant.name,
+        consultant_title: consultant.title,
+        consultant_email: consultant.email,
+        consultant_phone: consultant.phone,
+        consultant_linkedin: consultant.linkedin,
+        consultant_photo: consultant.photo_url || consultant.photo,
+        calendar_link: consultant.calendar_link || 'https://artisan.com.au/contact',
+        preheader_text,
+        industry_insight_heading,
+        industry_insight_body: industry_insight_body_html,
+        life_update_heading,
+        life_update_body: life_update_body_html,
+        has_media: mediaItemsArray.length > 0,
+        media_items: mediaItemsArray,
+        has_job: !!(job.title),
+        job_title: job.title || '',
+        job_type: job.type || 'Full Time',
+        job_location: job.location || '',
+        job_description: jobDesc,
+        job_link: job.link || 'https://clientapps.jobadder.com/67514/artisan',
+        has_alist_candidate: !!alistCandidate,
+        alist_candidate_title: alistCandidate ? alistCandidate.title : '',
+        alist_candidate_image: alistCandidate ? (alistCandidate.image_url || fallbackImg) : fallbackImg,
+        alist_candidate_link: alistCandidate ? alistCandidate.mailto_link : '',
+        article1_title: articlesArr[0] ? articlesArr[0].title : '',
+        article1_image: articlesArr[0] ? articlesArr[0].image : fallbackImg,
+        article1_link: articlesArr[0] ? articlesArr[0].link : 'https://artisan.com.au/creative-community/',
+        article2_title: articlesArr[1] ? articlesArr[1].title : '',
+        article2_image: articlesArr[1] ? articlesArr[1].image : fallbackImg,
+        article2_link: articlesArr[1] ? articlesArr[1].link : 'https://artisan.com.au/creative-community/',
+        article3_title: articlesArr[2] ? articlesArr[2].title : '',
+        article3_image: articlesArr[2] ? articlesArr[2].image : fallbackImg,
+        article3_link: articlesArr[2] ? articlesArr[2].link : 'https://artisan.com.au/creative-community/',
+        instagram_caption: instagram_caption_final
     };
 }
 
@@ -741,10 +796,25 @@ async function updateSections(req, res) {
         
         // 3. Update Arrays with safety stripping of base64 data: URLs (Brevo doesn't support them)
         if (events) {
-            state.content.events = events.map(e => ({
-                ...e,
-                image: (e.image && e.image.startsWith('data:')) ? '' : e.image
-            }));
+            state.content.events = events.map(e => {
+                // Parse the date string into day/month for template rendering
+                let day = e.day || '';
+                let month = e.month || '';
+                if (e.date && (!day || !month)) {
+                    const dateInfo = parseEventDate(e.date);
+                    if (dateInfo) { day = dateInfo.day; month = dateInfo.month; }
+                    else {
+                        const parts = (e.date || '').trim().split(/\s+/);
+                        if (parts.length >= 2) { day = parts[0]; month = parts[1].toUpperCase(); }
+                    }
+                }
+                return {
+                    ...e,
+                    day,
+                    month,
+                    image: (e.image && e.image.startsWith('data:')) ? '' : e.image
+                };
+            });
         }
         if (media) {
             state.content.media = media.map(m => ({
@@ -755,6 +825,12 @@ async function updateSections(req, res) {
         }
         state.content.instagram_grid = (instagram_grid || state.content.instagram_grid || []).filter(url => url && !url.startsWith("data:"));
         state.content.life_update_images = (life_update_images || state.content.life_update_images || []).filter(url => url && !url.startsWith("data:"));
+        // Always sync state.content.instagram with the latest instagram_grid so populateFromState works correctly
+        state.content.instagram = {
+            caption: state.content.instagram_caption || (state.content.instagram && state.content.instagram.caption) || '',
+            images: state.content.instagram_grid,
+            grid: state.content.instagram_grid
+        };
 
         // 4. Rebuild templateParams using the same logic as initial build
         state.templateParams = buildTemplateParams(

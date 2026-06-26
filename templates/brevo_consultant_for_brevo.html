@@ -249,7 +249,9 @@
                 <tr>
                   <td style="padding:32px 32px 28px 32px;">
                     <p style="margin:0 0 10px 0;font-size:10px;font-weight:700;color:#bd203d;letter-spacing:2.5px;text-transform:uppercase;">Industry Insight</p>
+                    {% if params.content.industry_insight_heading %}
                     <h2 style="margin:0 0 16px 0;font-size:22px;font-weight:900;color:#1b334d;line-height:1.3;">{{ params.content.industry_insight_heading }}</h2>
+                    {% endif %}
                     <p style="margin:0;font-size:14px;line-height:1.8;color:#444444;">{{ params.content.industry_insight_body }}</p>
                   </td>
                 </tr>
@@ -407,6 +409,46 @@
                     <p style="margin:0 0 16px 0;font-size:13px;color:#555555;line-height:1.6;">{{ item.caption }}</p>
                     {% endif %}
                     <a href="{{ item.url }}" style="display:inline-block;background:linear-gradient(135deg,#1b334d 0%,#0f1f30 100%);color:#ffffff;padding:10px 22px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 4px 14px rgba(27,51,77,0.25);">READ MORE &#8594;</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          {% endif %}
+          {% if item.type == 'podcast' %}
+          <tr>
+            <td style="padding:28px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#1b334d 0%,#2d5a8e 100%);border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(27,51,77,0.25);">
+                <tr>
+                  <td style="padding:28px 32px;text-align:center;">
+                    <p style="margin:0 0 8px 0;font-size:10px;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:2px;text-transform:uppercase;">&#127911; Podcast</p>
+                    {% if item.title %}
+                    <p style="margin:0 0 20px 0;font-size:16px;font-weight:700;color:#ffffff;line-height:1.5;">{{ item.title }}</p>
+                    {% endif %}
+                    {% if item.caption and item.caption != item.title %}
+                    <p style="margin:0 0 20px 0;font-size:13px;color:rgba(255,255,255,0.75);line-height:1.6;">{{ item.caption }}</p>
+                    {% endif %}
+                    <a href="{{ item.url }}" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;letter-spacing:0.5px;box-shadow:0 4px 14px rgba(189,32,61,0.35);">&#9654; LISTEN NOW</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          {% endif %}
+          {% if item.type == 'linkedin' %}
+          <tr>
+            <td style="padding:28px 45px 0 45px;" class="mobile-pad mobile-pad-sm">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:linear-gradient(135deg,#0077b5 0%,#005a8e 100%);border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,119,181,0.25);">
+                <tr>
+                  <td style="padding:28px 32px;text-align:center;">
+                    <p style="margin:0 0 8px 0;font-size:10px;font-weight:700;color:rgba(255,255,255,0.7);letter-spacing:2px;text-transform:uppercase;">LinkedIn</p>
+                    {% if item.title %}
+                    <p style="margin:0 0 20px 0;font-size:16px;font-weight:700;color:#ffffff;line-height:1.5;">{{ item.title }}</p>
+                    {% endif %}
+                    {% if item.caption and item.caption != item.title %}
+                    <p style="margin:0 0 20px 0;font-size:13px;color:rgba(255,255,255,0.85);line-height:1.6;">{{ item.caption }}</p>
+                    {% endif %}
+                    <a href="{{ item.url }}" style="display:inline-block;background-color:rgba(255,255,255,0.2);color:#ffffff;border:2px solid rgba(255,255,255,0.6);padding:11px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;letter-spacing:0.5px;">VIEW ON LINKEDIN &#8599;</a>
                   </td>
                 </tr>
               </table>
@@ -715,7 +757,7 @@
                   <!-- MOBILE FIX 3 + DESKTOP FIX 1: Added event-text-cell class for mobile right-align; added padding top/bottom for desktop -->
                   <td valign="middle" style="padding:20px 20px 20px 20px;text-align:left;" class="event-text-cell">
                     <h3 style="margin:0 0 4px 0;font-size:16px;font-weight:900;color:#1b334d;line-height:1.3;text-align:left;">{{ event.title }}</h3>
-                    <p style="margin:0 0 10px 0;font-size:13px;line-height:1.6;color:#666666;text-align:left;">{{ event.description }}</p>
+                    <p style="margin:0 0 10px 0;font-size:13px;line-height:1.6;color:#666666;text-align:left;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">{{ event.description }}</p>
                     {% if event.link %}
                     <a href="{{ event.link }}" style="display:inline-block;background:linear-gradient(135deg,#1b334d 0%,#0f1f30 100%);color:#ffffff;padding:7px 16px;border-radius:8px;text-decoration:none;font-weight:700;font-size:11px;letter-spacing:0.5px;">FIND OUT MORE &#8594;</a>
                     {% endif %}
@@ -847,9 +889,9 @@
                   <td align="center" style="padding-bottom:16px;">
                     <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" class="footer-phones">
                       <tr>
-                        <td style="padding:0 10px;font-size:12px;color:#666666;white-space:nowrap;"><strong style="color:#1b334d;">BNE</strong> <a href="tel:+61733331833" style="color:#666666;text-decoration:none;">07 3333 1833</a></td>
-                        <td style="padding:0 10px;font-size:12px;color:#666666;white-space:nowrap;"><strong style="color:#1b334d;">MEL</strong> <a href="tel:+61396709820" style="color:#666666;text-decoration:none;">03 9670 9820</a></td>
-                        <td style="padding:0 10px;font-size:12px;color:#666666;white-space:nowrap;"><strong style="color:#1b334d;">SYD</strong> <a href="tel:+61292791788" style="color:#666666;text-decoration:none;">02 9279 1788</a></td>
+                        <td style="padding:0 10px;font-size:12px;color:#666666;white-space:nowrap;"><strong style="color:#1b334d;">MEL</strong> <a href="tel:+61395141000" style="color:#666666;text-decoration:none;">(03) 9514 1000</a></td>
+                        <td style="padding:0 10px;font-size:12px;color:#666666;white-space:nowrap;"><strong style="color:#1b334d;">SYD</strong> <a href="tel:+61282144666" style="color:#666666;text-decoration:none;">(02) 8214 4666</a></td>
+                        <td style="padding:0 10px;font-size:12px;color:#666666;white-space:nowrap;"><strong style="color:#1b334d;">BNE</strong> <a href="tel:+61733331833" style="color:#666666;text-decoration:none;">(07) 3333 1833</a></td>
                       </tr>
                     </table>
                   </td>

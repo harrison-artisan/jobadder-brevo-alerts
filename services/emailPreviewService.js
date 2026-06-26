@@ -49,7 +49,35 @@ class EmailPreviewService {
      */
     replaceTemplateVariables(html, data) {
         let result = html;
-
+        // Step 0: Handle {%- set -%} statements — resolve and inject into data context
+        const setData = Object.assign({}, data);
+        result = result.replace(/\{%\s*set\s+(\w+)\s*=\s*([^%]+?)\s*%\}/g, (match, varName, valueExpr) => {
+            const parts = valueExpr.trim().split(/\s+or\s+/);
+            let resolved = '';
+            for (const part of parts) {
+                const trimmed = part.trim();
+                // Check if it is a quoted string literal
+                if (/^['"]/.test(trimmed)) {
+                    resolved = trimmed.replace(/^['"]|['"]$/g, '');
+                    break;
+                }
+                // Check if it is an empty array literal
+                if (trimmed === '[]') {
+                    resolved = [];
+                    break;
+                }
+                // Try to resolve as a data path
+                const val = this.getNestedProperty(setData, trimmed, null);
+                if (val !== null && val !== undefined && val !== '' && !(Array.isArray(val) && val.length === 0)) {
+                    resolved = val;
+                    break;
+                }
+            }
+            setData[varName] = resolved;
+            data[varName] = resolved;
+            return ''; // Remove the set tag from output
+        });
+        data = setData;
         // Step 1: Handle {% for %} loops first (they need to be processed before simple variables)
         result = result.replace(/\{%\s*for\s+(\w+)\s+in\s+([\w.]+)\s*%\}([\s\S]*?)\{%\s*endfor\s*%\}/g, 
             (match, itemName, arrayPath, loopContent) => {
@@ -113,11 +141,25 @@ class EmailPreviewService {
                             return parts.every(part => evalCondition(part));
                         }
 
-                        // Handle: "path.length > N"
-                        const lengthMatch = trimmed.match(/^([\w.]+)\.length\s*>\s*(\d+)$/);
+                        // Handle: "path.length > N", "path.length == N", "path.length >= N"
+                        // Also handles Jinja2 filter syntax: "path|length == N", "path|length > N"
+                        const lengthMatch = trimmed.match(/^([\w.]+)(?:\.|\|)length\s*(>=|==|>|<|<=)\s*(\d+)$/);
                         if (lengthMatch) {
                             const arr = this.getNestedProperty(data, lengthMatch[1], null);
-                            return Array.isArray(arr) && arr.length > parseInt(lengthMatch[2], 10);
+                            const len = Array.isArray(arr) ? arr.length : (arr ? String(arr).length : 0);
+                            const n = parseInt(lengthMatch[3], 10);
+                            const op = lengthMatch[2];
+                            if (op === '>') return len > n;
+                            if (op === '>=') return len >= n;
+                            if (op === '==') return len === n;
+                            if (op === '<') return len < n;
+                            if (op === '<=') return len <= n;
+                        }
+                        // Handle: "path and path.length > 0" (truthy array check)
+                        const lengthGtZero = trimmed.match(/^([\w.]+)(?:\.|\|)length\s*>\s*0$/);
+                        if (lengthGtZero) {
+                            const arr = this.getNestedProperty(data, lengthGtZero[1], null);
+                            return Array.isArray(arr) && arr.length > 0;
                         }
                         // Handle: string equality e.g. item.type == 'youtube' or item.type == "youtube"
                         const strEqMatch = trimmed.match(/^([\w.]+)\s*==\s*['"]([^'"]+)['"]$/);
@@ -152,7 +194,17 @@ class EmailPreviewService {
             return value || defaultVal;
         });
 
-        // Step 3b: Replace all {{ variable.path }} with actual values
+        // Step 3b: Replace {{ varname[N] }} array index access (e.g. insta_grid[0])
+        result = result.replace(/\{\{\s*([\w.]+)\[(\d+)\]\s*\}\}/g, (match, varPath, indexStr) => {
+            const arr = this.getNestedProperty(data, varPath, null);
+            if (Array.isArray(arr)) {
+                const val = arr[parseInt(indexStr, 10)];
+                return (val !== undefined && val !== null) ? String(val) : '';
+            }
+            return '';
+        });
+
+        // Step 3c: Replace all {{ variable.path }} with actual values
         result = result.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (match, varPath) => {
             const value = this.getNestedProperty(data, varPath, '');
             

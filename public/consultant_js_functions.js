@@ -140,6 +140,7 @@ function addMediaField(data = { title: '', url: '', type: 'link' }) {
                 <option value="youtube" ${data.type === 'youtube' ? 'selected' : ''}>YouTube</option>
                 <option value="podcast" ${data.type === 'podcast' ? 'selected' : ''}>Podcast</option>
                 <option value="instagram" ${data.type === 'instagram' ? 'selected' : ''}>Instagram</option>
+                <option value="linkedin" ${data.type === 'linkedin' ? 'selected' : ''}>LinkedIn Post</option>
             </select>
         </div>
         <button onclick="this.parentElement.remove()" style="padding:6px; background:#e74c3c; border:none; border-radius:4px; color:white; cursor:pointer;">&times;</button>
@@ -201,12 +202,13 @@ async function updateConsultantSectionVisibility() {
     })).filter(e => e.title || e.url);
 
     const mediaItems = document.querySelectorAll('.media-edit-item');
-    const media = Array.from(mediaItems).map(item => ({
-        title: item.querySelector('.media-title').value,
-        url: item.querySelector('.media-url').value,
-        type: item.querySelector('.media-type').value,
-        caption: item.querySelector('.media-title').value
-    })).filter(m => m.title || m.url);
+    const media = Array.from(mediaItems).map(item => {
+        const type = item.querySelector('.media-type').value;
+        const title = item.querySelector('.media-title').value;
+        // For 'link' (Worth Reading), caption would duplicate the title — send empty so only title shows
+        const caption = (type === 'link') ? '' : title;
+        return { title, url: item.querySelector('.media-url').value, type, caption };
+    }).filter(m => m.title || m.url);
 
     const instagram_grid = [];
     for (let i = 1; i <= 4; i++) {
