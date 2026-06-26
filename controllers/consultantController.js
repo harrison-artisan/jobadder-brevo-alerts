@@ -643,6 +643,7 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
             email: consultant.email,
             phone: consultant.phone,
             linkedin: consultant.linkedin,
+            instagram: consultant.instagram || '',
             photo: consultant.photo_url || consultant.photo,
             calendar_link: consultant.calendar_link || 'https://artisan.com.au/contact'
         },

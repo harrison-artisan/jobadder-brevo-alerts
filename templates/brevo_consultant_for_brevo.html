@@ -163,7 +163,7 @@
                 <tr>
                   <!-- Left: Logo + tagline + newsletter name -->
                   <td width="55%" valign="middle" class="header-left">
-                    <a href="https://artisan.com.au/?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="text-decoration:none;display:block;margin-bottom:12px;" class="header-logo-link">
+                    <a href="https://artisan.com.au/" style="text-decoration:none;display:block;margin-bottom:12px;" class="header-logo-link">
                       <img src="https://artisan.com.au/wp-content/uploads/2024/03/artisan_A_RGB_artisan-A-Red.png" alt="Artisan" width="56" height="56" style="display:block;border:0;" class="header-logo-img">
                     </a>
                     <p style="margin:0 0 14px 0;font-size:12px;color:rgba(255,255,255,0.5);font-weight:600;letter-spacing:0.3px;line-height:1.5;">Creative, Digital and Marketing Recruitment</p>
@@ -471,12 +471,12 @@
 
           <!-- ====== INSTAGRAM (Independent block) ====== -->
           {% if params.sections.instagram %}
-          {% set insta_url = "https://www.instagram.com/the_new_mathew/" %}
+          {% set insta_url = "https://www.instagram.com/" + (params.consultant.instagram or "artisan.com.au") + "/" %}
           <!-- Gradient rule -->
           <tr><td style="padding:40px 45px 0 45px;"><div style="height:3px;background:linear-gradient(90deg,#bd203d 0%,#1b334d 100%);border-radius:2px;"></div></td></tr>
           <tr>
             <td style="padding:40px 45px 0 45px;" class="mobile-pad">
-              <h2 style="margin:0 0 24px 0;font-size:18px;font-weight:900;color:#1b334d;text-align:center;text-transform:uppercase;letter-spacing:0.5px;"><a href="{{ insta_url }}" style="color:#1b334d;text-decoration:none;">#PASTATUESDAY - @the_new_mathew</a></h2>
+              <h2 style="margin:0 0 24px 0;font-size:18px;font-weight:900;color:#1b334d;text-align:center;text-transform:uppercase;letter-spacing:0.5px;"><a href="{{ insta_url }}" style="color:#1b334d;text-decoration:none;">@{{ params.consultant.instagram or "artisan.com.au" }}</a></h2>
               
               <!-- Instagram post-style card -->
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;border:1px solid #dbdbdb;border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.12);max-width:480px;margin:0 auto;">
@@ -528,7 +528,7 @@
                         </td>
                         <!-- Username + location/subtitle -->
                         <td valign="middle">
-                          <p style="margin:0;font-size:13px;font-weight:700;color:#262626;line-height:1.3;">the_new_mathew</p>
+                          <p style="margin:0;font-size:13px;font-weight:700;color:#262626;line-height:1.3;">{{ params.consultant.instagram or "artisan.com.au" }}</p>
                           <p style="margin:0;font-size:11px;color:#8e8e8e;line-height:1.3;">Artisan Recruitment</p>
                         </td>
                         <!-- Follow button -->
@@ -650,7 +650,7 @@
                 <tr>
                   <td style="padding:15px 15px 15px 15px;">
                     <p style="margin:0;font-size:14px;color:#1b334d;line-height:1.5;">
-                      <strong style="color:#bd203d;">the_new_mathew</strong> {{ params.content.instagram_caption | safe }}
+                      <strong style="color:#bd203d;">{{ params.consultant.instagram or "artisan.com.au" }}</strong> {{ params.content.instagram_caption | safe }}
                     </p>
                   </td>
                 </tr>
@@ -698,7 +698,7 @@
                       <tr>
                         <td height="200" style="padding:20px 22px;text-align:center;vertical-align:middle;height:200px;">
                           <p style="margin:0 0 16px 0;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.6;">Looking for your next creative role?</p>
-                          <a href="https://clientapps.jobadder.com/67514/artisan?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:10px 20px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;">VIEW ALL JOBS &#8594;</a>
+                          <a href="https://clientapps.jobadder.com/67514/artisan" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:10px 20px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;">VIEW ALL JOBS &#8594;</a>
                         </td>
                       </tr>
                     </table>
@@ -722,7 +722,7 @@
                       <tr>
                         <td height="200" style="padding:20px 22px;text-align:center;vertical-align:middle;height:200px;">
                           <p style="margin:0 0 16px 0;font-size:13px;color:#666666;line-height:1.6;">Know someone who'd be perfect for a role?</p>
-                          <a href="https://artisan.com.au/refer-a-friend/?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:10px 20px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;">REFER A FRIEND &#8594;</a>
+                          <a href="https://artisan.com.au/refer-a-friend/" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:10px 20px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;">REFER A FRIEND &#8594;</a>
                         </td>
                       </tr>
                     </table>
@@ -734,7 +734,7 @@
               <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" style="margin-top:20px;">
                 <tr>
                   <td>
-                    <a href="https://clientapps.jobadder.com/67514/artisan?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="display:inline-block;background-color:#ffffff;color:#1b334d;border:2px solid #1b334d;padding:10px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 3px 10px rgba(27,51,77,0.1);">VIEW ALL OUR JOBS &#8594;</a>
+                    <a href="https://clientapps.jobadder.com/67514/artisan" style="display:inline-block;background-color:#ffffff;color:#1b334d;border:2px solid #1b334d;padding:10px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 3px 10px rgba(27,51,77,0.1);">VIEW ALL OUR JOBS &#8594;</a>
                   </td>
                 </tr>
               </table>
@@ -789,13 +789,13 @@
                 <tr>
                   {% for article in params.articles %}
                   <td width="33%" valign="top" style="padding:0 6px;" class="article-col">
-                    <a href="{{ article.link }}?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="text-decoration:none;display:block;">
+                    <a href="{{ article.link }}" style="text-decoration:none;display:block;">
                       <img src="{{ article.image }}" alt="{{ article.title }}" style="display:block;width:100%;height:150px;border-radius:8px;border:1px solid #e0e0e0;object-fit:cover;">
                     </a>
                     <p style="margin:8px 0 3px 0;font-size:11px;font-weight:700;color:#1b334d;line-height:1.4;text-align:center;">
-                      <a href="{{ article.link }}?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="color:#1b334d;text-decoration:none;">{{ article.title }}</a>
+                      <a href="{{ article.link }}" style="color:#1b334d;text-decoration:none;">{{ article.title }}</a>
                     </p>
-                    <p style="margin:0;text-align:center;"><a href="{{ article.link }}?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="font-size:10px;color:#bd203d;font-weight:700;text-decoration:none;">READ &#8594;</a></p>
+                    <p style="margin:0;text-align:center;"><a href="{{ article.link }}" style="font-size:10px;color:#bd203d;font-weight:700;text-decoration:none;">READ &#8594;</a></p>
                   </td>
                   {% endfor %}
                 </tr>
@@ -803,7 +803,7 @@
               <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" style="margin-top:24px;">
                 <tr>
                   <td>
-                    <a href="https://artisan.com.au/creative-community/?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="display:inline-block;background-color:#ffffff;color:#1b334d;border:2px solid #1b334d;padding:10px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 3px 10px rgba(27,51,77,0.1);">VISIT THE CREATIVE COMMUNITY &#8594;</a>
+                    <a href="https://artisan.com.au/creative-community/" style="display:inline-block;background-color:#ffffff;color:#1b334d;border:2px solid #1b334d;padding:10px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.5px;box-shadow:0 3px 10px rgba(27,51,77,0.1);">VISIT THE CREATIVE COMMUNITY &#8594;</a>
                   </td>
                 </tr>
               </table>
@@ -866,10 +866,10 @@
                     <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" class="cta-btn-row">
                       <tr>
                         <td style="padding:0 10px;">
-                          <a href="https://artisan.com.au/looking-for-talent/?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:13px 22px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;letter-spacing:0.5px;box-shadow:0 4px 14px rgba(189,32,61,0.4);white-space:nowrap;">I'M LOOKING FOR TALENT &#8594;</a>
+                          <a href="https://artisan.com.au/looking-for-talent/" style="display:inline-block;background:linear-gradient(135deg,#bd203d 0%,#9a1830 100%);color:#ffffff;padding:13px 22px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;letter-spacing:0.5px;box-shadow:0 4px 14px rgba(189,32,61,0.4);white-space:nowrap;">I'M LOOKING FOR TALENT &#8594;</a>
                         </td>
                         <td style="padding:0 10px;">
-                          <a href="https://clientapps.jobadder.com/67514/artisan?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="display:inline-block;background-color:transparent;color:#ffffff;border:2px solid rgba(255,255,255,0.4);padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;letter-spacing:0.5px;white-space:nowrap;">I'M LOOKING FOR WORK &#8594;</a>
+                          <a href="https://clientapps.jobadder.com/67514/artisan" style="display:inline-block;background-color:transparent;color:#ffffff;border:2px solid rgba(255,255,255,0.4);padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;letter-spacing:0.5px;white-space:nowrap;">I'M LOOKING FOR WORK &#8594;</a>
                         </td>
                       </tr>
                     </table>
@@ -889,7 +889,7 @@
                   <td align="center" style="padding-bottom:18px;">
                     <h3 style="margin:0 0 4px 0;font-size:17px;font-weight:900;color:#1b334d;letter-spacing:0.5px;">ARTISAN</h3>
                     <p style="margin:0;font-size:13px;color:#999999;">
-                      <a href="https://artisan.com.au?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="color:#bd203d;text-decoration:none;font-weight:600;">www.artisan.com.au</a>
+                      <a href="https://artisan.com.au" style="color:#bd203d;text-decoration:none;font-weight:600;">www.artisan.com.au</a>
                     </p>
                   </td>
                 </tr>
@@ -908,10 +908,10 @@
                   <td align="center" style="padding-bottom:18px;">
                     <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
                       <tr>
-                        <td style="padding:0 8px;"><a href="https://artisan.com.au/about-us/?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="font-size:11px;color:#888888;text-decoration:none;">About</a></td>
-                        <td style="padding:0 8px;"><a href="https://artisan.com.au/creative-community/?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="font-size:11px;color:#888888;text-decoration:none;">Creative Community</a></td>
-                        <td style="padding:0 8px;"><a href="https://artisan.com.au/contact-us/?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="font-size:11px;color:#888888;text-decoration:none;">Contact</a></td>
-                        <td style="padding:0 8px;"><a href="https://clientapps.jobadder.com/67514/artisan?utm_source=brevo&utm_medium=email&utm_campaign=CONSULTANT%20NEWSLETTER%20-%20MATHEW%20HEHIR" style="font-size:11px;color:#888888;text-decoration:none;">Jobs</a></td>
+                        <td style="padding:0 8px;"><a href="https://artisan.com.au/about-us/" style="font-size:11px;color:#888888;text-decoration:none;">About</a></td>
+                        <td style="padding:0 8px;"><a href="https://artisan.com.au/creative-community/" style="font-size:11px;color:#888888;text-decoration:none;">Creative Community</a></td>
+                        <td style="padding:0 8px;"><a href="https://artisan.com.au/contact-us/" style="font-size:11px;color:#888888;text-decoration:none;">Contact</a></td>
+                        <td style="padding:0 8px;"><a href="https://clientapps.jobadder.com/67514/artisan" style="font-size:11px;color:#888888;text-decoration:none;">Jobs</a></td>
                       </tr>
                     </table>
                   </td>
