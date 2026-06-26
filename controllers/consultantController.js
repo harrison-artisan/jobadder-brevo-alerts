@@ -652,7 +652,9 @@ function buildTemplateParams(consultant, parsed, mediaArray, articles, alistCand
             industry_insight_body: industry_insight_body_html,
             life_update_heading,
             life_update_body: life_update_body_html,
-            life_update_images
+            life_update_images,
+            instagram_grid: instagram_grid_final,
+            instagram_caption: instagram_caption_final
         },
         media: {
             has_media: mediaItemsArray.length > 0,

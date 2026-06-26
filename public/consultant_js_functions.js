@@ -6,6 +6,12 @@ function showConsultantEditPanel() {
 }
 
 function addEventField(data = { title: '', date: '', url: '', description: '' }) {
+    // Reconstruct date from day/month if date field is missing (CSV-parsed events store day+month separately)
+    if (!data.date && (data.day || data.month)) {
+        data = Object.assign({}, data, { date: [data.day, data.month].filter(Boolean).join(' ') });
+    }
+    // Also handle link vs url field name difference
+    if (!data.url && data.link) data = Object.assign({}, data, { url: data.link });
     const container = document.getElementById('eventsEditContainer');
     if (!container) return;
     
