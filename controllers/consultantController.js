@@ -886,9 +886,12 @@ async function updateSections(req, res) {
         }
         state.content.instagram_grid = (instagram_grid || state.content.instagram_grid || []).filter(url => url && !url.startsWith("data:"));
         state.content.life_update_images = (life_update_images || state.content.life_update_images || []).filter(url => url && !url.startsWith("data:"));
+        // Resolve the best available caption — instagram_caption flat key OR instagram.caption nested key
+        const resolvedCaption = state.content.instagram_caption || (state.content.instagram && state.content.instagram.caption) || '';
+        state.content.instagram_caption = resolvedCaption;
         // Always sync state.content.instagram with the latest instagram_grid so populateFromState works correctly
         state.content.instagram = {
-            caption: state.content.instagram_caption || (state.content.instagram && state.content.instagram.caption) || '',
+            caption: resolvedCaption,
             images: state.content.instagram_grid,
             grid: state.content.instagram_grid
         };
@@ -903,19 +906,17 @@ async function updateSections(req, res) {
             state.content.live_job,
             state.sections,
             state.content.instagram_grid,
-            state.content.instagram_caption
+            resolvedCaption
         );
         
-        // Final sync for templateParams
+        // Final sync for templateParams — ensure instagram.grid is always populated
         state.templateParams.instagram_grid = state.content.instagram_grid;
-        state.templateParams.instagram_caption = state.content.instagram_caption;
+        state.templateParams.instagram_caption = resolvedCaption;
         state.templateParams.instagram = {
-            caption: state.content.instagram_caption,
+            caption: resolvedCaption,
             images: state.content.instagram_grid,
             grid: state.content.instagram_grid
         };
-        state.templateParams.instagram_caption = state.content.instagram_caption;
-        state.templateParams.instagram_grid = state.content.instagram_grid;
 
         writeState(state);
         res.json({ success: true, state });

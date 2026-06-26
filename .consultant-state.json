@@ -30,7 +30,19 @@
       "https://picsum.photos/203"
     ],
     "instagram": {
-      "caption": "Check out our latest post!"
+      "caption": "Check out our latest post!",
+      "images": [
+        "https://picsum.photos/200",
+        "https://picsum.photos/201",
+        "https://picsum.photos/202",
+        "https://picsum.photos/203"
+      ],
+      "grid": [
+        "https://picsum.photos/200",
+        "https://picsum.photos/201",
+        "https://picsum.photos/202",
+        "https://picsum.photos/203"
+      ]
     },
     "events": [
       {
@@ -50,7 +62,8 @@
         "caption": "",
         "thumbnail": "https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg"
       }
-    ]
+    ],
+    "instagram_caption": "Check out our latest post!"
   },
   "templateParams": {
     "consultant": {
@@ -112,7 +125,19 @@
       "articles": true
     },
     "instagram": {
-      "caption": "Check out our latest post!"
+      "caption": "Check out our latest post!",
+      "images": [
+        "https://picsum.photos/200",
+        "https://picsum.photos/201",
+        "https://picsum.photos/202",
+        "https://picsum.photos/203"
+      ],
+      "grid": [
+        "https://picsum.photos/200",
+        "https://picsum.photos/201",
+        "https://picsum.photos/202",
+        "https://picsum.photos/203"
+      ]
     },
     "instagram_grid": [
       "https://picsum.photos/200",
@@ -124,6 +149,7 @@
     "has_life_update": true,
     "has_events": true,
     "has_media": true,
-    "has_instagram": true
+    "has_instagram": true,
+    "instagram_caption": "Check out our latest post!"
   }
 }

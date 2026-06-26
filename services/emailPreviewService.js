@@ -204,8 +204,11 @@ class EmailPreviewService {
             return '';
         });
 
-        // Step 3c: Replace all {{ variable.path }} with actual values
-        result = result.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (match, varPath) => {
+        // Step 3c: Replace all {{ variable.path }} and {{ variable.path | filter }} with actual values
+        // Handles Jinja2 filters like | safe, | upper, | lower, | default etc. by stripping the filter part
+        // The | safe filter in particular is critical — it means the value contains HTML that should not be escaped
+        // In the local preview renderer we always output raw values, so | safe is a no-op here
+        result = result.replace(/\{\{\s*([\w.]+)(?:\s*\|\s*[\w]+(?:\([^)]*\))?)*\s*\}\}/g, (match, varPath) => {
             const value = this.getNestedProperty(data, varPath, '');
             
             // Handle special cases for URLs - don't replace if it's a placeholder
