@@ -446,8 +446,21 @@ function parseCsvBuffer(buffer) {
 
 function parseEventDate(dateStr) {
     if (!dateStr || !dateStr.trim()) return null;
-    const s = dateStr.trim();
     const MONTHS = { january:'JAN', february:'FEB', march:'MAR', april:'APR', may:'MAY', june:'JUN', july:'JUL', august:'AUG', september:'SEP', october:'OCT', november:'NOV', december:'DEC', jan:'JAN', feb:'FEB', mar:'MAR', apr:'APR', jun:'JUN', jul:'JUL', aug:'AUG', sep:'SEP', oct:'OCT', nov:'NOV', dec:'DEC' };
+    const monthNames = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    // Normalise: strip ordinal suffixes (1st, 2nd, 3rd, 4th...), commas, and leading day-of-week words
+    let s = dateStr.trim()
+        .replace(/\b(\d{1,2})(st|nd|rd|th)\b/gi, '$1')  // 15th -> 15
+        .replace(/,/g, '')                                  // remove commas
+        .replace(/^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\s+/i, '') // strip day-of-week
+        .trim();
+    // ISO format: YYYY-MM-DD
+    const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (isoMatch) {
+        const monthNum = parseInt(isoMatch[2], 10);
+        if (monthNum >= 1 && monthNum <= 12) return { day: String(parseInt(isoMatch[3], 10)), month: monthNames[monthNum - 1] };
+    }
+    // Word formats: "15 May", "15 May 2025", "May 15", "May 15 2025"
     const wordMatch = s.match(/^(\d{1,2})\s+([A-Za-z]+)(?:\s+\d{2,4})?$/) || s.match(/^([A-Za-z]+)\s+(\d{1,2})(?:\s+\d{2,4})?$/);
     if (wordMatch) {
         let day, monthWord;
@@ -456,13 +469,13 @@ function parseEventDate(dateStr) {
         const abbr = MONTHS[monthWord.toLowerCase()];
         if (abbr) return { day: String(parseInt(day, 10)), month: abbr };
     }
-    const numMatch = s.match(/^(\d{1,2})[\/-](\d{1,2})(?:[\/-]\d{2,4})?$/);
+    // Numeric formats: DD/MM/YYYY or DD-MM-YYYY
+    const numMatch = s.match(/^(\d{1,2})[\/\-](\d{1,2})(?:[\/\-]\d{2,4})?$/);
     if (numMatch) {
-        const day = numMatch[1];
         const monthNum = parseInt(numMatch[2], 10);
-        const monthNames = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-        if (monthNum >= 1 && monthNum <= 12) return { day: String(parseInt(day, 10)), month: monthNames[monthNum - 1] };
+        if (monthNum >= 1 && monthNum <= 12) return { day: String(parseInt(numMatch[1], 10)), month: monthNames[monthNum - 1] };
     }
+    // Last resort: if no date found but string has content, store it raw so it's not lost
     return null;
 }
 

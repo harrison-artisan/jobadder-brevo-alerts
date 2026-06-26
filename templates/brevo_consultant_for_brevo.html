@@ -471,12 +471,12 @@
 
           <!-- ====== INSTAGRAM (Independent block) ====== -->
           {% if params.sections.instagram %}
-          {% set insta_url = "https://www.instagram.com/" + (params.consultant.instagram or "artisan.com.au") + "/" %}
+          {% set insta_url = "https://www.instagram.com/the_new_mathew/" %}
           <!-- Gradient rule -->
           <tr><td style="padding:40px 45px 0 45px;"><div style="height:3px;background:linear-gradient(90deg,#bd203d 0%,#1b334d 100%);border-radius:2px;"></div></td></tr>
           <tr>
             <td style="padding:40px 45px 0 45px;" class="mobile-pad">
-              <h2 style="margin:0 0 24px 0;font-size:18px;font-weight:900;color:#1b334d;text-align:center;text-transform:uppercase;letter-spacing:0.5px;"><a href="{{ insta_url }}" style="color:#1b334d;text-decoration:none;">@{{ params.consultant.instagram or "artisan.com.au" }}</a></h2>
+              <h2 style="margin:0 0 24px 0;font-size:18px;font-weight:900;color:#1b334d;text-align:center;text-transform:uppercase;letter-spacing:0.5px;"><a href="{{ insta_url }}" style="color:#1b334d;text-decoration:none;">@the_new_mathew</a></h2>
               
               <!-- Instagram post-style card -->
               <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;border:1px solid #dbdbdb;border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.12);max-width:480px;margin:0 auto;">
@@ -528,7 +528,7 @@
                         </td>
                         <!-- Username + location/subtitle -->
                         <td valign="middle">
-                          <p style="margin:0;font-size:13px;font-weight:700;color:#262626;line-height:1.3;">{{ params.consultant.instagram or "artisan.com.au" }}</p>
+                          <p style="margin:0;font-size:13px;font-weight:700;color:#262626;line-height:1.3;">the_new_mathew</p>
                           <p style="margin:0;font-size:11px;color:#8e8e8e;line-height:1.3;">Artisan Recruitment</p>
                         </td>
                         <!-- Follow button -->
@@ -650,7 +650,7 @@
                 <tr>
                   <td style="padding:15px 15px 15px 15px;">
                     <p style="margin:0;font-size:14px;color:#1b334d;line-height:1.5;">
-                      <strong style="color:#bd203d;">{{ params.consultant.instagram or "artisan.com.au" }}</strong> {{ params.content.instagram_caption | safe }}
+                      <strong style="color:#bd203d;">the_new_mathew</strong> {{ params.content.instagram_caption | safe }}
                     </p>
                   </td>
                 </tr>
