@@ -8262,7 +8262,30 @@
                             type: m.type || 'link'
                         })));
                     }
-                    
+                    // Populate Instagram grid URL inputs
+                    const igImages = content.instagram_grid ||
+                        (content.instagram && (content.instagram.images || content.instagram.grid)) || [];
+                    for (let _i = 1; _i <= 4; _i++) {
+                        const _urlInput = document.getElementById('igUrl' + _i);
+                        const _preview = document.getElementById('igPreview' + _i);
+                        if (_urlInput) {
+                            _urlInput.value = igImages[_i - 1] || '';
+                            if (typeof updateImagePreview === 'function') updateImagePreview(_urlInput, _preview);
+                        }
+                    }
+                    // Populate Life Update image URL inputs
+                    const lifeImages = content.life_update_images || [];
+                    for (let _j = 1; _j <= 3; _j++) {
+                        const _luInput = document.getElementById('lifeUpdateUrl' + _j);
+                        const _luPreview = document.getElementById('lifeUpdatePreview' + _j);
+                        if (_luInput) {
+                            _luInput.value = lifeImages[_j - 1] || '';
+                            if (typeof updateImagePreview === 'function') updateImagePreview(_luInput, _luPreview);
+                        }
+                    }
+                    // Populate email subject if set
+                    const _subjectInput = document.getElementById('editEmailSubject');
+                    if (_subjectInput) _subjectInput.value = content.email_subject || '';
                     showToast('Edit suite populated with CSV data.', 'info');
                 }
             } catch (error) {

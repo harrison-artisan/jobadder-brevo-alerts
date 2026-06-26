@@ -89,9 +89,15 @@ function populateEditor(state) {
     }
 
     // Populate Instagram Grid and Caption
-    if (state.content.instagram) {
+    {
+        // Resolve caption from multiple possible locations
+        const igCaption = state.content.instagram_caption ||
+            (state.content.instagram && state.content.instagram.caption) || '';
+        // Resolve images from multiple possible locations
+        const igImages = state.content.instagram_grid ||
+            (state.content.instagram && (state.content.instagram.images || state.content.instagram.grid)) || [];
         if (document.getElementById('igCaption')) {
-            document.getElementById('igCaption').value = state.content.instagram.caption || '';
+            document.getElementById('igCaption').value = igCaption;
         }
         if (document.getElementById('editEmailSubject')) {
             document.getElementById('editEmailSubject').value = state.content.email_subject || '';
@@ -100,7 +106,7 @@ function populateEditor(state) {
             const urlInput = document.getElementById('igUrl' + i);
             const preview = document.getElementById('igPreview' + i);
             if (urlInput) {
-                urlInput.value = state.content.instagram.images[i - 1] || '';
+                urlInput.value = igImages[i - 1] || '';
                 if (typeof updateImagePreview === 'function') updateImagePreview(urlInput, preview);
             }
         }
