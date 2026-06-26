@@ -8244,7 +8244,8 @@
                         populateEventsEditor(evs.map(e => ({
                             title: e.title || '',
                             date: (e.day && e.month) ? `${e.day} ${e.month}` : (e.date || ''),
-                            url: e.link || e.url || ''
+                            url: e.link || e.url || '',
+                            description: e.description || ''
                         })));
                     }
                     if (typeof populateMediaEditor === 'function') {

@@ -1,14 +1,27 @@
 # Artisan Consultant Newsletter — fill in the VALUE column in Google Sheets
 # then File > Download > Comma Separated Values (.csv) and upload to the dashboard
+# -----------------------------------------------------------------------
+# MEDIA BLOCKS: Fill in the relevant rows for the content type you want.
+# Only rows with a value will appear in the newsletter.
+# -----------------------------------------------------------------------
 consultant,debbie-younger
+industry_insight_heading,
 industry_insight_body,
+life_update_heading,
 life_update_body,
 youtube_url,
-youtube_caption,
+youtube_title,
 image_url,
 image_caption,
-instagram_url,
 link_url,
+worth_reading_title,
+spotify_url,
+spotify_title,
+podcast_url,
+podcast_title,
+linkedin_url,
+linkedin_title,
+instagram_url,
 event_1_date,
 event_1_title,
 event_1_description,

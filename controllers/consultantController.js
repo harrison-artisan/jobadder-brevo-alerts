@@ -314,13 +314,28 @@ const LABEL_TO_KEY = {
     'life update': 'life_update_body',
     'youtube url': 'youtube_url',
     'youtube caption': 'youtube_caption',
+    'youtube title': 'youtube_title',
     'image url': 'image_url',
     'image caption': 'image_caption',
+    'image title': 'image_title',
     'instagram post url': 'instagram_url',
     'instagram url': 'instagram_url',
     'article url': 'link_url',
     'link url': 'link_url',
     'worth reading url': 'link_url',
+    'worth reading title': 'worth_reading_title',
+    'article title': 'article_title',
+    'link title': 'link_title',
+    'spotify url': 'spotify_url',
+    'spotify title': 'spotify_title',
+    'spotify caption': 'spotify_title',
+    'podcast url': 'podcast_url',
+    'podcast title': 'podcast_title',
+    'podcast caption': 'podcast_title',
+    'linkedin url': 'linkedin_url',
+    'linkedin post url': 'linkedin_post_url',
+    'linkedin title': 'linkedin_title',
+    'linkedin caption': 'linkedin_title',
     'event 1 date': 'event_1_date',
     'event 1 title': 'event_1_title',
     'event 1 description': 'event_1_description',
@@ -421,7 +436,7 @@ function parseCsvBuffer(buffer) {
         }
         if (!key) {
             const machineKey = rawLabel.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-            const KNOWN_KEYS = ['consultant','industry_insight_body','life_update_body','youtube_url','youtube_caption','image_url','image_caption','instagram_url','link_url','event_1_date','event_1_title','event_1_description','event_1_link','event_2_date','event_2_title','event_2_description','event_2_link','event_3_date','event_3_title','event_3_description','event_3_link'];
+            const KNOWN_KEYS = ['consultant','industry_insight_body','life_update_body','youtube_url','youtube_caption','youtube_title','image_url','image_caption','image_title','instagram_url','link_url','link_title','worth_reading_title','article_title','spotify_url','spotify_title','podcast_url','podcast_title','linkedin_url','linkedin_post_url','linkedin_title','event_1_date','event_1_title','event_1_description','event_1_link','event_2_date','event_2_title','event_2_description','event_2_link','event_3_date','event_3_title','event_3_description','event_3_link','media_1_type','media_1_url','media_1_title','media_1_caption','media_2_type','media_2_url','media_2_title','media_2_caption','media_3_type','media_3_url','media_3_title','media_3_caption','media_4_type','media_4_url','media_4_title','media_4_caption','media_5_type','media_5_url','media_5_title','media_5_caption'];
             if (KNOWN_KEYS.includes(machineKey)) key = machineKey;
         }
         if (key && value !== '') data[key] = value;
@@ -467,12 +482,14 @@ async function parseCsv(req, res) {
 
         const consultantConfig = consultants[consultantId];
         if (!consultantConfig) return res.status(400).json({ success: false, message: `Unknown consultant: ${consultantId}` });
-
         const parsed = {
             industry_insight: { heading: data.industry_insight_heading || '', body: data.industry_insight_body || '' },
             life_update: { heading: data.life_update_heading || '', body: data.life_update_body || '' },
-            events: []
+            events: [],
+            media: []
         };
+
+        // Build events array from flat CSV keys
         for (let i = 1; i <= 3; i++) {
             if (data[`event_${i}_title`]) {
                 const dateInfo = parseEventDate(data[`event_${i}_date`]);
@@ -486,12 +503,48 @@ async function parseCsv(req, res) {
             }
         }
 
+        // Build media array from flat CSV keys (legacy single-item format)
+        // Supports: youtube_url/caption, image_url/caption, link_url/title,
+        //           spotify_url/title, podcast_url/title, linkedin_url/title
+        if (data.youtube_url) {
+            parsed.media.push({ type: 'youtube', url: data.youtube_url, title: data.youtube_title || data.youtube_caption || '', caption: data.youtube_caption || data.youtube_title || '' });
+        }
+        if (data.image_url) {
+            parsed.media.push({ type: 'image', url: data.image_url, title: data.image_title || data.image_caption || '', caption: data.image_caption || data.image_title || '' });
+        }
+        if (data.link_url) {
+            parsed.media.push({ type: 'link', url: data.link_url, title: data.link_title || data.worth_reading_title || data.article_title || '', caption: '' });
+        }
+        if (data.spotify_url || data.podcast_url) {
+            const pUrl = data.spotify_url || data.podcast_url;
+            const pTitle = data.spotify_title || data.podcast_title || data.spotify_caption || data.podcast_caption || '';
+            parsed.media.push({ type: 'podcast', url: pUrl, title: pTitle, caption: pTitle });
+        }
+        if (data.linkedin_url || data.linkedin_post_url) {
+            const lUrl = data.linkedin_url || data.linkedin_post_url;
+            const lTitle = data.linkedin_title || data.linkedin_caption || '';
+            parsed.media.push({ type: 'linkedin', url: lUrl, title: lTitle, caption: lTitle });
+        }
+
+        // Also support numbered media items: media_1_type, media_1_url, media_1_title, media_1_caption
+        for (let i = 1; i <= 5; i++) {
+            const mType = data[`media_${i}_type`];
+            const mUrl = data[`media_${i}_url`];
+            if (mType && mUrl) {
+                parsed.media.push({
+                    type: mType,
+                    url: mUrl,
+                    title: data[`media_${i}_title`] || data[`media_${i}_caption`] || '',
+                    caption: (mType === 'link') ? '' : (data[`media_${i}_caption`] || data[`media_${i}_title`] || '')
+                });
+            }
+        }
+
         const wpArticles = await fetchWordPressArticles();
         const articles = [wpArticles[0] || {}, wpArticles[1] || {}, wpArticles[2] || {}];
         const alistCandidate = getAListCandidateFromState() || await fetchAListCandidateLive();
         const liveJob = await fetchLiveJob();
-
-        const templateParams = buildTemplateParams(consultantConfig, parsed, [], articles, alistCandidate, liveJob);
+        const templateParams = buildTemplateParams(consultantConfig, parsed, parsed.media, articles, alistCandidate, liveJob);
         const state = {
             state: 'GENERATED',
             generatedAt: new Date().toISOString(),
